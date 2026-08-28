@@ -42,6 +42,46 @@ void main() {
     expect(after.players[0].totalScore, 300); // le tiret ne change pas le score
   });
 
+  test('un second craque barre le score (via GameEngine, pas seulement Player)', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    // A porte déjà un tiret suite à un craque précédent (posé quand son
+    // score était 700), et a depuis validé un tour de 300 points.
+    engine = engine.copyWith(
+      players: [
+        const Player(name: 'A', totalScore: 1000, hasEntered: true, hasTiret: true, preTiretScore: 700),
+        const Player(name: 'B'),
+      ],
+      currentPlayerIndex: 0,
+      activeTurn: const TurnState(diceToRoll: 4, bankedScore: 0, busted: true),
+    );
+
+    final after = engine.endBustedTurn();
+
+    expect(after.players[0].totalScore, 700, reason: 'retombe au dernier score non barré');
+    expect(after.players[0].hasTiret, isFalse, reason: 'le tiret est consommé par le barrage');
+    expect(after.players[0].preTiretScore, isNull);
+    expect(after.currentPlayerIndex, 1);
+    expect(after.nextTurnDice, 5);
+  });
+
+  test('après un score barré, un craque ultérieur redémarre un nouveau cycle de tiret', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        const Player(name: 'A', totalScore: 700, hasEntered: true), // déjà barré une fois
+        const Player(name: 'B'),
+      ],
+      currentPlayerIndex: 0,
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 0, busted: true),
+    );
+
+    final after = engine.endBustedTurn();
+
+    expect(after.players[0].totalScore, 700, reason: 'un simple craque ne change pas le score');
+    expect(after.players[0].hasTiret, isTrue, reason: 'nouveau cycle de tiret');
+    expect(after.players[0].preTiretScore, 700);
+  });
+
   test('dépasser 10000 fait craquer le tour même sans intervention du joueur', () {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(

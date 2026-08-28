@@ -51,6 +51,52 @@ void main() {
     expect(after.players[0].totalScore, 0, reason: 'le craque ne doit pas changer le score déjà acquis');
   });
 
+  testWidgets('un second craque barre le score : le tiret disparaît et le score retombe', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A porte déjà un tiret (posé quand son score était 700) et a depuis
+    // validé un tour de 300 points ; il craque une seconde fois.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        const Player(name: 'A', totalScore: 1000, hasEntered: true, hasTiret: true, preTiretScore: 700),
+        const Player(name: 'B'),
+      ],
+      currentPlayerIndex: 0,
+      activeTurn: TurnState(
+        diceToRoll: 4,
+        pendingRoll: analyzeRoll([2, 3, 4, 6]), // aucun dé marquant
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Avant le second craque : le score affiché est 1000, avec le tiret visible.
+    expect(find.text('1000'), findsOneWidget);
+    expect(find.byIcon(Icons.priority_high), findsOneWidget);
+    expect(find.text('Craqué !'), findsOneWidget);
+
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[0].totalScore, 700, reason: 'retombe au dernier score non barré');
+    expect(after.players[0].hasTiret, isFalse, reason: 'le tiret est consommé par le barrage');
+    expect(after.currentPlayerIndex, 1);
+  });
+
   testWidgets('atteindre exactement 10000 lors du tour final affiche l\'écran de victoire', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
