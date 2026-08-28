@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/ai/ai_profiles.dart';
@@ -35,6 +36,15 @@ class GameNotifier extends Notifier<GameEngine?> {
   void startGame(GameSetup setup) {
     _setup = setup;
     state = GameEngine.newGame(setup.playerNames).startTurn();
+  }
+
+  /// Charge un état de partie déjà construit, sans passer par [startGame].
+  /// Réservé aux tests, pour vérifier des scénarios (craque, victoire...)
+  /// sans dépendre de vrais lancers de dés aléatoires.
+  @visibleForTesting
+  void debugLoadState(GameEngine engine, GameSetup setup) {
+    _setup = setup;
+    state = engine;
   }
 
   void roll() {

@@ -101,7 +101,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     final engine = ref.watch(gameProvider);
-    if (engine == null) {
+    if (engine == null || engine.gameOver) {
+      // Partie terminée : l'écran de fin de partie est poussé par le
+      // ref.listen ci-dessus, activeTurn est déjà nettoyé côté moteur.
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
