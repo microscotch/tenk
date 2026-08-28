@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
@@ -193,5 +194,51 @@ void main() {
     final after = container.read(gameProvider)!;
     expect(after.gameOver, isTrue);
     expect(after.winnerIndex, 0, reason: 'A doit gagner malgré le tour final joué par B');
+  });
+
+  testWidgets('le tour d\'un joueur IA se joue automatiquement à l\'écran, sans interaction', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // De vrais lancers de dés pilotent ce tour (pas d'état pré-construit
+    // comme les autres tests) : on vérifie ici le comportement du GameScreen
+    // face à un vrai tour IA, dés aléatoires compris.
+    var engine = GameEngine.newGame(['Joueur', 'IA']).startTurn();
+    engine = engine.copyWith(currentPlayerIndex: 1, activeTurn: TurnState.initial(5));
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['Joueur', 'IA'], aiPlayers: {1: AiDifficulty.prudent}),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pump(); // premier frame : le postFrameCallback programme le 1er pas IA
+
+    // Dès le premier frame, c'est visiblement le tour de l'IA : aucun
+    // contrôle interactif du joueur humain n'est proposé.
+    expect(find.textContaining('réfléchit'), findsOneWidget);
+    expect(find.text('Lancer les dés'), findsNothing);
+    expect(find.text('S\'arrêter'), findsNothing);
+    expect(find.text('Valider'), findsNothing);
+
+    // On laisse le temps s'écouler (délai de "réflexion" de l'IA) jusqu'à ce
+    // que la main revienne au joueur humain ou que la partie se termine.
+    var iterations = 0;
+    while (container.read(gameProvider)!.currentPlayerIndex == 1 && !container.read(gameProvider)!.gameOver) {
+      await tester.pump(const Duration(milliseconds: 700));
+      iterations++;
+      expect(iterations, lessThan(60), reason: 'le tour de l\'IA ne devrait pas s\'éterniser');
+    }
+
+    final after = container.read(gameProvider)!;
+    if (!after.gameOver) {
+      expect(after.currentPlayerIndex, 0, reason: 'la main revient bien au joueur humain');
+      await tester.pump();
+      expect(find.text('Lancer les dés'), findsOneWidget, reason: 'le joueur humain reprend la main normalement');
+    }
   });
 }
