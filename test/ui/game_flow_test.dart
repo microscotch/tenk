@@ -60,7 +60,7 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 1000, hasEntered: true, hasTiret: true, preTiretScore: 700),
+        const Player(name: 'A', totalScore: 1000, previousScore: 700, hasEntered: true, hasTiret: true),
         const Player(name: 'B'),
       ],
       currentPlayerIndex: 0,

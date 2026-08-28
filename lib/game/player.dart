@@ -13,59 +13,74 @@ const int winningScore = 10000;
 /// score validé marque ce score d'un tiret d'avertissement ([hasTiret]).
 /// Ce tiret ne disparaît jamais tout seul (même si le joueur réussit des
 /// tours entre-temps). S'il craque une seconde fois alors qu'il porte déjà
-/// un tiret, son score est "barré" : il retombe à [preTiretScore], le
-/// dernier score non barré (celui d'avant le tiret), et le cycle recommence.
+/// un tiret, son score est "barré" : il retombe d'un seul cran, au score
+/// d'avant le dernier tour validé ([previousScore]), et le cycle recommence.
+///
+/// Un score peut aussi être barré par un autre mécanisme, indépendant du
+/// tiret : si un autre joueur termine son tour exactement sur le même score,
+/// ce joueur-ci se retrouve barré (voir [applyScoreCollisionBar]), qu'il
+/// porte ou non un tiret.
 class Player {
   final String name;
   final int totalScore;
+
+  /// Score d'avant le dernier tour validé, utilisé comme point de retour en
+  /// cas de score barré (un seul cran en arrière, jamais plus).
+  final int previousScore;
   final bool hasEntered;
   final bool hasTiret;
-  final int? preTiretScore;
 
   const Player({
     required this.name,
     this.totalScore = 0,
+    this.previousScore = 0,
     this.hasEntered = false,
     this.hasTiret = false,
-    this.preTiretScore,
   });
 
   int get minimumForNextTurn => hasEntered ? normalThreshold : entryThreshold;
 
   Player copyWith({
     int? totalScore,
+    int? previousScore,
     bool? hasEntered,
     bool? hasTiret,
-    int? preTiretScore,
-    bool clearPreTiretScore = false,
   }) {
     return Player(
       name: name,
       totalScore: totalScore ?? this.totalScore,
+      previousScore: previousScore ?? this.previousScore,
       hasEntered: hasEntered ?? this.hasEntered,
       hasTiret: hasTiret ?? this.hasTiret,
-      preTiretScore: clearPreTiretScore ? null : (preTiretScore ?? this.preTiretScore),
     );
   }
 
   /// Applique un tour validé avec succès (le contrôle du minimum requis et
   /// de la règle du 50 a déjà été fait au niveau du moteur de tour).
   Player applySuccessfulTurn(int points) {
-    return copyWith(totalScore: totalScore + points, hasEntered: true);
-  }
-
-  /// Applique un craque : marque un tiret la première fois, ou barre le
-  /// score (retour au dernier score non barré) la seconde fois.
-  Player applyBust() {
-    if (!hasTiret) {
-      return copyWith(hasTiret: true, preTiretScore: totalScore);
-    }
-    return Player(
-      name: name,
-      totalScore: preTiretScore!,
-      hasEntered: hasEntered,
-      hasTiret: false,
-      preTiretScore: null,
+    return copyWith(
+      previousScore: totalScore,
+      totalScore: totalScore + points,
+      hasEntered: true,
     );
   }
+
+  /// Revient d'un cran en arrière (au score d'avant le dernier tour validé)
+  /// et efface un éventuel tiret : c'est l'action de "barrer" un score,
+  /// déclenchée soit par un second craque, soit par une collision de score.
+  Player _bar() => copyWith(totalScore: previousScore, hasTiret: false);
+
+  /// Applique un craque : marque un tiret la première fois, ou barre le
+  /// score la seconde fois (s'il portait déjà un tiret).
+  Player applyBust() {
+    if (!hasTiret) {
+      return copyWith(hasTiret: true);
+    }
+    return _bar();
+  }
+
+  /// Applique un score barré suite à une collision : un autre joueur vient
+  /// de terminer son tour avec exactement le même score que celui-ci. Barre
+  /// toujours, que ce joueur porte ou non un tiret.
+  Player applyScoreCollisionBar() => _bar();
 }

@@ -20,12 +20,17 @@ class GameEngine {
   final bool gameOver;
   final int? winnerIndex;
 
-  /// Index du joueur ayant le premier atteint exactement 10000 (déclenche le
-  /// tour final pour les autres). Null tant que personne n'a gagné.
+  /// Index du joueur détenant actuellement le score exact de 10000 (celui
+  /// autour duquel tourne le tour final). Peut changer de main en cours de
+  /// partie : si un autre joueur égale 10000 pendant le tour final, il barre
+  /// l'ancien détenteur (voir la collision de score dans [bank]), devient le
+  /// nouveau détenteur, et un tour final complet redémarre pour lui. Null
+  /// tant que personne n'a jamais atteint 10000.
   final int? triggeringWinnerIndex;
 
   /// Nombre de tours restant à jouer par les autres joueurs avant la fin de
-  /// la partie, une fois [triggeringWinnerIndex] fixé.
+  /// la partie, dans le tour final en cours autour de [triggeringWinnerIndex].
+  /// Repart à `players.length - 1` à chaque fois que le détenteur change.
   final int? remainingFinalTurns;
 
   const GameEngine({
@@ -111,6 +116,10 @@ class GameEngine {
   /// le score au joueur et passe la main (les dés non utilisés sont hérités
   /// par le joueur suivant). En cas d'échec, retourne l'état inchangé avec
   /// la raison de l'échec.
+  ///
+  /// Si le nouveau score égale celui d'un autre joueur, ce dernier se
+  /// retrouve barré (collision de score), qu'il porte ou non un tiret — y
+  /// compris si le score en question est 10000.
   (GameEngine, BankAttempt) bank() {
     final attempt = tryBank(activeTurn!, minimumRequired: minimumForCurrentPlayer);
     if (!attempt.success) return (this, attempt);
@@ -118,6 +127,13 @@ class GameEngine {
     final updatedPlayer = currentPlayer.applySuccessfulTurn(attempt.bankedPoints!);
     final newPlayers = [...players];
     newPlayers[currentPlayerIndex] = updatedPlayer;
+
+    for (var i = 0; i < newPlayers.length; i++) {
+      if (i == currentPlayerIndex) continue;
+      if (newPlayers[i].totalScore == updatedPlayer.totalScore) {
+        newPlayers[i] = newPlayers[i].applyScoreCollisionBar();
+      }
+    }
 
     final leftoverDice = activeTurn!.diceToRoll;
     return (_advance(newPlayers, diceForNext: leftoverDice), attempt);
@@ -127,7 +143,11 @@ class GameEngine {
     var triggering = triggeringWinnerIndex;
     var remaining = remainingFinalTurns;
 
-    if (triggering == null && newPlayers[currentPlayerIndex].totalScore == winningScore) {
+    // Le joueur courant vient d'atteindre (ou de reprendre, après avoir
+    // barré l'ancien détenteur) exactement 10000 : il devient le détenteur
+    // et un tour final complet redémarre pour lui, que ce soit la toute
+    // première fois ou un changement de main en cours de tour final.
+    if (newPlayers[currentPlayerIndex].totalScore == winningScore) {
       triggering = currentPlayerIndex;
       remaining = newPlayers.length - 1;
     } else if (remaining != null) {
