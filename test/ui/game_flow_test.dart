@@ -8,6 +8,7 @@ import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
+import 'package:le10000/ui/screens/pass_device_screen.dart';
 
 /// Ces scénarios (craque, victoire) sont difficiles à obtenir de façon
 /// fiable via de vrais lancers aléatoires en un temps raisonnable ; on
@@ -95,6 +96,60 @@ void main() {
     expect(after.players[0].totalScore, 700, reason: 'retombe au dernier score non barré');
     expect(after.players[0].hasTiret, isFalse, reason: 'le tiret est consommé par le barrage');
     expect(after.currentPlayerIndex, 1);
+  });
+
+  testWidgets('une collision de score barre l\'autre joueur, visible sur la feuille de score', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A est à 2000 (avec un tiret actif). B va banquer un tour qui l'amène
+    // aussi à 2000 : la collision doit barrer A (retour à 1800) et effacer
+    // son tiret, même si ce n'est pas lui qui vient de jouer.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        const Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true, hasTiret: true),
+        const Player(name: 'B', totalScore: 1500, hasEntered: true),
+      ],
+      currentPlayerIndex: 1,
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B : 1500 -> 2000
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Avant le banquage de B : A affiche 2000 avec son tiret, B affiche 1500.
+    expect(find.text('2000'), findsOneWidget);
+    expect(find.text('1500'), findsOneWidget);
+    expect(find.byIcon(Icons.priority_high), findsOneWidget);
+
+    await tester.tap(find.text('S\'arrêter'));
+    await tester.pumpAndSettle();
+
+    // La main passe à A (pass-and-play) : écran de transition affiché.
+    expect(find.byType(PassDeviceScreen), findsOneWidget);
+    await tester.tap(find.text('Prêt'));
+    await tester.pumpAndSettle();
+
+    // De retour sur la feuille de score : B est à 2000, A est retombé à
+    // 1800 (barré par la collision) et n'a plus son tiret.
+    expect(find.text('2000'), findsOneWidget); // B
+    expect(find.text('1800'), findsOneWidget); // A, barré
+    expect(find.byIcon(Icons.priority_high), findsNothing);
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[1].totalScore, 2000);
+    expect(after.players[0].totalScore, 1800, reason: 'A retombe à son score précédent : collision à 2000');
+    expect(after.players[0].hasTiret, isFalse);
   });
 
   testWidgets('atteindre exactement 10000 lors du tour final affiche l\'écran de victoire', (tester) async {
