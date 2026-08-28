@@ -90,6 +90,20 @@ void main() {
       final ext = state.pendingRoll!.mandatoryGroups.firstWhere((g) => g.value == 2);
       expect(ext.points, 100);
     });
+
+    test('la règle d\'extension s\'efface dès que les dés chauds surviennent', () {
+      // Brelan de 3 + un 1 + un 5 : les 5 dés sont gardés d'un coup -> dés
+      // chauds. La règle d'extension ne doit pas survivre à ce reset.
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([3, 3, 3, 1, 5]));
+      state = applyKeepDecision(state);
+      expect(state.mustContinue, isTrue);
+      expect(state.extendedValues, isEmpty);
+
+      state = rollTurn(state, random: _QueueRandom([1, 3, 4, 5, 6]));
+      final analysis = state.pendingRoll!;
+      expect(analysis.mandatoryGroups.map((g) => g.value), [1]); // pas de 3 étendu
+      expect(analysis.junkDiceCount, 3); // 3, 4 et 6 ne rapportent rien
+    });
   });
 
   group('tryBank', () {
