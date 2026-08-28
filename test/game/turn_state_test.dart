@@ -91,6 +91,43 @@ void main() {
       expect(ext.points, 100);
     });
 
+    test('un carré banqué déclenche aussi la règle d\'extension au lancer suivant', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([4, 4, 4, 4, 2]));
+      state = applyKeepDecision(state);
+      expect(state.extendedValues, contains(4));
+      expect(state.diceToRoll, 1);
+
+      state = rollTurn(state, random: _QueueRandom([4]));
+      final ext = state.pendingRoll!.mandatoryGroups.firstWhere((g) => g.value == 4);
+      expect(ext.points, 100);
+    });
+
+    test('l\'extension issue d\'un carré s\'efface aussi dès les dés chauds', () {
+      // Carré de 4 + un 1 : les 5 dés sont gardés d'un coup -> dés chauds.
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([4, 4, 4, 4, 1]));
+      state = applyKeepDecision(state);
+      expect(state.mustContinue, isTrue);
+      expect(state.extendedValues, isEmpty);
+
+      state = rollTurn(state, random: _QueueRandom([4, 4, 5, 3, 6]));
+      final analysis = state.pendingRoll!;
+      expect(analysis.mandatoryGroups, isEmpty); // pas de 4 étendu (juste une paire)
+      expect(analysis.declinableFives, isNotNull); // le 5 reste isolé normal
+    });
+
+    test('l\'extension issue d\'une quinte s\'efface aussi dès les dés chauds '
+        '(une quinte consomme toujours les 5 dés)', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([6, 6, 6, 6, 6]));
+      state = applyKeepDecision(state);
+      expect(state.bankedScore, 6000);
+      expect(state.mustContinue, isTrue);
+      expect(state.extendedValues, isEmpty);
+
+      state = rollTurn(state, random: _QueueRandom([6, 1, 2, 3, 4]));
+      final analysis = state.pendingRoll!;
+      expect(analysis.mandatoryGroups.map((g) => g.value), [1]); // pas de 6 étendu
+    });
+
     test('la règle d\'extension s\'efface dès que les dés chauds surviennent', () {
       // Brelan de 3 + un 1 + un 5 : les 5 dés sont gardés d'un coup -> dés
       // chauds. La règle d'extension ne doit pas survivre à ce reset.

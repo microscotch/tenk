@@ -136,5 +136,29 @@ void main() {
       expect(a.mandatoryGroups, isEmpty);
       expect(a.junkDiceCount, 4);
     });
+
+    test('l\'extension fonctionne pour chaque valeur possible (2,3,4,6)', () {
+      for (final v in [2, 3, 4, 6]) {
+        final faces = [v, ...[1, 2, 3, 4, 6].where((f) => f != v).take(3)];
+        final a = analyzeRoll(faces, extendedValues: {v});
+        final ext = a.mandatoryGroups.firstWhere((g) => g.value == v);
+        expect(ext.points, 100, reason: 'valeur $v');
+        expect(ext.diceCount, 1, reason: 'valeur $v');
+      }
+    });
+
+    test('plusieurs valeurs étendues simultanément sont chacune prises en compte '
+        '(cas défensif : en jeu réel, une seule valeur peut être étendue à la fois '
+        'puisqu\'un brelan/carré consomme déjà 3 ou 4 des 5 dés)', () {
+      final a = analyzeRoll([2, 4, 3, 6, 1], extendedValues: {2, 4});
+      final extTwo = a.mandatoryGroups.firstWhere((g) => g.value == 2);
+      final extFour = a.mandatoryGroups.firstWhere((g) => g.value == 4);
+      expect(extTwo.points, 100);
+      expect(extFour.points, 100);
+      // Le 1 reste mandatoire à sa valeur normale, le 3 et le 6 restent junk.
+      final one = a.mandatoryGroups.firstWhere((g) => g.value == 1);
+      expect(one.points, 100);
+      expect(a.junkDiceCount, 2); // 3 et 6
+    });
   });
 }
