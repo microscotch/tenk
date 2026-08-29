@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,12 +84,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
   int _selectedKeep = 0;
 
+  Timer? _aiTimer;
+  Timer? _autoAdvanceTimer;
+
   @override
   void initState() {
     super.initState();
     final initialPendingRoll = ref.read(gameProvider)?.activeTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll?.declinableFives?.diceCount ?? 0;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleAiIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleAiIfNeeded();
+      _scheduleAutoAdvanceIfNeeded();
+    });
+  }
+
+  @override
+  void dispose() {
+    _aiTimer?.cancel();
+    _autoAdvanceTimer?.cancel();
+    super.dispose();
   }
 
   void _scheduleAiIfNeeded() {
@@ -95,9 +110,46 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
     if (!notifier.isAiPlayer(engine.currentPlayerIndex)) return;
-    Future.delayed(const Duration(milliseconds: 650), () {
+    _aiTimer?.cancel();
+    _aiTimer = Timer(const Duration(milliseconds: 650), () {
       if (!mounted) return;
       ref.read(gameProvider.notifier).playAiTurnStep();
+    });
+  }
+
+  /// Fait avancer automatiquement le tour d'un joueur humain quand il n'y a
+  /// aucune décision réelle à prendre : pas de choix possible sur les 5 à
+  /// garder (on garde tout d'office), ou score insuffisant/50 interdit/dés
+  /// chauds obligeant de toute façon à relancer.
+  void _scheduleAutoAdvanceIfNeeded() {
+    final engine = ref.read(gameProvider);
+    final notifier = ref.read(gameProvider.notifier);
+    if (engine == null || engine.gameOver) return;
+    if (notifier.isAiPlayer(engine.currentPlayerIndex)) return;
+    final turn = engine.activeTurn;
+    if (turn == null || turn.busted) return;
+
+    if (turn.pendingRoll != null) {
+      final analysis = turn.pendingRoll!;
+      final canChoose = analysis.declinableFives != null && analysis.canDeclineFives;
+      if (canChoose) return;
+      _autoAdvanceTimer?.cancel();
+      _autoAdvanceTimer = Timer(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        if (ref.read(gameProvider)?.activeTurn?.pendingRoll != analysis) return;
+        ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0);
+      });
+      return;
+    }
+
+    final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
+    if (attempt.success) return;
+    _autoAdvanceTimer?.cancel();
+    _autoAdvanceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final currentTurn = ref.read(gameProvider)?.activeTurn;
+      if (currentTurn != turn) return;
+      ref.read(gameProvider.notifier).roll();
     });
   }
 
@@ -126,6 +178,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         _selectedKeep = newPendingRoll?.declinableFives?.diceCount ?? 0;
       }
       _scheduleAiIfNeeded();
+      _scheduleAutoAdvanceIfNeeded();
     });
 
     final engine = ref.watch(gameProvider);
@@ -152,8 +205,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: Center(
-                    child: isAiTurn ? const Text('L\'IA réfléchit...') : _buildHandChoiceView(engine),
+                  child: SingleChildScrollView(
+                    child: Center(
+                      child: isAiTurn ? const Text('L\'IA réfléchit...') : _buildHandChoiceView(engine),
+                    ),
                   ),
                 ),
               ],
@@ -189,14 +244,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ],
               const SizedBox(height: 16),
               Expanded(
-                child: Center(
-                  child: isAiTurn
-                      ? _buildAiTurnView(turn)
-                      : (turn.busted
-                          ? _buildBustedView(turn)
-                          : (turn.pendingRoll != null
-                              ? _buildPendingRollView(turn)
-                              : _buildIdleView(engine, turn))),
+                child: SingleChildScrollView(
+                  child: Center(
+                    child: isAiTurn
+                        ? _buildAiTurnView(turn)
+                        : (turn.busted
+                            ? _buildBustedView(turn)
+                            : (turn.pendingRoll != null
+                                ? _buildPendingRollView(engine, turn)
+                                : _buildIdleView(engine, turn))),
+                  ),
                 ),
               ),
             ],
@@ -226,6 +283,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           '${engine.currentPlayer.name} hérite de ${engine.nextTurnDice} dé(s) du tour précédent.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 16),
+        Text('Score en cours : ${engine.inheritedScore}',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: [
+            for (final d in engine.inheritedKeptDice)
+              DieWidget(value: d.value, state: d.isExtended ? DieVisualState.extended : DieVisualState.kept),
+          ],
         ),
         const SizedBox(height: 24),
         FilledButton(
@@ -268,11 +336,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  Widget _buildPendingRollView(TurnState turn) {
+  Widget _buildPendingRollView(GameEngine engine, TurnState turn) {
     final analysis = turn.pendingRoll!;
     final fives = analysis.declinableFives;
     final canChoose = fives != null && analysis.canDeclineFives;
     final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
+    final declineCount = (fives?.diceCount ?? 0) - _selectedKeep;
+
+    // Simule la décision de garde en cours pour savoir si s'arrêter serait
+    // possible juste après : évite un écran intermédiaire "Valider" séparé
+    // de la décision de continuer/s'arrêter.
+    final hypothetical = applyKeepDecision(turn, declineFivesCount: declineCount);
+    final hypotheticalBank = tryBank(hypothetical, minimumRequired: engine.minimumForCurrentPlayer);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -297,14 +372,35 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ],
           ),
           const SizedBox(height: 16),
-        ],
-        FilledButton(
-          onPressed: () {
-            final declineCount = (fives?.diceCount ?? 0) - _selectedKeep;
-            ref.read(gameProvider.notifier).applyKeep(declineFivesCount: declineCount);
-          },
-          child: const Text('Valider'),
-        ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FilledButton(
+                onPressed: () {
+                  final notifier = ref.read(gameProvider.notifier);
+                  notifier.applyKeep(declineFivesCount: declineCount);
+                  notifier.roll();
+                },
+                child: const Text('Lancer les dés'),
+              ),
+              if (hypotheticalBank.success) ...[
+                const SizedBox(width: 16),
+                OutlinedButton(
+                  onPressed: () {
+                    final notifier = ref.read(gameProvider.notifier);
+                    notifier.applyKeep(declineFivesCount: declineCount);
+                    notifier.bank();
+                  },
+                  child: const Text('S\'arrêter'),
+                ),
+              ],
+            ],
+          ),
+        ] else
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+          ),
       ],
     );
   }
@@ -327,22 +423,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             child: Text(_failureMessage(attempt), style: const TextStyle(color: Colors.grey)),
           ),
         const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FilledButton(
-              onPressed: () => ref.read(gameProvider.notifier).roll(),
-              child: const Text('Lancer les dés'),
-            ),
-            if (!turn.mustContinue) ...[
+        if (attempt.success)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FilledButton(
+                onPressed: () => ref.read(gameProvider.notifier).roll(),
+                child: const Text('Lancer les dés'),
+              ),
               const SizedBox(width: 16),
               OutlinedButton(
-                onPressed: attempt.success ? () => ref.read(gameProvider.notifier).bank() : null,
+                onPressed: () => ref.read(gameProvider.notifier).bank(),
                 child: const Text('S\'arrêter'),
               ),
             ],
-          ],
-        ),
+          )
+        else
+          const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
       ],
     );
   }

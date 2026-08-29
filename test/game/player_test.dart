@@ -52,12 +52,39 @@ void main() {
     expect(p.totalScore, 0);
   });
 
+  test('un retour à 0 (barrage) remet l\'entrée en jeu à zéro : il faut de nouveau 500', () {
+    var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700, hasEntered devient true
+    expect(p.hasEntered, isTrue);
+    p = p.applyBust(); // tiret, point de retour = 0
+    p = p.applyBust(); // barré -> revient à 0
+    expect(p.totalScore, 0);
+    expect(p.hasEntered, isFalse, reason: 'retombé à 0 : il faut de nouveau marquer 500 pour entrer');
+    expect(p.minimumForNextTurn, entryThreshold);
+  });
+
   group('applyScoreCollisionBar', () {
     test('barre même sans tiret actif', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
       p = p.applyScoreCollisionBar();
       expect(p.totalScore, 0);
       expect(p.hasTiret, isFalse);
+    });
+
+    test('une collision qui ramène à 0 remet aussi l\'entrée en jeu à zéro', () {
+      var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
+      p = p.applyScoreCollisionBar(); // collision -> retombe à 0
+      expect(p.totalScore, 0);
+      expect(p.hasEntered, isFalse);
+      expect(p.minimumForNextTurn, entryThreshold);
+    });
+
+    test('une collision qui ne ramène pas à 0 ne touche pas à l\'entrée en jeu', () {
+      var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
+      p = p.applySuccessfulTurn(300); // 500 -> 800
+      p = p.applyScoreCollisionBar(); // collision -> retombe à 500, toujours entré
+      expect(p.totalScore, 500);
+      expect(p.hasEntered, isTrue);
+      expect(p.minimumForNextTurn, normalThreshold);
     });
 
     test('barre aussi un joueur qui portait déjà un tiret, et l\'efface', () {

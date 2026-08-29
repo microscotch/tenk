@@ -225,7 +225,82 @@ void main() {
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
+    // Score de tour à 0 (aucun score hérité ici) : insuffisant pour
+    // s'arrêter, le lancer se déclenche donc automatiquement, sans bouton.
+    expect(find.text('Lancer les dés'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
+        reason: 'le lancer forcé doit se déclencher sans confirmation');
+  });
+
+  testWidgets('après un lancer avec un choix de 5 à garder, "S\'arrêter" banque directement', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // B a déjà 100 pts banqués ce tour ; le lancer en attente propose deux 5
+    // déclinables. Garder les deux amène à 200, le minimum requis (entré).
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A'), Player(name: 'B', hasEntered: true)],
+      currentPlayerIndex: 1,
+      activeTurn: TurnState(diceToRoll: 5, bankedScore: 100, pendingRoll: analyzeRoll([5, 5, 2, 3, 4])),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Aucun écran intermédiaire "Valider" : le choix de garde propose
+    // directement de continuer ou de s'arrêter.
+    expect(find.text('Valider'), findsNothing);
     expect(find.text('Lancer les dés'), findsOneWidget);
+    expect(find.text('S\'arrêter'), findsOneWidget);
+
+    await tester.tap(find.text('S\'arrêter'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PassDeviceScreen), findsOneWidget, reason: 'B a banqué, la main passe à A');
+    final after = container.read(gameProvider)!;
+    expect(after.players[1].totalScore, 200);
+  });
+
+  testWidgets('après un lancer avec un choix de 5 à garder, "Lancer les dés" relance directement', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A'), Player(name: 'B', hasEntered: true)],
+      currentPlayerIndex: 1,
+      activeTurn: TurnState(diceToRoll: 5, bankedScore: 100, pendingRoll: analyzeRoll([5, 5, 2, 3, 4])),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Lancer les dés'));
+    await tester.pump();
+
+    final after = container.read(gameProvider)!;
+    expect(after.activeTurn!.bankedScore, 200, reason: 'le choix de garde a bien été appliqué avant de relancer');
+    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'un nouveau lancer a été déclenché directement');
   });
 
   testWidgets('choisir de repartir à 5 dés neufs ignore les dés hérités', (tester) async {
@@ -304,7 +379,12 @@ void main() {
         await tester.pump();
       }
 
-      expect(find.text('Lancer les dés'), findsOneWidget, reason: 'le joueur humain reprend la main normalement');
+      // Score de tour à 0 : insuffisant pour s'arrêter, le premier lancer du
+      // tour se déclenche donc automatiquement, sans bouton à cliquer.
+      expect(find.text('Lancer les dés'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
+          reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
     }
   });
 }

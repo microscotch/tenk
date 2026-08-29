@@ -104,6 +104,8 @@ class Player {
     final newGrid = List<ScoreEntry>.of(grid);
     newGrid[newGrid.length - 1] = currentEntry.copyWith(isBarred: true);
     newGrid.add(ScoreEntry(previousValue));
-    return Player._raw(name: name, grid: newGrid, hasEntered: hasEntered);
+    // Un retour à 0 remet l'entrée en jeu à zéro : il faudra de nouveau
+    // marquer au moins 500 points en un tour pour entrer à nouveau.
+    return Player._raw(name: name, grid: newGrid, hasEntered: previousValue == 0 ? false : hasEntered);
   }
 }

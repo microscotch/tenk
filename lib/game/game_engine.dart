@@ -33,6 +33,23 @@ class GameEngine {
   /// Repart à `players.length - 1` à chaque fois que le détenteur change.
   final int? remainingFinalTurns;
 
+  /// Dés déjà gardés lors du tour précédent, pour affichage informatif sur
+  /// l'écran de choix de main (le joueur héritant voit ce qui a déjà été mis
+  /// de côté avant de décider). Vide après un craque ou en tout début de
+  /// partie.
+  final List<KeptDie> inheritedKeptDice;
+
+  /// Score déjà accumulé lors du tour précédent sur les dés hérités : si le
+  /// joueur choisit de continuer avec ces dés plutôt que de repartir à zéro,
+  /// son propre tour démarre avec ce score comme base (un "bonus de départ"
+  /// distinct du score déjà crédité au joueur précédent).
+  final int inheritedScore;
+
+  /// Valeurs déjà "étendues" (brelan/carré banqué) sur le tour précédent,
+  /// transmises avec les dés hérités pour que la règle d'extension continue
+  /// de s'appliquer si le joueur choisit de poursuivre la même main.
+  final Set<int> inheritedExtendedValues;
+
   const GameEngine({
     required this.players,
     required this.currentPlayerIndex,
@@ -42,6 +59,9 @@ class GameEngine {
     this.winnerIndex,
     this.triggeringWinnerIndex,
     this.remainingFinalTurns,
+    this.inheritedKeptDice = const [],
+    this.inheritedScore = 0,
+    this.inheritedExtendedValues = const {},
   });
 
   factory GameEngine.newGame(List<String> playerNames) {
@@ -67,6 +87,9 @@ class GameEngine {
     int? winnerIndex,
     int? triggeringWinnerIndex,
     int? remainingFinalTurns,
+    List<KeptDie>? inheritedKeptDice,
+    int? inheritedScore,
+    Set<int>? inheritedExtendedValues,
   }) {
     return GameEngine(
       players: players ?? this.players,
@@ -77,16 +100,29 @@ class GameEngine {
       winnerIndex: winnerIndex ?? this.winnerIndex,
       triggeringWinnerIndex: triggeringWinnerIndex ?? this.triggeringWinnerIndex,
       remainingFinalTurns: remainingFinalTurns ?? this.remainingFinalTurns,
+      inheritedKeptDice: inheritedKeptDice ?? this.inheritedKeptDice,
+      inheritedScore: inheritedScore ?? this.inheritedScore,
+      inheritedExtendedValues: inheritedExtendedValues ?? this.inheritedExtendedValues,
     );
   }
 
   /// Démarre le tour du joueur courant. Quand ce tour hérite de dés d'un
   /// tour précédent (nextTurnDice < 5), le joueur peut choisir de repartir
-  /// avec une main pleine de 5 dés neufs via [useFullHand].
+  /// avec une main pleine de 5 dés neufs via [useFullHand], ou de continuer
+  /// la main précédente : il part alors avec le score et les dés déjà gardés
+  /// par le joueur précédent comme base.
   GameEngine startTurn({bool useFullHand = false}) {
     assert(!gameOver);
     final diceToRoll = useFullHand ? 5 : nextTurnDice;
-    return copyWith(activeTurn: TurnState.initial(diceToRoll));
+    final initial = useFullHand
+        ? TurnState.initial(diceToRoll)
+        : TurnState(
+            diceToRoll: diceToRoll,
+            bankedScore: inheritedScore,
+            extendedValues: inheritedExtendedValues,
+            keptDiceThisTurn: inheritedKeptDice,
+          );
+    return copyWith(activeTurn: initial);
   }
 
   /// Lance les dés disponibles du tour en cours.
@@ -139,10 +175,25 @@ class GameEngine {
     }
 
     final leftoverDice = activeTurn!.diceToRoll;
-    return (_advance(newPlayers, diceForNext: leftoverDice), attempt);
+    return (
+      _advance(
+        newPlayers,
+        diceForNext: leftoverDice,
+        inheritedKeptDice: activeTurn!.keptDiceThisTurn,
+        inheritedScore: attempt.bankedPoints!,
+        inheritedExtendedValues: activeTurn!.extendedValues,
+      ),
+      attempt,
+    );
   }
 
-  GameEngine _advance(List<Player> newPlayers, {required int diceForNext}) {
+  GameEngine _advance(
+    List<Player> newPlayers, {
+    required int diceForNext,
+    List<KeptDie> inheritedKeptDice = const [],
+    int inheritedScore = 0,
+    Set<int> inheritedExtendedValues = const {},
+  }) {
     var triggering = triggeringWinnerIndex;
     var remaining = remainingFinalTurns;
 
@@ -176,6 +227,9 @@ class GameEngine {
       clearActiveTurn: true,
       triggeringWinnerIndex: triggering,
       remainingFinalTurns: remaining,
+      inheritedKeptDice: inheritedKeptDice,
+      inheritedScore: inheritedScore,
+      inheritedExtendedValues: inheritedExtendedValues,
     );
   }
 }

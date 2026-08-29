@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/dice_off.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../widgets/die_widget.dart';
 import 'game_screen.dart';
 import 'pass_device_screen.dart';
 
@@ -17,10 +20,18 @@ class DiceOffScreen extends ConsumerStatefulWidget {
 }
 
 class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
+  Timer? _aiTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleAiIfNeeded());
+  }
+
+  @override
+  void dispose() {
+    _aiTimer?.cancel();
+    super.dispose();
   }
 
   void _scheduleAiIfNeeded() {
@@ -29,7 +40,8 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     if (state == null || state.isResolved) return;
     final next = state.nextToRoll;
     if (next == null || !notifier.isAiPlayer(next)) return;
-    Future.delayed(const Duration(milliseconds: 500), () {
+    _aiTimer?.cancel();
+    _aiTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       ref.read(diceOffProvider.notifier).rollForCurrent();
     });
@@ -93,6 +105,10 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
               textAlign: TextAlign.center,
             ),
           ),
+        if (state.rollsThisRound.isNotEmpty) ...[
+          _diceOffRow(state.rollsThisRound, notifier),
+          const SizedBox(height: 16),
+        ],
         Text('${notifier.nameOf(next)} lance le dé', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 24),
         if (isAi)
@@ -117,8 +133,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        for (final i in lastRound.keys)
-          Text('${notifier.nameOf(i)} : ${lastRound[i]}', style: Theme.of(context).textTheme.bodyLarge),
+        _diceOffRow(lastRound, notifier),
         const SizedBox(height: 32),
         FilledButton(
           onPressed: () {
@@ -128,6 +143,25 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           },
           child: const Text('Commencer la partie'),
         ),
+      ],
+    );
+  }
+
+  Widget _diceOffRow(Map<int, int> rolls, DiceOffNotifier notifier) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 16,
+      runSpacing: 8,
+      children: [
+        for (final i in rolls.keys)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(notifier.nameOf(i), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 4),
+              DieWidget(value: rolls[i]!, state: DieVisualState.kept),
+            ],
+          ),
       ],
     );
   }

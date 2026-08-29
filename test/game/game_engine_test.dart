@@ -17,13 +17,44 @@ void main() {
     // par de vrais lancers aléatoires : seule la logique d'héritage/avance
     // du GameEngine est ici sous test.
     engine = engine.copyWith(
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500),
+      activeTurn: const TurnState(
+        diceToRoll: 3,
+        bankedScore: 500,
+        keptDiceThisTurn: [KeptDie(value: 5, points: 500 ~/ 2, isExtended: false)],
+      ),
     );
     final (after, attempt) = engine.bank();
     expect(attempt.success, isTrue);
     expect(after.currentPlayerIndex, 1);
     expect(after.nextTurnDice, 3); // hérité du tour précédent
     expect(after.players[0].totalScore, 500);
+    // Le score et les dés déjà gardés par A sont transmis à B comme base
+    // possible pour son propre tour, sans que cela retire quoi que ce soit
+    // à A (déjà crédité ci-dessus).
+    expect(after.inheritedScore, 500);
+    expect(after.inheritedKeptDice, hasLength(1));
+  });
+
+  test('continuer avec les dés hérités reprend le score déjà accumulé comme base', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: const TurnState(
+        diceToRoll: 3,
+        bankedScore: 500,
+        extendedValues: {5},
+        keptDiceThisTurn: [KeptDie(value: 5, points: 500 ~/ 2, isExtended: false)],
+      ),
+    );
+    final (after, _) = engine.bank();
+
+    final continued = after.startTurn();
+    expect(continued.activeTurn!.bankedScore, 500);
+    expect(continued.activeTurn!.extendedValues, {5});
+    expect(continued.activeTurn!.keptDiceThisTurn, hasLength(1));
+
+    final fresh = after.startTurn(useFullHand: true);
+    expect(fresh.activeTurn!.bankedScore, 0);
+    expect(fresh.activeTurn!.keptDiceThisTurn, isEmpty);
   });
 
   test('startTurn(useFullHand: true) ignore les dés hérités et repart à 5', () {
@@ -51,6 +82,31 @@ void main() {
     expect(after.nextTurnDice, 5);
     expect(after.players[0].hasTiret, isTrue);
     expect(after.players[0].totalScore, 300); // le tiret ne change pas le score
+  });
+
+  test('un craque n\'offre jamais de reprise de main : aucun score ni dé hérité, même si un tour précédent en avait laissé', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    // On simule un engine qui portait encore des dés/score hérités d'un tour
+    // réussi antérieur (résidu), pour vérifier qu'un craque les efface bien :
+    // la reprise de main n'est possible qu'après un tour RÉUSSI, jamais après
+    // un craque.
+    engine = engine.copyWith(
+      inheritedScore: 500,
+      inheritedKeptDice: const [KeptDie(value: 5, points: 500, isExtended: false)],
+      inheritedExtendedValues: const {5},
+      activeTurn: const TurnState(diceToRoll: 2, bankedScore: 0, busted: true),
+    );
+    final after = engine.endBustedTurn();
+    expect(after.nextTurnDice, 5);
+    expect(after.inheritedScore, 0);
+    expect(after.inheritedKeptDice, isEmpty);
+    expect(after.inheritedExtendedValues, isEmpty);
+
+    // Et le tour suivant démarre bien avec 5 dés neufs, sans le résidu.
+    final next = after.startTurn();
+    expect(next.activeTurn!.diceToRoll, 5);
+    expect(next.activeTurn!.bankedScore, 0);
+    expect(next.activeTurn!.keptDiceThisTurn, isEmpty);
   });
 
   test('un second craque barre le score d\'un seul cran (via GameEngine, pas seulement Player)', () {

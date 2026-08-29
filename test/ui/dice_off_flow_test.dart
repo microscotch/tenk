@@ -7,8 +7,40 @@ import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/ui/screens/dice_off_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
+import 'package:le10000/ui/widgets/die_widget.dart';
 
 void main() {
+  testWidgets('le dé d\'un joueur reste affiché à l\'écran une fois lancé', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Solo vs IA : pas d'écran "passez l'appareil" entre les lancers, donc le
+    // dé du joueur humain doit rester visible pendant que les IA lancent le
+    // leur juste après, sur le même écran.
+    container.read(diceOffProvider.notifier).start(
+          const GameSetup(
+            playerNames: ['Joueur', 'IA 1', 'IA 2'],
+            aiPlayers: {1: AiDifficulty.equilibre, 2: AiDifficulty.equilibre},
+          ),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: DiceOffScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(DieWidget), findsNothing, reason: 'personne n\'a encore lancé de dé');
+
+    await tester.tap(find.text('Lancer le dé'));
+    await tester.pump();
+
+    expect(find.byType(DieWidget), findsOneWidget, reason: 'le dé du joueur qui vient de lancer doit être visible');
+  });
+
+
   testWidgets('le départage se joue à l\'écran et lance la partie avec le vainqueur en premier', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
