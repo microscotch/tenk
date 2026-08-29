@@ -12,8 +12,8 @@ import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
 
 /// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
-/// nombre de 5 que le joueur envisage de rejeter (aperçu avant validation).
-List<DieVisualState> _classifyDiceForDisplay(RollAnalysis analysis, int selectedDeclineCount) {
+/// nombre de 5 que le joueur envisage de garder (aperçu avant validation).
+List<DieVisualState> _classifyDiceForDisplay(RollAnalysis analysis, int selectedKeepCount) {
   if (analysis.groups.any((g) => g.isSuite)) {
     return List.filled(analysis.faces.length, DieVisualState.kept);
   }
@@ -24,28 +24,49 @@ List<DieVisualState> _classifyDiceForDisplay(RollAnalysis analysis, int selected
   }
 
   final fives = analysis.declinableFives;
-  var toDeclineRemaining = selectedDeclineCount;
+  var keepRemaining = selectedKeepCount;
 
   return [
     for (final v in analysis.faces)
       if ((mandatoryRemaining[v] ?? 0) > 0)
-        _consume(mandatoryRemaining, v, DieVisualState.kept)
+        _consume(mandatoryRemaining, v, _mandatoryVisualState(analysis, v))
       else if (fives != null && v == 5)
         (() {
-          if (toDeclineRemaining > 0) {
-            toDeclineRemaining--;
-            return DieVisualState.declined;
+          if (keepRemaining > 0) {
+            keepRemaining--;
+            final perDie = fives.points ~/ fives.diceCount;
+            return perDie == 100 ? DieVisualState.extended : DieVisualState.kept;
           }
-          return DieVisualState.declinable;
+          return DieVisualState.declined;
         })()
       else
         DieVisualState.junk,
   ];
 }
 
+DieVisualState _mandatoryVisualState(RollAnalysis analysis, int value) {
+  final g = analysis.mandatoryGroups.firstWhere((g) => g.value == value);
+  // Un groupe obligatoire isolé (moins de 3 dés) de valeur non-as ne peut
+  // exister que via la règle d'extension : ses points sont "temporaires".
+  final isExtended = g.diceCount < 3 && g.value != 1;
+  return isExtended ? DieVisualState.extended : DieVisualState.kept;
+}
+
 DieVisualState _consume(Map<int, int> remaining, int value, DieVisualState result) {
   remaining[value] = remaining[value]! - 1;
   return result;
+}
+
+/// Points que rapporterait ce lancer si le joueur valide sa sélection
+/// actuelle (combien de 5 garder).
+int _previewPoints(RollAnalysis analysis, int selectedKeepCount) {
+  var points = analysis.mandatoryGroups.fold<int>(0, (sum, g) => sum + g.points);
+  final fives = analysis.declinableFives;
+  if (fives != null) {
+    final perDie = fives.points ~/ fives.diceCount;
+    points += selectedKeepCount * perDie;
+  }
+  return points;
 }
 
 class GameScreen extends ConsumerStatefulWidget {
@@ -56,11 +77,14 @@ class GameScreen extends ConsumerStatefulWidget {
 }
 
 class _GameScreenState extends ConsumerState<GameScreen> {
-  int _selectedDecline = 0;
+  /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
+  int _selectedKeep = 0;
 
   @override
   void initState() {
     super.initState();
+    final initialPendingRoll = ref.read(gameProvider)?.activeTurn?.pendingRoll;
+    _selectedKeep = initialPendingRoll?.declinableFives?.diceCount ?? 0;
     WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleAiIfNeeded());
   }
 
@@ -94,8 +118,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ))
             .then((_) => _scheduleAiIfNeeded());
       }
-      if (previous?.activeTurn?.pendingRoll != next.activeTurn?.pendingRoll) {
-        _selectedDecline = 0;
+      final newPendingRoll = next.activeTurn?.pendingRoll;
+      if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
+        // Par défaut, on garde tous les 5 déclinables.
+        _selectedKeep = newPendingRoll?.declinableFives?.diceCount ?? 0;
       }
       _scheduleAiIfNeeded();
     });
@@ -154,6 +180,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
               Text('Score du tour : ${turn.bankedScore}', style: Theme.of(context).textTheme.titleLarge),
               Text('Minimum requis : ${engine.minimumForCurrentPlayer}'),
+              if (turn.keptDiceThisTurn.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text('Dés gardés ce tour', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                _keptDiceRow(turn),
+              ],
               const SizedBox(height: 16),
               Expanded(
                 child: Center(
@@ -226,33 +257,38 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   Widget _buildPendingRollView(TurnState turn) {
     final analysis = turn.pendingRoll!;
     final fives = analysis.declinableFives;
+    final canChoose = fives != null && analysis.canDeclineFives;
+    final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _diceRow(analysis, _selectedDecline),
+        Text('Score de ce lancer : ${_previewPoints(analysis, _selectedKeep)}',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        _diceRow(analysis, _selectedKeep),
         const SizedBox(height: 16),
-        if (fives != null && analysis.canDeclineFives) ...[
-          const Text('Rejeter combien de 5 ?'),
+        if (canChoose) ...[
+          const Text('Combien de 5 garder ?'),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
-              // Il faut toujours garder au moins un dé marquant sur ce
-              // lancer : si aucun groupe obligatoire n'existe, impossible de
-              // rejeter le dernier 5.
-              for (var i = 0; i <= (analysis.mandatoryGroups.isEmpty ? fives.diceCount - 1 : fives.diceCount); i++)
+              for (var i = minKeep; i <= fives.diceCount; i++)
                 ChoiceChip(
                   label: Text('$i'),
-                  selected: _selectedDecline == i,
-                  onSelected: (_) => setState(() => _selectedDecline = i),
+                  selected: _selectedKeep == i,
+                  onSelected: (_) => setState(() => _selectedKeep = i),
                 ),
             ],
           ),
           const SizedBox(height: 16),
         ],
         FilledButton(
-          onPressed: () =>
-              ref.read(gameProvider.notifier).applyKeep(declineFivesCount: _selectedDecline),
+          onPressed: () {
+            final declineCount = (fives?.diceCount ?? 0) - _selectedKeep;
+            ref.read(gameProvider.notifier).applyKeep(declineFivesCount: declineCount);
+          },
           child: const Text('Valider'),
         ),
       ],
@@ -310,13 +346,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
-  Widget _diceRow(RollAnalysis analysis, int selectedDecline) {
-    final states = _classifyDiceForDisplay(analysis, selectedDecline);
+  Widget _diceRow(RollAnalysis analysis, int selectedKeep) {
+    final states = _classifyDiceForDisplay(analysis, selectedKeep);
     return Wrap(
       alignment: WrapAlignment.center,
       children: [
         for (var i = 0; i < analysis.faces.length; i++)
           DieWidget(value: analysis.faces[i], state: states[i]),
+      ],
+    );
+  }
+
+  Widget _keptDiceRow(TurnState turn) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      children: [
+        for (final d in turn.keptDiceThisTurn)
+          DieWidget(value: d.value, state: d.isExtended ? DieVisualState.extended : DieVisualState.kept),
       ],
     );
   }

@@ -166,6 +166,48 @@ void main() {
     });
   });
 
+  group('keptDiceThisTurn', () {
+    test('s\'accumule au fil des lancers du tour', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state); // garde les deux 1
+      expect(state.keptDiceThisTurn.map((d) => d.value), [1, 1]);
+
+      state = rollTurn(state, random: _QueueRandom([1, 5, 4]));
+      state = applyKeepDecision(state); // garde le 1 et le 5, le 4 reste junk
+      expect(state.keptDiceThisTurn.map((d) => d.value), [1, 1, 1, 5]);
+    });
+
+    test('un dé isolé étendu est marqué isExtended, une valeur normale non', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([2, 2, 2, 3, 4]));
+      state = applyKeepDecision(state); // brelan de 2, pas encore d'extension
+      expect(state.keptDiceThisTurn.every((d) => !d.isExtended), isTrue);
+
+      state = rollTurn(state, random: _QueueRandom([2, 6]));
+      state = applyKeepDecision(state); // le 2 isolé est maintenant étendu (100 pts)
+      final extendedDie = state.keptDiceThisTurn.last;
+      expect(extendedDie.value, 2);
+      expect(extendedDie.points, 100);
+      expect(extendedDie.isExtended, isTrue);
+    });
+
+    test('un 1 isolé n\'est jamais marqué comme étendu (sa valeur de 100 est normale)', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 6]));
+      state = applyKeepDecision(state);
+      expect(state.keptDiceThisTurn.single.isExtended, isFalse);
+    });
+
+    test('persiste à travers un reset de dés chauds', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 1, 3, 5]));
+      state = applyKeepDecision(state, declineFivesCount: 1); // garde le brelan d'as, relance le 5
+      expect(state.keptDiceThisTurn, hasLength(3));
+
+      state = rollTurn(state, random: _QueueRandom([5, 5]));
+      state = applyKeepDecision(state); // les 5 dés du tour sont maintenant tous gardés -> dés chauds
+      expect(state.mustContinue, isTrue);
+      expect(state.keptDiceThisTurn, hasLength(5), reason: 'les dés gardés ne sont pas effacés par les dés chauds');
+    });
+  });
+
   group('tryBank', () {
     test('échoue sous le minimum requis', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 6]));

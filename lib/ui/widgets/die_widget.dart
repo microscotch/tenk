@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum DieVisualState { junk, kept, declinable, declined }
+enum DieVisualState { junk, kept, declined, extended }
 
 class DieWidget extends StatelessWidget {
   final int value;
@@ -12,8 +12,8 @@ class DieWidget extends StatelessWidget {
   Color get _borderColor => switch (state) {
         DieVisualState.kept => Colors.green.shade600,
         DieVisualState.junk => Colors.blueGrey.shade200,
-        DieVisualState.declinable => Colors.amber.shade700,
         DieVisualState.declined => Colors.orange.shade800,
+        DieVisualState.extended => Colors.red.shade600,
       };
 
   @override

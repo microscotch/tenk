@@ -62,8 +62,8 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 1000, previousScore: 700, hasEntered: true, hasTiret: true),
-        const Player(name: 'B'),
+        Player(name: 'A', totalScore: 1000, previousScore: 700, hasEntered: true, hasTiret: true),
+        Player(name: 'B'),
       ],
       currentPlayerIndex: 0,
       activeTurn: TurnState(
@@ -109,8 +109,8 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true, hasTiret: true),
-        const Player(name: 'B', totalScore: 1500, hasEntered: true),
+        Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true, hasTiret: true),
+        Player(name: 'B', totalScore: 1500, hasEntered: true),
       ],
       currentPlayerIndex: 1,
       activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B : 1500 -> 2000
@@ -162,8 +162,8 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 10000, hasEntered: true),
-        const Player(name: 'B', totalScore: 3000, hasEntered: true),
+        Player(name: 'A', totalScore: 10000, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
       ],
       currentPlayerIndex: 1,
       triggeringWinnerIndex: 0,

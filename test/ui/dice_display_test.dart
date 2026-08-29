@@ -9,7 +9,7 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 
 void main() {
-  testWidgets('1-3-4-5-6 : seul le 1 est vert, seul le 5 est orange, le reste est junk', (tester) async {
+  testWidgets('1-3-4-5-6 : le 1 et le 5 (gardé par défaut) sont verts, le reste est junk', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -37,12 +37,81 @@ void main() {
         case 1:
           expect(d.state, DieVisualState.kept, reason: 'le 1 doit être gardé (obligatoire)');
         case 5:
-          expect(d.state, DieVisualState.declinable, reason: 'le 5 isolé doit être déclinable');
+          expect(d.state, DieVisualState.kept, reason: 'le 5 isolé est gardé par défaut (aucun rejet sélectionné)');
         case 3:
         case 4:
         case 6:
           expect(d.state, DieVisualState.junk, reason: 'le ${d.value} seul ne vaut rien');
       }
     }
+  });
+
+  testWidgets('changer le nombre de 5 à garder met à jour l\'aperçu du score et les dés', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(diceToRoll: 5, pendingRoll: analyzeRoll([1, 1, 5, 5, 3])),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Par défaut, les deux 5 sont gardés : 200 (deux 1) + 100 (deux 5) = 300.
+    expect(find.text('Score de ce lancer : 300'), findsOneWidget);
+    expect(tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5).map((d) => d.state),
+        everyElement(DieVisualState.kept));
+
+    await tester.tap(find.text('1'));
+    await tester.pump();
+
+    // Un seul 5 gardé : 200 + 50 = 250, l'aperçu doit se mettre à jour.
+    expect(find.text('Score de ce lancer : 250'), findsOneWidget);
+    final fiveStates =
+        tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5).map((d) => d.state).toList();
+    expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));
+  });
+
+  testWidgets('un dé étendu affiche une bordure rouge, dans le lancer comme dans les dés gardés', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(
+        diceToRoll: 4,
+        extendedValues: const {2},
+        pendingRoll: analyzeRoll([2, 3, 6, 1], extendedValues: const {2}),
+        keptDiceThisTurn: const [KeptDie(value: 4, points: 100, isExtended: true)],
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dice = tester.widgetList<DieWidget>(find.byType(DieWidget)).toList();
+    expect(dice.firstWhere((d) => d.value == 2).state, DieVisualState.extended,
+        reason: 'le 2 étendu du lancer en cours doit ressortir en rouge');
+    expect(dice.firstWhere((d) => d.value == 4).state, DieVisualState.extended,
+        reason: 'le 4 étendu déjà gardé (persistant) doit aussi ressortir en rouge');
   });
 }

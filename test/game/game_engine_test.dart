@@ -41,8 +41,8 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 300, hasEntered: true),
-        const Player(name: 'B'),
+        Player(name: 'A', totalScore: 300, hasEntered: true),
+        Player(name: 'B'),
       ],
       activeTurn: const TurnState(diceToRoll: 2, bankedScore: 0, busted: true),
     );
@@ -59,8 +59,8 @@ void main() {
     // de 300 points (700 -> 1000, previousScore mis à jour à 700).
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 1000, previousScore: 700, hasEntered: true, hasTiret: true),
-        const Player(name: 'B'),
+        Player(name: 'A', totalScore: 1000, previousScore: 700, hasEntered: true, hasTiret: true),
+        Player(name: 'B'),
       ],
       currentPlayerIndex: 0,
       activeTurn: const TurnState(diceToRoll: 4, bankedScore: 0, busted: true),
@@ -78,8 +78,8 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 700, hasEntered: true), // déjà barré une fois
-        const Player(name: 'B'),
+        Player(name: 'A', totalScore: 700, hasEntered: true), // déjà barré une fois
+        Player(name: 'B'),
       ],
       currentPlayerIndex: 0,
       activeTurn: const TurnState(diceToRoll: 3, bankedScore: 0, busted: true),
@@ -96,8 +96,8 @@ void main() {
       var engine = GameEngine.newGame(['A', 'B']).startTurn();
       engine = engine.copyWith(
         players: [
-          const Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true),
-          const Player(name: 'B', totalScore: 1500, hasEntered: true),
+          Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true),
+          Player(name: 'B', totalScore: 1500, hasEntered: true),
         ],
         currentPlayerIndex: 1,
         activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B: 1500 -> 2000
@@ -115,8 +115,8 @@ void main() {
       var engine = GameEngine.newGame(['A', 'B']).startTurn();
       engine = engine.copyWith(
         players: [
-          const Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true, hasTiret: true),
-          const Player(name: 'B', totalScore: 1500, hasEntered: true),
+          Player(name: 'A', totalScore: 2000, previousScore: 1800, hasEntered: true, hasTiret: true),
+          Player(name: 'B', totalScore: 1500, hasEntered: true),
         ],
         currentPlayerIndex: 1,
         activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B: 1500 -> 2000
@@ -133,8 +133,8 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 9900, hasEntered: true),
-        const Player(name: 'B'),
+        Player(name: 'A', totalScore: 9900, hasEntered: true),
+        Player(name: 'B'),
       ],
       // Un lancer de deux 1 (200 points) en attente de décision : une fois
       // appliqué, 9900 + 200 = 10100 > 10000, donc craque.
@@ -149,9 +149,9 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B', 'C']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 9800, hasEntered: true),
-        const Player(name: 'B', totalScore: 3000, hasEntered: true),
-        const Player(name: 'C', totalScore: 3000, hasEntered: true),
+        Player(name: 'A', totalScore: 9800, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+        Player(name: 'C', totalScore: 3000, hasEntered: true),
       ],
       activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200),
     );
@@ -185,9 +185,9 @@ void main() {
     var engine = GameEngine.newGame(['A', 'B', 'C']).startTurn();
     engine = engine.copyWith(
       players: [
-        const Player(name: 'A', totalScore: 9800, previousScore: 9500, hasEntered: true),
-        const Player(name: 'B', totalScore: 3000, hasEntered: true),
-        const Player(name: 'C', totalScore: 3000, hasEntered: true),
+        Player(name: 'A', totalScore: 9800, previousScore: 9500, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+        Player(name: 'C', totalScore: 3000, hasEntered: true),
       ],
       activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200), // A : 9800 -> 10000
     );
