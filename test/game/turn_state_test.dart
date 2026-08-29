@@ -80,6 +80,29 @@ void main() {
       );
     });
 
+    test('impossible de rejeter le seul 5 d\'un lancer sans autre groupe obligatoire', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([5, 2, 3, 4, 4]));
+      final analysis = state.pendingRoll!;
+      expect(analysis.mandatoryGroups, isEmpty);
+      expect(
+        () => applyKeepDecision(state, declineFivesCount: 1),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('impossible de rejeter tous les 5 d\'un lancer sans autre groupe obligatoire', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([5, 5, 2, 3, 4]));
+      final analysis = state.pendingRoll!;
+      expect(analysis.mandatoryGroups, isEmpty);
+      expect(
+        () => applyKeepDecision(state, declineFivesCount: 2),
+        throwsA(isA<ArgumentError>()),
+      );
+      // Mais en garder au moins un reste possible.
+      state = applyKeepDecision(state, declineFivesCount: 1);
+      expect(state.bankedScore, 50);
+    });
+
     test('un brelan banqué déclenche la règle d\'extension au lancer suivant', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([2, 2, 2, 3, 4]));
       state = applyKeepDecision(state);

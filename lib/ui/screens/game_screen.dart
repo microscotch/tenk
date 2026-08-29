@@ -109,6 +109,32 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final notifier = ref.read(gameProvider.notifier);
     final isAiTurn = notifier.isAiPlayer(engine.currentPlayerIndex);
+
+    if (engine.activeTurn == null) {
+      // Dés hérités d'un tour précédent : le joueur doit choisir de les
+      // garder ou de repartir avec une main pleine, avant que le tour ne
+      // démarre réellement.
+      return Scaffold(
+        appBar: AppBar(title: const Text('Le 10000')),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Center(
+                    child: isAiTurn ? const Text('L\'IA réfléchit...') : _buildHandChoiceView(engine),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final turn = engine.activeTurn!;
 
     return Scaffold(
@@ -144,6 +170,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHandChoiceView(GameEngine engine) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '${engine.currentPlayer.name} hérite de ${engine.nextTurnDice} dé(s) du tour précédent.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: false),
+          child: Text('Continuer avec ${engine.nextTurnDice} dé(s)'),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton(
+          onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: true),
+          child: const Text('Recommencer avec 5 dés neufs'),
+        ),
+      ],
     );
   }
 
@@ -188,7 +237,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           Wrap(
             spacing: 8,
             children: [
-              for (var i = 0; i <= fives.diceCount; i++)
+              // Il faut toujours garder au moins un dé marquant sur ce
+              // lancer : si aucun groupe obligatoire n'existe, impossible de
+              // rejeter le dernier 5.
+              for (var i = 0; i <= (analysis.mandatoryGroups.isEmpty ? fives.diceCount - 1 : fives.diceCount); i++)
                 ChoiceChip(
                   label: Text('$i'),
                   selected: _selectedDecline == i,

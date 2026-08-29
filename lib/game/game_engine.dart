@@ -80,10 +80,13 @@ class GameEngine {
     );
   }
 
-  /// Démarre le tour du joueur courant.
-  GameEngine startTurn() {
+  /// Démarre le tour du joueur courant. Quand ce tour hérite de dés d'un
+  /// tour précédent (nextTurnDice < 5), le joueur peut choisir de repartir
+  /// avec une main pleine de 5 dés neufs via [useFullHand].
+  GameEngine startTurn({bool useFullHand = false}) {
     assert(!gameOver);
-    return copyWith(activeTurn: TurnState.initial(nextTurnDice));
+    final diceToRoll = useFullHand ? 5 : nextTurnDice;
+    return copyWith(activeTurn: TurnState.initial(diceToRoll));
   }
 
   /// Lance les dés disponibles du tour en cours.

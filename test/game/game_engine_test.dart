@@ -26,6 +26,17 @@ void main() {
     expect(after.players[0].totalScore, 500);
   });
 
+  test('startTurn(useFullHand: true) ignore les dés hérités et repart à 5', () {
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 3); // dés hérités d'un tour précédent
+
+    final withInherited = engine.startTurn();
+    expect(withInherited.activeTurn!.diceToRoll, 3);
+
+    final withFullHand = engine.startTurn(useFullHand: true);
+    expect(withFullHand.activeTurn!.diceToRoll, 5);
+  });
+
   test('un craque réinitialise les dés à 5 pour le joueur suivant', () {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(

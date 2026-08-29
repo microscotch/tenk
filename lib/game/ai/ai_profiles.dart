@@ -25,6 +25,14 @@ double bustProbability(int diceCount, Set<int> extendedValues) {
   return bustCount / total;
 }
 
+/// Nombre maximal de 5 déclinables qu'il est possible de rejeter : il faut
+/// toujours garder au moins un dé marquant sur le lancer, donc si aucun
+/// groupe obligatoire n'existe, un des 5 doit rester (le dernier ne peut pas
+/// être rejeté).
+int _maxDeclinable(RollAnalysis analysis, ScoringGroup fives) {
+  return analysis.mandatoryGroups.isEmpty ? fives.diceCount - 1 : fives.diceCount;
+}
+
 enum AiDifficulty { prudent, equilibre, agressif }
 
 AiStrategy aiStrategyFor(AiDifficulty difficulty) {
@@ -67,7 +75,7 @@ class BalancedAi implements AiStrategy {
     final fives = analysis.declinableFives;
     if (fives == null || !analysis.canDeclineFives) return 0;
     final rerollPoolIfDeclined = analysis.junkDiceCount + fives.diceCount;
-    return rerollPoolIfDeclined >= 3 ? fives.diceCount : 0;
+    return rerollPoolIfDeclined >= 3 ? _maxDeclinable(analysis, fives) : 0;
   }
 
   @override
@@ -90,7 +98,7 @@ class AggressiveAi implements AiStrategy {
   int decideDeclineFives(RollAnalysis analysis, TurnState state) {
     final fives = analysis.declinableFives;
     if (fives == null || !analysis.canDeclineFives) return 0;
-    return fives.diceCount;
+    return _maxDeclinable(analysis, fives);
   }
 
   @override

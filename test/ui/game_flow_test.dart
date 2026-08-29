@@ -196,6 +196,63 @@ void main() {
     expect(after.winnerIndex, 0, reason: 'A doit gagner malgré le tour final joué par B');
   });
 
+  testWidgets('le choix de main hérité propose bien de continuer ou de repartir à 5 dés', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 3); // A hérite de 3 dés d'un tour précédent
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('hérite de 3 dé(s)'), findsOneWidget);
+    expect(find.text('Continuer avec 3 dé(s)'), findsOneWidget);
+    expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
+    // Tant que le choix n'est pas fait, aucun lancer n'est possible.
+    expect(find.text('Lancer les dés'), findsNothing);
+
+    await tester.tap(find.text('Continuer avec 3 dé(s)'));
+    await tester.pump();
+
+    expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
+    expect(find.text('Lancer les dés'), findsOneWidget);
+  });
+
+  testWidgets('choisir de repartir à 5 dés neufs ignore les dés hérités', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 2);
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Recommencer avec 5 dés neufs'));
+    await tester.pump();
+
+    expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
+  });
+
   testWidgets('le tour d\'un joueur IA se joue automatiquement à l\'écran, sans interaction', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -238,6 +295,15 @@ void main() {
     if (!after.gameOver) {
       expect(after.currentPlayerIndex, 0, reason: 'la main revient bien au joueur humain');
       await tester.pump();
+
+      if (after.activeTurn == null) {
+        // L'IA a laissé des dés hérités : le joueur humain doit d'abord
+        // choisir sa main avant de pouvoir lancer les dés.
+        expect(find.textContaining('hérite de'), findsOneWidget);
+        await tester.tap(find.text('Recommencer avec 5 dés neufs'));
+        await tester.pump();
+      }
+
       expect(find.text('Lancer les dés'), findsOneWidget, reason: 'le joueur humain reprend la main normalement');
     }
   });

@@ -107,6 +107,11 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
     if (!analysis.canDeclineFives) {
       throw StateError('Impossible de rejeter un 5 : aucun dé non-marquant à relancer avec');
     }
+    if (analysis.mandatoryGroups.isEmpty && declineFivesCount == fivesGroup.diceCount) {
+      throw ArgumentError(
+        'Impossible de rejeter tous les 5 : au moins un dé marquant doit être gardé sur ce lancer',
+      );
+    }
   }
 
   var diceKept = 0;

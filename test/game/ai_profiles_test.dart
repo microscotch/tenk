@@ -66,4 +66,22 @@ void main() {
       expect(const BalancedAi().decideDeclineFives(analysis, state), 2);
     });
   });
+
+  group('decideDeclineFives : garde toujours au moins un dé marquant', () {
+    final state = TurnState.initial(5);
+
+    test('aucun autre groupe obligatoire : agressif garde un des deux 5', () {
+      final analysis = analyzeRoll([5, 5, 2, 3, 4]); // pas de 1, pas de brelan
+      expect(analysis.mandatoryGroups, isEmpty);
+      expect(const AggressiveAi().decideDeclineFives(analysis, state), 1);
+      expect(const BalancedAi().decideDeclineFives(analysis, state), 1);
+    });
+
+    test('un seul 5 sans autre groupe obligatoire : impossible de le rejeter', () {
+      final analysis = analyzeRoll([5, 2, 3, 4, 4]); // pas de 1, pas de brelan
+      expect(analysis.mandatoryGroups, isEmpty);
+      expect(const AggressiveAi().decideDeclineFives(analysis, state), 0);
+      expect(const BalancedAi().decideDeclineFives(analysis, state), 0);
+    });
+  });
 }

@@ -56,6 +56,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   }
 
   void endBustedTurn() {
+    // Un craque remet toujours à 5 dés neufs : aucun choix de main possible.
     final ended = state!.endBustedTurn();
     state = ended.gameOver ? ended : ended.startTurn();
   }
@@ -63,9 +64,24 @@ class GameNotifier extends Notifier<GameEngine?> {
   BankAttempt bank() {
     final (engine, attempt) = state!.bank();
     if (attempt.success) {
-      state = engine.gameOver ? engine : engine.startTurn();
+      if (engine.gameOver) {
+        state = engine;
+      } else if (engine.nextTurnDice < 5) {
+        // Le joueur suivant hérite de dés d'un tour précédent : on laisse
+        // activeTurn à null en attendant son choix (cf. [startTurn]).
+        state = engine;
+      } else {
+        state = engine.startTurn();
+      }
     }
     return attempt;
+  }
+
+  /// À appeler quand le joueur courant doit choisir entre hériter des dés
+  /// du tour précédent ou repartir avec une main pleine de 5 dés neufs
+  /// (state.activeTurn est alors null, cf. [bank]).
+  void startTurn({required bool useFullHand}) {
+    state = state!.startTurn(useFullHand: useFullHand);
   }
 
   /// Joue une unique action du tour du joueur IA courant (un lancer, une
@@ -74,6 +90,15 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// jusqu'à ce que la main passe à un autre joueur.
   void playAiTurnStep() {
     final engine = state!;
+
+    if (engine.activeTurn == null) {
+      // Choix de main en attente : repartir avec 5 dés neufs est toujours
+      // au moins aussi favorable qu'hériter de moins de dés (risque de
+      // craque strictement plus faible), donc l'IA choisit toujours ainsi.
+      startTurn(useFullHand: true);
+      return;
+    }
+
     final turn = engine.activeTurn!;
 
     if (turn.busted) {
