@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/ai/ai_profiles.dart';
+import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
-import 'game_screen.dart';
+import 'dice_off_screen.dart';
 
 enum _Mode { passAndPlay, soloVsAi }
 
@@ -59,8 +60,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         aiPlayers: {1: _aiDifficulty},
       );
     }
-    ref.read(gameProvider.notifier).startGame(setup);
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GameScreen()));
+    ref.read(diceOffProvider.notifier).start(setup);
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiceOffScreen()));
   }
 
   String _aiLabel(AiDifficulty d) => switch (d) {

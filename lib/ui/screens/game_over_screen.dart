@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
+import 'score_grid_screen.dart';
 
 class GameOverScreen extends StatelessWidget {
   final List<Player> players;
@@ -12,7 +13,18 @@ class GameOverScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final sorted = [...players]..sort((a, b) => b.totalScore.compareTo(a.totalScore));
     return Scaffold(
-      appBar: AppBar(title: const Text('Fin de la partie')),
+      appBar: AppBar(
+        title: const Text('Fin de la partie'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.grid_on),
+            tooltip: 'Grille des scores',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: Padding(

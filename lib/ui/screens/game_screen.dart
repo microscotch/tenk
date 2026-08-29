@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/combination.dart';
 import '../../game/game_engine.dart';
+import '../../game/player.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../state/game_providers.dart';
@@ -10,6 +11,7 @@ import '../widgets/die_widget.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
+import 'score_grid_screen.dart';
 
 /// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
 /// nombre de 5 que le joueur envisage de garder (aperçu avant validation).
@@ -141,7 +143,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       // garder ou de repartir avec une main pleine, avant que le tour ne
       // démarre réellement.
       return Scaffold(
-        appBar: AppBar(title: const Text('Le 10000')),
+        appBar: AppBar(title: const Text('Le 10000'), actions: _scoreGridAction(engine.players)),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -164,7 +166,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final turn = engine.activeTurn!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Le 10000')),
+      appBar: AppBar(title: const Text('Le 10000'), actions: _scoreGridAction(engine.players)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -202,6 +204,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ),
       ),
     );
+  }
+
+  List<Widget> _scoreGridAction(List<Player> players) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.grid_on),
+        tooltip: 'Grille des scores',
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
+        ),
+      ),
+    ];
   }
 
   Widget _buildHandChoiceView(GameEngine engine) {
