@@ -7,15 +7,17 @@ import 'package:vector_math/vector_math.dart' show Matrix4, Vector3;
 import '../die_widget.dart' show DieVisualState;
 import 'dice_face_texture.dart';
 
-/// Valeurs des 6 faces d'un dé standard (faces opposées = 7) pour un [front]
+/// Valeurs des 6 faces d'un dé standard (faces opposées = 7) pour un [top]
 /// donné ; les 4 autres faces sont réparties arbitrairement entre les deux
 /// paires restantes (uniquement pour l'aspect visuel pendant la rotation).
-Map<String, int> _faceValues(int front) {
-  final back = 7 - front;
-  final remaining = [1, 2, 3, 4, 5, 6].where((v) => v != front && v != back).toList();
-  final top = remaining[0];
+/// La valeur réelle du dé doit être sur "top" : c'est la face que la caméra
+/// (vue plongeante) montre dominamment au joueur.
+Map<String, int> _faceValues(int top) {
   final bottom = 7 - top;
-  final right = remaining.firstWhere((v) => v != top && v != bottom);
+  final remaining = [1, 2, 3, 4, 5, 6].where((v) => v != top && v != bottom).toList();
+  final front = remaining[0];
+  final back = 7 - front;
+  final right = remaining.firstWhere((v) => v != front && v != back);
   final left = 7 - right;
   return {'front': front, 'back': back, 'top': top, 'bottom': bottom, 'left': left, 'right': right};
 }
