@@ -11,9 +11,12 @@ ThemeData buildAppTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: colorScheme.surface,
+    // Transparent : le feutre de table (CasinoFeltBackground, posé derrière
+    // le Navigator dans main.dart) doit rester visible à travers chaque
+    // Scaffold et sa barre d'app.
+    scaffoldBackgroundColor: Colors.transparent,
     appBarTheme: AppBarTheme(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Colors.transparent,
       foregroundColor: colorScheme.primary,
       elevation: 0,
       scrolledUnderElevation: 0,
