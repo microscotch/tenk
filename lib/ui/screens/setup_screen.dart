@@ -7,8 +7,6 @@ import '../../state/game_providers.dart';
 import '../widgets/app_title.dart';
 import 'dice_off_screen.dart';
 
-enum _Mode { passAndPlay, soloVsAi }
-
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
 
@@ -17,59 +15,53 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
-  _Mode _mode = _Mode.passAndPlay;
-  final List<TextEditingController> _passAndPlayNames = [
+  final List<TextEditingController> _names = [
     TextEditingController(text: 'Joueur 1'),
     TextEditingController(text: 'Joueur 2'),
   ];
-  final _soloHumanName = TextEditingController(text: 'Joueur');
+  final List<bool> _isBot = [false, false];
+
+  /// Difficulté partagée par tous les bots de la partie.
   AiDifficulty _aiDifficulty = AiDifficulty.equilibre;
+
+  bool get _hasAnyBot => _isBot.any((b) => b);
 
   @override
   void dispose() {
-    for (final c in _passAndPlayNames) {
+    for (final c in _names) {
       c.dispose();
     }
-    _soloHumanName.dispose();
     super.dispose();
   }
 
   void _addPlayer() {
-    if (_passAndPlayNames.length >= 6) return;
-    setState(() => _passAndPlayNames.add(
-          TextEditingController(text: 'Joueur ${_passAndPlayNames.length + 1}'),
-        ));
+    if (_names.length >= 6) return;
+    setState(() {
+      _names.add(TextEditingController(text: 'Joueur ${_names.length + 1}'));
+      _isBot.add(false);
+    });
   }
 
   void _removePlayer() {
-    if (_passAndPlayNames.length <= 2) return;
-    setState(() => _passAndPlayNames.removeLast().dispose());
+    if (_names.length <= 2) return;
+    setState(() {
+      _names.removeLast().dispose();
+      _isBot.removeLast();
+    });
   }
 
   void _start() {
-    final GameSetup setup;
-    if (_mode == _Mode.passAndPlay) {
-      setup = GameSetup(
-        playerNames: [for (final c in _passAndPlayNames) c.text.trim().isEmpty ? 'Joueur' : c.text.trim()],
-      );
-    } else {
-      setup = GameSetup(
-        playerNames: [
-          _soloHumanName.text.trim().isEmpty ? 'Joueur' : _soloHumanName.text.trim(),
-          'IA (${_aiLabel(_aiDifficulty)})',
-        ],
-        aiPlayers: {1: _aiDifficulty},
-      );
-    }
+    final aiPlayers = <int, AiDifficulty>{
+      for (var i = 0; i < _isBot.length; i++)
+        if (_isBot[i]) i: _aiDifficulty,
+    };
+    final setup = GameSetup(
+      playerNames: [for (final c in _names) c.text.trim().isEmpty ? 'Joueur' : c.text.trim()],
+      aiPlayers: aiPlayers,
+    );
     ref.read(diceOffProvider.notifier).start(setup);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiceOffScreen()));
   }
-
-  String _aiLabel(AiDifficulty d) => switch (d) {
-        AiDifficulty.prudent => 'prudent',
-        AiDifficulty.equilibre => 'équilibré',
-        AiDifficulty.agressif => 'agressif',
-      };
 
   @override
   Widget build(BuildContext context) {
@@ -81,16 +73,58 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SegmentedButton<_Mode>(
-                segments: const [
-                  ButtonSegment(value: _Mode.passAndPlay, label: Text('Pass-and-play')),
-                  ButtonSegment(value: _Mode.soloVsAi, label: Text('Solo vs IA')),
+              Text('Joueurs (${_names.length})', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              for (var i = 0; i < _names.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _names[i],
+                          decoration: InputDecoration(labelText: 'Nom du joueur ${i + 1}', border: const OutlineInputBorder()),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      FilterChip(
+                        label: const Text('IA'),
+                        avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,
+                        selected: _isBot[i],
+                        onSelected: (selected) => setState(() => _isBot[i] = selected),
+                      ),
+                    ],
+                  ),
+                ),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _names.length < 6 ? _addPlayer : null,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Ajouter'),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: _names.length > 2 ? _removePlayer : null,
+                    icon: const Icon(Icons.remove),
+                    label: const Text('Retirer'),
+                  ),
                 ],
-                selected: {_mode},
-                onSelectionChanged: (s) => setState(() => _mode = s.first),
               ),
-              const SizedBox(height: 24),
-              if (_mode == _Mode.passAndPlay) ..._buildPassAndPlayForm() else ..._buildSoloForm(),
+              if (_hasAnyBot) ...[
+                const SizedBox(height: 24),
+                Text('Difficulté des bots', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                SegmentedButton<AiDifficulty>(
+                  segments: const [
+                    ButtonSegment(value: AiDifficulty.prudent, label: Text('Prudent')),
+                    ButtonSegment(value: AiDifficulty.equilibre, label: Text('Équilibré')),
+                    ButtonSegment(value: AiDifficulty.agressif, label: Text('Agressif')),
+                  ],
+                  selected: {_aiDifficulty},
+                  onSelectionChanged: (s) => setState(() => _aiDifficulty = s.first),
+                ),
+              ],
               const SizedBox(height: 32),
               FilledButton(onPressed: _start, child: const Text('Commencer la partie')),
             ],
@@ -98,56 +132,5 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         ),
       ),
     );
-  }
-
-  List<Widget> _buildPassAndPlayForm() {
-    return [
-      Text('Joueurs (${_passAndPlayNames.length})', style: Theme.of(context).textTheme.titleMedium),
-      const SizedBox(height: 8),
-      for (var i = 0; i < _passAndPlayNames.length; i++)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: TextField(
-            controller: _passAndPlayNames[i],
-            decoration: InputDecoration(labelText: 'Nom du joueur ${i + 1}', border: const OutlineInputBorder()),
-          ),
-        ),
-      Row(
-        children: [
-          OutlinedButton.icon(
-            onPressed: _passAndPlayNames.length < 6 ? _addPlayer : null,
-            icon: const Icon(Icons.add),
-            label: const Text('Ajouter'),
-          ),
-          const SizedBox(width: 12),
-          OutlinedButton.icon(
-            onPressed: _passAndPlayNames.length > 2 ? _removePlayer : null,
-            icon: const Icon(Icons.remove),
-            label: const Text('Retirer'),
-          ),
-        ],
-      ),
-    ];
-  }
-
-  List<Widget> _buildSoloForm() {
-    return [
-      TextField(
-        controller: _soloHumanName,
-        decoration: const InputDecoration(labelText: 'Votre nom', border: OutlineInputBorder()),
-      ),
-      const SizedBox(height: 16),
-      Text('Difficulté de l\'IA', style: Theme.of(context).textTheme.titleMedium),
-      const SizedBox(height: 8),
-      SegmentedButton<AiDifficulty>(
-        segments: const [
-          ButtonSegment(value: AiDifficulty.prudent, label: Text('Prudent')),
-          ButtonSegment(value: AiDifficulty.equilibre, label: Text('Équilibré')),
-          ButtonSegment(value: AiDifficulty.agressif, label: Text('Agressif')),
-        ],
-        selected: {_aiDifficulty},
-        onSelectionChanged: (s) => setState(() => _aiDifficulty = s.first),
-      ),
-    ];
   }
 }

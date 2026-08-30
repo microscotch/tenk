@@ -175,7 +175,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       }
       if (previous != null &&
           next.currentPlayerIndex != previous.currentPlayerIndex &&
-          ref.read(gameProvider.notifier).isPassAndPlayMode) {
+          ref.read(gameProvider.notifier).shouldShowPassDevice(next.currentPlayerIndex)) {
         Navigator.of(context)
             .push(MaterialPageRoute(
               builder: (_) => PassDeviceScreen(nextPlayerName: next.currentPlayer.name),

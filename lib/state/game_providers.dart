@@ -28,10 +28,13 @@ class GameNotifier extends Notifier<GameEngine?> {
 
   bool isAiPlayer(int index) => _setup?.isAi(index) ?? false;
 
-  /// Vrai s'il s'agit d'une partie pass-and-play pure (aucun joueur IA),
-  /// auquel cas les transitions entre joueurs doivent afficher l'écran
-  /// "passez l'appareil".
-  bool get isPassAndPlayMode => _setup?.aiPlayers.isEmpty ?? true;
+  /// Nombre de joueurs humains dans la partie (les autres sont des bots IA).
+  int get humanPlayerCount => (_setup?.playerNames.length ?? 0) - (_setup?.aiPlayers.length ?? 0);
+
+  /// Vrai si passer la main au joueur [index] doit afficher l'écran "passez
+  /// l'appareil" : c'est un humain, et il y a plus d'un joueur humain dans la
+  /// partie (sinon l'appareil est déjà devant la bonne personne).
+  bool shouldShowPassDevice(int index) => !isAiPlayer(index) && humanPlayerCount > 1;
 
   void startGame(GameSetup setup) {
     _setup = setup;

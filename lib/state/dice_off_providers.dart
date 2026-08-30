@@ -12,7 +12,8 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   @override
   DiceOffState? build() => null;
 
-  bool get isPassAndPlayMode => _setup.aiPlayers.isEmpty;
+  int get humanPlayerCount => _setup.playerNames.length - _setup.aiPlayers.length;
+  bool shouldShowPassDevice(int index) => !isAiPlayer(index) && humanPlayerCount > 1;
   bool isAiPlayer(int index) => _setup.isAi(index);
   String nameOf(int index) => _setup.playerNames[index];
 

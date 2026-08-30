@@ -54,7 +54,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
       if (previous != null &&
           previous.nextToRoll != next.nextToRoll &&
           next.nextToRoll != null &&
-          ref.read(diceOffProvider.notifier).isPassAndPlayMode) {
+          ref.read(diceOffProvider.notifier).shouldShowPassDevice(next.nextToRoll!)) {
         Navigator.of(context)
             .push(MaterialPageRoute(
               builder: (_) => PassDeviceScreen(

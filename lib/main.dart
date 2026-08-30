@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'ui/screens/setup_screen.dart';
+import 'ui/screens/splash_screen.dart';
 import 'ui/theme.dart';
 import 'ui/widgets/casino_felt_background.dart';
 
@@ -23,7 +23,7 @@ class Le10000App extends StatelessWidget {
           ?child,
         ],
       ),
-      home: const SetupScreen(),
+      home: const SplashScreen(),
     );
   }
 }
