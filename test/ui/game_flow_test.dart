@@ -7,7 +7,7 @@ import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
-import 'package:le10000/ui/auto_advance.dart';
+import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
@@ -17,6 +17,14 @@ import 'package:le10000/ui/screens/pass_device_screen.dart';
 /// charge donc directement un [GameEngine] pré-construit via
 /// [GameNotifier.debugLoadState] pour exercer les mêmes écrans que ceux
 /// utilisés en jeu réel.
+///
+/// Marge au-dessus du délai par défaut réglé dans les préférences : assez
+/// pour laisser UNE étape automatique se déclencher, mais pas assez pour
+/// qu'une deuxième s'enchaîne dans le même pump (sinon un test qui vérifie
+/// l'état juste après une seule étape deviendrait dépendant du hasard).
+final _autoActionPump = const AppSettings().autoActionDelay + const Duration(milliseconds: 100);
+final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
+
 void main() {
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {
     final container = ProviderContainer();
@@ -235,7 +243,7 @@ void main() {
     // Score de tour à 0 (aucun score hérité ici) : insuffisant pour
     // s'arrêter, le lancer se déclenche donc automatiquement, sans bouton.
     expect(find.text('Lancer les dés'), findsNothing);
-    await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+    await tester.pump(_autoActionPump);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le lancer forcé doit se déclencher sans confirmation');
   });
@@ -272,7 +280,7 @@ void main() {
     // tour-ci : impossible de s'arrêter, le lancer doit se déclencher seul.
     expect(find.text('S\'arrêter'), findsNothing);
     expect(find.text('Lancer les dés'), findsNothing);
-    await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+    await tester.pump(_autoActionPump);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le lancer forcé doit se déclencher sans confirmation, même avec un score déjà suffisant');
   });
@@ -415,7 +423,7 @@ void main() {
     // que la main revienne au joueur humain ou que la partie se termine.
     var iterations = 0;
     while (container.read(gameProvider)!.currentPlayerIndex == 1 && !container.read(gameProvider)!.gameOver) {
-      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+      await tester.pump(_aiStepPump);
       iterations++;
       expect(iterations, lessThan(60), reason: 'le tour de l\'IA ne devrait pas s\'éterniser');
     }
@@ -436,7 +444,7 @@ void main() {
       // Score de tour à 0 : insuffisant pour s'arrêter, le premier lancer du
       // tour se déclenche donc automatiquement, sans bouton à cliquer.
       expect(find.text('Lancer les dés'), findsNothing);
-      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+      await tester.pump(_autoActionPump);
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
     }

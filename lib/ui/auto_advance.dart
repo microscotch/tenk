@@ -1,6 +1,8 @@
-/// Délai par défaut avant qu'une action ou transition automatique (lancer de
-/// l'IA, décision de garde/banque automatique d'un joueur humain sans choix
-/// réel, changement d'écran) ne se déclenche seule. Centralisé ici pour
-/// rester configurable en un seul endroit ; chaque écran concerné doit aussi
-/// permettre d'interrompre l'attente par un clic n'importe où sur l'écran.
+/// Durée d'affichage par défaut de l'écran de démarrage avant de passer seul
+/// à l'écran d'accueil (voir [SplashScreen.displayDuration]) ; sautable par
+/// un clic n'importe où sur l'écran.
+///
+/// Les délais d'action IA et d'action automatique du joueur humain sont
+/// réglables séparément dans les préférences (voir `settings_providers.dart`)
+/// et n'utilisent plus cette constante.
 const Duration kAutoAdvanceDelay = Duration(seconds: 5);

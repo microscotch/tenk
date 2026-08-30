@@ -29,12 +29,17 @@ const Map<int, List<Offset>> pipPositions = {
   ],
 };
 
-/// Couleur du corps du dé (façon ivoire, comme un vrai dé en plastique),
-/// légèrement teintée pour les 5 déclinés.
-Color bodyColorFor(DieVisualState state) => switch (state) {
-      DieVisualState.declined => const Color(0xFFFBEEDD),
-      _ => const Color(0xFFF7F2E7),
-    };
+/// Couleur de corps par défaut (façon ivoire, comme un vrai dé en plastique).
+const Color kDefaultDieBodyColor = Color(0xFFF7F2E7);
+
+/// Couleur du corps du dé, à partir de [baseColor] (couleur par défaut si
+/// non fournie, ou couleur choisie par le mode panaché), légèrement
+/// éclaircie pour les 5 déclinés afin de garder ce signal visuel quelle que
+/// soit la couleur de base.
+Color bodyColorFor(DieVisualState state, [Color? baseColor]) {
+  final base = baseColor ?? kDefaultDieBodyColor;
+  return state == DieVisualState.declined ? Color.lerp(base, Colors.white, 0.35)! : base;
+}
 
 /// Couleur du liseré fin qui porte le signal d'état (gardé/junk/décliné/
 /// étendu), volontairement discret pour ne pas casser l'aspect "vrai dé".
@@ -60,15 +65,15 @@ class DiceFaceTextures {
   static const _size = 128.0;
   static final Map<String, Future<Texture2D>> _cache = {};
 
-  static Future<Texture2D> get(int value, DieVisualState state) {
-    final key = '$value|$state';
-    return _cache.putIfAbsent(key, () => _render(value, state));
+  static Future<Texture2D> get(int value, DieVisualState state, [Color? baseColor]) {
+    final key = '$value|$state|${(baseColor ?? kDefaultDieBodyColor).toARGB32()}';
+    return _cache.putIfAbsent(key, () => _render(value, state, baseColor));
   }
 
-  static Future<Texture2D> _render(int value, DieVisualState state) async {
+  static Future<Texture2D> _render(int value, DieVisualState state, Color? baseColor) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, _size, _size));
-    final body = bodyColorFor(state);
+    final body = bodyColorFor(state, baseColor);
     final accent = accentColorFor(state);
     final pipColor = pipColorFor(state);
 

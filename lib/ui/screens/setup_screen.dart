@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/ai/ai_profiles.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../../state/settings_providers.dart';
 import '../ai_character_names.dart';
 import '../widgets/app_title.dart';
 import 'dice_off_screen.dart';
+import 'settings_screen.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -18,16 +20,25 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
-  final List<TextEditingController> _names = [
-    TextEditingController(text: 'Joueur 1'),
-    TextEditingController(text: 'Joueur 2'),
-  ];
+  late final List<TextEditingController> _names;
   final List<bool> _isBot = [false, false];
 
   /// Difficulté partagée par tous les bots de la partie.
   AiDifficulty _aiDifficulty = AiDifficulty.equilibre;
 
   final _random = math.Random();
+
+  @override
+  void initState() {
+    super.initState();
+    // Le joueur 1 est par défaut le propriétaire de l'appareil, s'il a
+    // renseigné son nom dans les réglages.
+    final ownerName = ref.read(settingsProvider).playerName.trim();
+    _names = [
+      TextEditingController(text: ownerName.isEmpty ? 'Joueur 1' : ownerName),
+      TextEditingController(text: 'Joueur 2'),
+    ];
+  }
 
   bool get _hasAnyBot => _isBot.any((b) => b);
 
@@ -94,7 +105,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const AppTitle()),
+      appBar: AppBar(
+        title: const AppTitle(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Réglages',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

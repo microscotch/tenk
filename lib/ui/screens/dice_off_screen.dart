@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/dice_off.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
-import '../auto_advance.dart';
+import '../../state/settings_providers.dart';
+import '../dice_colors.dart';
 import '../sound_effects.dart';
 import '../widgets/die_widget.dart';
 import 'game_screen.dart';
@@ -40,13 +41,14 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     super.dispose();
   }
 
-  /// Programme [action] pour s'exécuter seule après [kAutoAdvanceDelay],
-  /// sauf si l'utilisateur clique entre-temps n'importe où sur l'écran (voir
-  /// [_skipPendingAction]), auquel cas elle s'exécute immédiatement.
+  /// Programme [action] pour s'exécuter seule après le délai IA réglé dans
+  /// les préférences, sauf si l'utilisateur clique entre-temps n'importe où
+  /// sur l'écran (voir [_skipPendingAction]), auquel cas elle s'exécute
+  /// immédiatement.
   void _scheduleAutoAction(VoidCallback action) {
     _pendingTimer?.cancel();
     _pendingAction = action;
-    _pendingTimer = Timer(kAutoAdvanceDelay, () {
+    _pendingTimer = Timer(ref.read(settingsProvider).aiMessageDelay, () {
       if (!mounted) return;
       _pendingAction = null;
       action();
@@ -198,6 +200,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
   }
 
   Widget _diceOffRow(Map<int, int> rolls, DiceOffNotifier notifier, {required int roundIndex}) {
+    final colorMode = ref.watch(settingsProvider).diceColorMode;
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 16,
@@ -209,7 +212,12 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
             children: [
               Text(notifier.nameOf(i), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
               const SizedBox(height: 4),
-              DieWidget(value: rolls[i]!, state: DieVisualState.kept, rollToken: '$roundIndex-$i'),
+              DieWidget(
+                value: rolls[i]!,
+                state: DieVisualState.kept,
+                rollToken: '$roundIndex-$i',
+                bodyColor: diceBodyColorFor(colorMode, i),
+              ),
             ],
           ),
       ],

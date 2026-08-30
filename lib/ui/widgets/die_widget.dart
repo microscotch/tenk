@@ -28,14 +28,26 @@ class DieWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final Object? rollToken;
 
-  const DieWidget({super.key, required this.value, required this.state, this.onTap, this.rollToken});
+  /// Couleur de corps du dé ; null pour la couleur ivoire par défaut (mode
+  /// "uniforme" des préférences). Voir `dice_colors.dart` pour le mode
+  /// "panaché", qui attribue une couleur différente par dé de la rangée.
+  final Color? bodyColor;
+
+  const DieWidget({
+    super.key,
+    required this.value,
+    required this.state,
+    this.onTap,
+    this.rollToken,
+    this.bodyColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (Scene3DDie.isSupported) {
-      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken);
+      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor);
     }
-    return _TransformCubeDie(value: value, state: state, onTap: onTap, rollToken: rollToken);
+    return _TransformCubeDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor);
   }
 }
 
@@ -47,8 +59,15 @@ class _TransformCubeDie extends StatefulWidget {
   final DieVisualState state;
   final VoidCallback? onTap;
   final Object? rollToken;
+  final Color? bodyColor;
 
-  const _TransformCubeDie({required this.value, required this.state, this.onTap, this.rollToken});
+  const _TransformCubeDie({
+    required this.value,
+    required this.state,
+    this.onTap,
+    this.rollToken,
+    this.bodyColor,
+  });
 
   @override
   State<_TransformCubeDie> createState() => _TransformCubeDieState();
@@ -176,7 +195,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.copy(face.placement)..translateByDouble(0.0, 0.0, _half, 1.0),
-                  child: _DieFace(value: face.value, state: widget.state),
+                  child: _DieFace(value: face.value, state: widget.state, bodyColor: widget.bodyColor),
                 ),
             ],
           ),
@@ -189,12 +208,13 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
 class _DieFace extends StatelessWidget {
   final int value;
   final DieVisualState state;
+  final Color? bodyColor;
 
-  const _DieFace({required this.value, required this.state});
+  const _DieFace({required this.value, required this.state, this.bodyColor});
 
   @override
   Widget build(BuildContext context) {
-    final body = bodyColorFor(state);
+    final body = bodyColorFor(state, bodyColor);
     return Container(
       width: _TransformCubeDieState._size,
       height: _TransformCubeDieState._size,

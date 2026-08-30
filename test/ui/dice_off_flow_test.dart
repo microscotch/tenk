@@ -4,11 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_providers.dart';
-import 'package:le10000/ui/auto_advance.dart';
+import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/dice_off_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
+
+/// Marge au-dessus du délai IA par défaut réglé dans les préférences : assez
+/// pour laisser une étape se déclencher, sans risquer d'en enchaîner deux
+/// dans le même pump (ce qui rendrait le test dépendant du hasard).
+final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
 
 void main() {
   testWidgets('le dé d\'un joueur reste affiché à l\'écran une fois lancé', (tester) async {
@@ -106,7 +111,7 @@ void main() {
 
     var iterations = 0;
     while (!container.read(diceOffProvider)!.isResolved) {
-      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+      await tester.pump(_aiStepPump);
       iterations++;
       expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
       if (find.text('Lancer le dé').evaluate().isNotEmpty) {
@@ -140,7 +145,7 @@ void main() {
 
     var iterations = 0;
     while (!container.read(diceOffProvider)!.isResolved) {
-      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+      await tester.pump(_aiStepPump);
       iterations++;
       expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
     }
@@ -149,7 +154,7 @@ void main() {
     expect(find.text('Commencer la partie'), findsNothing);
     expect(find.byType(GameScreen), findsNothing, reason: 'pas encore écoulé le délai de transition automatique');
 
-    await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+    await tester.pump(_aiStepPump);
     await tester.pump();
 
     expect(find.byType(GameScreen), findsOneWidget);

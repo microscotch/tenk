@@ -46,8 +46,16 @@ class Scene3DDie extends StatefulWidget {
   final DieVisualState state;
   final VoidCallback? onTap;
   final Object? rollToken;
+  final Color? bodyColor;
 
-  const Scene3DDie({super.key, required this.value, required this.state, this.onTap, this.rollToken});
+  const Scene3DDie({
+    super.key,
+    required this.value,
+    required this.state,
+    this.onTap,
+    this.rollToken,
+    this.bodyColor,
+  });
 
   /// Vrai si Flutter GPU/Impeller est disponible sur ce moteur, calculé une
   /// seule fois par processus (les tests widgets tournent sans backend GPU,
@@ -102,7 +110,7 @@ class _Scene3DDieState extends State<Scene3DDie> {
   @override
   void didUpdateWidget(covariant Scene3DDie oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.value != oldWidget.value || widget.state != oldWidget.state) {
+    if (widget.value != oldWidget.value || widget.state != oldWidget.state || widget.bodyColor != oldWidget.bodyColor) {
       _buildFaces();
     }
   }
@@ -111,7 +119,8 @@ class _Scene3DDieState extends State<Scene3DDie> {
     final generation = ++_loadGeneration;
     final values = _faceValues(widget.value);
     final textures = await Future.wait(
-      values.entries.map((e) async => MapEntry(e.key, await DiceFaceTextures.get(e.value, widget.state))),
+      values.entries
+          .map((e) async => MapEntry(e.key, await DiceFaceTextures.get(e.value, widget.state, widget.bodyColor))),
     );
     if (!mounted || generation != _loadGeneration) return;
 

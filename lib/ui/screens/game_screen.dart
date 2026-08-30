@@ -9,7 +9,8 @@ import '../../game/player.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../state/game_providers.dart';
-import '../auto_advance.dart';
+import '../../state/settings_providers.dart';
+import '../dice_colors.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/die_widget.dart';
@@ -144,13 +145,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
   }
 
-  /// Programme [action] pour s'exécuter seule après [kAutoAdvanceDelay],
-  /// sauf si l'utilisateur clique entre-temps n'importe où sur l'écran (voir
-  /// [_skipPendingAction]), auquel cas elle s'exécute immédiatement.
-  void _scheduleAutoAction(VoidCallback action) {
+  /// Programme [action] pour s'exécuter seule après [delay] (réglable dans
+  /// les préférences ; 0 = quasi immédiat), sauf si l'utilisateur clique
+  /// entre-temps n'importe où sur l'écran (voir [_skipPendingAction]),
+  /// auquel cas elle s'exécute immédiatement.
+  void _scheduleAutoAction(VoidCallback action, Duration delay) {
     _pendingTimer?.cancel();
     _pendingAction = action;
-    _pendingTimer = Timer(kAutoAdvanceDelay, () {
+    _pendingTimer = Timer(delay, () {
       if (!mounted) return;
       _pendingAction = null;
       action();
@@ -180,7 +182,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
     if (!notifier.isAiPlayer(engine.currentPlayerIndex)) return;
-    _scheduleAutoAction(() => ref.read(gameProvider.notifier).playAiTurnStep());
+    _scheduleAutoAction(
+      () => ref.read(gameProvider.notifier).playAiTurnStep(),
+      ref.read(settingsProvider).aiMessageDelay,
+    );
   }
 
   /// Fait avancer automatiquement le tour d'un joueur humain quand il n'y a
@@ -207,7 +212,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       _scheduleAutoAction(() {
         if (ref.read(gameProvider)?.activeTurn?.pendingRoll != analysis) return;
         ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0);
-      });
+      }, ref.read(settingsProvider).autoActionDelay);
       return;
     }
 
@@ -220,7 +225,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       final currentTurn = ref.read(gameProvider)?.activeTurn;
       if (currentTurn != turn) return;
       ref.read(gameProvider.notifier).roll();
-    });
+    }, ref.read(settingsProvider).autoActionDelay);
   }
 
   @override
@@ -373,8 +378,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         Wrap(
           alignment: WrapAlignment.center,
           children: [
-            for (final d in engine.inheritedKeptDice)
-              DieWidget(value: d.value, state: d.isExtended ? DieVisualState.extended : DieVisualState.kept),
+            for (final (i, d) in engine.inheritedKeptDice.indexed)
+              DieWidget(
+                value: d.value,
+                state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+                bodyColor: _diceColor(i),
+              ),
           ],
         ),
         const SizedBox(height: 24),
@@ -549,13 +558,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
+  Color? _diceColor(int index) => diceBodyColorFor(ref.watch(settingsProvider).diceColorMode, index);
+
   Widget _diceRow(RollAnalysis analysis, int selectedKeep) {
     final states = _classifyDiceForDisplay(analysis, selectedKeep);
     return Wrap(
       alignment: WrapAlignment.center,
       children: [
         for (var i = 0; i < analysis.faces.length; i++)
-          DieWidget(value: analysis.faces[i], state: states[i], rollToken: analysis),
+          DieWidget(value: analysis.faces[i], state: states[i], rollToken: analysis, bodyColor: _diceColor(i)),
       ],
     );
   }
@@ -564,8 +575,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return Wrap(
       alignment: WrapAlignment.center,
       children: [
-        for (final d in turn.keptDiceThisTurn)
-          DieWidget(value: d.value, state: d.isExtended ? DieVisualState.extended : DieVisualState.kept),
+        for (final (i, d) in turn.keptDiceThisTurn.indexed)
+          DieWidget(
+            value: d.value,
+            state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+            bodyColor: _diceColor(i),
+          ),
       ],
     );
   }
