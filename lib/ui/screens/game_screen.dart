@@ -463,7 +463,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       alignment: WrapAlignment.center,
       children: [
         for (var i = 0; i < analysis.faces.length; i++)
-          DieWidget(value: analysis.faces[i], state: states[i]),
+          DieWidget(value: analysis.faces[i], state: states[i], rollToken: analysis),
       ],
     );
   }

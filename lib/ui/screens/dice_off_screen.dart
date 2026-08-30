@@ -106,7 +106,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
             ),
           ),
         if (state.rollsThisRound.isNotEmpty) ...[
-          _diceOffRow(state.rollsThisRound, notifier),
+          _diceOffRow(state.rollsThisRound, notifier, roundIndex: state.roundHistory.length),
           const SizedBox(height: 16),
         ],
         Text('${notifier.nameOf(next)} lance le dé', style: Theme.of(context).textTheme.titleLarge),
@@ -133,7 +133,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        _diceOffRow(lastRound, notifier),
+        _diceOffRow(lastRound, notifier, roundIndex: state.roundHistory.length - 1),
         const SizedBox(height: 32),
         FilledButton(
           onPressed: () {
@@ -147,7 +147,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     );
   }
 
-  Widget _diceOffRow(Map<int, int> rolls, DiceOffNotifier notifier) {
+  Widget _diceOffRow(Map<int, int> rolls, DiceOffNotifier notifier, {required int roundIndex}) {
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 16,
@@ -159,7 +159,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
             children: [
               Text(notifier.nameOf(i), style: const TextStyle(fontSize: 12, color: Colors.grey)),
               const SizedBox(height: 4),
-              DieWidget(value: rolls[i]!, state: DieVisualState.kept),
+              DieWidget(value: rolls[i]!, state: DieVisualState.kept, rollToken: '$roundIndex-$i'),
             ],
           ),
       ],
