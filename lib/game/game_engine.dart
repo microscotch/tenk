@@ -77,6 +77,12 @@ class GameEngine {
   int get minimumForCurrentPlayer => currentPlayer.minimumForNextTurn;
   bool get isInFinalRound => triggeringWinnerIndex != null;
 
+  /// Vrai si continuer la main héritée (score de base [inheritedScore])
+  /// dépasserait déjà 10000 avant même d'avoir relancé un seul dé : dans ce
+  /// cas, cette main ne peut plus jamais aboutir à un banquage réussi, quel
+  /// que soit le lancer — ce n'est donc pas une option viable à proposer.
+  bool get inheritedHandExceedsWinningScore => currentPlayer.totalScore + inheritedScore > winningScore;
+
   GameEngine copyWith({
     List<Player>? players,
     int? currentPlayerIndex,

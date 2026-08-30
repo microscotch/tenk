@@ -95,10 +95,20 @@ class GameNotifier extends Notifier<GameEngine?> {
     final engine = state!;
 
     if (engine.activeTurn == null) {
-      // Choix de main en attente : repartir avec 5 dés neufs est toujours
-      // au moins aussi favorable qu'hériter de moins de dés (risque de
-      // craque strictement plus faible), donc l'IA choisit toujours ainsi.
-      startTurn(useFullHand: true);
+      // Choix de main en attente : accepter la main héritée n'a aucun coût
+      // (un craque a les mêmes conséquences quel que soit le nombre de dés)
+      // mais un vrai bénéfice (le score hérité comme base gratuite), donc
+      // l'IA l'accepte sauf si ça dépasserait déjà 10000 ou que le risque
+      // est trop élevé pour son profil.
+      final canContinue = !engine.inheritedHandExceedsWinningScore;
+      final wantsToContinue = canContinue &&
+          _currentStrategy().decideAcceptInheritedHand(
+            diceCount: engine.nextTurnDice,
+            extendedValues: engine.inheritedExtendedValues,
+            inheritedScore: engine.inheritedScore,
+            currentTotalScore: engine.currentPlayer.totalScore,
+          );
+      startTurn(useFullHand: !wantsToContinue);
       return;
     }
 

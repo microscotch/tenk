@@ -67,6 +67,61 @@ void main() {
     });
   });
 
+  group('decideAcceptInheritedHand : accepte toujours à 0, sinon selon le risque du profil', () {
+    test('à 0, tous les profils acceptent même une main très risquée (1 dé)', () {
+      for (final ai in [const CautiousAi(), const BalancedAi(), const AggressiveAi()]) {
+        expect(
+          ai.decideAcceptInheritedHand(
+            diceCount: 1,
+            extendedValues: const {},
+            inheritedScore: 300,
+            currentTotalScore: 0,
+          ),
+          isTrue,
+        );
+      }
+    });
+
+    // 1 dé restant, valeur 3 déjà étendue -> 50% de risque de craquer :
+    // situation intermédiaire qui différencie les trois profils (comme pour
+    // decideContinue), cette fois à un score déjà entamé.
+    test('à score non nul, prudent refuse une main à 50% de risque', () {
+      expect(
+        const CautiousAi().decideAcceptInheritedHand(
+          diceCount: 1,
+          extendedValues: const {3},
+          inheritedScore: 300,
+          currentTotalScore: 1000,
+        ),
+        isFalse,
+      );
+    });
+
+    test('à score non nul, équilibré refuse une main à 50% de risque', () {
+      expect(
+        const BalancedAi().decideAcceptInheritedHand(
+          diceCount: 1,
+          extendedValues: const {3},
+          inheritedScore: 300,
+          currentTotalScore: 1000,
+        ),
+        isFalse,
+      );
+    });
+
+    test('à score non nul, agressif accepte une main à 50% de risque', () {
+      expect(
+        const AggressiveAi().decideAcceptInheritedHand(
+          diceCount: 1,
+          extendedValues: const {3},
+          inheritedScore: 300,
+          currentTotalScore: 1000,
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('decideDeclineFives : garde toujours au moins un dé marquant', () {
     final state = TurnState.initial(5);
 

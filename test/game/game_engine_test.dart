@@ -200,6 +200,23 @@ void main() {
     );
     final result = engine.applyKeep();
     expect(result.activeTurn!.busted, isTrue);
+    // La décision de garde a déjà été appliquée avant la détection du
+    // dépassement : il n'y a donc plus de lancer en attente à ce stade (l'UI
+    // doit gérer ce cas sans planter, voir game_flow_test.dart).
+    expect(result.activeTurn!.pendingRoll, isNull);
+  });
+
+  test('inheritedHandExceedsWinningScore détecte qu\'une reprise dépasserait déjà 10000', () {
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9700, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 700, // 9700 + 700 = 10400 > 10000
+    );
+    expect(engine.inheritedHandExceedsWinningScore, isTrue);
+
+    final safer = engine.copyWith(inheritedScore: 200); // 9700 + 200 = 9900 <= 10000
+    expect(safer.inheritedHandExceedsWinningScore, isFalse);
   });
 
   test('atteindre exactement 10000 déclenche un tour final pour les autres joueurs '

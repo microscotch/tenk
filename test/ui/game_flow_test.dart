@@ -68,6 +68,90 @@ void main() {
     expect(after.players[0].totalScore, 0, reason: 'le craque ne doit pas changer le score déjà acquis');
   });
 
+  testWidgets(
+      'un craque par dépassement de 10000 (sans lancer en attente) ne plante pas et sanctionne le joueur',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A a 9900 points ; la décision de garde qui vient d'être appliquée
+    // ajoute 200 points, détectés en trop par GameEngine.applyKeep : le tour
+    // est marqué craqué SANS lancer en attente (contrairement à un craque
+    // classique où aucun dé ne marque, qui garde le lancer pour l'afficher).
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9900, hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(
+        diceToRoll: 3,
+        bankedScore: 200,
+        busted: true,
+        hasRolledThisTurn: true,
+        keptDiceThisTurn: [
+          KeptDie(value: 1, points: 100, isExtended: false),
+          KeptDie(value: 1, points: 100, isExtended: false),
+        ],
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    // Pas de lancer à animer pour ce type de craque : révélation immédiate.
+    await tester.pump();
+
+    expect(tester.takeException(), isNull, reason: 'ne doit pas planter faute de lancer en attente');
+    expect(find.text('Craqué !'), findsOneWidget);
+
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    final after = container.read(gameProvider)!;
+    expect(after.currentPlayerIndex, 1, reason: 'la main doit passer au joueur B');
+    expect(after.players[0].hasTiret, isTrue, reason: 'le craque doit marquer un tiret sur A');
+    expect(after.players[0].totalScore, 9900, reason: 'le craque ne doit pas changer le score déjà acquis');
+    expect(after.nextTurnDice, 5, reason: 'un craque ne transmet jamais de main héritée au joueur suivant');
+    expect(after.inheritedScore, 0);
+  });
+
+  testWidgets('main héritée qui dépasserait déjà 10000 : "Continuer" n\'est pas proposé', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A a 9700 points, le tour précédent laisse un score hérité de 700 :
+    // 9700 + 700 = 10400 > 10000, reprendre cette main ne pourrait plus
+    // jamais aboutir à un banquage réussi.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9700, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 700,
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Continuer avec'), findsNothing,
+        reason: 'reprendre cette main garantirait un dépassement de 10000');
+    expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
+    expect(find.textContaining('dépasserait déjà 10000'), findsOneWidget);
+  });
+
   testWidgets('un second craque barre le score : le tiret disparaît et le score retombe', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

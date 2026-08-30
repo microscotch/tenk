@@ -105,7 +105,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// lancer des dés est terminée (résultat visible), pas dès que le craque
   /// est connu côté moteur : sinon le suspense du lancer est gâché.
   static const _bustRevealDelay = Duration(milliseconds: 700);
-  RollAnalysis? _bustAnalysisBeingRevealed;
+  Object? _bustKeyBeingRevealed;
   bool _bustRevealed = false;
   Timer? _bustRevealTimer;
 
@@ -129,15 +129,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   /// Programme la révélation du message "Craqué !" une fois l'animation de
-  /// lancer des dés terminée pour ce lancer précis.
+  /// lancer des dés terminée pour ce lancer précis. Cas particulier : un
+  /// craque par dépassement de 10000 (déclenché dans [GameEngine.applyKeep]
+  /// après une décision de garde déjà appliquée) n'a plus de lancer en
+  /// attente à animer — rien à cacher, la révélation est immédiate.
   void _scheduleBustRevealIfNeeded(GameEngine? engine) {
     final turn = engine?.activeTurn;
-    if (turn == null || !turn.busted || turn.pendingRoll == null) return;
-    final analysis = turn.pendingRoll!;
-    if (_bustAnalysisBeingRevealed == analysis) return;
-    _bustAnalysisBeingRevealed = analysis;
+    if (turn == null || !turn.busted) return;
+
+    // Clé d'identité du craque en cours : le lancer en attente s'il y en a
+    // un, sinon l'état de tour lui-même (craque par dépassement de 10000,
+    // déclenché dans [GameEngine.applyKeep] après une décision de garde déjà
+    // appliquée — pas de lancer à animer, donc rien à cacher).
+    final key = turn.pendingRoll ?? turn;
+    if (_bustKeyBeingRevealed == key) return;
+    _bustKeyBeingRevealed = key;
     _bustRevealed = false;
     _bustRevealTimer?.cancel();
+
+    if (turn.pendingRoll == null) {
+      SoundEffects.instance.playBust();
+      setState(() => _bustRevealed = true);
+      return;
+    }
+
     _bustRevealTimer = Timer(_bustRevealDelay, () {
       if (!mounted) return;
       SoundEffects.instance.playBust();
@@ -363,6 +378,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Widget _buildHandChoiceView(GameEngine engine) {
+    final canContinue = !engine.inheritedHandExceedsWinningScore;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -387,10 +403,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        FilledButton(
-          onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: false),
-          child: Text('Continuer avec ${engine.nextTurnDice} dé(s)'),
-        ),
+        if (canContinue)
+          FilledButton(
+            onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: false),
+            child: Text('Continuer avec ${engine.nextTurnDice} dé(s)'),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Reprendre cette main dépasserait déjà 10000 : impossible de banquer.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+          ),
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: true),
@@ -414,17 +440,26 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   Widget _buildBustedView(TurnState turn) {
     // Le résultat n'est révélé qu'une fois l'animation de lancer des dés
     // terminée (cf. _scheduleBustRevealIfNeeded) : le suspense du lancer ne
-    // doit pas être gâché par un message qui s'affiche trop tôt.
-    final revealed = _bustRevealed && _bustAnalysisBeingRevealed == turn.pendingRoll;
+    // doit pas être gâché par un message qui s'affiche trop tôt. Un craque
+    // par dépassement de 10000 n'a pas de lancer en attente (la décision de
+    // garde a déjà été appliquée) : on affiche les dés gardés ce tour à la
+    // place, et la révélation est immédiate (rien à animer).
+    final key = turn.pendingRoll ?? turn;
+    final revealed = _bustRevealed && _bustKeyBeingRevealed == key;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _diceRow(turn.pendingRoll!, 0),
+        if (turn.pendingRoll != null) _diceRow(turn.pendingRoll!, 0) else _keptDiceRow(turn),
         const SizedBox(height: 16),
         if (!revealed)
           const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
         else ...[
           const Text('Craqué !', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
+          if (turn.pendingRoll == null)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text('Ce lancer ferait dépasser 10000.', style: TextStyle(color: Colors.orange)),
+            ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),

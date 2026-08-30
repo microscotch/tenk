@@ -62,6 +62,20 @@ class CautiousAi implements AiStrategy {
   }) {
     return bustProbability(state.diceToRoll, state.extendedValues) <= 0.25;
   }
+
+  @override
+  bool decideAcceptInheritedHand({
+    required int diceCount,
+    required Set<int> extendedValues,
+    required int inheritedScore,
+    required int currentTotalScore,
+  }) {
+    // À 0, aucune perte possible à tenter la reprise : la reprise est
+    // toujours acceptée. Sinon, seulement si le risque de craquer sur ce
+    // premier lancer reste dans la marge habituelle du profil.
+    if (currentTotalScore == 0) return true;
+    return bustProbability(diceCount, extendedValues) <= 0.25;
+  }
 }
 
 /// Équilibré : rejette un 5 isolé seulement si cela laisse un lot d'au moins
@@ -86,6 +100,17 @@ class BalancedAi implements AiStrategy {
   }) {
     return bustProbability(state.diceToRoll, state.extendedValues) <= 0.45;
   }
+
+  @override
+  bool decideAcceptInheritedHand({
+    required int diceCount,
+    required Set<int> extendedValues,
+    required int inheritedScore,
+    required int currentTotalScore,
+  }) {
+    if (currentTotalScore == 0) return true;
+    return bustProbability(diceCount, extendedValues) <= 0.45;
+  }
 }
 
 /// Agressif : rejette systématiquement les 5 isolés dès que possible pour
@@ -108,5 +133,16 @@ class AggressiveAi implements AiStrategy {
     required int currentTotalScore,
   }) {
     return bustProbability(state.diceToRoll, state.extendedValues) <= 0.65;
+  }
+
+  @override
+  bool decideAcceptInheritedHand({
+    required int diceCount,
+    required Set<int> extendedValues,
+    required int inheritedScore,
+    required int currentTotalScore,
+  }) {
+    if (currentTotalScore == 0) return true;
+    return bustProbability(diceCount, extendedValues) <= 0.65;
   }
 }
