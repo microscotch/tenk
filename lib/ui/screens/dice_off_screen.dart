@@ -157,7 +157,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(notifier.nameOf(i), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text(notifier.nameOf(i), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
               const SizedBox(height: 4),
               DieWidget(value: rolls[i]!, state: DieVisualState.kept, rollToken: '$roundIndex-$i'),
             ],

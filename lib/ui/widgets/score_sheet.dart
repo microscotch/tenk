@@ -46,9 +46,9 @@ class _PlayerRow extends StatelessWidget {
               ),
               Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
               if (!player.hasEntered)
-                const Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: Text('(pas entré)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text('(pas entré)', style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
                 ),
             ],
           ),

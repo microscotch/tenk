@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/ai/ai_profiles.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../widgets/app_title.dart';
 import 'dice_off_screen.dart';
 
 enum _Mode { passAndPlay, soloVsAi }
@@ -73,7 +74,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Le 10000')),
+      appBar: AppBar(title: const AppTitle()),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

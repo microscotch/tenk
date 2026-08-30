@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'ui/screens/setup_screen.dart';
+import 'ui/theme.dart';
 
 void main() {
   runApp(const ProviderScope(child: Le10000App()));
@@ -14,7 +15,7 @@ class Le10000App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Le 10000',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.red)),
+      theme: buildAppTheme(),
       home: const SetupScreen(),
     );
   }

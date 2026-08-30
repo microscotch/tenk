@@ -59,11 +59,12 @@ class _ScoreChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: entry.isBarred ? Colors.red.shade50 : Colors.grey.shade100,
-        border: Border.all(color: entry.isBarred ? Colors.red.shade300 : Colors.grey.shade300),
+        color: entry.isBarred ? colorScheme.errorContainer : colorScheme.surfaceContainerHighest,
+        border: Border.all(color: entry.isBarred ? colorScheme.error : colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -75,11 +76,12 @@ class _ScoreChip extends StatelessWidget {
               decoration: entry.isBarred ? TextDecoration.lineThrough : null,
               decorationThickness: 2,
               fontWeight: FontWeight.w600,
+              color: entry.isBarred ? colorScheme.onErrorContainer : colorScheme.onSurface,
             ),
           ),
           if (entry.hasTiret) ...[
             const SizedBox(width: 4),
-            Icon(Icons.remove, size: 14, color: entry.isBarred ? Colors.red.shade300 : Colors.orange),
+            Icon(Icons.remove, size: 14, color: entry.isBarred ? colorScheme.onErrorContainer : Colors.orange),
           ],
         ],
       ),

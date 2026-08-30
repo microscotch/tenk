@@ -9,6 +9,7 @@ import '../../game/player.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../state/game_providers.dart';
+import '../widgets/app_title.dart';
 import '../widgets/die_widget.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
@@ -196,7 +197,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       // garder ou de repartir avec une main pleine, avant que le tour ne
       // démarre réellement.
       return Scaffold(
-        appBar: AppBar(title: const Text('Le 10000'), actions: _scoreGridAction(engine.players)),
+        appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -221,7 +222,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final turn = engine.activeTurn!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Le 10000'), actions: _scoreGridAction(engine.players)),
+      appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -239,7 +240,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               Text('Minimum requis : ${engine.minimumForCurrentPlayer}'),
               if (turn.keptDiceThisTurn.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                const Text('Dés gardés ce tour', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text('Dés gardés ce tour', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
                 _keptDiceRow(turn),
               ],
               const SizedBox(height: 16),
@@ -420,7 +421,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         else if (!attempt.success)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_failureMessage(attempt), style: const TextStyle(color: Colors.grey)),
+            child: Text(_failureMessage(attempt), style: TextStyle(color: Colors.grey.shade400)),
           ),
         const SizedBox(height: 24),
         if (attempt.success)
