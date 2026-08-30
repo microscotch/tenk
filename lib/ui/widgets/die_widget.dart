@@ -3,18 +3,26 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 
+import 'dice3d/dice_face_texture.dart' show accentColorFor, bodyColorFor, pipColorFor, pipPositions;
+import 'dice3d/scene_die.dart';
+
 enum DieVisualState { junk, kept, declined, extended }
 
-/// Un dé rendu comme un vrai cube en 3D (6 faces, faces opposées totalisant
-/// 7, comme un dé physique).
+/// Un dé, avec ses pips peints et un état visuel (couleur de bordure).
+///
+/// Rendu comme un vrai cube 3D via flutter_scene (Impeller/Flutter GPU)
+/// quand ce backend est disponible ([Scene3DDie]) ; sinon (par ex. dans les
+/// tests widgets, qui tournent sans backend GPU) retombe sur un cube 3D
+/// dessiné à la main via Matrix4/Transform ([_TransformCubeDie]), qui donne
+/// un rendu très proche sans dépendre du GPU.
 ///
 /// Si [rollToken] est fourni et change d'un build à l'autre (par exemple la
-/// référence du [RollAnalysis] d'un nouveau lancer), le dé joue une courte
-/// animation de "lancer" : le cube tourne sur plusieurs axes puis ralentit
-/// jusqu'à s'immobiliser face à l'écran sur [value]. Un simple changement de
-/// sélection (ex: combien de 5 garder) sans nouveau lancer ne rejoue pas
-/// l'animation, tant que [rollToken] reste le même objet.
-class DieWidget extends StatefulWidget {
+/// référence du `RollAnalysis` d'un nouveau lancer), le dé joue une courte
+/// animation de "lancer" (rotation multi-axes qui ralentit puis se fixe sur
+/// [value]). Un simple changement de sélection (ex: combien de 5 garder)
+/// sans nouveau lancer ne rejoue pas l'animation, tant que [rollToken] reste
+/// le même objet.
+class DieWidget extends StatelessWidget {
   final int value;
   final DieVisualState state;
   final VoidCallback? onTap;
@@ -22,17 +30,28 @@ class DieWidget extends StatefulWidget {
 
   const DieWidget({super.key, required this.value, required this.state, this.onTap, this.rollToken});
 
-  Color get _borderColor => switch (state) {
-        DieVisualState.kept => Colors.green.shade600,
-        DieVisualState.junk => Colors.blueGrey.shade200,
-        DieVisualState.declined => Colors.orange.shade800,
-        DieVisualState.extended => Colors.red.shade600,
-      };
+  @override
+  Widget build(BuildContext context) {
+    if (Scene3DDie.isSupported) {
+      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken);
+    }
+    return _TransformCubeDie(value: value, state: state, onTap: onTap, rollToken: rollToken);
+  }
+}
 
-  Color get _faceColor => state == DieVisualState.declined ? Colors.orange.shade50 : Colors.white;
+/// Repli sans GPU : le même cube 6-faces, animé et incliné au repos comme
+/// [Scene3DDie], mais dessiné à la main via Matrix4/Transform (algorithme du
+/// peintre pour l'ordre de rendu) plutôt que par un vrai moteur de rendu 3D.
+class _TransformCubeDie extends StatefulWidget {
+  final int value;
+  final DieVisualState state;
+  final VoidCallback? onTap;
+  final Object? rollToken;
+
+  const _TransformCubeDie({required this.value, required this.state, this.onTap, this.rollToken});
 
   @override
-  State<DieWidget> createState() => _DieWidgetState();
+  State<_TransformCubeDie> createState() => _TransformCubeDieState();
 }
 
 /// Une face du cube : sa valeur, et la rotation (sans translation) qui la
@@ -57,8 +76,8 @@ Map<String, int> _faceValues(int front) {
   return {'front': front, 'back': back, 'top': top, 'bottom': bottom, 'left': left, 'right': right};
 }
 
-class _DieWidgetState extends State<DieWidget> with SingleTickerProviderStateMixin {
-  static const _size = 56.0;
+class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerProviderStateMixin {
+  static const _size = 76.0;
   static const _half = _size / 2;
   // Inclinaison de repos (dé immobile) : assez pour voir le dessus et le
   // côté du cube, pas assez pour gêner la lecture de la face avant.
@@ -87,7 +106,7 @@ class _DieWidgetState extends State<DieWidget> with SingleTickerProviderStateMix
   }
 
   @override
-  void didUpdateWidget(covariant DieWidget oldWidget) {
+  void didUpdateWidget(covariant _TransformCubeDie oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.rollToken != null && widget.rollToken != _lastRollToken) {
       _lastRollToken = widget.rollToken;
@@ -153,7 +172,7 @@ class _DieWidgetState extends State<DieWidget> with SingleTickerProviderStateMix
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.copy(face.placement)..translateByDouble(0.0, 0.0, _half, 1.0),
-                  child: _DieFace(value: face.value, borderColor: widget._borderColor, fillColor: widget._faceColor),
+                  child: _DieFace(value: face.value, state: widget.state),
                 ),
             ],
           ),
@@ -165,48 +184,30 @@ class _DieWidgetState extends State<DieWidget> with SingleTickerProviderStateMix
 
 class _DieFace extends StatelessWidget {
   final int value;
-  final Color borderColor;
-  final Color fillColor;
+  final DieVisualState state;
 
-  const _DieFace({required this.value, required this.borderColor, required this.fillColor});
+  const _DieFace({required this.value, required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final body = bodyColorFor(state);
     return Container(
-      width: _DieWidgetState._size,
-      height: _DieWidgetState._size,
+      width: _TransformCubeDieState._size,
+      height: _TransformCubeDieState._size,
       decoration: BoxDecoration(
-        color: fillColor,
-        border: Border.all(color: borderColor, width: 3),
-        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [body, Color.lerp(body, Colors.black, 0.05)!],
+        ),
+        border: Border.all(color: accentColorFor(state), width: 2.5),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(1, 1))],
       ),
-      child: CustomPaint(painter: _PipsPainter(value, borderColor), size: Size.infinite),
+      child: CustomPaint(painter: _PipsPainter(value, pipColorFor(state)), size: Size.infinite),
     );
   }
 }
-
-const Map<int, List<Offset>> _pipPositions = {
-  1: [Offset(0.5, 0.5)],
-  2: [Offset(0.25, 0.25), Offset(0.75, 0.75)],
-  3: [Offset(0.25, 0.25), Offset(0.5, 0.5), Offset(0.75, 0.75)],
-  4: [Offset(0.25, 0.25), Offset(0.75, 0.25), Offset(0.25, 0.75), Offset(0.75, 0.75)],
-  5: [
-    Offset(0.25, 0.25),
-    Offset(0.75, 0.25),
-    Offset(0.5, 0.5),
-    Offset(0.25, 0.75),
-    Offset(0.75, 0.75),
-  ],
-  6: [
-    Offset(0.25, 0.2),
-    Offset(0.75, 0.2),
-    Offset(0.25, 0.5),
-    Offset(0.75, 0.5),
-    Offset(0.25, 0.8),
-    Offset(0.75, 0.8),
-  ],
-};
 
 class _PipsPainter extends CustomPainter {
   final int value;
@@ -215,9 +216,14 @@ class _PipsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    for (final p in _pipPositions[value] ?? const []) {
-      canvas.drawCircle(Offset(p.dx * size.width, p.dy * size.height), size.width * 0.09, paint);
+    for (final p in pipPositions[value] ?? const []) {
+      final center = Offset(p.dx * size.width, p.dy * size.height);
+      final radius = size.width * 0.078;
+      canvas.drawCircle(center + Offset(size.width * 0.006, size.width * 0.01), radius,
+          Paint()..color = Colors.black.withValues(alpha: 0.2));
+      canvas.drawCircle(center, radius, Paint()..color = color);
+      canvas.drawCircle(center - Offset(radius * 0.3, radius * 0.3), radius * 0.35,
+          Paint()..color = Colors.white.withValues(alpha: 0.25));
     }
   }
 
