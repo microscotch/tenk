@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A Flutter port of "Le 10000", a regional French dice game (Farkle-like) with a specific non-standard
-ruleset. Target platform is Android; local development happens on Linux desktop (see Environment
-constraints below).
+ruleset. Target platforms are Android and iOS; local development happens on Linux desktop (see
+Environment constraints below).
 
 ## Commands
 
@@ -19,18 +19,29 @@ flutter test --plain-name "un craque affiche"  # run tests matching a name
 flutter run -d linux         # run the app locally (see below — this is the only viable local target)
 ```
 
-CI (`.github/workflows/build_apk.yaml`) runs `pub get`, `analyze`, `test`, then
-`build apk --release` on every push/PR to `main`, on an `ubuntu-latest` runner.
+CI (`.github/workflows/build_apk.yaml`) has two jobs: `build-android` (`ubuntu-latest`) runs
+`pub get`, `analyze`, `test`, then `build apk --release`; `build-ios` (`macos-latest`) runs `pub get`
+then an unsigned `build ios --release --no-codesign` (no Apple signing is configured, so this only
+proves the Xcode build compiles — it can't produce an installable IPA or run on a device/simulator).
+Both run on every push/PR to `main`.
 
-## Environment constraint: no local Android build
+## Environment constraint: no local Android or iOS build
 
-The dev machine is Raspberry Pi / Linux ARM64. Flutter itself runs fine there, but Google's Android
-build tooling (`aapt2`) is only published for x86_64, so **Android builds and emulators do not work on
-this machine**. The established workflow is:
-- Local iteration and manual verification: `flutter run -d linux` (Linux desktop target).
-- Real APK builds: pushed to GitHub and built by CI (x86_64 runner), not built locally.
+The dev machine is Raspberry Pi / Linux ARM64. Flutter itself runs fine there, but:
+- Google's Android build tooling (`aapt2`) is only published for x86_64, so **Android builds and
+  emulators do not work on this machine**.
+- iOS builds require Xcode/macOS, which don't exist on Linux at all — **iOS can't be built, run, or
+  even smoke-tested locally, only via the `build-ios` CI job** (and even there, only as an unsigned
+  compile check, not a real device/simulator run).
 
-Do not attempt `flutter build apk` or `flutter run -d android` locally — it will fail on this host.
+The established workflow is:
+- Local iteration and manual verification: `flutter run -d linux` (Linux desktop target) — the only
+  platform this machine can actually run and interact with.
+- Real Android/iOS builds: pushed to GitHub and built by CI, not built locally. Android CI verifies
+  the whole test suite too, since `flutter test` runs fine on any host; iOS CI is build-only.
+
+Do not attempt `flutter build apk`, `flutter build ios`, `flutter run -d android`, or any iOS-targeted
+command locally — they will fail on this host.
 
 ## Architecture
 
