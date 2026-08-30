@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../game/player.dart';
 
 /// Grille de score complète : pour chaque joueur, tous ses tours validés
-/// dans l'ordre, avec le tiret d'avertissement ou le barré propre à chaque
-/// ligne (et non plus seulement le score courant).
+/// dans l'ordre (du plus ancien au plus récent), avec le tiret d'avertissement
+/// ou le barré propre à chaque ligne, et la ligne courante mise en évidence.
 class ScoreGridScreen extends StatelessWidget {
   final List<Player> players;
 
@@ -40,11 +40,11 @@ class _PlayerGrid extends StatelessWidget {
           children: [
             Text(player.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [for (final entry in player.grid) _ScoreChip(entry: entry)],
-            ),
+            for (var i = 0; i < player.grid.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _ScoreRow(entry: player.grid[i], isCurrent: i == player.currentIndex),
+              ),
           ],
         ),
       ),
@@ -52,23 +52,36 @@ class _PlayerGrid extends StatelessWidget {
   }
 }
 
-class _ScoreChip extends StatelessWidget {
+class _ScoreRow extends StatelessWidget {
   final ScoreEntry entry;
+  final bool isCurrent;
 
-  const _ScoreChip({required this.entry});
+  const _ScoreRow({required this.entry, required this.isCurrent});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final backgroundColor = entry.isBarred
+        ? colorScheme.errorContainer
+        : isCurrent
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHighest;
+    final borderColor = entry.isBarred
+        ? colorScheme.error
+        : isCurrent
+            ? colorScheme.primary
+            : colorScheme.outlineVariant;
+    final textColor = entry.isBarred ? colorScheme.onErrorContainer : colorScheme.onSurface;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: entry.isBarred ? colorScheme.errorContainer : colorScheme.surfaceContainerHighest,
-        border: Border.all(color: entry.isBarred ? colorScheme.error : colorScheme.outlineVariant),
+        color: backgroundColor,
+        border: Border.all(color: borderColor, width: isCurrent ? 2 : 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '${entry.value}',
@@ -76,12 +89,16 @@ class _ScoreChip extends StatelessWidget {
               decoration: entry.isBarred ? TextDecoration.lineThrough : null,
               decorationThickness: 2,
               fontWeight: FontWeight.w600,
-              color: entry.isBarred ? colorScheme.onErrorContainer : colorScheme.onSurface,
+              color: textColor,
             ),
           ),
           if (entry.hasTiret) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Icon(Icons.remove, size: 14, color: entry.isBarred ? colorScheme.onErrorContainer : Colors.orange),
+          ],
+          if (isCurrent) ...[
+            const Spacer(),
+            Icon(Icons.play_arrow, size: 16, color: colorScheme.primary),
           ],
         ],
       ),

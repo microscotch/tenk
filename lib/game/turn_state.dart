@@ -198,12 +198,14 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
 
   // La règle d'extension n'est active que tant qu'il reste des dés à jouer
   // dans la main en cours : un "dés chauds" (plus aucun dé restant) repart
-  // sur un jeu de 5 dés neufs, ce qui efface les valeurs étendues.
+  // sur un jeu de 5 dés neufs, ce qui efface les valeurs étendues. Idem pour
+  // l'affichage des dés gardés : il ne doit refléter que la main en cours,
+  // pas les mains précédentes du même tour.
   return state.copyWith(
     diceToRoll: hotDice ? 5 : diceRemaining,
     bankedScore: state.bankedScore + roundPoints,
     extendedValues: hotDice ? const {} : newExtended,
-    keptDiceThisTurn: [...state.keptDiceThisTurn, ..._keptDiceFrom(analysis, declineFivesCount)],
+    keptDiceThisTurn: hotDice ? const [] : [...state.keptDiceThisTurn, ..._keptDiceFrom(analysis, declineFivesCount)],
     clearPendingRoll: true,
     mustContinue: hotDice,
   );

@@ -52,6 +52,21 @@ void main() {
     expect(p.totalScore, 0);
   });
 
+  test('un barrage réutilise la ligne existante au lieu d\'en dupliquer une nouvelle', () {
+    var p = Player(name: 'A').applySuccessfulTurn(700); // grid: [0, 700]
+    p = p.applyBust(); // tiret sur 700
+    p = p.applySuccessfulTurn(300); // grid: [0, 700(tiret), 1000]
+    expect(p.grid, hasLength(3));
+
+    p = p.applyBust(); // tiret sur 1000
+    p = p.applyBust(); // 1000 barré -> retombe sur la ligne 700 déjà existante
+    expect(p.grid, hasLength(3), reason: 'aucune ligne dupliquée pour le retour à 700');
+    expect(p.totalScore, 700);
+    expect(p.currentIndex, 1);
+    expect(p.grid[1].value, 700);
+    expect(p.grid[2].isBarred, isTrue, reason: 'la ligne 1000 garde son statut barré dans l\'historique');
+  });
+
   test('un retour à 0 (barrage) remet l\'entrée en jeu à zéro : il faut de nouveau 500', () {
     var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700, hasEntered devient true
     expect(p.hasEntered, isTrue);

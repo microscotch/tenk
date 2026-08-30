@@ -9,20 +9,23 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/score_grid_screen.dart';
 
 void main() {
-  testWidgets('affiche chaque ligne de la grille avec son tiret ou son barré propre', (tester) async {
-    var a = Player(name: 'A').applySuccessfulTurn(500); // ligne 0 : 500
+  testWidgets('affiche chaque ligne de la grille avec son tiret ou son barré propre, sans doublon', (tester) async {
+    var a = Player(name: 'A').applySuccessfulTurn(500); // ligne : 500
     a = a.applyBust(); // tiret sur 500
-    a = a.applySuccessfulTurn(300); // ligne 1 : 800, sans tiret
+    a = a.applySuccessfulTurn(300); // nouvelle ligne : 800, sans tiret
     a = a.applyBust(); // tiret sur 800
-    a = a.applyBust(); // 800 barré, retour à 500 (nouvelle ligne propre)
+    a = a.applyBust(); // 800 barré, retombe sur la ligne 500 déjà existante
 
     await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: [a])));
     await tester.pumpAndSettle();
 
-    // Grille attendue : [500(tiret), 800(tiret, barré), 500(propre)]
-    expect(find.text('500'), findsNWidgets(2));
+    // Grille attendue : [0, 500(tiret, courante), 800(tiret, barré)] — pas de
+    // ligne dupliquée pour le retour à 500.
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('500'), findsOneWidget);
     expect(find.text('800'), findsOneWidget);
     expect(find.byIcon(Icons.remove), findsNWidgets(2)); // les deux lignes ayant porté un tiret
+    expect(find.byIcon(Icons.play_arrow), findsOneWidget, reason: 'une seule ligne courante mise en évidence');
 
     final texts = tester.widgetList<Text>(find.text('800'));
     expect(texts.single.style?.decoration, TextDecoration.lineThrough);

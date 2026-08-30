@@ -62,6 +62,16 @@ DieVisualState _consume(Map<int, int> remaining, int value, DieVisualState resul
   return result;
 }
 
+/// Vrai s'il existe un choix réel sur le nombre de 5 à garder (plusieurs
+/// valeurs possibles), pas juste une case techniquement "déclinable" dont la
+/// seule valeur légale serait de tout garder.
+bool _hasRealChoice(RollAnalysis analysis) {
+  final fives = analysis.declinableFives;
+  if (fives == null || !analysis.canDeclineFives) return false;
+  final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
+  return fives.diceCount > minKeep;
+}
+
 /// Points que rapporterait ce lancer si le joueur valide sa sélection
 /// actuelle (combien de 5 garder).
 int _previewPoints(RollAnalysis analysis, int selectedKeepCount) {
@@ -132,8 +142,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     if (turn.pendingRoll != null) {
       final analysis = turn.pendingRoll!;
-      final canChoose = analysis.declinableFives != null && analysis.canDeclineFives;
-      if (canChoose) return;
+      if (_hasRealChoice(analysis)) return;
       _autoAdvanceTimer?.cancel();
       _autoAdvanceTimer = Timer(const Duration(milliseconds: 500), () {
         if (!mounted) return;
@@ -236,7 +245,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   child: Text('Tour final : un joueur a atteint 10000 !',
                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
                 ),
-              Text('Score du tour : ${turn.bankedScore}', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Score du tour : ${!isAiTurn && turn.pendingRoll != null ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep) : turn.bankedScore}',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               Text('Minimum requis : ${engine.minimumForCurrentPlayer}'),
               if (turn.keptDiceThisTurn.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -340,7 +352,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   Widget _buildPendingRollView(GameEngine engine, TurnState turn) {
     final analysis = turn.pendingRoll!;
     final fives = analysis.declinableFives;
-    final canChoose = fives != null && analysis.canDeclineFives;
+    final canChoose = _hasRealChoice(analysis);
     final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
     final declineCount = (fives?.diceCount ?? 0) - _selectedKeep;
 
@@ -364,7 +376,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           Wrap(
             spacing: 8,
             children: [
-              for (var i = minKeep; i <= fives.diceCount; i++)
+              for (var i = minKeep; i <= fives!.diceCount; i++)
                 ChoiceChip(
                   label: Text('$i'),
                   selected: _selectedKeep == i,

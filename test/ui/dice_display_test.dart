@@ -106,7 +106,10 @@ void main() {
         child: const MaterialApp(home: GameScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    // Un seul pump (pas pumpAndSettle) : ce lancer n'a aucun 5 à garder, donc
+    // aucun choix réel — l'avancement automatique programme un lancer réel
+    // 500ms plus tard, qui remplacerait ce lancer scripté avant l'assertion.
+    await tester.pump();
 
     final dice = tester.widgetList<DieWidget>(find.byType(DieWidget)).toList();
     expect(dice.firstWhere((d) => d.value == 2).state, DieVisualState.extended,

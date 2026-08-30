@@ -196,7 +196,7 @@ void main() {
       expect(state.keptDiceThisTurn.single.isExtended, isFalse);
     });
 
-    test('persiste à travers un reset de dés chauds', () {
+    test('est effacé par un reset de dés chauds : ne reflète que la main en cours', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 1, 3, 5]));
       state = applyKeepDecision(state, declineFivesCount: 1); // garde le brelan d'as, relance le 5
       expect(state.keptDiceThisTurn, hasLength(3));
@@ -204,7 +204,8 @@ void main() {
       state = rollTurn(state, random: _QueueRandom([5, 5]));
       state = applyKeepDecision(state); // les 5 dés du tour sont maintenant tous gardés -> dés chauds
       expect(state.mustContinue, isTrue);
-      expect(state.keptDiceThisTurn, hasLength(5), reason: 'les dés gardés ne sont pas effacés par les dés chauds');
+      expect(state.keptDiceThisTurn, isEmpty,
+          reason: 'les dés chauds démarrent une nouvelle main : l\'affichage ne doit plus montrer les anciens dés');
     });
   });
 
