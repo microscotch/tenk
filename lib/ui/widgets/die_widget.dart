@@ -81,7 +81,9 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
   static const _half = _size / 2;
   // Inclinaison de repos (dé immobile) : assez pour voir le dessus et le
   // côté du cube, pas assez pour gêner la lecture de la face avant.
-  static const _restTiltX = -0.32;
+  // Vue plongeante (impression de regarder le dé du dessus), cohérente avec
+  // le rendu 3D réel de Scene3DDie.
+  static const _restTiltX = -1.15;
   static const _restTiltY = 0.42;
 
   late final AnimationController _controller;

@@ -1,9 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/ai/ai_profiles.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../ai_character_names.dart';
 import '../widgets/app_title.dart';
 import 'dice_off_screen.dart';
 
@@ -24,7 +27,32 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   /// Difficulté partagée par tous les bots de la partie.
   AiDifficulty _aiDifficulty = AiDifficulty.equilibre;
 
+  final _random = math.Random();
+
   bool get _hasAnyBot => _isBot.any((b) => b);
+
+  /// Choisit un nom de personnage du Guide du routard galactique non déjà
+  /// utilisé par un autre joueur IA de la partie, si possible.
+  String _randomAiName() {
+    final used = {for (var i = 0; i < _isBot.length; i++) if (_isBot[i]) _names[i].text};
+    final available = kAiCharacterNames.where((n) => !used.contains(n)).toList();
+    final pool = available.isNotEmpty ? available : kAiCharacterNames;
+    return pool[_random.nextInt(pool.length)];
+  }
+
+  /// Bascule le statut IA du joueur [i] : un nom de personnage lui est
+  /// attribué dynamiquement dès qu'il devient IA, et le nom par défaut est
+  /// restauré s'il redevient humain.
+  void _toggleBot(int i, bool isBot) {
+    setState(() {
+      _isBot[i] = isBot;
+      if (isBot) {
+        _names[i].text = _randomAiName();
+      } else if (kAiCharacterNames.contains(_names[i].text)) {
+        _names[i].text = 'Joueur ${i + 1}';
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -91,7 +119,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         label: const Text('IA'),
                         avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,
                         selected: _isBot[i],
-                        onSelected: (selected) => setState(() => _isBot[i] = selected),
+                        onSelected: (selected) => _toggleBot(i, selected),
                       ),
                     ],
                   ),

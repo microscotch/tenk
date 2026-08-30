@@ -9,6 +9,11 @@ enum BankFailureReason {
 
   /// Le joueur vient de faire un "dés chauds" : il est obligé de relancer.
   mustContinueHotDice,
+
+  /// Aucun lancer n'a encore eu lieu ce tour-ci (début de tour, y compris sur
+  /// une main héritée dont le score de base atteindrait déjà le minimum) :
+  /// il faut d'abord lancer les dés avant de pouvoir s'arrêter.
+  notRolledYet,
 }
 
 /// Résultat d'une tentative de banquer (valider) le score du tour en cours.

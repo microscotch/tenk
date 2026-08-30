@@ -242,5 +242,14 @@ void main() {
       expect(attempt.success, isTrue);
       expect(attempt.bankedPoints, 200);
     });
+
+    test('échoue si aucun lancer n\'a encore eu lieu ce tour, même avec un score hérité suffisant', () {
+      // Simule un tour qui démarre sur une main héritée : le score hérité
+      // dépasse déjà le minimum, mais aucun dé n'a été relancé cette fois-ci.
+      const state = TurnState(diceToRoll: 3, bankedScore: 500);
+      final attempt = tryBank(state, minimumRequired: 200);
+      expect(attempt.success, isFalse);
+      expect(attempt.reason, BankFailureReason.notRolledYet);
+    });
   });
 }

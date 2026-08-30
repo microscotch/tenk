@@ -9,6 +9,8 @@ import '../../game/player.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../state/game_providers.dart';
+import '../auto_advance.dart';
+import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/die_widget.dart';
 import '../widgets/score_sheet.dart';
@@ -95,8 +97,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
   int _selectedKeep = 0;
 
-  Timer? _aiTimer;
-  Timer? _autoAdvanceTimer;
+  Timer? _pendingTimer;
+  VoidCallback? _pendingAction;
+
+  /// Le message "Craqué !" ne doit apparaître qu'une fois que l'animation de
+  /// lancer des dés est terminée (résultat visible), pas dès que le craque
+  /// est connu côté moteur : sinon le suspense du lancer est gâché.
+  static const _bustRevealDelay = Duration(milliseconds: 700);
+  RollAnalysis? _bustAnalysisBeingRevealed;
+  bool _bustRevealed = false;
+  Timer? _bustRevealTimer;
 
   @override
   void initState() {
@@ -106,14 +116,63 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scheduleAiIfNeeded();
       _scheduleAutoAdvanceIfNeeded();
+      _scheduleBustRevealIfNeeded(ref.read(gameProvider));
     });
   }
 
   @override
   void dispose() {
-    _aiTimer?.cancel();
-    _autoAdvanceTimer?.cancel();
+    _pendingTimer?.cancel();
+    _bustRevealTimer?.cancel();
     super.dispose();
+  }
+
+  /// Programme la révélation du message "Craqué !" une fois l'animation de
+  /// lancer des dés terminée pour ce lancer précis.
+  void _scheduleBustRevealIfNeeded(GameEngine? engine) {
+    final turn = engine?.activeTurn;
+    if (turn == null || !turn.busted || turn.pendingRoll == null) return;
+    final analysis = turn.pendingRoll!;
+    if (_bustAnalysisBeingRevealed == analysis) return;
+    _bustAnalysisBeingRevealed = analysis;
+    _bustRevealed = false;
+    _bustRevealTimer?.cancel();
+    _bustRevealTimer = Timer(_bustRevealDelay, () {
+      if (!mounted) return;
+      SoundEffects.instance.playBust();
+      setState(() => _bustRevealed = true);
+    });
+  }
+
+  /// Programme [action] pour s'exécuter seule après [kAutoAdvanceDelay],
+  /// sauf si l'utilisateur clique entre-temps n'importe où sur l'écran (voir
+  /// [_skipPendingAction]), auquel cas elle s'exécute immédiatement.
+  void _scheduleAutoAction(VoidCallback action) {
+    _pendingTimer?.cancel();
+    _pendingAction = action;
+    _pendingTimer = Timer(kAutoAdvanceDelay, () {
+      if (!mounted) return;
+      _pendingAction = null;
+      action();
+    });
+  }
+
+  void _cancelAutoAction() {
+    _pendingTimer?.cancel();
+    _pendingTimer = null;
+    _pendingAction = null;
+  }
+
+  /// Exécute immédiatement l'action automatique en attente, si il y en a
+  /// une : appelé quand l'utilisateur clique sur l'écran pour sauter le
+  /// délai de temporisation.
+  void _skipPendingAction() {
+    final action = _pendingAction;
+    if (action == null) return;
+    _pendingTimer?.cancel();
+    _pendingTimer = null;
+    _pendingAction = null;
+    action();
   }
 
   void _scheduleAiIfNeeded() {
@@ -121,11 +180,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
     if (!notifier.isAiPlayer(engine.currentPlayerIndex)) return;
-    _aiTimer?.cancel();
-    _aiTimer = Timer(const Duration(milliseconds: 650), () {
-      if (!mounted) return;
-      ref.read(gameProvider.notifier).playAiTurnStep();
-    });
+    _scheduleAutoAction(() => ref.read(gameProvider.notifier).playAiTurnStep());
   }
 
   /// Fait avancer automatiquement le tour d'un joueur humain quand il n'y a
@@ -136,16 +191,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
-    if (notifier.isAiPlayer(engine.currentPlayerIndex)) return;
+    if (notifier.isAiPlayer(engine.currentPlayerIndex)) return; // géré par _scheduleAiIfNeeded
     final turn = engine.activeTurn;
-    if (turn == null || turn.busted) return;
+    if (turn == null || turn.busted) {
+      _cancelAutoAction();
+      return;
+    }
 
     if (turn.pendingRoll != null) {
       final analysis = turn.pendingRoll!;
-      if (_hasRealChoice(analysis)) return;
-      _autoAdvanceTimer?.cancel();
-      _autoAdvanceTimer = Timer(const Duration(milliseconds: 500), () {
-        if (!mounted) return;
+      if (_hasRealChoice(analysis)) {
+        _cancelAutoAction();
+        return;
+      }
+      _scheduleAutoAction(() {
         if (ref.read(gameProvider)?.activeTurn?.pendingRoll != analysis) return;
         ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0);
       });
@@ -153,10 +212,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
 
     final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
-    if (attempt.success) return;
-    _autoAdvanceTimer?.cancel();
-    _autoAdvanceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
+    if (attempt.success) {
+      _cancelAutoAction();
+      return;
+    }
+    _scheduleAutoAction(() {
       final currentTurn = ref.read(gameProvider)?.activeTurn;
       if (currentTurn != turn) return;
       ref.read(gameProvider.notifier).roll();
@@ -168,6 +228,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     ref.listen<GameEngine?>(gameProvider, (previous, next) {
       if (next == null) return;
       if (next.gameOver) {
+        SoundEffects.instance.playVictory();
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => GameOverScreen(players: next.players, winnerIndex: next.winnerIndex!),
         ));
@@ -184,11 +245,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       }
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
+        if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
         // Par défaut, on garde tous les 5 déclinables.
         _selectedKeep = newPendingRoll?.declinableFives?.diceCount ?? 0;
       }
       _scheduleAiIfNeeded();
       _scheduleAutoAdvanceIfNeeded();
+      _scheduleBustRevealIfNeeded(next);
     });
 
     final engine = ref.watch(gameProvider);
@@ -207,21 +270,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       // démarre réellement.
       return Scaffold(
         appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Center(
-                      child: isAiTurn ? const Text('L\'IA réfléchit...') : _buildHandChoiceView(engine),
+        body: GestureDetector(
+          onTap: _skipPendingAction,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Center(
+                        child: isAiTurn ? const Text('L\'IA réfléchit...') : _buildHandChoiceView(engine),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -232,44 +298,47 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
-              const SizedBox(height: 16),
-              if (engine.isInFinalRound)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: Text('Tour final : un joueur a atteint 10000 !',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+      body: GestureDetector(
+        onTap: _skipPendingAction,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
+                const SizedBox(height: 16),
+                if (engine.isInFinalRound)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('Tour final : un joueur a atteint 10000 !',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+                  ),
+                Text(
+                  'Score du tour : ${!isAiTurn && turn.pendingRoll != null ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep) : turn.bankedScore}',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-              Text(
-                'Score du tour : ${!isAiTurn && turn.pendingRoll != null ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep) : turn.bankedScore}',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              Text('Minimum requis : ${engine.minimumForCurrentPlayer}'),
-              if (turn.keptDiceThisTurn.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text('Dés gardés ce tour', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-                _keptDiceRow(turn),
-              ],
-              const SizedBox(height: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Center(
-                    child: isAiTurn
-                        ? _buildAiTurnView(turn)
-                        : (turn.busted
-                            ? _buildBustedView(turn)
-                            : (turn.pendingRoll != null
-                                ? _buildPendingRollView(engine, turn)
-                                : _buildIdleView(engine, turn))),
+                Text('Minimum requis : ${engine.minimumForCurrentPlayer}'),
+                if (turn.keptDiceThisTurn.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text('Dés gardés ce tour', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+                  _keptDiceRow(turn),
+                ],
+                const SizedBox(height: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Center(
+                      child: isAiTurn
+                          ? _buildAiTurnView(turn)
+                          : (turn.busted
+                              ? _buildBustedView(turn)
+                              : (turn.pendingRoll != null
+                                  ? _buildPendingRollView(engine, turn)
+                                  : _buildIdleView(engine, turn))),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -334,17 +403,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Widget _buildBustedView(TurnState turn) {
+    // Le résultat n'est révélé qu'une fois l'animation de lancer des dés
+    // terminée (cf. _scheduleBustRevealIfNeeded) : le suspense du lancer ne
+    // doit pas être gâché par un message qui s'affiche trop tôt.
+    final revealed = _bustRevealed && _bustAnalysisBeingRevealed == turn.pendingRoll;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _diceRow(turn.pendingRoll!, 0),
         const SizedBox(height: 16),
-        const Text('Craqué !', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
-          child: const Text('Continuer'),
-        ),
+        if (!revealed)
+          const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
+        else ...[
+          const Text('Craqué !', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
+            child: const Text('Continuer'),
+          ),
+        ],
       ],
     );
   }
@@ -465,6 +542,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         return 'Interdit de s\'arrêter sur un score finissant par 50.';
       case BankFailureReason.mustContinueHotDice:
         return 'Vous devez relancer.';
+      case BankFailureReason.notRolledYet:
+        return 'Vous devez lancer les dés avant de pouvoir vous arrêter.';
       case null:
         return '';
     }

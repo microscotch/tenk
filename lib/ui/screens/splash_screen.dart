@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../auto_advance.dart';
+import '../sound_effects.dart';
 import '../widgets/die_widget.dart';
 import 'setup_screen.dart';
 
@@ -12,7 +14,7 @@ import 'setup_screen.dart';
 class SplashScreen extends StatefulWidget {
   final Duration displayDuration;
 
-  const SplashScreen({super.key, this.displayDuration = const Duration(seconds: 5)});
+  const SplashScreen({super.key, this.displayDuration = kAutoAdvanceDelay});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -48,6 +50,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() => _diceRollToken = Object()));
 
+    SoundEffects.instance.playSplash();
     _navigateTimer = Timer(widget.displayDuration, _goToSetup);
   }
 

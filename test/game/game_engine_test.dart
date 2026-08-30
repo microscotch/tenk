@@ -21,6 +21,7 @@ void main() {
         diceToRoll: 3,
         bankedScore: 500,
         keptDiceThisTurn: [KeptDie(value: 5, points: 500 ~/ 2, isExtended: false)],
+        hasRolledThisTurn: true,
       ),
     );
     final (after, attempt) = engine.bank();
@@ -43,6 +44,7 @@ void main() {
         bankedScore: 500,
         extendedValues: {5},
         keptDiceThisTurn: [KeptDie(value: 5, points: 500 ~/ 2, isExtended: false)],
+        hasRolledThisTurn: true,
       ),
     );
     final (after, _) = engine.bank();
@@ -156,7 +158,7 @@ void main() {
           Player(name: 'B', totalScore: 1500, hasEntered: true),
         ],
         currentPlayerIndex: 1,
-        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B: 1500 -> 2000
+        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500, hasRolledThisTurn: true), // B: 1500 -> 2000
       );
 
       final (after, attempt) = engine.bank();
@@ -175,7 +177,7 @@ void main() {
           Player(name: 'B', totalScore: 1500, hasEntered: true),
         ],
         currentPlayerIndex: 1,
-        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B: 1500 -> 2000
+        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500, hasRolledThisTurn: true), // B: 1500 -> 2000
       );
 
       final (after, _) = engine.bank();
@@ -209,7 +211,7 @@ void main() {
         Player(name: 'B', totalScore: 3000, hasEntered: true),
         Player(name: 'C', totalScore: 3000, hasEntered: true),
       ],
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200),
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true),
     );
     var (after, attempt) = engine.bank();
     expect(attempt.success, isTrue);
@@ -228,7 +230,7 @@ void main() {
 
     // C joue son tour final mais n'égale pas 10000 (pas de collision).
     after = after.startTurn().copyWith(
-          activeTurn: const TurnState(diceToRoll: 3, bankedScore: 6000),
+          activeTurn: const TurnState(diceToRoll: 3, bankedScore: 6000, hasRolledThisTurn: true),
         );
     final (finalEngine, finalAttempt) = after.bank();
     expect(finalAttempt.success, isTrue);
@@ -245,7 +247,7 @@ void main() {
         Player(name: 'B', totalScore: 3000, hasEntered: true),
         Player(name: 'C', totalScore: 3000, hasEntered: true),
       ],
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200), // A : 9800 -> 10000
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true), // A : 9800 -> 10000
     );
     var (after, attempt) = engine.bank();
     expect(attempt.success, isTrue);
@@ -264,7 +266,7 @@ void main() {
     // d'avant son tour gagnant), devient le nouveau détenteur, et un tour
     // final complet redémarre (2 tours restants, pour A et B).
     after = after.startTurn().copyWith(
-          activeTurn: const TurnState(diceToRoll: 3, bankedScore: 7000), // C : 3000 -> 10000
+          activeTurn: const TurnState(diceToRoll: 3, bankedScore: 7000, hasRolledThisTurn: true), // C : 3000 -> 10000
         );
     final (afterCollision, collisionAttempt) = after.bank();
     expect(collisionAttempt.success, isTrue);
@@ -286,7 +288,7 @@ void main() {
 
     // B valide un tour qui n'égale pas 10000 : le tour final se termine, C gagne.
     end = end.startTurn().copyWith(
-          activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200), // B : 3000 -> 3200
+          activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true), // B : 3000 -> 3200
         );
     final (finalEngine, finalAttempt) = end.bank();
     expect(finalAttempt.success, isTrue);

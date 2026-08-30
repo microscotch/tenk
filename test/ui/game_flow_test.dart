@@ -7,6 +7,7 @@ import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/ui/auto_advance.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
@@ -40,6 +41,12 @@ void main() {
         child: const MaterialApp(home: GameScreen()),
       ),
     );
+    await tester.pump();
+
+    // Le message ne doit pas gâcher le suspense : il n'apparaît pas tant que
+    // l'animation de lancer des dés n'est pas terminée.
+    expect(find.text('Craqué !'), findsNothing);
+
     await tester.pumpAndSettle();
 
     expect(find.text('Craqué !'), findsOneWidget);
@@ -113,7 +120,7 @@ void main() {
         Player(name: 'B', totalScore: 1500, hasEntered: true),
       ],
       currentPlayerIndex: 1,
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500), // B : 1500 -> 2000
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 500, hasRolledThisTurn: true), // B : 1500 -> 2000
     );
     container.read(gameProvider.notifier).debugLoadState(
           engine,
@@ -168,7 +175,7 @@ void main() {
       currentPlayerIndex: 1,
       triggeringWinnerIndex: 0,
       remainingFinalTurns: 1,
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200),
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true),
     );
     container.read(gameProvider.notifier).debugLoadState(
           engine,
@@ -228,9 +235,46 @@ void main() {
     // Score de tour à 0 (aucun score hérité ici) : insuffisant pour
     // s'arrêter, le lancer se déclenche donc automatiquement, sans bouton.
     expect(find.text('Lancer les dés'), findsNothing);
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le lancer forcé doit se déclencher sans confirmation');
+  });
+
+  testWidgets(
+      'continuer une main héritée dont le score dépasse déjà le minimum '
+      'oblige quand même à relancer avant de pouvoir s\'arrêter', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A hérite de 3 dés ET d'un score de 500 déjà validé par le joueur
+    // précédent : ce score seul dépasserait le minimum requis, mais aucun
+    // lancer n'a encore eu lieu ce tour-ci pour A.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 3, inheritedScore: 500);
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Continuer avec 3 dé(s)'));
+    await tester.pump();
+
+    expect(container.read(gameProvider)!.activeTurn!.bankedScore, 500);
+    // Score largement au-dessus du minimum, mais aucun lancer encore fait ce
+    // tour-ci : impossible de s'arrêter, le lancer doit se déclencher seul.
+    expect(find.text('S\'arrêter'), findsNothing);
+    expect(find.text('Lancer les dés'), findsNothing);
+    await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
+        reason: 'le lancer forcé doit se déclencher sans confirmation, même avec un score déjà suffisant');
   });
 
   testWidgets('après un lancer avec un choix de 5 à garder, "S\'arrêter" banque directement', (tester) async {
@@ -243,7 +287,12 @@ void main() {
     engine = engine.copyWith(
       players: [Player(name: 'A'), Player(name: 'B', hasEntered: true)],
       currentPlayerIndex: 1,
-      activeTurn: TurnState(diceToRoll: 5, bankedScore: 100, pendingRoll: analyzeRoll([5, 5, 2, 3, 4])),
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        bankedScore: 100,
+        pendingRoll: analyzeRoll([5, 5, 2, 3, 4]),
+        hasRolledThisTurn: true,
+      ),
     );
     container.read(gameProvider.notifier).debugLoadState(
           engine,
@@ -280,7 +329,12 @@ void main() {
     engine = engine.copyWith(
       players: [Player(name: 'A'), Player(name: 'B', hasEntered: true)],
       currentPlayerIndex: 1,
-      activeTurn: TurnState(diceToRoll: 5, bankedScore: 100, pendingRoll: analyzeRoll([5, 5, 2, 3, 4])),
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        bankedScore: 100,
+        pendingRoll: analyzeRoll([5, 5, 2, 3, 4]),
+        hasRolledThisTurn: true,
+      ),
     );
     container.read(gameProvider.notifier).debugLoadState(
           engine,
@@ -361,7 +415,7 @@ void main() {
     // que la main revienne au joueur humain ou que la partie se termine.
     var iterations = 0;
     while (container.read(gameProvider)!.currentPlayerIndex == 1 && !container.read(gameProvider)!.gameOver) {
-      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
       iterations++;
       expect(iterations, lessThan(60), reason: 'le tour de l\'IA ne devrait pas s\'éterniser');
     }
@@ -382,7 +436,7 @@ void main() {
       // Score de tour à 0 : insuffisant pour s'arrêter, le premier lancer du
       // tour se déclenche donc automatiquement, sans bouton à cliquer.
       expect(find.text('Lancer les dés'), findsNothing);
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
     }

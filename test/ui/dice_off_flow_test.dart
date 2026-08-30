@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/ui/auto_advance.dart';
 import 'package:le10000/ui/screens/dice_off_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
@@ -105,7 +106,7 @@ void main() {
 
     var iterations = 0;
     while (!container.read(diceOffProvider)!.isResolved) {
-      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
       iterations++;
       expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
       if (find.text('Lancer le dé').evaluate().isNotEmpty) {
@@ -115,5 +116,43 @@ void main() {
     }
 
     expect(container.read(diceOffProvider)!.isResolved, isTrue);
+  });
+
+  testWidgets('une partie 100% IA démarre seule une fois l\'ordre déterminé, sans "Commencer la partie"',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    container.read(diceOffProvider.notifier).start(
+          const GameSetup(
+            playerNames: ['IA 1', 'IA 2'],
+            aiPlayers: {0: AiDifficulty.equilibre, 1: AiDifficulty.equilibre},
+          ),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: DiceOffScreen()),
+      ),
+    );
+    await tester.pump();
+
+    var iterations = 0;
+    while (!container.read(diceOffProvider)!.isResolved) {
+      await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+      iterations++;
+      expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
+    }
+
+    // Aucun joueur humain : pas de bouton à cliquer, la partie démarre seule.
+    expect(find.text('Commencer la partie'), findsNothing);
+    expect(find.byType(GameScreen), findsNothing, reason: 'pas encore écoulé le délai de transition automatique');
+
+    await tester.pump(kAutoAdvanceDelay + const Duration(milliseconds: 100));
+    await tester.pump();
+
+    expect(find.byType(GameScreen), findsOneWidget);
+    expect(container.read(gameProvider), isNotNull);
   });
 }

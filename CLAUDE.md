@@ -43,6 +43,12 @@ The established workflow is:
 Do not attempt `flutter build apk`, `flutter build ios`, `flutter run -d android`, or any iOS-targeted
 command locally — they will fail on this host.
 
+`audioplayers` (sound effects) needs GStreamer to build the Linux desktop target:
+`libgstreamer1.0-dev`, `libgstreamer-plugins-base1.0-dev`, plus runtime plugin packs
+(`gstreamer1.0-plugins-good/bad/ugly`, `gstreamer1.0-libav`) for actual playback. These are installed
+on this machine already; if `flutter run -d linux` ever fails with a `gstreamer-1.0` CMake error again
+(e.g. after a fresh machine/container), reinstall via apt before assuming it's a code problem.
+
 ## Architecture
 
 ### Strict engine/UI separation

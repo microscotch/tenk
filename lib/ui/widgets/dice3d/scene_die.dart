@@ -70,9 +70,11 @@ class Scene3DDie extends StatefulWidget {
 class _Scene3DDieState extends State<Scene3DDie> {
   static const _size = 76.0;
   static const _half = 0.5;
-  // Inclinaison de repos (dé immobile) : assez pour voir le dessus et le
-  // côté du cube, pas assez pour gêner la lecture de la face avant.
-  static const _restTiltX = -0.32;
+  // Inclinaison de repos (dé immobile) : vue plongeante donnant l'impression
+  // de regarder le dé du dessus (la face "top" domine), avec juste assez
+  // d'écart par rapport à la verticale pure pour distinguer les faces
+  // latérales et garder un rendu clairement 3D (pas un carré plat).
+  static const _restTiltX = -1.15;
   static const _restTiltY = 0.42;
   static const _rollSeconds = 0.65;
 

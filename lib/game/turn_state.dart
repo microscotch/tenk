@@ -89,6 +89,13 @@ class TurnState {
   /// permanent à l'écran.
   final List<KeptDie> keptDiceThisTurn;
 
+  /// True dès qu'au moins un lancer a eu lieu ce tour. Un tour qui démarre
+  /// sur une main héritée (score/dés d'un autre joueur repris comme base)
+  /// a un bankedScore potentiellement déjà au-dessus du minimum sans qu'aucun
+  /// dé n'ait encore été lancé cette fois-ci : il ne doit pas être possible
+  /// de s'arrêter avant d'avoir effectivement relancé les dés hérités.
+  final bool hasRolledThisTurn;
+
   const TurnState({
     required this.diceToRoll,
     this.bankedScore = 0,
@@ -97,6 +104,7 @@ class TurnState {
     this.mustContinue = false,
     this.busted = false,
     this.keptDiceThisTurn = const [],
+    this.hasRolledThisTurn = false,
   });
 
   factory TurnState.initial(int diceToRoll) => TurnState(diceToRoll: diceToRoll);
@@ -114,6 +122,7 @@ class TurnState {
     bool? mustContinue,
     bool? busted,
     List<KeptDie>? keptDiceThisTurn,
+    bool? hasRolledThisTurn,
   }) {
     return TurnState(
       diceToRoll: diceToRoll ?? this.diceToRoll,
@@ -123,6 +132,7 @@ class TurnState {
       mustContinue: mustContinue ?? this.mustContinue,
       busted: busted ?? this.busted,
       keptDiceThisTurn: keptDiceThisTurn ?? this.keptDiceThisTurn,
+      hasRolledThisTurn: hasRolledThisTurn ?? this.hasRolledThisTurn,
     );
   }
 }
@@ -142,9 +152,9 @@ TurnState rollTurn(TurnState state, {Random? random}) {
   final analysis = analyzeRoll(faces, extendedValues: state.extendedValues);
 
   if (!analysis.hasAnyScore) {
-    return state.copyWith(pendingRoll: analysis, busted: true);
+    return state.copyWith(pendingRoll: analysis, busted: true, hasRolledThisTurn: true);
   }
-  return state.copyWith(pendingRoll: analysis);
+  return state.copyWith(pendingRoll: analysis, hasRolledThisTurn: true);
 }
 
 /// Applique la décision du joueur sur le lancer en attente : combien de 5
@@ -215,6 +225,9 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
 BankAttempt tryBank(TurnState state, {required int minimumRequired}) {
   if (state.pendingRoll != null) {
     throw StateError('Une décision est en attente sur le lancer précédent');
+  }
+  if (!state.hasRolledThisTurn) {
+    return const BankAttempt.failure(BankFailureReason.notRolledYet);
   }
   if (state.mustContinue) {
     return const BankAttempt.failure(BankFailureReason.mustContinueHotDice);
