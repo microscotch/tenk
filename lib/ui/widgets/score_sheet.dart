@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../game/ai/ai_profiles.dart';
 import '../../game/player.dart';
 import '../../game/turn_state.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ScoreSheet extends StatelessWidget {
   final List<Player> players;
@@ -93,6 +94,7 @@ class _PlayerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     // Un écart de 200 (le score minimum d'un tour) signale un risque réel de
     // collision au prochain tour de l'adversaire concerné.
     final dangerBelow = gaps.below == 200;
@@ -127,34 +129,34 @@ class _PlayerRow extends StatelessWidget {
                     if (!player.hasEntered)
                       Padding(
                         padding: const EdgeInsets.only(left: 8),
-                        child: Text('(pas entré)', style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
+                        child: Text(l10n.notEnteredLabel, style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
                       ),
                   ],
                 ),
                 Row(
                   children: [
                     if (opportunityAbove)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
                         child: Tooltip(
-                          message: 'À 200 points de barrer le joueur juste au-dessus !',
-                          child: Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
+                          message: l10n.opportunityTooltip,
+                          child: const Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
                         ),
                       ),
                     if (dangerBelow)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
                         child: Tooltip(
-                          message: 'Danger : le joueur juste en dessous n\'est qu\'à 200 points, risque de vous barrer',
-                          child: Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
+                          message: l10n.dangerTooltip,
+                          child: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
                         ),
                       ),
                     if (player.hasTiret)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
                         child: Tooltip(
-                          message: 'Tiret : un second craque barrera le score',
-                          child: Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                          message: l10n.tiretTooltip,
+                          child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
                         ),
                       ),
                     Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
@@ -167,7 +169,7 @@ class _PlayerRow extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(left: 2),
                         child: Tooltip(
-                          message: 'Le score précédent portait un tiret',
+                          message: l10n.previousScoreHadTiretTooltip,
                           child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
                         ),
                       ),
@@ -177,7 +179,7 @@ class _PlayerRow extends StatelessWidget {
                         final (num, den) = scoreProbabilityFraction(turn.diceToRoll, turn.extendedValues);
                         final p = num / den;
                         return Tooltip(
-                          message: 'Probabilité de marquer sur ${turn.diceToRoll} dé(s)',
+                          message: l10n.scoreProbabilityTooltip(turn.diceToRoll),
                           child: Text(
                             '$num/$den (${(p * 100).toStringAsFixed(2)}%)',
                             style: TextStyle(

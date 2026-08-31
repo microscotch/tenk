@@ -1,0 +1,294 @@
+{
+  "@@locale": "fr",
+
+  "splashPresents": "présente",
+  "@splashPresents": {"description": "Mot affiché sous l'avatar sur l'écran d'introduction (\"[Auteur] présente\")."},
+
+  "ownerNameDialogTitle": "Votre nom ?",
+  "@ownerNameDialogTitle": {"description": "Titre du dialogue demandant son nom au propriétaire de l'appareil."},
+
+  "ownerNameFieldLabel": "Nom du joueur principal",
+  "@ownerNameFieldLabel": {"description": "Libellé du champ de saisie dans le dialogue \"Votre nom ?\"."},
+
+  "laterButton": "Plus tard",
+  "@laterButton": {"description": "Bouton pour repousser la saisie du nom du joueur principal."},
+
+  "validateButton": "Valider",
+  "@validateButton": {"description": "Bouton de validation d'un dialogue."},
+
+  "settingsTooltip": "Réglages",
+  "@settingsTooltip": {"description": "Infobulle de l'icône d'accès aux réglages."},
+
+  "playersCountTitle": "Joueurs ({count})",
+  "@playersCountTitle": {
+    "description": "Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "defaultPlayerName": "Joueur {number}",
+  "@defaultPlayerName": {
+    "description": "Nom par défaut attribué à un joueur humain (ex. \"Joueur 1\").",
+    "placeholders": {"number": {"type": "int"}}
+  },
+
+  "unnamedPlayerFallback": "Joueur",
+  "@unnamedPlayerFallback": {"description": "Nom de secours si le champ de nom d'un joueur est laissé vide au démarrage de la partie."},
+
+  "playerNameFieldLabel": "Nom du joueur {number}",
+  "@playerNameFieldLabel": {
+    "description": "Libellé du champ de saisie du nom d'un joueur, sur l'écran de configuration.",
+    "placeholders": {"number": {"type": "int"}}
+  },
+
+  "autoChipLabel": "Auto",
+  "@autoChipLabel": {"description": "Libellé du bouton à bascule activant le mode automatique d'un joueur."},
+
+  "aiChipLabel": "IA",
+  "@aiChipLabel": {"description": "Libellé du bouton à bascule désignant un joueur comme IA."},
+
+  "addPlayerButton": "Ajouter",
+  "@addPlayerButton": {"description": "Bouton pour ajouter un joueur sur l'écran de configuration."},
+
+  "removePlayerButton": "Retirer",
+  "@removePlayerButton": {"description": "Bouton pour retirer un joueur sur l'écran de configuration."},
+
+  "botDifficultyTitle": "Difficulté des bots",
+  "@botDifficultyTitle": {"description": "Titre du sélecteur de difficulté des joueurs IA."},
+
+  "aiDifficultyCautious": "Prudent",
+  "@aiDifficultyCautious": {"description": "Niveau de difficulté IA le plus prudent."},
+
+  "aiDifficultyBalanced": "Équilibré",
+  "@aiDifficultyBalanced": {"description": "Niveau de difficulté IA intermédiaire."},
+
+  "aiDifficultyAggressive": "Agressif",
+  "@aiDifficultyAggressive": {"description": "Niveau de difficulté IA le plus agressif."},
+
+  "startGameButton": "Commencer la partie",
+  "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},
+
+  "scoreGridLabel": "Grille des scores",
+  "@scoreGridLabel": {"description": "Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs."},
+
+  "finalRoundBanner": "Tour final : un joueur a atteint 10000 !",
+  "@finalRoundBanner": {"description": "Bandeau affiché quand un joueur a atteint 10000 et que les autres jouent leur dernier tour."},
+
+  "turnScoreLabel": "Score du tour : {score}",
+  "@turnScoreLabel": {
+    "description": "Score cumulé du tour en cours.",
+    "placeholders": {"score": {"type": "int"}}
+  },
+
+  "minimumRequiredLabel": "Minimum requis : {minimum}",
+  "@minimumRequiredLabel": {
+    "description": "Score minimum requis pour que le joueur courant puisse s'arrêter.",
+    "placeholders": {"minimum": {"type": "int"}}
+  },
+
+  "keptDiceThisTurnLabel": "Dés gardés ce tour",
+  "@keptDiceThisTurnLabel": {"description": "Étiquette au-dessus de la rangée de dés déjà gardés pendant le tour en cours."},
+
+  "inheritedHandMessage": "{playerName} hérite de {diceCount, plural, one{{diceCount} dé} other{{diceCount} dés}} du tour précédent.",
+  "@inheritedHandMessage": {
+    "description": "Annonce qu'un joueur hérite de dés d'un tour précédent réussi.",
+    "placeholders": {
+      "playerName": {"type": "String"},
+      "diceCount": {"type": "int"}
+    }
+  },
+
+  "currentScoreLabel": "Score en cours : {score}",
+  "@currentScoreLabel": {
+    "description": "Score déjà accumulé sur la main héritée proposée au joueur.",
+    "placeholders": {"score": {"type": "int"}}
+  },
+
+  "continueWithDiceButton": "Continuer avec {count, plural, one{{count} dé} other{{count} dés}}",
+  "@continueWithDiceButton": {
+    "description": "Bouton pour reprendre la main héritée avec le nombre de dés restants (joueur humain).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "inheritedHandExceedsWinning": "Reprendre cette main dépasserait déjà 10000 : impossible de banquer.",
+  "@inheritedHandExceedsWinning": {"description": "Message expliquant pourquoi la main héritée ne peut pas être reprise."},
+
+  "restartWithFreshDiceButton": "Recommencer avec 5 dés neufs",
+  "@restartWithFreshDiceButton": {"description": "Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain)."},
+
+  "aiContinueWithDiceButton": "Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}",
+  "@aiContinueWithDiceButton": {
+    "description": "Libellé du bouton unique de l'IA quand elle décide de reprendre la main héritée.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "aiRestartWithFreshDiceLabel": "Repartir avec 5 dés neufs",
+  "@aiRestartWithFreshDiceLabel": {"description": "Libellé du bouton unique de l'IA quand elle décide de repartir avec une main pleine."},
+
+  "keepDiceButton": "Garder les dés",
+  "@keepDiceButton": {"description": "Bouton pour valider la garde des dés d'un lancer."},
+
+  "reRollFullHandButton": "Relancer (main pleine)",
+  "@reRollFullHandButton": {"description": "Bouton pour relancer quand tous les dés ont scoré (main pleine, relance obligatoire)."},
+
+  "stopButton": "S'arrêter",
+  "@stopButton": {"description": "Bouton pour arrêter son tour et banquer le score."},
+
+  "rollDiceButton": "Lancer les dés",
+  "@rollDiceButton": {"description": "Bouton pour lancer les dés."},
+
+  "diceToRollLabel": "{count, plural, one{{count} dé} other{{count} dés}} à lancer",
+  "@diceToRollLabel": {
+    "description": "Nombre de dés que le joueur courant s'apprête à lancer.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "bustedTitle": "Craqué !",
+  "@bustedTitle": {"description": "Titre affiché quand le joueur craque (bust)."},
+
+  "bustExceedsTarget": "Ce lancer ferait dépasser 10000.",
+  "@bustExceedsTarget": {"description": "Explique un craque déclenché par un dépassement de 10000 points."},
+
+  "continueButton": "Continuer",
+  "@continueButton": {"description": "Bouton pour passer la main après un craque."},
+
+  "thisRollScoreLabel": "Score de ce lancer : {score}",
+  "@thisRollScoreLabel": {
+    "description": "Score que rapporterait le lancer en attente selon la sélection actuelle.",
+    "placeholders": {"score": {"type": "int"}}
+  },
+
+  "howManyFivesToKeep": "Combien de 5 garder ?",
+  "@howManyFivesToKeep": {"description": "Question posée quand le joueur peut choisir combien de 5 garder sur un lancer."},
+
+  "fullHandMustReroll": "Main pleine : vous devez relancer !",
+  "@fullHandMustReroll": {"description": "Avertissement affiché quand tous les dés ont scoré, obligeant à relancer."},
+
+  "failureBelowMinimum": "Score insuffisant pour s'arrêter.",
+  "@failureBelowMinimum": {"description": "Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis."},
+
+  "failureEndsIn50": "Interdit de s'arrêter sur un score finissant par 50.",
+  "@failureEndsIn50": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : le score se terminerait par 50."},
+
+  "failureMustContinueHotDice": "Vous devez relancer.",
+  "@failureMustContinueHotDice": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : main pleine, relance obligatoire."},
+
+  "failureNotRolledYet": "Vous devez lancer les dés avant de pouvoir vous arrêter.",
+  "@failureNotRolledYet": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : aucun lancer effectué ce tour."},
+
+  "settingsMainPlayerTitle": "Joueur principal",
+  "@settingsMainPlayerTitle": {"description": "Titre de la section réglages consacrée au joueur principal."},
+
+  "settingsYourNameLabel": "Votre nom (propriétaire de l'appareil)",
+  "@settingsYourNameLabel": {"description": "Libellé du champ de saisie du nom du propriétaire de l'appareil, dans les réglages."},
+
+  "settingsDelaysTitle": "Temporisations",
+  "@settingsDelaysTitle": {"description": "Titre de la section réglages consacrée aux délais d'auto-validation."},
+
+  "settingsDelaysDescription": "Délai avant qu'une action automatique ne se déclenche seule. 0 pour désactiver.",
+  "@settingsDelaysDescription": {"description": "Explication de la section temporisations."},
+
+  "settingsAiDelayLabel": "Messages IA (ms)",
+  "@settingsAiDelayLabel": {"description": "Libellé du champ réglant le délai d'auto-validation des actions IA."},
+
+  "settingsAutoActionDelayLabel": "Actions automatiques du joueur humain (ms)",
+  "@settingsAutoActionDelayLabel": {"description": "Libellé du champ réglant le délai d'auto-validation des actions du joueur humain."},
+
+  "settingsDiceTitle": "Dés",
+  "@settingsDiceTitle": {"description": "Titre de la section réglages consacrée à l'apparence des dés."},
+
+  "settingsDiceUniform": "Uniforme",
+  "@settingsDiceUniform": {"description": "Mode de couleur des dés : une seule couleur pour tous."},
+
+  "settingsDiceVaried": "Panachée",
+  "@settingsDiceVaried": {"description": "Mode de couleur des dés : une couleur différente par dé."},
+
+  "settingsSoundsTitle": "Sons",
+  "@settingsSoundsTitle": {"description": "Titre de la section réglages consacrée au son."},
+
+  "settingsMusicLabel": "Musique de fond",
+  "@settingsMusicLabel": {"description": "Interrupteur activant/désactivant la musique de fond."},
+
+  "settingsSoundEffectsLabel": "Effets sonores",
+  "@settingsSoundEffectsLabel": {"description": "Interrupteur activant/désactivant les effets sonores."},
+
+  "settingsLanguageTitle": "Langue",
+  "@settingsLanguageTitle": {"description": "Titre de la section réglages consacrée à la langue de l'application."},
+
+  "settingsLanguageSystemOption": "Langue du téléphone",
+  "@settingsLanguageSystemOption": {"description": "Option du sélecteur de langue qui suit automatiquement la langue de l'appareil."},
+
+  "diceOffTitle": "Qui commence ?",
+  "@diceOffTitle": {"description": "Titre de l'écran de tirage au sort de l'ordre de jeu."},
+
+  "diceOffInstructions": "Chacun lance un dé : le score le plus faible commence la partie.",
+  "@diceOffInstructions": {"description": "Explication de la règle du tirage au sort."},
+
+  "diceOffTieBreak": "Égalité : {names} relancent.",
+  "@diceOffTieBreak": {
+    "description": "Annonce d'une égalité au tirage au sort ; noms déjà joints par des virgules.",
+    "placeholders": {"names": {"type": "String"}}
+  },
+
+  "diceOffPlayerTurn": "{playerName} lance le dé",
+  "@diceOffPlayerTurn": {
+    "description": "Indique quel joueur doit lancer le dé, pendant le tirage au sort.",
+    "placeholders": {"playerName": {"type": "String"}}
+  },
+
+  "diceOffRollButton": "Lancer le dé",
+  "@diceOffRollButton": {"description": "Bouton pour lancer le dé pendant le tirage au sort."},
+
+  "diceOffWinnerAnnouncement": "{playerName} commence la partie !",
+  "@diceOffWinnerAnnouncement": {
+    "description": "Annonce du joueur qui commence la partie, à l'issue du tirage au sort.",
+    "placeholders": {"playerName": {"type": "String"}}
+  },
+
+  "gameOverTitle": "Fin de la partie",
+  "@gameOverTitle": {"description": "Titre de l'écran de fin de partie."},
+
+  "winnerAnnouncement": "{playerName} gagne !",
+  "@winnerAnnouncement": {
+    "description": "Annonce du vainqueur sur l'écran de fin de partie.",
+    "placeholders": {"playerName": {"type": "String"}}
+  },
+
+  "playerScoreLine": "{name} : {score}",
+  "@playerScoreLine": {
+    "description": "Ligne \"Nom : Score\" dans le classement final.",
+    "placeholders": {
+      "name": {"type": "String"},
+      "score": {"type": "int"}
+    }
+  },
+
+  "newGameButton": "Nouvelle partie",
+  "@newGameButton": {"description": "Bouton pour revenir à l'écran de configuration après une partie."},
+
+  "passDeviceInstruction": "Passez l'appareil à",
+  "@passDeviceInstruction": {"description": "Instruction affichée entre deux tours, avant le nom du joueur suivant."},
+
+  "readyButton": "Prêt",
+  "@readyButton": {"description": "Bouton confirmant que l'appareil a été passé au joueur suivant."},
+
+  "notEnteredLabel": "(pas entré)",
+  "@notEnteredLabel": {"description": "Indique qu'un joueur n'a pas encore atteint le score d'entrée en jeu."},
+
+  "opportunityTooltip": "À 200 points de barrer le joueur juste au-dessus !",
+  "@opportunityTooltip": {"description": "Infobulle : le joueur peut barrer son voisin du dessus au tour suivant."},
+
+  "dangerTooltip": "Danger : le joueur juste en dessous n'est qu'à 200 points, risque de vous barrer",
+  "@dangerTooltip": {"description": "Infobulle : le joueur risque d'être barré par son voisin du dessous au tour suivant."},
+
+  "tiretTooltip": "Tiret : un second craque barrera le score",
+  "@tiretTooltip": {"description": "Infobulle expliquant la sanction \"tiret\" sur la ligne de score courante."},
+
+  "previousScoreHadTiretTooltip": "Le score précédent portait un tiret",
+  "@previousScoreHadTiretTooltip": {"description": "Infobulle indiquant que la ligne de score précédente portait un tiret."},
+
+  "scoreProbabilityTooltip": "Probabilité de marquer sur {count, plural, one{{count} dé} other{{count} dés}}",
+  "@scoreProbabilityTooltip": {
+    "description": "Infobulle sur la fraction de probabilité de marquer avec les dés restants.",
+    "placeholders": {"count": {"type": "int"}}
+  }
+}

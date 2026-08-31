@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/dice_off.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
 import '../../state/settings_providers.dart';
@@ -137,7 +138,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Qui commence ?')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).diceOffTitle)),
       body: GestureDetector(
         onTap: _skipPendingAction,
         child: SafeArea(
@@ -153,12 +154,13 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
   }
 
   Widget _buildRollView(DiceOffState state, DiceOffNotifier notifier) {
+    final l10n = AppLocalizations.of(context);
     final next = state.nextToRoll!;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Chacun lance un dé : le score le plus faible commence la partie.',
+        Text(
+          l10n.diceOffInstructions,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
@@ -166,7 +168,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
-              'Égalité : ${state.activeIndices.map(notifier.nameOf).join(', ')} relancent.',
+              l10n.diceOffTieBreak(state.activeIndices.map(notifier.nameOf).join(', ')),
               style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
@@ -175,30 +177,31 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           _diceOffRow(state.rollsThisRound, notifier, roundIndex: state.roundHistory.length),
           const SizedBox(height: 16),
         ],
-        Text('${notifier.nameOf(next)} lance le dé', style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.diceOffPlayerTurn(notifier.nameOf(next)), style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 24),
         FilledButton(
           onPressed: _rollDie,
-          child: const Text('Lancer le dé'),
+          child: Text(l10n.diceOffRollButton),
         ),
       ],
     );
   }
 
   Widget _buildResult(DiceOffState state, DiceOffNotifier notifier) {
+    final l10n = AppLocalizations.of(context);
     final lastRound = state.roundHistory.last;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '${notifier.nameOf(state.winnerIndex!)} commence la partie !',
+          l10n.diceOffWinnerAnnouncement(notifier.nameOf(state.winnerIndex!)),
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
         _diceOffRow(lastRound, notifier, roundIndex: state.roundHistory.length - 1),
         const SizedBox(height: 32),
-        FilledButton(onPressed: _startGame, child: const Text('Commencer la partie')),
+        FilledButton(onPressed: _startGame, child: Text(l10n.startGameButton)),
       ],
     );
   }

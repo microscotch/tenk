@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_providers.dart';
@@ -33,7 +34,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: DiceOffScreen()),
+        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pump();
@@ -56,7 +57,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: DiceOffScreen()),
+        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -102,7 +103,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: DiceOffScreen()),
+        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pump();
@@ -143,7 +144,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: DiceOffScreen()),
+        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pump();

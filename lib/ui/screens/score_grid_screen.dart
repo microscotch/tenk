@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Largeur minimale d'une colonne pour que le score (jusqu'à 5 chiffres,
 /// icônes tiret/courant comprises) ne soit jamais contraint à passer à la
@@ -41,7 +42,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
   Widget build(BuildContext context) {
     final labels = widget.players.length == 1 ? [widget.players[0].name] : shortLabelsFor(widget.players);
     return Scaffold(
-      appBar: AppBar(title: const Text('Grille des scores')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).scoreGridLabel)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

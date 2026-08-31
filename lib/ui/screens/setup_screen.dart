@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/ai/ai_profiles.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
 import '../../state/settings_providers.dart';
@@ -36,7 +37,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     // Par défaut : le propriétaire de l'appareil (humain) et une IA, tous
     // deux en mode auto désactivé (chaque action attend un clic manuel).
     _names = [
-      TextEditingController(text: ownerName.isEmpty ? 'Joueur 1' : ownerName),
+      TextEditingController(text: ownerName.isEmpty ? AppLocalizations.of(context).defaultPlayerName(1) : ownerName),
       TextEditingController(text: kAiCharacterNames[_random.nextInt(kAiCharacterNames.length)]),
     ];
     _isBot = [false, true];
@@ -51,22 +52,23 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   /// renseigné dans les préférences ; sautable (le nom par défaut reste).
   Future<void> _promptForOwnerName() async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Votre nom ?'),
+        title: Text(l10n.ownerNameDialogTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nom du joueur principal'),
+          decoration: InputDecoration(labelText: l10n.ownerNameFieldLabel),
           onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Plus tard')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: Text(l10n.laterButton)),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Valider'),
+            child: Text(l10n.validateButton),
           ),
         ],
       ),
@@ -97,7 +99,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       if (isBot) {
         _names[i].text = _randomAiName();
       } else if (kAiCharacterNames.contains(_names[i].text)) {
-        _names[i].text = 'Joueur ${i + 1}';
+        _names[i].text = AppLocalizations.of(context).defaultPlayerName(i + 1);
       }
     });
   }
@@ -113,7 +115,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void _addPlayer() {
     if (_names.length >= 6) return;
     setState(() {
-      _names.add(TextEditingController(text: 'Joueur ${_names.length + 1}'));
+      _names.add(TextEditingController(text: AppLocalizations.of(context).defaultPlayerName(_names.length + 1)));
       _isBot.add(false);
       _isAuto.add(false);
     });
@@ -135,7 +137,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     };
     final autoPlayers = {for (var i = 0; i < _isAuto.length; i++) if (_isAuto[i]) i};
     final setup = GameSetup(
-      playerNames: [for (final c in _names) c.text.trim().isEmpty ? 'Joueur' : c.text.trim()],
+      playerNames: [
+        for (final c in _names) c.text.trim().isEmpty ? AppLocalizations.of(context).unnamedPlayerFallback : c.text.trim(),
+      ],
       aiPlayers: aiPlayers,
       autoPlayers: autoPlayers,
     );
@@ -145,13 +149,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const AppTitle(),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: 'Réglages',
+            tooltip: l10n.settingsTooltip,
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
@@ -162,7 +167,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Joueurs (${_names.length})', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.playersCountTitle(_names.length), style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               for (var i = 0; i < _names.length; i++)
                 Padding(
@@ -172,19 +177,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       Expanded(
                         child: TextField(
                           controller: _names[i],
-                          decoration: InputDecoration(labelText: 'Nom du joueur ${i + 1}', border: const OutlineInputBorder()),
+                          decoration:
+                              InputDecoration(labelText: l10n.playerNameFieldLabel(i + 1), border: const OutlineInputBorder()),
                         ),
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
-                        label: const Text('Auto'),
+                        label: Text(l10n.autoChipLabel),
                         avatar: _isAuto[i] ? const Icon(Icons.bolt, size: 18) : null,
                         selected: _isAuto[i],
                         onSelected: (selected) => setState(() => _isAuto[i] = selected),
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
-                        label: const Text('IA'),
+                        label: Text(l10n.aiChipLabel),
                         avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,
                         selected: _isBot[i],
                         onSelected: (selected) => _toggleBot(i, selected),
@@ -197,32 +203,32 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   OutlinedButton.icon(
                     onPressed: _names.length < 6 ? _addPlayer : null,
                     icon: const Icon(Icons.add),
-                    label: const Text('Ajouter'),
+                    label: Text(l10n.addPlayerButton),
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: _names.length > 2 ? _removePlayer : null,
                     icon: const Icon(Icons.remove),
-                    label: const Text('Retirer'),
+                    label: Text(l10n.removePlayerButton),
                   ),
                 ],
               ),
               if (_hasAnyBot) ...[
                 const SizedBox(height: 24),
-                Text('Difficulté des bots', style: Theme.of(context).textTheme.titleMedium),
+                Text(l10n.botDifficultyTitle, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 SegmentedButton<AiDifficulty>(
-                  segments: const [
-                    ButtonSegment(value: AiDifficulty.prudent, label: Text('Prudent')),
-                    ButtonSegment(value: AiDifficulty.equilibre, label: Text('Équilibré')),
-                    ButtonSegment(value: AiDifficulty.agressif, label: Text('Agressif')),
+                  segments: [
+                    ButtonSegment(value: AiDifficulty.prudent, label: Text(l10n.aiDifficultyCautious)),
+                    ButtonSegment(value: AiDifficulty.equilibre, label: Text(l10n.aiDifficultyBalanced)),
+                    ButtonSegment(value: AiDifficulty.agressif, label: Text(l10n.aiDifficultyAggressive)),
                   ],
                   selected: {_aiDifficulty},
                   onSelectionChanged: (s) => setState(() => _aiDifficulty = s.first),
                 ),
               ],
               const SizedBox(height: 32),
-              FilledButton(onPressed: _start, child: const Text('Commencer la partie')),
+              FilledButton(onPressed: _start, child: Text(l10n.startGameButton)),
             ],
           ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'l10n/generated/app_localizations.dart';
 import 'state/settings_providers.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/sound_effects.dart';
@@ -22,9 +23,28 @@ class Le10000App extends ConsumerWidget {
     ref.listen(settingsProvider, (previous, next) => SoundEffects.instance.applySettings(next));
     SoundEffects.instance.applySettings(ref.watch(settingsProvider));
 
+    final languageOverride = ref.watch(settingsProvider).languageOverride;
+
     return MaterialApp(
       title: 'Le 10000',
       theme: buildAppTheme(),
+      locale: languageOverride == null ? null : Locale(languageOverride),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      // Le français est la langue d'origine du jeu : c'est le repli si la
+      // langue de l'appareil (ou aucune de ses préférences) ne fait partie
+      // des langues supportées, plutôt que la première de la liste triée
+      // alphabétiquement (le bulgare, sinon).
+      localeListResolutionCallback: (locales, supportedLocales) {
+        if (locales != null) {
+          for (final locale in locales) {
+            for (final supported in supportedLocales) {
+              if (supported.languageCode == locale.languageCode) return supported;
+            }
+          }
+        }
+        return const Locale('fr');
+      },
       builder: (context, child) => Stack(
         children: [
           const CasinoFeltBackground(),

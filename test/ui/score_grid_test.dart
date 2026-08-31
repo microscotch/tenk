@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
 import 'package:le10000/game/turn_state.dart';
@@ -16,7 +17,7 @@ void main() {
     a = a.applyBust(); // tiret sur 800
     a = a.applyBust(); // 800 barré, retombe sur la ligne 500 déjà existante
 
-    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: [a])));
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: [a]), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
     await tester.pumpAndSettle();
 
     // Grille attendue : [0, 500(tiret, courante), 800(tiret, barré)] — pas de
@@ -45,7 +46,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -59,7 +60,7 @@ void main() {
   testWidgets('affiche une colonne par joueur, avec ses initiales comme libellé', (tester) async {
     final players = [Player(name: 'Alice'), Player(name: 'Bob')];
 
-    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players)));
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
     await tester.pumpAndSettle();
 
     expect(find.text('A'), findsOneWidget);
@@ -81,7 +82,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -103,7 +104,7 @@ void main() {
     // colonnes par page, donc 2 pages pour 6 joueurs.
     final players = [for (var i = 0; i < 6; i++) Player(name: 'J$i')];
 
-    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players)));
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
     await tester.pumpAndSettle();
 
     expect(find.byType(PageView), findsOneWidget);
@@ -123,7 +124,7 @@ void main() {
 
     final players = [Player(name: 'Alice'), Player(name: 'Bob')];
 
-    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players)));
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
     await tester.pumpAndSettle();
 
     expect(find.byType(PageView), findsNothing);

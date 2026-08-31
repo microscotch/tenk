@@ -1,8 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../state/settings_providers.dart';
 import '../widgets/app_title.dart';
+
+/// Nom natif de chaque langue supportée, tel qu'un locuteur de cette langue
+/// le reconnaît — affiché tel quel dans le sélecteur, indépendamment de la
+/// langue actuelle de l'app (voir [AppLocalizations.supportedLocales]).
+const Map<String, String> _languageNativeNames = {
+  'fr': 'Français',
+  'en': 'English',
+  'es': 'Español',
+  'de': 'Deutsch',
+  'it': 'Italiano',
+  'pt': 'Português',
+  'bg': 'Български',
+  'ro': 'Română',
+  'nb': 'Norsk bokmål',
+  'sv': 'Svenska',
+  'fi': 'Suomi',
+};
 
 /// Écran de configuration : préférences persistées indépendamment de toute
 /// partie en cours (nom du joueur principal, temporisations, couleur des
@@ -38,6 +56,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
 
@@ -49,58 +68,71 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Joueur principal', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.settingsMainPlayerTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Votre nom (propriétaire de l\'appareil)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.settingsYourNameLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: notifier.setPlayerName,
               ),
               const SizedBox(height: 28),
-              Text('Temporisations', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.settingsLanguageTitle, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String?>(
+                initialValue: settings.languageOverride,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                items: [
+                  DropdownMenuItem(value: null, child: Text(l10n.settingsLanguageSystemOption)),
+                  for (final code in AppLocalizations.supportedLocales.map((l) => l.languageCode))
+                    DropdownMenuItem(value: code, child: Text(_languageNativeNames[code] ?? code)),
+                ],
+                onChanged: notifier.setLanguageOverride,
+              ),
+              const SizedBox(height: 28),
+              Text(l10n.settingsDelaysTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
-                'Délai avant qu\'une action automatique ne se déclenche seule. 0 pour désactiver.',
+                l10n.settingsDelaysDescription,
                 style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
               ),
               const SizedBox(height: 12),
               _DelayField(
-                label: 'Messages IA (ms)',
+                label: l10n.settingsAiDelayLabel,
                 controller: _aiDelayController,
                 onChanged: (ms) => notifier.setAiMessageDelayMs(ms),
               ),
               const SizedBox(height: 12),
               _DelayField(
-                label: 'Actions automatiques du joueur humain (ms)',
+                label: l10n.settingsAutoActionDelayLabel,
                 controller: _autoActionDelayController,
                 onChanged: (ms) => notifier.setAutoActionDelayMs(ms),
               ),
               const SizedBox(height: 28),
-              Text('Dés', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.settingsDiceTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               SegmentedButton<DiceColorMode>(
-                segments: const [
-                  ButtonSegment(value: DiceColorMode.uniform, label: Text('Uniforme')),
-                  ButtonSegment(value: DiceColorMode.varied, label: Text('Panachée')),
+                segments: [
+                  ButtonSegment(value: DiceColorMode.uniform, label: Text(l10n.settingsDiceUniform)),
+                  ButtonSegment(value: DiceColorMode.varied, label: Text(l10n.settingsDiceVaried)),
                 ],
                 selected: {settings.diceColorMode},
                 onSelectionChanged: (s) => notifier.setDiceColorMode(s.first),
               ),
               const SizedBox(height: 28),
-              Text('Sons', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.settingsSoundsTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Musique de fond'),
+                title: Text(l10n.settingsMusicLabel),
                 value: settings.musicEnabled,
                 onChanged: notifier.setMusicEnabled,
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Effets sonores'),
+                title: Text(l10n.settingsSoundEffectsLabel),
                 value: settings.soundEffectsEnabled,
                 onChanged: notifier.setSoundEffectsEnabled,
               ),

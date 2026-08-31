@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+
 class PassDeviceScreen extends StatelessWidget {
   final String nextPlayerName;
 
@@ -7,6 +9,7 @@ class PassDeviceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -18,7 +21,7 @@ class PassDeviceScreen extends StatelessWidget {
                 const Icon(Icons.screen_rotation_alt, size: 64),
                 const SizedBox(height: 24),
                 Text(
-                  'Passez l\'appareil à',
+                  l10n.passDeviceInstruction,
                   style: Theme.of(context).textTheme.titleMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -31,7 +34,7 @@ class PassDeviceScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Prêt'),
+                  child: Text(l10n.readyButton),
                 ),
               ],
             ),

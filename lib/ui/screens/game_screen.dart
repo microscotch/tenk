@@ -8,6 +8,7 @@ import '../../game/game_engine.dart';
 import '../../game/player.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
@@ -335,6 +336,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
 
     final turn = engine.activeTurn!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
@@ -353,19 +355,21 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
                 const SizedBox(height: 16),
                 if (engine.isInFinalRound)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text('Tour final : un joueur a atteint 10000 !',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(l10n.finalRoundBanner,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
                   ),
                 Text(
-                  'Score du tour : ${!isAiTurn && turn.pendingRoll != null ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep) : turn.bankedScore}',
+                  l10n.turnScoreLabel(!isAiTurn && turn.pendingRoll != null
+                      ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep)
+                      : turn.bankedScore),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                Text('Minimum requis : ${engine.minimumForCurrentPlayer}'),
+                Text(l10n.minimumRequiredLabel(engine.minimumForCurrentPlayer)),
                 if (turn.keptDiceThisTurn.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text('Dés gardés ce tour', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+                  Text(l10n.keptDiceThisTurnLabel, style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
                   _keptDiceRow(turn),
                 ],
                 const SizedBox(height: 16),
@@ -394,7 +398,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return [
       IconButton(
         icon: const Icon(Icons.grid_on),
-        tooltip: 'Grille des scores',
+        tooltip: AppLocalizations.of(context).scoreGridLabel,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
         ),
@@ -410,17 +414,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Widget _buildHandChoiceView(GameEngine engine) {
+    final l10n = AppLocalizations.of(context);
     final canContinue = !engine.inheritedHandExceedsWinningScore;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '${engine.currentPlayer.name} hérite de ${engine.nextTurnDice} dé(s) du tour précédent.',
+          l10n.inheritedHandMessage(engine.currentPlayer.name, engine.nextTurnDice),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 16),
-        Text('Score en cours : ${engine.inheritedScore}',
+        Text(l10n.currentScoreLabel(engine.inheritedScore),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
@@ -438,13 +443,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         if (canContinue)
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: false),
-            child: Text('Continuer avec ${engine.nextTurnDice} dé(s)'),
+            child: Text(l10n.continueWithDiceButton(engine.nextTurnDice)),
           )
         else
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'Reprendre cette main dépasserait déjà 10000 : impossible de banquer.',
+              l10n.inheritedHandExceedsWinning,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade400),
             ),
@@ -452,7 +457,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: true),
-          child: const Text('Recommencer avec 5 dés neufs'),
+          child: Text(l10n.restartWithFreshDiceButton),
         ),
       ],
     );
@@ -462,19 +467,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// qu'elle prendrait (voir [GameNotifier.previewAiAcceptInheritedHand]),
   /// qui déclenche cette même décision (via [GameNotifier.playAiTurnStep]).
   Widget _buildAiHandChoiceView(GameEngine engine) {
+    final l10n = AppLocalizations.of(context);
     final notifier = ref.read(gameProvider.notifier);
     final accepts = notifier.previewAiAcceptInheritedHand();
-    final label = accepts ? 'Reprendre avec ${engine.nextTurnDice} dé(s)' : 'Repartir avec 5 dés neufs';
+    final label = accepts ? l10n.aiContinueWithDiceButton(engine.nextTurnDice) : l10n.aiRestartWithFreshDiceLabel;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '${engine.currentPlayer.name} hérite de ${engine.nextTurnDice} dé(s) du tour précédent.',
+          l10n.inheritedHandMessage(engine.currentPlayer.name, engine.nextTurnDice),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 16),
-        Text('Score en cours : ${engine.inheritedScore}',
+        Text(l10n.currentScoreLabel(engine.inheritedScore),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
@@ -503,6 +509,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// Le craque est géré séparément par [_buildBustedView] (appelé avant
   /// celle-ci par l'appelant, IA ou humain confondus).
   Widget _buildAiTurnView(GameEngine engine, TurnState turn) {
+    final l10n = AppLocalizations.of(context);
     final notifier = ref.read(gameProvider.notifier);
     void action() => ref.read(gameProvider.notifier).playAiTurnStep();
 
@@ -512,24 +519,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         children: [
           _diceRow(turn.pendingRoll!, 0),
           const SizedBox(height: 16),
-          FilledButton(onPressed: action, child: const Text('Garder les dés')),
+          FilledButton(onPressed: action, child: Text(l10n.keepDiceButton)),
         ],
       );
     }
 
     final String label;
     if (turn.mustContinue) {
-      label = 'Relancer (main pleine)';
+      label = l10n.reRollFullHandButton;
     } else if (tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer).success && !notifier.previewAiContinue(turn)) {
-      label = 'S\'arrêter';
+      label = l10n.stopButton;
     } else {
-      label = 'Lancer les dés';
+      label = l10n.rollDiceButton;
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('${turn.diceToRoll} dé(s) à lancer', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.diceToRollLabel(turn.diceToRoll), style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 16),
         FilledButton(onPressed: action, child: Text(label)),
       ],
@@ -543,6 +550,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     // par dépassement de 10000 n'a pas de lancer en attente (la décision de
     // garde a déjà été appliquée) : on affiche les dés gardés ce tour à la
     // place, et la révélation est immédiate (rien à animer).
+    final l10n = AppLocalizations.of(context);
     final key = turn.pendingRoll ?? turn;
     final revealed = _bustRevealed && _bustKeyBeingRevealed == key;
     return Column(
@@ -553,16 +561,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         if (!revealed)
           const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
         else ...[
-          const Text('Craqué !', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
+          Text(l10n.bustedTitle, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
           if (turn.pendingRoll == null)
-            const Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Text('Ce lancer ferait dépasser 10000.', style: TextStyle(color: Colors.orange)),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(l10n.bustExceedsTarget, style: const TextStyle(color: Colors.orange)),
             ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
-            child: const Text('Continuer'),
+            child: Text(l10n.continueButton),
           ),
         ],
       ],
@@ -570,6 +578,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Widget _buildPendingRollView(GameEngine engine, TurnState turn) {
+    final l10n = AppLocalizations.of(context);
     final analysis = turn.pendingRoll!;
     final fives = analysis.declinableFives;
     final canChoose = _hasRealChoice(analysis);
@@ -585,13 +594,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Score de ce lancer : ${_previewPoints(analysis, _selectedKeep)}',
+        Text(l10n.thisRollScoreLabel(_previewPoints(analysis, _selectedKeep)),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         _diceRow(analysis, _selectedKeep),
         const SizedBox(height: 16),
         if (canChoose) ...[
-          const Text('Combien de 5 garder ?'),
+          Text(l10n.howManyFivesToKeep),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -614,7 +623,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   notifier.applyKeep(declineFivesCount: declineCount);
                   notifier.roll();
                 },
-                child: const Text('Lancer les dés'),
+                child: Text(l10n.rollDiceButton),
               ),
               if (hypotheticalBank.success) ...[
                 const SizedBox(width: 16),
@@ -624,7 +633,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     notifier.applyKeep(declineFivesCount: declineCount);
                     notifier.bank();
                   },
-                  child: const Text('S\'arrêter'),
+                  child: Text(l10n.stopButton),
                 ),
               ],
             ],
@@ -634,7 +643,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             padding: const EdgeInsets.only(top: 8),
             child: FilledButton(
               onPressed: () => ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0),
-              child: const Text('Garder les dés'),
+              child: Text(l10n.keepDiceButton),
             ),
           ),
       ],
@@ -642,21 +651,22 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Widget _buildIdleView(GameEngine engine, TurnState turn) {
+    final l10n = AppLocalizations.of(context);
     final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('${turn.diceToRoll} dé(s) à lancer', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.diceToRollLabel(turn.diceToRoll), style: Theme.of(context).textTheme.titleMedium),
         if (turn.mustContinue)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text('Main pleine : vous devez relancer !',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(l10n.fullHandMustReroll,
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
           )
         else if (!attempt.success)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_failureMessage(attempt), style: TextStyle(color: Colors.grey.shade400)),
+            child: Text(_failureMessage(l10n, attempt), style: TextStyle(color: Colors.grey.shade400)),
           ),
         const SizedBox(height: 24),
         if (attempt.success)
@@ -665,34 +675,34 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             children: [
               FilledButton(
                 onPressed: () => ref.read(gameProvider.notifier).roll(),
-                child: const Text('Lancer les dés'),
+                child: Text(l10n.rollDiceButton),
               ),
               const SizedBox(width: 16),
               OutlinedButton(
                 onPressed: () => ref.read(gameProvider.notifier).bank(),
-                child: const Text('S\'arrêter'),
+                child: Text(l10n.stopButton),
               ),
             ],
           )
         else
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).roll(),
-            child: Text(turn.mustContinue ? 'Relancer (main pleine)' : 'Lancer les dés'),
+            child: Text(turn.mustContinue ? l10n.reRollFullHandButton : l10n.rollDiceButton),
           ),
       ],
     );
   }
 
-  String _failureMessage(BankAttempt attempt) {
+  String _failureMessage(AppLocalizations l10n, BankAttempt attempt) {
     switch (attempt.reason) {
       case BankFailureReason.belowMinimum:
-        return 'Score insuffisant pour s\'arrêter.';
+        return l10n.failureBelowMinimum;
       case BankFailureReason.endsIn50:
-        return 'Interdit de s\'arrêter sur un score finissant par 50.';
+        return l10n.failureEndsIn50;
       case BankFailureReason.mustContinueHotDice:
-        return 'Vous devez relancer.';
+        return l10n.failureMustContinueHotDice;
       case BankFailureReason.notRolledYet:
-        return 'Vous devez lancer les dés avant de pouvoir vous arrêter.';
+        return l10n.failureNotRolledYet;
       case null:
         return '';
     }

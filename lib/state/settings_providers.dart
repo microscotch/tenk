@@ -17,6 +17,10 @@ class AppSettings {
   final bool musicEnabled;
   final bool soundEffectsEnabled;
 
+  /// Code de langue forcé (ex. "en", "es") ; null = suit la langue de
+  /// l'appareil.
+  final String? languageOverride;
+
   const AppSettings({
     this.playerName = '',
     this.aiMessageDelayMs = 1000,
@@ -24,6 +28,7 @@ class AppSettings {
     this.diceColorMode = DiceColorMode.uniform,
     this.musicEnabled = true,
     this.soundEffectsEnabled = true,
+    this.languageOverride,
   });
 
   Duration get aiMessageDelay => Duration(milliseconds: aiMessageDelayMs);
@@ -36,6 +41,7 @@ class AppSettings {
     DiceColorMode? diceColorMode,
     bool? musicEnabled,
     bool? soundEffectsEnabled,
+    Object? languageOverride = _unset,
   }) {
     return AppSettings(
       playerName: playerName ?? this.playerName,
@@ -44,9 +50,15 @@ class AppSettings {
       diceColorMode: diceColorMode ?? this.diceColorMode,
       musicEnabled: musicEnabled ?? this.musicEnabled,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
+      languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
     );
   }
 }
+
+/// Sentinelle distincte de `null` : permet à [AppSettings.copyWith] de
+/// distinguer "ne pas toucher à ce champ" de "le remettre à null" (suivre la
+/// langue de l'appareil), pour un champ nullable.
+const Object _unset = Object();
 
 const _keyPlayerName = 'settings.playerName';
 const _keyAiMessageDelayMs = 'settings.aiMessageDelayMs';
@@ -54,6 +66,7 @@ const _keyAutoActionDelayMs = 'settings.autoActionDelayMs';
 const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
+const _keyLanguageOverride = 'settings.languageOverride';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
 
@@ -76,6 +89,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
         musicEnabled: prefs.getBool(_keyMusicEnabled) ?? true,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
+        languageOverride: prefs.getString(_keyLanguageOverride),
       );
     } catch (_) {
       // Pas de backend de persistance disponible (tests, plateforme non
@@ -129,5 +143,21 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setSoundEffectsEnabled(bool enabled) {
     state = state.copyWith(soundEffectsEnabled: enabled);
     _save(_keySoundEffectsEnabled, enabled);
+  }
+
+  /// [code] est un code de langue supporté (ex. "en"), ou null pour suivre à
+  /// nouveau la langue de l'appareil.
+  Future<void> setLanguageOverride(String? code) async {
+    state = state.copyWith(languageOverride: code);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (code == null) {
+        await prefs.remove(_keyLanguageOverride);
+      } else {
+        await prefs.setString(_keyLanguageOverride, code);
+      }
+    } catch (_) {
+      // Idem : la session en cours garde la valeur en mémoire.
+    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/turn_state.dart';
@@ -25,7 +26,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -62,7 +63,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -103,7 +104,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     // Un seul pump (pas pumpAndSettle) : ce lancer n'a aucun 5 à garder, donc

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
@@ -50,7 +51,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pump();
@@ -93,7 +94,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -138,7 +139,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     // Pas de lancer à animer pour ce type de craque : révélation immédiate.
@@ -179,7 +180,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -217,7 +218,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -260,7 +261,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -315,7 +316,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -347,18 +348,18 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('hérite de 3 dé(s)'), findsOneWidget);
-    expect(find.text('Continuer avec 3 dé(s)'), findsOneWidget);
+    expect(find.textContaining('hérite de 3 dés'), findsOneWidget);
+    expect(find.text('Continuer avec 3 dés'), findsOneWidget);
     expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
     // Tant que le choix n'est pas fait, aucun lancer n'est possible.
     expect(find.text('Lancer les dés'), findsNothing);
 
-    await tester.tap(find.text('Continuer avec 3 dé(s)'));
+    await tester.tap(find.text('Continuer avec 3 dés'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
@@ -387,12 +388,12 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Continuer avec 3 dé(s)'));
+    await tester.tap(find.text('Continuer avec 3 dés'));
     await tester.pump();
 
     expect(find.text('Lancer les dés'), findsOneWidget);
@@ -427,12 +428,12 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Continuer avec 3 dé(s)'));
+    await tester.tap(find.text('Continuer avec 3 dés'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.bankedScore, 500);
@@ -471,7 +472,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -513,7 +514,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -540,7 +541,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pumpAndSettle();
@@ -572,7 +573,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: GameScreen()),
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
       ),
     );
     await tester.pump(); // premier frame : le postFrameCallback programme le 1er pas IA

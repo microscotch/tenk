@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/player.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/ui/widgets/score_sheet.dart';
@@ -17,7 +18,7 @@ void main() {
       Player(name: 'B', totalScore: 1000, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: players, currentPlayerIndex: 0)));
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
 
     // B n'est qu'à 200 pts au-dessus de A : B risque d'être barré si A
     // valide un tour minimal. A, lui, est à 200 pts de barrer B.
@@ -34,7 +35,7 @@ void main() {
       Player(name: 'B', totalScore: 1000, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: players, currentPlayerIndex: 0)));
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
 
     expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     expect(find.byIcon(Icons.gps_fixed), findsNothing);
@@ -47,7 +48,7 @@ void main() {
       Player(name: 'C', totalScore: 1200, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: players, currentPlayerIndex: 0)));
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
 
     // A (200 sous B) et B (200 sous C) peuvent chacun barrer leur voisin du
     // dessus ; B (200 au-dessus de A) et C (200 au-dessus de B) risquent
@@ -65,7 +66,7 @@ void main() {
     a = a.applyBust(); // tiret sur 500
     a = a.applySuccessfulTurn(300); // nouvelle ligne : 800, sans tiret
 
-    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
 
     expect(find.text('800'), findsOneWidget);
     expect(find.text('(500)'), findsOneWidget, reason: 'le score précédent apparaît entre parenthèses');
@@ -85,7 +86,7 @@ void main() {
     a = a.applyBust(); // 500 barré, retombe à 0
     a = a.applySuccessfulTurn(300); // nouvelle ligne 300, courante
 
-    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
 
     expect(find.text('300'), findsOneWidget);
     expect(find.text('(0)'), findsOneWidget, reason: 'la ligne 500 est barrée : on remonte jusqu\'à 0');
@@ -99,7 +100,7 @@ void main() {
       Player(name: 'B', totalScore: 500, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
       home: ScoreSheet(
         players: players,
         currentPlayerIndex: 0,
@@ -123,7 +124,7 @@ void main() {
     ];
     Player? tapped;
 
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
       home: ScoreSheet(players: players, currentPlayerIndex: 0, onTapPlayer: (p) => tapped = p),
     ));
 

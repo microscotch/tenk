@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'score_grid_screen.dart';
 
 class GameOverScreen extends StatelessWidget {
@@ -11,14 +12,15 @@ class GameOverScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final sorted = [...players]..sort((a, b) => b.totalScore.compareTo(a.totalScore));
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fin de la partie'),
+        title: Text(l10n.gameOverTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.grid_on),
-            tooltip: 'Grille des scores',
+            tooltip: l10n.scoreGridLabel,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
             ),
@@ -35,7 +37,7 @@ class GameOverScreen extends StatelessWidget {
                 const Icon(Icons.emoji_events, size: 72, color: Colors.amber),
                 const SizedBox(height: 16),
                 Text(
-                  '${players[winnerIndex].name} gagne !',
+                  l10n.winnerAnnouncement(players[winnerIndex].name),
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -43,12 +45,12 @@ class GameOverScreen extends StatelessWidget {
                 for (final p in sorted)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text('${p.name} : ${p.totalScore}', style: Theme.of(context).textTheme.titleMedium),
+                    child: Text(l10n.playerScoreLine(p.name, p.totalScore), style: Theme.of(context).textTheme.titleMedium),
                   ),
                 const SizedBox(height: 32),
                 FilledButton(
                   onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                  child: const Text('Nouvelle partie'),
+                  child: Text(l10n.newGameButton),
                 ),
               ],
             ),
