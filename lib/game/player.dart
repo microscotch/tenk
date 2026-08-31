@@ -99,6 +99,18 @@ class Player {
   /// la ligne courante (voir [hasTiret]).
   ScoreEntry? get previousEntry => currentIndex >= 1 ? grid[currentIndex - 1] : null;
 
+  /// Dernière ligne non barrée avant la ligne courante, en remontant
+  /// au-delà des lignes barrées (qui ne représentent plus un score valide) :
+  /// null s'il n'en reste aucune. Contrairement à [previousEntry] (toujours
+  /// la ligne juste avant, utilisée en interne pour le repli du barrage),
+  /// c'est celle-ci qu'il faut afficher comme "score précédent" à l'écran.
+  ScoreEntry? get lastUnbarredEntry {
+    for (var i = currentIndex - 1; i >= 0; i--) {
+      if (!grid[i].isBarred) return grid[i];
+    }
+    return null;
+  }
+
   int get minimumForNextTurn => hasEntered ? normalThreshold : entryThreshold;
 
   /// Applique un tour validé avec succès (le contrôle du minimum requis et
@@ -116,8 +128,10 @@ class Player {
   }
 
   /// Applique un craque : marque la ligne courante d'un tiret si elle n'en a
-  /// pas déjà un actif, ou la barre sinon.
+  /// pas déjà un actif, ou la barre sinon. Un craque à 0 ne marque jamais de
+  /// tiret : il n'y a rien à sanctionner en dessous du plancher.
   Player applyBust() {
+    if (totalScore == 0) return this;
     if (!hasTiret) {
       final marked = List<ScoreEntry>.of(grid);
       marked[currentIndex] = currentEntry.copyWith(hasTiret: true);

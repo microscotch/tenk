@@ -76,6 +76,22 @@ void main() {
     );
   });
 
+  testWidgets('le score précédent ignore les lignes barrées, et affiche 0 s\'il n\'en reste aucune', (tester) async {
+    // Grid final : [0, 500(barré), 300(courante)]. La ligne juste avant
+    // (500) est barrée : le score précédent affiché doit remonter jusqu'à
+    // 0, pas afficher "500".
+    var a = Player(name: 'A').applySuccessfulTurn(500);
+    a = a.applyBust(); // tiret sur 500
+    a = a.applyBust(); // 500 barré, retombe à 0
+    a = a.applySuccessfulTurn(300); // nouvelle ligne 300, courante
+
+    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
+
+    expect(find.text('300'), findsOneWidget);
+    expect(find.text('(0)'), findsOneWidget, reason: 'la ligne 500 est barrée : on remonte jusqu\'à 0');
+    expect(find.text('(500)'), findsNothing);
+  });
+
   testWidgets('affiche la probabilité de marquer (fraction irréductible) pour le joueur courant seulement',
       (tester) async {
     final players = [
@@ -91,7 +107,8 @@ void main() {
       ),
     ));
 
-    expect(find.text('1/3'), findsOneWidget, reason: '2/6 doit être affiché sous forme réduite');
+    expect(find.text('1/3 (33.33%)'), findsOneWidget,
+        reason: '2/6 doit être affiché sous forme réduite, avec le pourcentage à 2 décimales');
     expect(
       find.descendant(of: _rowOf('B'), matching: find.textContaining('/')),
       findsNothing,

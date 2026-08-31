@@ -2,38 +2,92 @@ import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
 
+/// Largeur minimale d'une colonne pour que le score (jusqu'à 5 chiffres,
+/// icônes tiret/courant comprises) ne soit jamais contraint à passer à la
+/// ligne.
+const double _minColumnWidth = 108.0;
+
 /// Grille de score complète : une colonne par joueur (initiales désambiguïsées
 /// en cas de collision comme entête ; nom complet s'il n'y a qu'un seul
 /// joueur affiché — voir l'écran de jeu, qui ouvre cette même grille filtrée
 /// sur un joueur en cliquant sur sa ligne), avec tous ses tours validés dans
 /// l'ordre, le tiret ou le barré propre à chaque ligne, et la ligne courante
 /// mise en évidence.
-class ScoreGridScreen extends StatelessWidget {
+///
+/// Les colonnes s'étalent pour remplir toute la largeur disponible, sans
+/// jamais descendre sous [_minColumnWidth] ; si tous les joueurs ne tiennent
+/// pas sur une page à cette largeur minimale, elles sont réparties sur
+/// plusieurs pages navigables façon carrousel (glissement + points de page).
+class ScoreGridScreen extends StatefulWidget {
   final List<Player> players;
 
   const ScoreGridScreen({super.key, required this.players});
 
   @override
+  State<ScoreGridScreen> createState() => _ScoreGridScreenState();
+}
+
+class _ScoreGridScreenState extends State<ScoreGridScreen> {
+  final _pageController = PageController();
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final labels = players.length == 1 ? [players[0].name] : shortLabelsFor(players);
+    final labels = widget.players.length == 1 ? [widget.players[0].name] : shortLabelsFor(widget.players);
     return Scaffold(
       appBar: AppBar(title: const Text('Grille des scores')),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: LayoutBuilder(builder: (context, constraints) {
+            final columnsPerPage =
+                (constraints.maxWidth / _minColumnWidth).floor().clamp(1, widget.players.length);
+            final pageCount = (widget.players.length / columnsPerPage).ceil();
+
+            if (pageCount <= 1) {
+              return _GridPage(players: widget.players, labels: labels, start: 0, end: widget.players.length);
+            }
+
+            return Column(
               children: [
-                for (var i = 0; i < players.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: IntrinsicWidth(child: _PlayerColumn(player: players[i], label: labels[i])),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: pageCount,
+                    onPageChanged: (p) => setState(() => _page = p),
+                    itemBuilder: (context, pageIndex) {
+                      final start = pageIndex * columnsPerPage;
+                      final end = (start + columnsPerPage).clamp(0, widget.players.length);
+                      return _GridPage(players: widget.players, labels: labels, start: start, end: end);
+                    },
                   ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < pageCount; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Icon(
+                          Icons.circle,
+                          size: 8,
+                          color: i == _page
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
+                  ],
+                ),
               ],
-            ),
-          ),
+            );
+          }),
         ),
       ),
     );
@@ -78,6 +132,35 @@ List<String> shortLabelsFor(List<Player> players) {
     length++;
   }
   return labels;
+}
+
+/// Une page du carrousel : les colonnes des joueurs [start] (inclus) à [end]
+/// (exclus), étalées pour remplir toute la largeur disponible.
+class _GridPage extends StatelessWidget {
+  final List<Player> players;
+  final List<String> labels;
+  final int start;
+  final int end;
+
+  const _GridPage({required this.players, required this.labels, required this.start, required this.end});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = start; i < end; i++)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: _PlayerColumn(player: players[i], label: labels[i]),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PlayerColumn extends StatelessWidget {

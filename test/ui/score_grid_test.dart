@@ -94,6 +94,43 @@ void main() {
     expect(find.text('Alice'), findsNothing, reason: 'la grille est filtrée sur ce seul joueur');
   });
 
+  testWidgets('bascule en carrousel paginé quand toutes les colonnes ne tiennent pas sur une page',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+
+    // Largeur utile ~368 (400 - marges) / largeur mini de colonne 108 -> 3
+    // colonnes par page, donc 2 pages pour 6 joueurs.
+    final players = [for (var i = 0; i < 6; i++) Player(name: 'J$i')];
+
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players)));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PageView), findsOneWidget);
+    expect(find.text('J0'), findsOneWidget);
+    expect(find.text('J3'), findsNothing, reason: 'pas encore visible : sur la deuxième page');
+
+    await tester.drag(find.byType(PageView), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+
+    expect(find.text('J3'), findsOneWidget);
+    expect(find.text('J0'), findsNothing, reason: 'la première page a défilé hors champ');
+  });
+
+  testWidgets('pas de carrousel quand toutes les colonnes tiennent sur une seule page', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+
+    final players = [Player(name: 'Alice'), Player(name: 'Bob')];
+
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players)));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PageView), findsNothing);
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('B'), findsOneWidget);
+  });
+
   group('shortLabelsFor', () {
     test('une seule lettre par joueur quand ça suffit à les distinguer', () {
       final players = [Player(name: 'Alice'), Player(name: 'Bob'), Player(name: 'Chloé')];

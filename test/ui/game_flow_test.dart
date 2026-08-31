@@ -32,6 +32,10 @@ void main() {
 
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
+      // Score déjà entamé : un craque à 0 ne marque plus jamais de tiret
+      // (voir le test dédié plus bas), donc ce scénario générique a besoin
+      // d'un score non nul pour exercer le marquage normal.
+      players: [Player(name: 'A', totalScore: 700, hasEntered: true), Player(name: 'B')],
       activeTurn: TurnState(
         diceToRoll: 3,
         pendingRoll: analyzeRoll([2, 3, 4]), // aucun dé marquant
@@ -65,7 +69,41 @@ void main() {
     final after = container.read(gameProvider)!;
     expect(after.currentPlayerIndex, 1, reason: 'la main doit passer au joueur B');
     expect(after.players[0].hasTiret, isTrue, reason: 'le craque doit marquer un tiret sur A');
-    expect(after.players[0].totalScore, 0, reason: 'le craque ne doit pas changer le score déjà acquis');
+    expect(after.players[0].totalScore, 700, reason: 'le craque ne doit pas changer le score déjà acquis');
+  });
+
+  testWidgets('un craque à 0 n\'affiche jamais de tiret (rien à sanctionner en dessous du plancher)',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([2, 3, 4]), // aucun dé marquant
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[0].hasTiret, isFalse, reason: 'un craque à 0 ne marque jamais de tiret');
+    expect(after.players[0].totalScore, 0);
   });
 
   testWidgets(

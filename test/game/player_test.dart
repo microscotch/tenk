@@ -40,15 +40,15 @@ void main() {
     expect(p.hasTiret, isFalse);
   });
 
-  test('après un score barré, un nouveau cycle de tiret peut démarrer', () {
+  test('un craque à 0 ne marque jamais de tiret : rien à sanctionner en dessous du plancher', () {
     var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
     p = p.applyBust(); // tiret, point de retour = 0
     p = p.applyBust(); // barré -> revient à 0, tiret effacé
     expect(p.totalScore, 0);
     expect(p.hasTiret, isFalse);
 
-    p = p.applyBust(); // nouveau cycle : tiret à nouveau, rien à barrer de plus bas
-    expect(p.hasTiret, isTrue);
+    p = p.applyBust(); // craque à 0 : sans effet, jamais de tiret
+    expect(p.hasTiret, isFalse);
     expect(p.totalScore, 0);
   });
 

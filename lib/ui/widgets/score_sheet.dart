@@ -97,7 +97,7 @@ class _PlayerRow extends StatelessWidget {
     // collision au prochain tour de l'adversaire concerné.
     final dangerBelow = gaps.below == 200;
     final opportunityAbove = gaps.above == 200;
-    final previousEntry = player.previousEntry;
+    final previousEntry = player.lastUnbarredEntry;
     final turn = turnForProbability;
 
     return Padding(
@@ -158,37 +158,32 @@ class _PlayerRow extends StatelessWidget {
                         ),
                       ),
                     Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    if (previousEntry != null) ...[
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${previousEntry.value})',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade400,
-                          decoration: previousEntry.isBarred ? TextDecoration.lineThrough : null,
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${previousEntry?.value ?? 0})',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                    ),
+                    if (previousEntry?.hasTiret ?? false)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 2),
+                        child: Tooltip(
+                          message: 'Le score précédent portait un tiret',
+                          child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
                         ),
                       ),
-                      if (previousEntry.hasTiret)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 2),
-                          child: Tooltip(
-                            message: 'Le score précédent portait un tiret',
-                            child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
-                          ),
-                        ),
-                    ],
                     if (turn != null) ...[
                       const SizedBox(width: 8),
                       Builder(builder: (context) {
                         final (num, den) = scoreProbabilityFraction(turn.diceToRoll, turn.extendedValues);
+                        final p = num / den;
                         return Tooltip(
                           message: 'Probabilité de marquer sur ${turn.diceToRoll} dé(s)',
                           child: Text(
-                            '$num/$den',
+                            '$num/$den (${(p * 100).toStringAsFixed(2)}%)',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: _probabilityColor(num / den),
+                              color: _probabilityColor(p),
                             ),
                           ),
                         );
