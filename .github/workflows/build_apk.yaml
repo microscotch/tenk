@@ -118,6 +118,12 @@ jobs:
       # clé API dédiée (secrets du repo) — indépendant du compte Apple perso,
       # fonctionne donc aussi sans session Xcode connectée.
       - name: Envoie vers TestFlight
+        # Ne bloque pas le reste du job (notamment le build de l'IPA de dev
+        # ci-dessous) si l'envoi échoue, par exemple à cause d'un numéro de
+        # build déjà utilisé — ce n'est pas la seule chose qui compte dans ce
+        # job, et un run n'a pas toujours vocation à produire un nouveau
+        # build TestFlight.
+        continue-on-error: true
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
