@@ -19,12 +19,36 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+
+      # Reconstitue le keystore de release (secret du repo) : sans lui, le
+      # build "release" retombe sur la clé debug (cf. android/app/build.gradle.kts)
+      # et produit un binaire non signé pour de vrai, inutilisable pour une
+      # mise à jour ou une publication sur le Play Store.
+      - name: Importe le keystore Android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo -n "$KEYSTORE_BASE64" | base64 --decode -o android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEYSTORE_PASSWORD
+          keyAlias=upload
+          storeFile=upload-keystore.jks
+          EOF
+
       - run: flutter build apk --release
+      - run: flutter build appbundle --release
 
       - uses: actions/upload-artifact@v4
         with:
           name: le10000-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: le10000-aab
+          path: build/app/outputs/bundle/release/app-release.aab
 
   build-ios:
     runs-on: macos-latest
