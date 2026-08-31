@@ -15,7 +15,18 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   int get humanPlayerCount => _setup.playerNames.length - _setup.aiPlayers.length;
   bool shouldShowPassDevice(int index) => !isAiPlayer(index) && humanPlayerCount > 1;
   bool isAiPlayer(int index) => _setup.isAi(index);
+  bool isAutoPlayer(int index) => _setup.isAuto(index);
   String nameOf(int index) => _setup.playerNames[index];
+
+  /// Vrai si tous les joueurs de la partie sont en mode auto : utilisé pour
+  /// savoir si la transition vers l'écran de jeu, une fois l'ordre déterminé,
+  /// peut se valider seule (aucun joueur non-auto à qui laisser la main).
+  bool get allPlayersAreAuto {
+    for (var i = 0; i < _setup.playerNames.length; i++) {
+      if (!_setup.isAuto(i)) return false;
+    }
+    return true;
+  }
 
   void start(GameSetup setup) {
     _setup = setup;
@@ -41,6 +52,7 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
     _setup.aiPlayers.forEach((origIndex, difficulty) {
       rotatedAi[(origIndex - winner + n) % n] = difficulty;
     });
-    return GameSetup(playerNames: rotatedNames, aiPlayers: rotatedAi);
+    final rotatedAuto = {for (final origIndex in _setup.autoPlayers) (origIndex - winner + n) % n};
+    return GameSetup(playerNames: rotatedNames, aiPlayers: rotatedAi, autoPlayers: rotatedAuto);
   }
 }

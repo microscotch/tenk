@@ -55,4 +55,61 @@ void main() {
 
     expect(find.byType(ScoreGridScreen), findsOneWidget);
   });
+
+  testWidgets('affiche une colonne par joueur, avec ses initiales comme libellé', (tester) async {
+    final players = [Player(name: 'Alice'), Player(name: 'Bob')];
+
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('B'), findsOneWidget);
+  });
+
+  testWidgets('un clic sur la ligne d\'un joueur ouvre sa grille seule, avec son nom complet en libellé',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['Alice', 'Bob']).startTurn();
+    engine = engine.copyWith(activeTurn: const TurnState(diceToRoll: 5, bankedScore: 0));
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['Alice', 'Bob']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bob'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScoreGridScreen), findsOneWidget);
+    expect(find.text('Bob'), findsOneWidget, reason: 'le nom complet sert de libellé, pas juste "B"');
+    expect(find.text('Alice'), findsNothing, reason: 'la grille est filtrée sur ce seul joueur');
+  });
+
+  group('shortLabelsFor', () {
+    test('une seule lettre par joueur quand ça suffit à les distinguer', () {
+      final players = [Player(name: 'Alice'), Player(name: 'Bob'), Player(name: 'Chloé')];
+      expect(shortLabelsFor(players), ['A', 'B', 'C']);
+    });
+
+    test('rallonge seulement les joueurs en collision, chacun jusqu\'à distinction', () {
+      // Bob est unique dès la première lettre ; Alice et Alex collisionnent
+      // sur "A" puis encore sur "AL", et ne se distinguent qu'à "ALI"/"ALE".
+      final players = [Player(name: 'Alice'), Player(name: 'Bob'), Player(name: 'Alex')];
+      expect(shortLabelsFor(players), ['ALI', 'B', 'ALE']);
+    });
+
+    test('accepte une collision résiduelle si plus aucune lettre ne distingue', () {
+      final players = [Player(name: 'Ana'), Player(name: 'Ana')];
+      expect(shortLabelsFor(players), ['ANA', 'ANA']);
+    });
+  });
 }

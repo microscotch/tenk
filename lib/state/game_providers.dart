@@ -7,15 +7,20 @@ import '../game/game_engine.dart';
 import '../game/turn_result.dart';
 import '../game/turn_state.dart';
 
-/// Configuration d'une partie : les noms des joueurs, et pour chacun
-/// éventuellement une difficulté d'IA (absent d'index = joueur humain).
+/// Configuration d'une partie : les noms des joueurs, pour chacun
+/// éventuellement une difficulté d'IA (absent d'index = joueur humain), et
+/// l'ensemble des joueurs en "mode auto" (leurs actions se valident seules
+/// après le délai réglé dans les préférences ; sinon un bouton explicite
+/// attend toujours un clic manuel).
 class GameSetup {
   final List<String> playerNames;
   final Map<int, AiDifficulty> aiPlayers;
+  final Set<int> autoPlayers;
 
-  const GameSetup({required this.playerNames, this.aiPlayers = const {}});
+  const GameSetup({required this.playerNames, this.aiPlayers = const {}, this.autoPlayers = const {}});
 
   bool isAi(int index) => aiPlayers.containsKey(index);
+  bool isAuto(int index) => autoPlayers.contains(index);
 }
 
 final gameProvider = NotifierProvider<GameNotifier, GameEngine?>(GameNotifier.new);
@@ -27,6 +32,11 @@ class GameNotifier extends Notifier<GameEngine?> {
   GameEngine? build() => null;
 
   bool isAiPlayer(int index) => _setup?.isAi(index) ?? false;
+
+  /// Vrai si les actions du joueur [index] doivent se valider seules après
+  /// le délai réglé dans les préférences (sinon elles attendent toujours un
+  /// clic manuel sur le bouton, quel que soit ce délai).
+  bool isAutoPlayer(int index) => _setup?.isAuto(index) ?? false;
 
   /// Nombre de joueurs humains dans la partie (les autres sont des bots IA).
   int get humanPlayerCount => (_setup?.playerNames.length ?? 0) - (_setup?.aiPlayers.length ?? 0);
@@ -95,20 +105,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     final engine = state!;
 
     if (engine.activeTurn == null) {
-      // Choix de main en attente : accepter la main héritée n'a aucun coût
-      // (un craque a les mêmes conséquences quel que soit le nombre de dés)
-      // mais un vrai bénéfice (le score hérité comme base gratuite), donc
-      // l'IA l'accepte sauf si ça dépasserait déjà 10000 ou que le risque
-      // est trop élevé pour son profil.
-      final canContinue = !engine.inheritedHandExceedsWinningScore;
-      final wantsToContinue = canContinue &&
-          _currentStrategy().decideAcceptInheritedHand(
-            diceCount: engine.nextTurnDice,
-            extendedValues: engine.inheritedExtendedValues,
-            inheritedScore: engine.inheritedScore,
-            currentTotalScore: engine.currentPlayer.totalScore,
-          );
-      startTurn(useFullHand: !wantsToContinue);
+      startTurn(useFullHand: !previewAiAcceptInheritedHand());
       return;
     }
 
@@ -120,29 +117,47 @@ class GameNotifier extends Notifier<GameEngine?> {
     }
 
     if (turn.pendingRoll != null) {
-      final strategy = _currentStrategy();
-      final decline = strategy.decideDeclineFives(turn.pendingRoll!, turn);
-      applyKeep(declineFivesCount: decline);
+      applyKeep(declineFivesCount: _currentStrategy().decideDeclineFives(turn.pendingRoll!, turn));
       return;
     }
 
     if (!turn.mustContinue) {
       final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
-      if (attempt.success) {
-        final strategy = _currentStrategy();
-        final wantsToContinue = strategy.decideContinue(
-          state: turn,
-          minimumRequired: engine.minimumForCurrentPlayer,
-          currentTotalScore: engine.currentPlayer.totalScore,
-        );
-        if (!wantsToContinue) {
-          bank();
-          return;
-        }
+      if (attempt.success && !previewAiContinue(turn)) {
+        bank();
+        return;
       }
     }
 
     roll();
+  }
+
+  /// Prévisualise, sans rien modifier, si l'IA du joueur courant accepterait
+  /// la main héritée en attente (score de base déjà au-delà de 10000, ou
+  /// risque trop élevé pour son profil sinon). Utilisé à la fois par
+  /// [playAiTurnStep] et par l'UI pour afficher un libellé de bouton explicite
+  /// avant que la décision ne s'exécute.
+  bool previewAiAcceptInheritedHand() {
+    final engine = state!;
+    if (engine.inheritedHandExceedsWinningScore) return false;
+    return _currentStrategy().decideAcceptInheritedHand(
+      diceCount: engine.nextTurnDice,
+      extendedValues: engine.inheritedExtendedValues,
+      inheritedScore: engine.inheritedScore,
+      currentTotalScore: engine.currentPlayer.totalScore,
+    );
+  }
+
+  /// Prévisualise si l'IA du joueur courant choisirait de continuer à
+  /// lancer plutôt que de s'arrêter sur [turn] (l'appelant garantit que
+  /// s'arrêter y est déjà légal). Même rôle que [previewAiAcceptInheritedHand]
+  /// pour cette autre décision.
+  bool previewAiContinue(TurnState turn) {
+    return _currentStrategy().decideContinue(
+      state: turn,
+      minimumRequired: state!.minimumForCurrentPlayer,
+      currentTotalScore: state!.currentPlayer.totalScore,
+    );
   }
 
   AiStrategy _currentStrategy() {

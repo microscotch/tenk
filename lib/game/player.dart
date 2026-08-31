@@ -93,6 +93,12 @@ class Player {
   /// [Player] dans un état donné.
   int get previousScore => currentIndex >= 1 ? grid[currentIndex - 1].value : 0;
 
+  /// Ligne précédant la ligne courante dans la grille (null s'il n'y en a
+  /// pas), avec son éventuel tiret/barré historique — pour afficher l'état
+  /// de sanction du score précédent, indépendamment du cycle en cours sur
+  /// la ligne courante (voir [hasTiret]).
+  ScoreEntry? get previousEntry => currentIndex >= 1 ? grid[currentIndex - 1] : null;
+
   int get minimumForNextTurn => hasEntered ? normalThreshold : entryThreshold;
 
   /// Applique un tour validé avec succès (le contrôle du minimum requis et

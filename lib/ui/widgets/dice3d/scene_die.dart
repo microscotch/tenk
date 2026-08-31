@@ -84,8 +84,8 @@ class _Scene3DDieState extends State<Scene3DDie> {
   // de regarder le dé du dessus (la face "top" domine), avec juste assez
   // d'écart par rapport à la verticale pure pour distinguer les faces
   // latérales et garder un rendu clairement 3D (pas un carré plat).
-  static const _restTiltX = -1.15;
-  static const _restTiltY = 0.42;
+  static const _restTiltX = -0.95;
+  static const _restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
   static const _rollSeconds = 0.65;
 
   final _random = math.Random();

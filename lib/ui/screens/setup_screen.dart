@@ -21,7 +21,8 @@ class SetupScreen extends ConsumerStatefulWidget {
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
   late final List<TextEditingController> _names;
-  final List<bool> _isBot = [false, false];
+  late final List<bool> _isBot;
+  late final List<bool> _isAuto;
 
   /// Difficulté partagée par tous les bots de la partie.
   AiDifficulty _aiDifficulty = AiDifficulty.equilibre;
@@ -31,13 +32,49 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   void initState() {
     super.initState();
-    // Le joueur 1 est par défaut le propriétaire de l'appareil, s'il a
-    // renseigné son nom dans les réglages.
     final ownerName = ref.read(settingsProvider).playerName.trim();
+    // Par défaut : le propriétaire de l'appareil (humain) et une IA, tous
+    // deux en mode auto désactivé (chaque action attend un clic manuel).
     _names = [
       TextEditingController(text: ownerName.isEmpty ? 'Joueur 1' : ownerName),
-      TextEditingController(text: 'Joueur 2'),
+      TextEditingController(text: kAiCharacterNames[_random.nextInt(kAiCharacterNames.length)]),
     ];
+    _isBot = [false, true];
+    _isAuto = [false, false];
+
+    if (ownerName.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _promptForOwnerName());
+    }
+  }
+
+  /// Demande son nom au propriétaire de l'appareil s'il n'est pas déjà
+  /// renseigné dans les préférences ; sautable (le nom par défaut reste).
+  Future<void> _promptForOwnerName() async {
+    if (!mounted) return;
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Votre nom ?'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Nom du joueur principal'),
+          onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Plus tard')),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Valider'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty || !mounted) return;
+    ref.read(settingsProvider.notifier).setPlayerName(name);
+    setState(() => _names[0].text = name);
   }
 
   bool get _hasAnyBot => _isBot.any((b) => b);
@@ -78,6 +115,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     setState(() {
       _names.add(TextEditingController(text: 'Joueur ${_names.length + 1}'));
       _isBot.add(false);
+      _isAuto.add(false);
     });
   }
 
@@ -86,6 +124,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     setState(() {
       _names.removeLast().dispose();
       _isBot.removeLast();
+      _isAuto.removeLast();
     });
   }
 
@@ -94,9 +133,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       for (var i = 0; i < _isBot.length; i++)
         if (_isBot[i]) i: _aiDifficulty,
     };
+    final autoPlayers = {for (var i = 0; i < _isAuto.length; i++) if (_isAuto[i]) i};
     final setup = GameSetup(
       playerNames: [for (final c in _names) c.text.trim().isEmpty ? 'Joueur' : c.text.trim()],
       aiPlayers: aiPlayers,
+      autoPlayers: autoPlayers,
     );
     ref.read(diceOffProvider.notifier).start(setup);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiceOffScreen()));
@@ -134,7 +175,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                           decoration: InputDecoration(labelText: 'Nom du joueur ${i + 1}', border: const OutlineInputBorder()),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        label: const Text('Auto'),
+                        avatar: _isAuto[i] ? const Icon(Icons.bolt, size: 18) : null,
+                        selected: _isAuto[i],
+                        onSelected: (selected) => setState(() => _isAuto[i] = selected),
+                      ),
+                      const SizedBox(width: 8),
                       FilterChip(
                         label: const Text('IA'),
                         avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,

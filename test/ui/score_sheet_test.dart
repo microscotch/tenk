@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/player.dart';
+import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/ui/widgets/score_sheet.dart';
 
 /// La ligne (le [Container]) affichant le nom [playerName], pour vérifier
@@ -57,5 +58,61 @@ void main() {
     final bIcons = _rowOf('B');
     expect(find.descendant(of: bIcons, matching: find.byIcon(Icons.gps_fixed)), findsOneWidget);
     expect(find.descendant(of: bIcons, matching: find.byIcon(Icons.warning_amber_rounded)), findsOneWidget);
+  });
+
+  testWidgets('affiche le score précédent entre parenthèses, avec son état de sanction', (tester) async {
+    var a = Player(name: 'A').applySuccessfulTurn(500); // ligne : 500
+    a = a.applyBust(); // tiret sur 500
+    a = a.applySuccessfulTurn(300); // nouvelle ligne : 800, sans tiret
+
+    await tester.pumpWidget(MaterialApp(home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
+
+    expect(find.text('800'), findsOneWidget);
+    expect(find.text('(500)'), findsOneWidget, reason: 'le score précédent apparaît entre parenthèses');
+    expect(
+      find.descendant(of: _rowOf('A'), matching: find.byIcon(Icons.remove)),
+      findsOneWidget,
+      reason: 'la ligne précédente portait un tiret, signalé à côté du score entre parenthèses',
+    );
+  });
+
+  testWidgets('affiche la probabilité de marquer (fraction irréductible) pour le joueur courant seulement',
+      (tester) async {
+    final players = [
+      Player(name: 'A', totalScore: 500, hasEntered: true),
+      Player(name: 'B', totalScore: 500, hasEntered: true),
+    ];
+
+    await tester.pumpWidget(MaterialApp(
+      home: ScoreSheet(
+        players: players,
+        currentPlayerIndex: 0,
+        activeTurn: const TurnState(diceToRoll: 1, bankedScore: 0), // 1 dé : 2/6 réduit à 1/3
+      ),
+    ));
+
+    expect(find.text('1/3'), findsOneWidget, reason: '2/6 doit être affiché sous forme réduite');
+    expect(
+      find.descendant(of: _rowOf('B'), matching: find.textContaining('/')),
+      findsNothing,
+      reason: 'seul le joueur courant (avec un tour actif) affiche une probabilité',
+    );
+  });
+
+  testWidgets('un joueur cliqué déclenche onTapPlayer avec ce joueur', (tester) async {
+    final players = [
+      Player(name: 'A', totalScore: 100, hasEntered: true),
+      Player(name: 'B', totalScore: 200, hasEntered: true),
+    ];
+    Player? tapped;
+
+    await tester.pumpWidget(MaterialApp(
+      home: ScoreSheet(players: players, currentPlayerIndex: 0, onTapPlayer: (p) => tapped = p),
+    ));
+
+    await tester.tap(find.text('B'));
+    await tester.pump();
+
+    expect(tapped?.name, 'B');
   });
 }

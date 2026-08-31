@@ -192,21 +192,37 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     action();
   }
 
+  /// Programme (ou annule) l'auto-validation d'[action] selon le mode auto
+  /// du joueur [playerIndex] et le délai [delay] réglé dans les préférences :
+  /// un bouton explicite reste toujours affiché et cliquable (voir les
+  /// méthodes `_build*View`), mais ne se déclenche seul que si les deux
+  /// conditions sont réunies (délai > 0 requis, sinon "désactivé").
+  void _scheduleIfAuto(int playerIndex, VoidCallback action, Duration delay) {
+    final notifier = ref.read(gameProvider.notifier);
+    if (notifier.isAutoPlayer(playerIndex) && delay > Duration.zero) {
+      _scheduleAutoAction(action, delay);
+    } else {
+      _cancelAutoAction();
+    }
+  }
+
   void _scheduleAiIfNeeded() {
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
     if (!notifier.isAiPlayer(engine.currentPlayerIndex)) return;
-    _scheduleAutoAction(
+    _scheduleIfAuto(
+      engine.currentPlayerIndex,
       () => ref.read(gameProvider.notifier).playAiTurnStep(),
       ref.read(settingsProvider).aiMessageDelay,
     );
   }
 
-  /// Fait avancer automatiquement le tour d'un joueur humain quand il n'y a
-  /// aucune décision réelle à prendre : pas de choix possible sur les 5 à
-  /// garder (on garde tout d'office), ou score insuffisant/50 interdit/dés
-  /// chauds obligeant de toute façon à relancer.
+  /// Programme l'auto-validation du tour d'un joueur humain (en mode auto)
+  /// quand il n'y a aucune décision réelle à prendre : pas de choix possible
+  /// sur les 5 à garder (on garde tout d'office), ou score insuffisant/50
+  /// interdit/dés chauds obligeant de toute façon à relancer. Un bouton
+  /// explicite est affiché dans tous les cas par les méthodes `_build*View`.
   void _scheduleAutoAdvanceIfNeeded() {
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
@@ -224,7 +240,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         _cancelAutoAction();
         return;
       }
-      _scheduleAutoAction(() {
+      _scheduleIfAuto(engine.currentPlayerIndex, () {
         if (ref.read(gameProvider)?.activeTurn?.pendingRoll != analysis) return;
         ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0);
       }, ref.read(settingsProvider).autoActionDelay);
@@ -236,7 +252,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       _cancelAutoAction();
       return;
     }
-    _scheduleAutoAction(() {
+    _scheduleIfAuto(engine.currentPlayerIndex, () {
       final currentTurn = ref.read(gameProvider)?.activeTurn;
       if (currentTurn != turn) return;
       ref.read(gameProvider.notifier).roll();
@@ -297,12 +313,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
+                  ScoreSheet(
+                    players: engine.players,
+                    currentPlayerIndex: engine.currentPlayerIndex,
+                    onTapPlayer: _openPlayerGrid,
+                  ),
                   const SizedBox(height: 16),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Center(
-                        child: isAiTurn ? const Text('L\'IA réfléchit...') : _buildHandChoiceView(engine),
+                        child: isAiTurn ? _buildAiHandChoiceView(engine) : _buildHandChoiceView(engine),
                       ),
                     ),
                   ),
@@ -325,7 +345,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                ScoreSheet(players: engine.players, currentPlayerIndex: engine.currentPlayerIndex),
+                ScoreSheet(
+                  players: engine.players,
+                  currentPlayerIndex: engine.currentPlayerIndex,
+                  activeTurn: turn,
+                  onTapPlayer: _openPlayerGrid,
+                ),
                 const SizedBox(height: 16),
                 if (engine.isInFinalRound)
                   const Padding(
@@ -347,10 +372,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Center(
-                      child: isAiTurn
-                          ? _buildAiTurnView(turn)
-                          : (turn.busted
-                              ? _buildBustedView(turn)
+                      child: turn.busted
+                          ? _buildBustedView(turn)
+                          : (isAiTurn
+                              ? _buildAiTurnView(engine, turn)
                               : (turn.pendingRoll != null
                                   ? _buildPendingRollView(engine, turn)
                                   : _buildIdleView(engine, turn))),
@@ -375,6 +400,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ),
       ),
     ];
+  }
+
+  /// Ouvre la grille de score filtrée sur un seul joueur (clic sur sa ligne
+  /// dans le [ScoreSheet]) : son nom complet sert alors de libellé de
+  /// colonne plutôt que des initiales.
+  void _openPlayerGrid(Player player) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ScoreGridScreen(players: [player])));
   }
 
   Widget _buildHandChoiceView(GameEngine engine) {
@@ -426,13 +458,80 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  Widget _buildAiTurnView(TurnState turn) {
+  /// Choix de main hérité pour l'IA : un unique bouton reflétant la décision
+  /// qu'elle prendrait (voir [GameNotifier.previewAiAcceptInheritedHand]),
+  /// qui déclenche cette même décision (via [GameNotifier.playAiTurnStep]).
+  Widget _buildAiHandChoiceView(GameEngine engine) {
+    final notifier = ref.read(gameProvider.notifier);
+    final accepts = notifier.previewAiAcceptInheritedHand();
+    final label = accepts ? 'Reprendre avec ${engine.nextTurnDice} dé(s)' : 'Repartir avec 5 dés neufs';
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (turn.pendingRoll != null) _diceRow(turn.pendingRoll!, 0),
+        Text(
+          '${engine.currentPlayer.name} hérite de ${engine.nextTurnDice} dé(s) du tour précédent.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 16),
-        const Text('L\'IA réfléchit...'),
+        Text('Score en cours : ${engine.inheritedScore}',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: [
+            for (final (i, d) in engine.inheritedKeptDice.indexed)
+              DieWidget(
+                value: d.value,
+                state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+                bodyColor: _diceColor(i),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: () => ref.read(gameProvider.notifier).playAiTurnStep(),
+          child: Text(label),
+        ),
+      ],
+    );
+  }
+
+  /// Tour de l'IA en cours : un unique bouton explicite reflétant l'action
+  /// qu'elle va effectuer, qui déclenche cette même action (les deux
+  /// s'appuient sur la même logique de décision, voir [GameNotifier]).
+  /// Le craque est géré séparément par [_buildBustedView] (appelé avant
+  /// celle-ci par l'appelant, IA ou humain confondus).
+  Widget _buildAiTurnView(GameEngine engine, TurnState turn) {
+    final notifier = ref.read(gameProvider.notifier);
+    void action() => ref.read(gameProvider.notifier).playAiTurnStep();
+
+    if (turn.pendingRoll != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _diceRow(turn.pendingRoll!, 0),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: action, child: const Text('Garder les dés')),
+        ],
+      );
+    }
+
+    final String label;
+    if (turn.mustContinue) {
+      label = 'Relancer (dés chauds)';
+    } else if (tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer).success && !notifier.previewAiContinue(turn)) {
+      label = 'S\'arrêter';
+    } else {
+      label = 'Lancer les dés';
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('${turn.diceToRoll} dé(s) à lancer', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 16),
+        FilledButton(onPressed: action, child: Text(label)),
       ],
     );
   }
@@ -531,9 +630,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ],
           ),
         ] else
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: FilledButton(
+              onPressed: () => ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0),
+              child: const Text('Garder les dés'),
+            ),
           ),
       ],
     );
@@ -573,7 +675,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ],
           )
         else
-          const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+          FilledButton(
+            onPressed: () => ref.read(gameProvider.notifier).roll(),
+            child: Text(turn.mustContinue ? 'Relancer (dés chauds)' : 'Lancer les dés'),
+          ),
       ],
     );
   }

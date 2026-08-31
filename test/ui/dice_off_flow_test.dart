@@ -92,7 +92,11 @@ void main() {
     addTearDown(container.dispose);
 
     container.read(diceOffProvider.notifier).start(
-          const GameSetup(playerNames: ['Joueur', 'IA'], aiPlayers: {1: AiDifficulty.equilibre}),
+          const GameSetup(
+            playerNames: ['Joueur', 'IA'],
+            aiPlayers: {1: AiDifficulty.equilibre},
+            autoPlayers: {1},
+          ),
         );
 
     await tester.pumpWidget(
@@ -132,6 +136,7 @@ void main() {
           const GameSetup(
             playerNames: ['IA 1', 'IA 2'],
             aiPlayers: {0: AiDifficulty.equilibre, 1: AiDifficulty.equilibre},
+            autoPlayers: {0, 1},
           ),
         );
 
@@ -150,8 +155,10 @@ void main() {
       expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
     }
 
-    // Aucun joueur humain : pas de bouton à cliquer, la partie démarre seule.
-    expect(find.text('Commencer la partie'), findsNothing);
+    // Aucun joueur humain : le bouton "Commencer la partie" est affiché
+    // immédiatement (explicite), mais se valide seul (tous les joueurs sont
+    // en mode auto), sans qu'il faille cliquer dessus.
+    expect(find.text('Commencer la partie'), findsOneWidget);
     expect(find.byType(GameScreen), findsNothing, reason: 'pas encore écoulé le délai de transition automatique');
 
     await tester.pump(_aiStepPump);

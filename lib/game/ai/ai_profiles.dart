@@ -25,6 +25,29 @@ double bustProbability(int diceCount, Set<int> extendedValues) {
   return bustCount / total;
 }
 
+/// Probabilité de marquer au moins un point sur un lancer de [diceCount] dés
+/// (complément exact de [bustProbability]), sous forme de fraction
+/// irréductible (numérateur, dénominateur) plutôt qu'un flottant : utile
+/// pour un affichage lisible façon "1/2" à l'écran.
+(int, int) scoreProbabilityFraction(int diceCount, Set<int> extendedValues) {
+  if (diceCount <= 0) return (0, 1);
+  final total = pow(6, diceCount).toInt();
+  var scoreCount = 0;
+  final faces = List<int>.filled(diceCount, 1);
+  for (var i = 0; i < total; i++) {
+    var rem = i;
+    for (var d = 0; d < diceCount; d++) {
+      faces[d] = (rem % 6) + 1;
+      rem ~/= 6;
+    }
+    if (analyzeRoll(faces, extendedValues: extendedValues).hasAnyScore) scoreCount++;
+  }
+  final divisor = _gcd(scoreCount, total);
+  return (scoreCount ~/ divisor, total ~/ divisor);
+}
+
+int _gcd(int a, int b) => b == 0 ? a : _gcd(b, a % b);
+
 /// Nombre maximal de 5 déclinables qu'il est possible de rejeter : il faut
 /// toujours garder au moins un dé marquant sur le lancer, donc si aucun
 /// groupe obligatoire n'existe, un des 5 doit rester (le dernier ne peut pas

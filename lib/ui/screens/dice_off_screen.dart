@@ -41,14 +41,25 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     super.dispose();
   }
 
-  /// Programme [action] pour s'exécuter seule après le délai IA réglé dans
-  /// les préférences, sauf si l'utilisateur clique entre-temps n'importe où
-  /// sur l'écran (voir [_skipPendingAction]), auquel cas elle s'exécute
-  /// immédiatement.
-  void _scheduleAutoAction(VoidCallback action) {
+  /// Programme (ou annule) l'auto-validation d'[action] après le délai IA
+  /// réglé dans les préférences, si [autoEnabled] (mode auto du/des joueur(s)
+  /// concerné(s) et délai > 0). Un bouton explicite reste dans tous les cas
+  /// affiché et cliquable (voir les méthodes `_build*`) ; l'utilisateur peut
+  /// aussi cliquer n'importe où sur l'écran pour sauter l'attente restante
+  /// (voir [_skipPendingAction]).
+  void _scheduleAutoAction(VoidCallback action, {required bool autoEnabled}) {
     _pendingTimer?.cancel();
+    if (!autoEnabled) {
+      _pendingAction = null;
+      return;
+    }
+    final delay = ref.read(settingsProvider).aiMessageDelay;
+    if (delay <= Duration.zero) {
+      _pendingAction = null;
+      return;
+    }
     _pendingAction = action;
-    _pendingTimer = Timer(ref.read(settingsProvider).aiMessageDelay, () {
+    _pendingTimer = Timer(delay, () {
       if (!mounted) return;
       _pendingAction = null;
       action();
@@ -70,7 +81,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     if (state == null || state.isResolved) return;
     final next = state.nextToRoll;
     if (next == null || !notifier.isAiPlayer(next)) return;
-    _scheduleAutoAction(_rollDie);
+    _scheduleAutoAction(_rollDie, autoEnabled: notifier.isAutoPlayer(next));
   }
 
   void _rollDie() {
@@ -78,15 +89,15 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     ref.read(diceOffProvider.notifier).rollForCurrent();
   }
 
-  /// Quand tous les joueurs sont des IA, personne n'est là pour cliquer sur
-  /// "Commencer la partie" une fois l'ordre déterminé : la partie démarre
-  /// donc seule, comme les autres transitions automatiques.
+  /// Quand tous les joueurs sont des IA en mode auto, personne n'est là pour
+  /// cliquer sur "Commencer la partie" une fois l'ordre déterminé : la
+  /// partie démarre donc seule, comme les autres transitions automatiques.
   void _scheduleAutoStartIfNeeded() {
     final state = ref.read(diceOffProvider);
     final notifier = ref.read(diceOffProvider.notifier);
     if (state == null || !state.isResolved) return;
     if (notifier.humanPlayerCount > 0) return;
-    _scheduleAutoAction(_startGame);
+    _scheduleAutoAction(_startGame, autoEnabled: notifier.allPlayersAreAuto);
   }
 
   void _startGame() {
@@ -143,7 +154,6 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
 
   Widget _buildRollView(DiceOffState state, DiceOffNotifier notifier) {
     final next = state.nextToRoll!;
-    final isAi = notifier.isAiPlayer(next);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -167,13 +177,10 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
         ],
         Text('${notifier.nameOf(next)} lance le dé', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 24),
-        if (isAi)
-          const Text('L\'IA réfléchit...')
-        else
-          FilledButton(
-            onPressed: _rollDie,
-            child: const Text('Lancer le dé'),
-          ),
+        FilledButton(
+          onPressed: _rollDie,
+          child: const Text('Lancer le dé'),
+        ),
       ],
     );
   }
@@ -191,10 +198,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
         const SizedBox(height: 16),
         _diceOffRow(lastRound, notifier, roundIndex: state.roundHistory.length - 1),
         const SizedBox(height: 32),
-        if (notifier.humanPlayerCount > 0)
-          FilledButton(onPressed: _startGame, child: const Text('Commencer la partie'))
-        else
-          const Text('La partie démarre automatiquement...'),
+        FilledButton(onPressed: _startGame, child: const Text('Commencer la partie')),
       ],
     );
   }

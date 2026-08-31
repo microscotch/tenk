@@ -1,12 +1,29 @@
 import 'package:flutter/material.dart';
 
+import '../../game/ai/ai_profiles.dart';
 import '../../game/player.dart';
+import '../../game/turn_state.dart';
 
 class ScoreSheet extends StatelessWidget {
   final List<Player> players;
   final int currentPlayerIndex;
 
-  const ScoreSheet({super.key, required this.players, required this.currentPlayerIndex});
+  /// Tour en cours du joueur courant : sert à calculer sa probabilité de
+  /// marquer sur les dés qu'il lui reste en main (null si aucun tour actif,
+  /// par ex. écran de choix de main).
+  final TurnState? activeTurn;
+
+  /// Appelé avec le joueur concerné quand on clique sur sa ligne (ouvre sa
+  /// grille de score complète). Aucune ligne n'est cliquable si null.
+  final ValueChanged<Player>? onTapPlayer;
+
+  const ScoreSheet({
+    super.key,
+    required this.players,
+    required this.currentPlayerIndex,
+    this.activeTurn,
+    this.onTapPlayer,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +34,8 @@ class ScoreSheet extends StatelessWidget {
             player: players[i],
             isCurrent: i == currentPlayerIndex,
             gaps: _scoreGaps(players, i),
+            turnForProbability: i == currentPlayerIndex ? activeTurn : null,
+            onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
           ),
       ],
     );
@@ -48,12 +67,28 @@ _ScoreGaps _scoreGaps(List<Player> players, int index) {
   );
 }
 
+/// Couleur de la fraction de probabilité de marquer, du rouge (risqué) au
+/// vert (favorable) : 1/5 (20%) sert d'ancrage rouge, 1/2 (50%) d'ancrage
+/// vert, la valeur est interpolée (et bornée) entre les deux.
+Color _probabilityColor(double p) {
+  final t = ((p - 0.2) / (0.5 - 0.2)).clamp(0.0, 1.0);
+  return Color.lerp(Colors.redAccent, Colors.lightGreenAccent, t)!;
+}
+
 class _PlayerRow extends StatelessWidget {
   final Player player;
   final bool isCurrent;
   final _ScoreGaps gaps;
+  final TurnState? turnForProbability;
+  final VoidCallback? onTap;
 
-  const _PlayerRow({required this.player, required this.isCurrent, required this.gaps});
+  const _PlayerRow({
+    required this.player,
+    required this.isCurrent,
+    required this.gaps,
+    required this.turnForProbability,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,61 +97,109 @@ class _PlayerRow extends StatelessWidget {
     // collision au prochain tour de l'adversaire concerné.
     final dangerBelow = gaps.below == 200;
     final opportunityAbove = gaps.above == 200;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      margin: const EdgeInsets.symmetric(vertical: 3),
-      decoration: BoxDecoration(
-        color: isCurrent ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              if (isCurrent) const Padding(
-                padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.play_arrow, size: 18),
-              ),
-              Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              if (!player.hasEntered)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Text('(pas entré)', style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
+    final previousEntry = player.previousEntry;
+    final turn = turnForProbability;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: isCurrent ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    if (isCurrent)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Icon(Icons.play_arrow, size: 18),
+                      ),
+                    Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    if (!player.hasEntered)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Text('(pas entré)', style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
+                      ),
+                  ],
                 ),
-            ],
+                Row(
+                  children: [
+                    if (opportunityAbove)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Tooltip(
+                          message: 'À 200 points de barrer le joueur juste au-dessus !',
+                          child: Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
+                        ),
+                      ),
+                    if (dangerBelow)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Tooltip(
+                          message: 'Danger : le joueur juste en dessous n\'est qu\'à 200 points, risque de vous barrer',
+                          child: Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
+                        ),
+                      ),
+                    if (player.hasTiret)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Tooltip(
+                          message: 'Tiret : un second craque barrera le score',
+                          child: Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                        ),
+                      ),
+                    Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                    if (previousEntry != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${previousEntry.value})',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade400,
+                          decoration: previousEntry.isBarred ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      if (previousEntry.hasTiret)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 2),
+                          child: Tooltip(
+                            message: 'Le score précédent portait un tiret',
+                            child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
+                          ),
+                        ),
+                    ],
+                    if (turn != null) ...[
+                      const SizedBox(width: 8),
+                      Builder(builder: (context) {
+                        final (num, den) = scoreProbabilityFraction(turn.diceToRoll, turn.extendedValues);
+                        return Tooltip(
+                          message: 'Probabilité de marquer sur ${turn.diceToRoll} dé(s)',
+                          child: Text(
+                            '$num/$den',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: _probabilityColor(num / den),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+              ],
+            ),
           ),
-          Row(
-            children: [
-              if (opportunityAbove)
-                const Padding(
-                  padding: EdgeInsets.only(right: 6),
-                  child: Tooltip(
-                    message: 'À 200 points de barrer le joueur juste au-dessus !',
-                    child: Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
-                  ),
-                ),
-              if (dangerBelow)
-                const Padding(
-                  padding: EdgeInsets.only(right: 6),
-                  child: Tooltip(
-                    message: 'Danger : le joueur juste en dessous n\'est qu\'à 200 points, risque de vous barrer',
-                    child: Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
-                  ),
-                ),
-              if (player.hasTiret)
-                const Padding(
-                  padding: EdgeInsets.only(right: 6),
-                  child: Tooltip(
-                    message: 'Tiret : un second craque barrera le score',
-                    child: Icon(Icons.priority_high, size: 18, color: Colors.orange),
-                  ),
-                ),
-              Text('${player.totalScore}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

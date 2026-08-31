@@ -104,8 +104,8 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
   // côté du cube, pas assez pour gêner la lecture de la face avant.
   // Vue plongeante (impression de regarder le dé du dessus), cohérente avec
   // le rendu 3D réel de Scene3DDie.
-  static const _restTiltX = -1.15;
-  static const _restTiltY = 0.42;
+  static const _restTiltX = -0.95;
+  static const _restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
 
   late final AnimationController _controller;
   Object? _lastRollToken;

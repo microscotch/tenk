@@ -303,7 +303,7 @@ void main() {
     engine = engine.copyWith(nextTurnDice: 3); // A hérite de 3 dés d'un tour précédent
     container.read(gameProvider.notifier).debugLoadState(
           engine,
-          const GameSetup(playerNames: ['A', 'B']),
+          const GameSetup(playerNames: ['A', 'B'], autoPlayers: {0}),
         );
 
     await tester.pumpWidget(
@@ -325,24 +325,22 @@ void main() {
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
     // Score de tour à 0 (aucun score hérité ici) : insuffisant pour
-    // s'arrêter, le lancer se déclenche donc automatiquement, sans bouton.
-    expect(find.text('Lancer les dés'), findsNothing);
+    // s'arrêter ; le bouton "Lancer les dés" est affiché immédiatement et se
+    // valide seul (joueur en mode auto).
+    expect(find.text('Lancer les dés'), findsOneWidget);
     await tester.pump(_autoActionPump);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
-        reason: 'le lancer forcé doit se déclencher sans confirmation');
+        reason: 'le lancer forcé doit se déclencher sans confirmation (joueur en mode auto)');
   });
 
-  testWidgets(
-      'continuer une main héritée dont le score dépasse déjà le minimum '
-      'oblige quand même à relancer avant de pouvoir s\'arrêter', (tester) async {
+  testWidgets('sans le mode auto, le bouton "Lancer les dés" attend un clic manuel, même après un long délai',
+      (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    // A hérite de 3 dés ET d'un score de 500 déjà validé par le joueur
-    // précédent : ce score seul dépasserait le minimum requis, mais aucun
-    // lancer n'a encore eu lieu ce tour-ci pour A.
     var engine = GameEngine.newGame(['A', 'B']);
-    engine = engine.copyWith(nextTurnDice: 3, inheritedScore: 500);
+    engine = engine.copyWith(nextTurnDice: 3);
+    // Pas de autoPlayers : le mode auto est désactivé par défaut.
     container.read(gameProvider.notifier).debugLoadState(
           engine,
           const GameSetup(playerNames: ['A', 'B']),
@@ -359,11 +357,52 @@ void main() {
     await tester.tap(find.text('Continuer avec 3 dé(s)'));
     await tester.pump();
 
+    expect(find.text('Lancer les dés'), findsOneWidget);
+    // Un délai bien plus long que l'auto-validation habituelle ne doit rien
+    // déclencher tout seul : le mode auto est désactivé pour ce joueur.
+    await tester.pump(const Duration(seconds: 30));
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull,
+        reason: 'sans mode auto, rien ne doit se déclencher sans clic, quel que soit le délai écoulé');
+
+    await tester.tap(find.text('Lancer les dés'));
+    await tester.pump();
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
+        reason: 'le clic manuel sur le bouton doit toujours fonctionner');
+  });
+
+  testWidgets(
+      'continuer une main héritée dont le score dépasse déjà le minimum '
+      'oblige quand même à relancer avant de pouvoir s\'arrêter', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A hérite de 3 dés ET d'un score de 500 déjà validé par le joueur
+    // précédent : ce score seul dépasserait le minimum requis, mais aucun
+    // lancer n'a encore eu lieu ce tour-ci pour A.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 3, inheritedScore: 500);
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B'], autoPlayers: {0}),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Continuer avec 3 dé(s)'));
+    await tester.pump();
+
     expect(container.read(gameProvider)!.activeTurn!.bankedScore, 500);
     // Score largement au-dessus du minimum, mais aucun lancer encore fait ce
-    // tour-ci : impossible de s'arrêter, le lancer doit se déclencher seul.
+    // tour-ci : impossible de s'arrêter. Le bouton "Lancer les dés" est
+    // affiché immédiatement et se valide seul (joueur en mode auto).
     expect(find.text('S\'arrêter'), findsNothing);
-    expect(find.text('Lancer les dés'), findsNothing);
+    expect(find.text('Lancer les dés'), findsOneWidget);
     await tester.pump(_autoActionPump);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le lancer forcé doit se déclencher sans confirmation, même avec un score déjà suffisant');
@@ -485,7 +524,11 @@ void main() {
     engine = engine.copyWith(currentPlayerIndex: 1, activeTurn: TurnState.initial(5));
     container.read(gameProvider.notifier).debugLoadState(
           engine,
-          const GameSetup(playerNames: ['Joueur', 'IA'], aiPlayers: {1: AiDifficulty.prudent}),
+          const GameSetup(
+            playerNames: ['Joueur', 'IA'],
+            aiPlayers: {1: AiDifficulty.prudent},
+            autoPlayers: {0, 1},
+          ),
         );
 
     await tester.pumpWidget(
@@ -496,10 +539,10 @@ void main() {
     );
     await tester.pump(); // premier frame : le postFrameCallback programme le 1er pas IA
 
-    // Dès le premier frame, c'est visiblement le tour de l'IA : aucun
-    // contrôle interactif du joueur humain n'est proposé.
-    expect(find.textContaining('réfléchit'), findsOneWidget);
-    expect(find.text('Lancer les dés'), findsNothing);
+    // Dès le premier frame, c'est visiblement le tour de l'IA (en mode
+    // auto) : le bouton affiché est le sien, pas un choix réservé à
+    // l'humain ("S'arrêter" n'a de sens que dans le dialogue de banque
+    // humain à deux boutons, "Valider" n'existe plus du tout).
     expect(find.text('S\'arrêter'), findsNothing);
     expect(find.text('Valider'), findsNothing);
 
@@ -525,9 +568,10 @@ void main() {
         await tester.pump();
       }
 
-      // Score de tour à 0 : insuffisant pour s'arrêter, le premier lancer du
-      // tour se déclenche donc automatiquement, sans bouton à cliquer.
-      expect(find.text('Lancer les dés'), findsNothing);
+      // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer
+      // les dés" est affiché immédiatement et se valide seul (joueur humain
+      // en mode auto).
+      expect(find.text('Lancer les dés'), findsOneWidget);
       await tester.pump(_autoActionPump);
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
