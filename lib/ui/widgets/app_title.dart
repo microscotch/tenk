@@ -11,7 +11,7 @@ class AppTitle extends StatelessWidget {
       children: [
         Icon(Icons.casino, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 10),
-        const Text('Le 10000'),
+        const Text('TenK'),
       ],
     );
   }
