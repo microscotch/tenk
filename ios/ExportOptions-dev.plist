@@ -12,7 +12,7 @@
 	<string>Apple Development</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>net.microscotch.games.10k</key>
+		<key>net.microscotch.games.tenk</key>
 		<string>games-dev</string>
 	</dict>
 	<key>uploadSymbols</key>

@@ -1,4 +1,4 @@
-package com.microscotch.le10000
+package net.microscotch.games.tenk
 
 import io.flutter.embedding.android.FlutterActivity
 
