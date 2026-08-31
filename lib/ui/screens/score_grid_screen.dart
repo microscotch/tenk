@@ -180,7 +180,7 @@ class _PlayerColumn extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        for (var i = 0; i < player.grid.length; i++)
+        for (var i = player.grid.length - 1; i >= 0; i--)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: _ScoreRow(entry: player.grid[i], isCurrent: i == player.currentIndex),

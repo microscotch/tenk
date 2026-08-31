@@ -519,7 +519,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final String label;
     if (turn.mustContinue) {
-      label = 'Relancer (dés chauds)';
+      label = 'Relancer (main pleine)';
     } else if (tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer).success && !notifier.previewAiContinue(turn)) {
       label = 'S\'arrêter';
     } else {
@@ -650,7 +650,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         if (turn.mustContinue)
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text('Dés chauds : vous devez relancer !',
+            child: Text('Main pleine : vous devez relancer !',
                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
           )
         else if (!attempt.success)
@@ -677,7 +677,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         else
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).roll(),
-            child: Text(turn.mustContinue ? 'Relancer (dés chauds)' : 'Lancer les dés'),
+            child: Text(turn.mustContinue ? 'Relancer (main pleine)' : 'Lancer les dés'),
           ),
       ],
     );
