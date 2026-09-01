@@ -73,6 +73,32 @@ class AppLocalizationsRo extends AppLocalizations {
   String get startGameButton => 'Începe jocul';
 
   @override
+  String get newGameSectionLabel => 'Joc nou...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Jocuri în pauză';
+
+  @override
+  String get noPausedGamesMessage => 'Niciun joc în pauză momentan.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Ștergi acest joc?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'Jocul „$alias” va fi șters definitiv.';
+  }
+
+  @override
+  String get cancelButton => 'Anulează';
+
+  @override
+  String get deleteButton => 'Șterge';
+
+  @override
+  String get leaveGameTooltip => 'Părăsește jocul';
+
+  @override
   String get scoreGridLabel => 'Grilă de scoruri';
 
   @override
@@ -239,6 +265,13 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Efecte sonore';
+
+  @override
+  String get settingsPausedGamesTitle => 'Jocuri în pauză';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Confirmă înainte de a șterge un joc';
 
   @override
   String get settingsLanguageTitle => 'Limbă';

@@ -4,6 +4,7 @@ import '../../game/ai/ai_profiles.dart';
 import '../../game/player.dart';
 import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'player_avatar.dart';
 
 class ScoreSheet extends StatelessWidget {
   final List<Player> players;
@@ -125,6 +126,10 @@ class _PlayerRow extends StatelessWidget {
                         padding: EdgeInsets.only(right: 6),
                         child: Icon(Icons.play_arrow, size: 18),
                       ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: PlayerAvatarWidget(name: player.name, size: 24),
+                    ),
                     Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                     if (!player.hasEntered)
                       Padding(

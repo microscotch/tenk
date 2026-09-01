@@ -17,6 +17,10 @@ class AppSettings {
   final bool musicEnabled;
   final bool soundEffectsEnabled;
 
+  /// Demande confirmation avant de purger une partie en pause (swipe sur
+  /// l'écran d'accueil). Désactivable pour une suppression immédiate.
+  final bool confirmBeforeDeleteGame;
+
   /// Code de langue forcé (ex. "en", "es") ; null = suit la langue de
   /// l'appareil.
   final String? languageOverride;
@@ -28,6 +32,7 @@ class AppSettings {
     this.diceColorMode = DiceColorMode.uniform,
     this.musicEnabled = true,
     this.soundEffectsEnabled = true,
+    this.confirmBeforeDeleteGame = true,
     this.languageOverride,
   });
 
@@ -41,6 +46,7 @@ class AppSettings {
     DiceColorMode? diceColorMode,
     bool? musicEnabled,
     bool? soundEffectsEnabled,
+    bool? confirmBeforeDeleteGame,
     Object? languageOverride = _unset,
   }) {
     return AppSettings(
@@ -50,6 +56,7 @@ class AppSettings {
       diceColorMode: diceColorMode ?? this.diceColorMode,
       musicEnabled: musicEnabled ?? this.musicEnabled,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
+      confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
     );
   }
@@ -66,6 +73,7 @@ const _keyAutoActionDelayMs = 'settings.autoActionDelayMs';
 const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
+const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 const _keyLanguageOverride = 'settings.languageOverride';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
@@ -89,6 +97,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
         musicEnabled: prefs.getBool(_keyMusicEnabled) ?? true,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
+        confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
         languageOverride: prefs.getString(_keyLanguageOverride),
       );
     } catch (_) {
@@ -143,6 +152,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setSoundEffectsEnabled(bool enabled) {
     state = state.copyWith(soundEffectsEnabled: enabled);
     _save(_keySoundEffectsEnabled, enabled);
+  }
+
+  void setConfirmBeforeDeleteGame(bool enabled) {
+    state = state.copyWith(confirmBeforeDeleteGame: enabled);
+    _save(_keyConfirmBeforeDeleteGame, enabled);
   }
 
   /// [code] est un code de langue supporté (ex. "en"), ou null pour suivre à

@@ -67,6 +67,35 @@
   "startGameButton": "Commencer la partie",
   "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},
 
+  "newGameSectionLabel": "Nouvelle partie...",
+  "@newGameSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie."},
+
+  "pausedGamesSectionLabel": "Parties en pause",
+  "@pausedGamesSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables."},
+
+  "noPausedGamesMessage": "Aucune partie en pause pour l'instant.",
+  "@noPausedGamesMessage": {"description": "Message affiché quand la liste des parties en pause est vide."},
+
+  "deleteGameConfirmTitle": "Supprimer cette partie ?",
+  "@deleteGameConfirmTitle": {"description": "Titre de la boîte de dialogue confirmant la suppression d'une partie en pause."},
+
+  "deleteGameConfirmMessage": "La partie « {alias} » sera définitivement supprimée.",
+  "@deleteGameConfirmMessage": {
+    "description": "Message de la boîte de dialogue confirmant la suppression d'une partie en pause.",
+    "placeholders": {
+      "alias": {"type": "String"}
+    }
+  },
+
+  "cancelButton": "Annuler",
+  "@cancelButton": {"description": "Bouton générique pour annuler une action en cours (ex: boîte de dialogue de confirmation)."},
+
+  "deleteButton": "Supprimer",
+  "@deleteButton": {"description": "Bouton générique pour confirmer une suppression (ex: boîte de dialogue de confirmation)."},
+
+  "leaveGameTooltip": "Quitter la partie",
+  "@leaveGameTooltip": {"description": "Infobulle de l'icône permettant de quitter une partie en cours pour revenir à l'écran d'accueil (la partie reste sauvegardée)."},
+
   "scoreGridLabel": "Grille des scores",
   "@scoreGridLabel": {"description": "Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs."},
 
@@ -210,6 +239,12 @@
 
   "settingsSoundEffectsLabel": "Effets sonores",
   "@settingsSoundEffectsLabel": {"description": "Interrupteur activant/désactivant les effets sonores."},
+
+  "settingsPausedGamesTitle": "Parties en pause",
+  "@settingsPausedGamesTitle": {"description": "Titre de la section réglages consacrée aux parties en pause."},
+
+  "settingsConfirmBeforeDeleteGameLabel": "Confirmer avant de supprimer une partie",
+  "@settingsConfirmBeforeDeleteGameLabel": {"description": "Interrupteur activant/désactivant la confirmation avant de purger une partie en pause par balayage."},
 
   "settingsLanguageTitle": "Langue",
   "@settingsLanguageTitle": {"description": "Titre de la section réglages consacrée à la langue de l'application."},

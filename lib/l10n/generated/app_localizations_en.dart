@@ -73,6 +73,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startGameButton => 'Start game';
 
   @override
+  String get newGameSectionLabel => 'New game...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Paused games';
+
+  @override
+  String get noPausedGamesMessage => 'No paused games yet.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Delete this game?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'The game “$alias” will be permanently deleted.';
+  }
+
+  @override
+  String get cancelButton => 'Cancel';
+
+  @override
+  String get deleteButton => 'Delete';
+
+  @override
+  String get leaveGameTooltip => 'Leave game';
+
+  @override
   String get scoreGridLabel => 'Score grid';
 
   @override
@@ -232,6 +258,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Sound effects';
+
+  @override
+  String get settingsPausedGamesTitle => 'Paused games';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Confirm before deleting a game';
 
   @override
   String get settingsLanguageTitle => 'Language';

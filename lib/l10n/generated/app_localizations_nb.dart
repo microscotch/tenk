@@ -73,6 +73,32 @@ class AppLocalizationsNb extends AppLocalizations {
   String get startGameButton => 'Start spillet';
 
   @override
+  String get newGameSectionLabel => 'Nytt spill...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Pausede spill';
+
+  @override
+  String get noPausedGamesMessage => 'Ingen pausede spill ennå.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Slette dette spillet?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'Spillet «$alias» blir slettet for godt.';
+  }
+
+  @override
+  String get cancelButton => 'Avbryt';
+
+  @override
+  String get deleteButton => 'Slett';
+
+  @override
+  String get leaveGameTooltip => 'Forlat spillet';
+
+  @override
   String get scoreGridLabel => 'Poengtabell';
 
   @override
@@ -232,6 +258,13 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Lydeffekter';
+
+  @override
+  String get settingsPausedGamesTitle => 'Pausede spill';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Bekreft før du sletter et spill';
 
   @override
   String get settingsLanguageTitle => 'Språk';

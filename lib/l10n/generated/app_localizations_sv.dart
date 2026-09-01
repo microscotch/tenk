@@ -73,6 +73,32 @@ class AppLocalizationsSv extends AppLocalizations {
   String get startGameButton => 'Starta spelet';
 
   @override
+  String get newGameSectionLabel => 'Nytt spel...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Pausade spel';
+
+  @override
+  String get noPausedGamesMessage => 'Inga pausade spel än.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Radera det här spelet?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'Spelet ”$alias” kommer att raderas permanent.';
+  }
+
+  @override
+  String get cancelButton => 'Avbryt';
+
+  @override
+  String get deleteButton => 'Radera';
+
+  @override
+  String get leaveGameTooltip => 'Lämna spelet';
+
+  @override
   String get scoreGridLabel => 'Poängtabell';
 
   @override
@@ -233,6 +259,13 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Ljudeffekter';
+
+  @override
+  String get settingsPausedGamesTitle => 'Pausade spel';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Bekräfta innan ett spel raderas';
 
   @override
   String get settingsLanguageTitle => 'Språk';

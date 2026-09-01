@@ -7,9 +7,13 @@ import '../../game/ai/ai_profiles.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../../state/game_save_store.dart';
 import '../../state/settings_providers.dart';
 import '../ai_character_names.dart';
+import '../route_observer.dart';
 import '../widgets/app_title.dart';
+import '../widgets/bordered_section.dart';
+import '../widgets/paused_games_list.dart';
 import 'dice_off_screen.dart';
 import 'settings_screen.dart';
 
@@ -20,7 +24,7 @@ class SetupScreen extends ConsumerStatefulWidget {
   ConsumerState<SetupScreen> createState() => _SetupScreenState();
 }
 
-class _SetupScreenState extends ConsumerState<SetupScreen> {
+class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
   late final List<TextEditingController> _names;
   late final List<bool> _isBot;
   late final List<bool> _isAuto;
@@ -84,7 +88,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   /// Choisit un nom de personnage du Guide du routard galactique non déjà
   /// utilisé par un autre joueur IA de la partie, si possible.
   String _randomAiName() {
-    final used = {for (var i = 0; i < _isBot.length; i++) if (_isBot[i]) _names[i].text};
+    final used = {
+      for (var i = 0; i < _isBot.length; i++)
+        if (_isBot[i]) _names[i].text,
+    };
     final available = kAiCharacterNames.where((n) => !used.contains(n)).toList();
     final pool = available.isNotEmpty ? available : kAiCharacterNames;
     return pool[_random.nextInt(pool.length)];
@@ -105,7 +112,23 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<void>) routeObserver.subscribe(this, route);
+  }
+
+  /// Cet écran n'est jamais re-poussé (il reste toujours la toute première
+  /// route de la pile, voir `game_over_screen.dart`) : `initState` ne
+  /// s'exécute donc qu'une fois. `didPopNext` (une route poussée par-dessus
+  /// vient d'être dépilée) est le bon moment pour rafraîchir la liste des
+  /// parties en pause.
+  @override
+  void didPopNext() => ref.invalidate(pausedGamesProvider);
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     for (final c in _names) {
       c.dispose();
     }
@@ -135,10 +158,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       for (var i = 0; i < _isBot.length; i++)
         if (_isBot[i]) i: _aiDifficulty,
     };
-    final autoPlayers = {for (var i = 0; i < _isAuto.length; i++) if (_isAuto[i]) i};
+    final autoPlayers = {
+      for (var i = 0; i < _isAuto.length; i++)
+        if (_isAuto[i]) i,
+    };
     final setup = GameSetup(
       playerNames: [
-        for (final c in _names) c.text.trim().isEmpty ? AppLocalizations.of(context).unnamedPlayerFallback : c.text.trim(),
+        for (final c in _names)
+          c.text.trim().isEmpty ? AppLocalizations.of(context).unnamedPlayerFallback : c.text.trim(),
       ],
       aiPlayers: aiPlayers,
       autoPlayers: autoPlayers,
@@ -167,72 +194,85 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.playersCountTitle(_names.length), style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              for (var i = 0; i < _names.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _names[i],
-                          decoration:
-                              InputDecoration(labelText: l10n.playerNameFieldLabel(i + 1), border: const OutlineInputBorder()),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: Text(l10n.autoChipLabel),
-                        avatar: _isAuto[i] ? const Icon(Icons.bolt, size: 18) : null,
-                        selected: _isAuto[i],
-                        onSelected: (selected) => setState(() => _isAuto[i] = selected),
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: Text(l10n.aiChipLabel),
-                        avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,
-                        selected: _isBot[i],
-                        onSelected: (selected) => _toggleBot(i, selected),
-                      ),
-                    ],
-                  ),
-                ),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _names.length < 6 ? _addPlayer : null,
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.addPlayerButton),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: _names.length > 2 ? _removePlayer : null,
-                    icon: const Icon(Icons.remove),
-                    label: Text(l10n.removePlayerButton),
-                  ),
-                ],
-              ),
-              if (_hasAnyBot) ...[
-                const SizedBox(height: 24),
-                Text(l10n.botDifficultyTitle, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                SegmentedButton<AiDifficulty>(
-                  segments: [
-                    ButtonSegment(value: AiDifficulty.prudent, label: Text(l10n.aiDifficultyCautious)),
-                    ButtonSegment(value: AiDifficulty.equilibre, label: Text(l10n.aiDifficultyBalanced)),
-                    ButtonSegment(value: AiDifficulty.agressif, label: Text(l10n.aiDifficultyAggressive)),
-                  ],
-                  selected: {_aiDifficulty},
-                  onSelectionChanged: (s) => setState(() => _aiDifficulty = s.first),
-                ),
-              ],
-              const SizedBox(height: 32),
-              FilledButton(onPressed: _start, child: Text(l10n.startGameButton)),
+              BorderedSection(label: l10n.newGameSectionLabel, child: _buildNewGameSection(context, l10n)),
+              const SizedBox(height: 20),
+              BorderedSection(label: l10n.pausedGamesSectionLabel, child: const PausedGamesList()),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildNewGameSection(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.playersCountTitle(_names.length), style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        for (var i = 0; i < _names.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _names[i],
+                    decoration: InputDecoration(
+                      labelText: l10n.playerNameFieldLabel(i + 1),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilterChip(
+                  label: Text(l10n.autoChipLabel),
+                  avatar: _isAuto[i] ? const Icon(Icons.bolt, size: 18) : null,
+                  selected: _isAuto[i],
+                  onSelected: (selected) => setState(() => _isAuto[i] = selected),
+                ),
+                const SizedBox(width: 8),
+                FilterChip(
+                  label: Text(l10n.aiChipLabel),
+                  avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,
+                  selected: _isBot[i],
+                  onSelected: (selected) => _toggleBot(i, selected),
+                ),
+              ],
+            ),
+          ),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _names.length < 6 ? _addPlayer : null,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addPlayerButton),
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton.icon(
+              onPressed: _names.length > 2 ? _removePlayer : null,
+              icon: const Icon(Icons.remove),
+              label: Text(l10n.removePlayerButton),
+            ),
+          ],
+        ),
+        if (_hasAnyBot) ...[
+          const SizedBox(height: 24),
+          Text(l10n.botDifficultyTitle, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          SegmentedButton<AiDifficulty>(
+            segments: [
+              ButtonSegment(value: AiDifficulty.prudent, label: Text(l10n.aiDifficultyCautious)),
+              ButtonSegment(value: AiDifficulty.equilibre, label: Text(l10n.aiDifficultyBalanced)),
+              ButtonSegment(value: AiDifficulty.agressif, label: Text(l10n.aiDifficultyAggressive)),
+            ],
+            selected: {_aiDifficulty},
+            onSelectionChanged: (s) => setState(() => _aiDifficulty = s.first),
+          ),
+        ],
+        const SizedBox(height: 32),
+        FilledButton(onPressed: _start, child: Text(l10n.startGameButton)),
+      ],
     );
   }
 }

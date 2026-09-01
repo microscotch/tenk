@@ -395,13 +395,22 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   List<Widget> _scoreGridAction(List<Player> players) {
+    final l10n = AppLocalizations.of(context);
     return [
       IconButton(
         icon: const Icon(Icons.grid_on),
-        tooltip: AppLocalizations.of(context).scoreGridLabel,
+        tooltip: l10n.scoreGridLabel,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
         ),
+      ),
+      IconButton(
+        icon: const Icon(Icons.exit_to_app),
+        tooltip: l10n.leaveGameTooltip,
+        // La partie est déjà sauvegardée en continu après chaque transition
+        // (voir GameNotifier) : quitter ne nécessite aucune action explicite
+        // de sauvegarde, juste revenir à l'écran d'accueil.
+        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
       ),
     ];
   }

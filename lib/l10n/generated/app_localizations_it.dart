@@ -73,6 +73,32 @@ class AppLocalizationsIt extends AppLocalizations {
   String get startGameButton => 'Inizia partita';
 
   @override
+  String get newGameSectionLabel => 'Nuova partita...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Partite in pausa';
+
+  @override
+  String get noPausedGamesMessage => 'Nessuna partita in pausa per ora.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Eliminare questa partita?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'La partita «$alias» sarà eliminata definitivamente.';
+  }
+
+  @override
+  String get cancelButton => 'Annulla';
+
+  @override
+  String get deleteButton => 'Elimina';
+
+  @override
+  String get leaveGameTooltip => 'Esci dalla partita';
+
+  @override
   String get scoreGridLabel => 'Tabellone dei punteggi';
 
   @override
@@ -235,6 +261,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Effetti sonori';
+
+  @override
+  String get settingsPausedGamesTitle => 'Partite in pausa';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Conferma prima di eliminare una partita';
 
   @override
   String get settingsLanguageTitle => 'Lingua';

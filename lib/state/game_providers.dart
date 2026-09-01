@@ -1,32 +1,39 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/ai/ai_profiles.dart';
 import '../game/ai/ai_strategy.dart';
 import '../game/game_engine.dart';
+import '../game/game_recording.dart';
+import '../game/game_setup.dart';
 import '../game/turn_result.dart';
 import '../game/turn_state.dart';
+import 'game_save_store.dart';
 
-/// Configuration d'une partie : les noms des joueurs, pour chacun
-/// éventuellement une difficulté d'IA (absent d'index = joueur humain), et
-/// l'ensemble des joueurs en "mode auto" (leurs actions se valident seules
-/// après le délai réglé dans les préférences ; sinon un bouton explicite
-/// attend toujours un clic manuel).
-class GameSetup {
-  final List<String> playerNames;
-  final Map<int, AiDifficulty> aiPlayers;
-  final Set<int> autoPlayers;
-
-  const GameSetup({required this.playerNames, this.aiPlayers = const {}, this.autoPlayers = const {}});
-
-  bool isAi(int index) => aiPlayers.containsKey(index);
-  bool isAuto(int index) => autoPlayers.contains(index);
-}
+export '../game/game_setup.dart' show GameSetup;
 
 final gameProvider = NotifierProvider<GameNotifier, GameEngine?>(GameNotifier.new);
 
 class GameNotifier extends Notifier<GameEngine?> {
+  /// Config courante, dans l'ordre de jeu réordonné (index 0 = vainqueur du
+  /// départage) — sert aux lookups IA/auto par index de joueur courant.
   GameSetup? _setup;
+
+  /// Config d'origine, telle que saisie avant le départage (non réordonnée)
+  /// — c'est elle qui doit être persistée : `replayGame` réordonne lui-même
+  /// une fois le départage rejoué, donc persister la version déjà réordonnée
+  /// la ferait réordonner une seconde fois à la reprise.
+  GameSetup? _originalSetup;
+
+  int? _seed;
+  Random? _random;
+  String? _alias;
+  DateTime? _createdAt;
+  DateTime? _enteredPlayAt;
+  final List<GameAction> _actions = [];
 
   @override
   GameEngine? build() => null;
@@ -46,14 +53,55 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// partie (sinon l'appareil est déjà devant la bonne personne).
   bool shouldShowPassDevice(int index) => !isAiPlayer(index) && humanPlayerCount > 1;
 
-  void startGame(GameSetup setup) {
+  /// Démarre la partie principale une fois le départage résolu. [handoff],
+  /// quand fourni (partie réellement jouée, pas un test), transmet la
+  /// seed/le générateur/le journal accumulés pendant le départage : voir
+  /// [GameRecordingHandoff] pour pourquoi c'est la même instance de
+  /// [Random], pas seulement la même seed, qui doit continuer d'être
+  /// consommée.
+  void startGame(GameSetup setup, {GameRecordingHandoff? handoff}) {
     _setup = setup;
+    if (handoff != null) {
+      _originalSetup = handoff.originalSetup;
+      _seed = handoff.seed;
+      _random = handoff.random;
+      _alias = handoff.alias;
+      _createdAt = handoff.createdAt;
+      _actions
+        ..clear()
+        ..addAll(handoff.actions);
+    }
+    _enteredPlayAt = DateTime.now();
+    final action = GameAction.startTurn(useFullHand: false, at: _enteredPlayAt);
     state = GameEngine.newGame(setup.playerNames).startTurn();
+    _record(action);
+  }
+
+  /// Reprend une partie en pause : rejoue son journal d'actions (voir
+  /// `lib/game/game_recording.dart`) pour reconstruire l'état exact où elle
+  /// avait été laissée, puis continue de consommer le même flux aléatoire
+  /// pour la suite.
+  void resumeFromSave(SavedGame saved) {
+    final replay = replayGame(saved.setup, saved.seed, saved.actions);
+    assert(replay.engine != null, 'une sauvegarde ne devrait jamais être persistée avant la fin du départage');
+
+    _setup = replay.rotatedSetup;
+    _originalSetup = saved.setup;
+    _seed = saved.seed;
+    _random = replay.random;
+    _alias = saved.alias;
+    _createdAt = saved.createdAt;
+    _enteredPlayAt = saved.enteredPlayAt;
+    _actions
+      ..clear()
+      ..addAll(saved.actions);
+    state = replay.engine;
   }
 
   /// Charge un état de partie déjà construit, sans passer par [startGame].
   /// Réservé aux tests, pour vérifier des scénarios (craque, victoire...)
-  /// sans dépendre de vrais lancers de dés aléatoires.
+  /// sans dépendre de vrais lancers de dés aléatoires. N'active aucune
+  /// persistance (pas de seed).
   @visibleForTesting
   void debugLoadState(GameEngine engine, GameSetup setup) {
     _setup = setup;
@@ -61,31 +109,43 @@ class GameNotifier extends Notifier<GameEngine?> {
   }
 
   void roll() {
-    state = state!.roll();
+    state = state!.roll(random: _random);
+    _record(GameAction.roll());
   }
 
   void applyKeep({int declineFivesCount = 0}) {
     state = state!.applyKeep(declineFivesCount: declineFivesCount);
+    _record(GameAction.applyKeep(declineFivesCount: declineFivesCount));
   }
 
   void endBustedTurn() {
     // Un craque remet toujours à 5 dés neufs : aucun choix de main possible.
     final ended = state!.endBustedTurn();
     state = ended.gameOver ? ended : ended.startTurn();
+    _record(GameAction.endBustedTurn());
+    if (!ended.gameOver) {
+      _record(GameAction.startTurn(useFullHand: false));
+    }
   }
 
   BankAttempt bank() {
     final (engine, attempt) = state!.bank();
     if (attempt.success) {
-      if (engine.gameOver) {
-        state = engine;
-      } else if (engine.nextTurnDice < 5) {
-        // Le joueur suivant hérite de dés d'un tour précédent : on laisse
-        // activeTurn à null en attendant son choix (cf. [startTurn]).
-        state = engine;
-      } else {
+      // `state` DOIT déjà refléter `engine` avant `_record` : elle décide
+      // persister-vs-supprimer d'après `state!.gameOver`, qui lirait sinon
+      // encore l'ancien état (pré-banquage) et ne supprimerait jamais la
+      // sauvegarde du coup qui fait gagner la partie.
+      state = engine;
+      _record(GameAction.bank());
+      if (!engine.gameOver && engine.nextTurnDice >= 5) {
+        // Aucun dé hérité pour le joueur suivant (cas limite) : pas de choix
+        // de main à proposer, son tour démarre directement.
         state = engine.startTurn();
+        _record(GameAction.startTurn(useFullHand: false));
       }
+      // Sinon : gameOver (rien de plus à faire), ou le joueur suivant hérite
+      // de dés d'un tour précédent — activeTurn reste à null en attendant
+      // son choix (cf. [startTurn]).
     }
     return attempt;
   }
@@ -95,6 +155,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// (state.activeTurn est alors null, cf. [bank]).
   void startTurn({required bool useFullHand}) {
     state = state!.startTurn(useFullHand: useFullHand);
+    _record(GameAction.startTurn(useFullHand: useFullHand));
   }
 
   /// Joue une unique action du tour du joueur IA courant (un lancer, une
@@ -163,5 +224,44 @@ class GameNotifier extends Notifier<GameEngine?> {
   AiStrategy _currentStrategy() {
     final difficulty = _setup!.aiPlayers[state!.currentPlayerIndex]!;
     return aiStrategyFor(difficulty);
+  }
+
+  /// Chaîne chaque écriture/suppression sur la précédente : deux transitions
+  /// rapprochées (ex: coups IA enchaînés) déclenchent chacune une
+  /// persistance fire-and-forget, et sans cette sérialisation deux écritures
+  /// concurrentes sur le même fichier `.tmp` peuvent se marcher dessus
+  /// (`PathNotFoundException` au renommage, l'une ayant déjà consommé le
+  /// fichier temporaire de l'autre).
+  Future<void> _persistChain = Future.value();
+
+  /// Journalise [action] puis persiste (ou supprime, si la partie vient de
+  /// se terminer) la sauvegarde correspondante. Sans seed (ex:
+  /// [debugLoadState] en test), ne fait rien : il n'y a pas de partie à
+  /// persister.
+  void _record(GameAction action) {
+    _actions.add(action);
+    if (_seed == null) return;
+    // .catchError avale l'échec d'UNE persistance (ex: disque plein) sans
+    // jamais laisser la chaîne elle-même rejetée — sinon, plus aucune
+    // sauvegarde suivante ne s'exécuterait (.then court-circuite sur une
+    // future rejetée).
+    if (state!.gameOver) {
+      _persistChain = _persistChain.then((_) => ref.read(gameSaveStoreProvider).delete(_seed!)).catchError((_) {});
+    } else {
+      _persistChain = _persistChain.then((_) => _persist()).catchError((_) {});
+    }
+  }
+
+  Future<void> _persist() async {
+    final store = ref.read(gameSaveStoreProvider);
+    await store.write(SavedGame(
+      seed: _seed!,
+      setup: _originalSetup!,
+      alias: _alias ?? '',
+      createdAt: _createdAt ?? DateTime.now(),
+      enteredPlayAt: _enteredPlayAt,
+      durationSeconds: durationSecondsFor(_actions),
+      actions: List.unmodifiable(_actions),
+    ));
   }
 }

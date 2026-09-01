@@ -73,6 +73,32 @@ class AppLocalizationsBg extends AppLocalizations {
   String get startGameButton => 'Започни играта';
 
   @override
+  String get newGameSectionLabel => 'Нова игра...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Игри на пауза';
+
+  @override
+  String get noPausedGamesMessage => 'Все още няма игри на пауза.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Изтриване на тази игра?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'Играта „$alias“ ще бъде окончателно изтрита.';
+  }
+
+  @override
+  String get cancelButton => 'Отказ';
+
+  @override
+  String get deleteButton => 'Изтрий';
+
+  @override
+  String get leaveGameTooltip => 'Напусни играта';
+
+  @override
   String get scoreGridLabel => 'Таблица с резултати';
 
   @override
@@ -233,6 +259,13 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Звукови ефекти';
+
+  @override
+  String get settingsPausedGamesTitle => 'Игри на пауза';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Потвърждение преди изтриване на игра';
 
   @override
   String get settingsLanguageTitle => 'Език';

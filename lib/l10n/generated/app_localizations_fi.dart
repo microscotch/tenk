@@ -73,6 +73,32 @@ class AppLocalizationsFi extends AppLocalizations {
   String get startGameButton => 'Aloita peli';
 
   @override
+  String get newGameSectionLabel => 'Uusi peli...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Tauolla olevat pelit';
+
+  @override
+  String get noPausedGamesMessage => 'Ei vielä tauolla olevia pelejä.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Poistetaanko tämä peli?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'Peli ”$alias” poistetaan pysyvästi.';
+  }
+
+  @override
+  String get cancelButton => 'Peruuta';
+
+  @override
+  String get deleteButton => 'Poista';
+
+  @override
+  String get leaveGameTooltip => 'Poistu pelistä';
+
+  @override
   String get scoreGridLabel => 'Pistetaulukko';
 
   @override
@@ -235,6 +261,13 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Äänitehosteet';
+
+  @override
+  String get settingsPausedGamesTitle => 'Tauolla olevat pelit';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Vahvista ennen pelin poistamista';
 
   @override
   String get settingsLanguageTitle => 'Kieli';

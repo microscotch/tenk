@@ -230,6 +230,54 @@ abstract class AppLocalizations {
   /// **'Commencer la partie'**
   String get startGameButton;
 
+  /// Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle partie...'**
+  String get newGameSectionLabel;
+
+  /// Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parties en pause'**
+  String get pausedGamesSectionLabel;
+
+  /// Message affiché quand la liste des parties en pause est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune partie en pause pour l\'instant.'**
+  String get noPausedGamesMessage;
+
+  /// Titre de la boîte de dialogue confirmant la suppression d'une partie en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette partie ?'**
+  String get deleteGameConfirmTitle;
+
+  /// Message de la boîte de dialogue confirmant la suppression d'une partie en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'La partie « {alias} » sera définitivement supprimée.'**
+  String deleteGameConfirmMessage(String alias);
+
+  /// Bouton générique pour annuler une action en cours (ex: boîte de dialogue de confirmation).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get cancelButton;
+
+  /// Bouton générique pour confirmer une suppression (ex: boîte de dialogue de confirmation).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get deleteButton;
+
+  /// Infobulle de l'icône permettant de quitter une partie en cours pour revenir à l'écran d'accueil (la partie reste sauvegardée).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter la partie'**
+  String get leaveGameTooltip;
+
   /// Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs.
   ///
   /// In fr, this message translates to:
@@ -463,6 +511,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Effets sonores'**
   String get settingsSoundEffectsLabel;
+
+  /// Titre de la section réglages consacrée aux parties en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parties en pause'**
+  String get settingsPausedGamesTitle;
+
+  /// Interrupteur activant/désactivant la confirmation avant de purger une partie en pause par balayage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer avant de supprimer une partie'**
+  String get settingsConfirmBeforeDeleteGameLabel;
 
   /// Titre de la section réglages consacrée à la langue de l'application.
   ///

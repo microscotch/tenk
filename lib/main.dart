@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'l10n/generated/app_localizations.dart';
 import 'state/settings_providers.dart';
+import 'ui/route_observer.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/sound_effects.dart';
 import 'ui/theme.dart';
@@ -51,6 +52,7 @@ class Le10000App extends ConsumerWidget {
           ?child,
         ],
       ),
+      navigatorObservers: [routeObserver],
       home: const SplashScreen(),
     );
   }

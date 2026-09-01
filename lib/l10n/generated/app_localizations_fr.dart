@@ -73,6 +73,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startGameButton => 'Commencer la partie';
 
   @override
+  String get newGameSectionLabel => 'Nouvelle partie...';
+
+  @override
+  String get pausedGamesSectionLabel => 'Parties en pause';
+
+  @override
+  String get noPausedGamesMessage => 'Aucune partie en pause pour l\'instant.';
+
+  @override
+  String get deleteGameConfirmTitle => 'Supprimer cette partie ?';
+
+  @override
+  String deleteGameConfirmMessage(String alias) {
+    return 'La partie « $alias » sera définitivement supprimée.';
+  }
+
+  @override
+  String get cancelButton => 'Annuler';
+
+  @override
+  String get deleteButton => 'Supprimer';
+
+  @override
+  String get leaveGameTooltip => 'Quitter la partie';
+
+  @override
   String get scoreGridLabel => 'Grille des scores';
 
   @override
@@ -233,6 +259,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsSoundEffectsLabel => 'Effets sonores';
+
+  @override
+  String get settingsPausedGamesTitle => 'Parties en pause';
+
+  @override
+  String get settingsConfirmBeforeDeleteGameLabel =>
+      'Confirmer avant de supprimer une partie';
 
   @override
   String get settingsLanguageTitle => 'Langue';

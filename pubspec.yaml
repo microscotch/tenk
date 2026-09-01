@@ -41,6 +41,7 @@ dependencies:
   flutter_scene: ^0.23.0
   audioplayers: ^6.8.1
   shared_preferences: ^2.5.5
+  path_provider: ^2.1.6
   intl: ^0.20.2
 
 dev_dependencies:
@@ -102,6 +103,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  fonts:
+    - family: UnifrakturMaguntia
+      fonts:
+        - asset: assets/fonts/UnifrakturMaguntia-Regular.ttf
 
 flutter_launcher_icons:
   android: true
