@@ -18,7 +18,11 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android'
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 (historique complet) : nécessaire pour lister les
+      # commits de ce push via `git log` ci-dessous (notes de version).
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -27,6 +31,27 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+
+      # Notes de version Play Store = titres des commits de ce push (celui
+      # dont la fiche apparaît juste avant sur le dépôt distant). Retombe sur
+      # le commit précédent si `before` est absent/inconnu (workflow_dispatch,
+      # ou historique local trop court) ; sur le titre du commit HEAD si la
+      # plage est vide (re-run sans nouveau commit).
+      - name: Prépare les notes de version depuis les titres de commit
+        run: |
+          BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            BASE="HEAD~1"
+          fi
+          mkdir -p distribution/whatsnew
+          git log --pretty=format:'- %s' "$BASE"..HEAD > distribution/whatsnew/whatsnew-fr-FR
+          if [ ! -s distribution/whatsnew/whatsnew-fr-FR ]; then
+            git log -1 --pretty=format:'- %s' > distribution/whatsnew/whatsnew-fr-FR
+          fi
+          # Limite imposée par Google Play sur le texte des notes de version.
+          head -c 500 distribution/whatsnew/whatsnew-fr-FR > distribution/whatsnew/whatsnew-fr-FR.tmp
+          mv distribution/whatsnew/whatsnew-fr-FR.tmp distribution/whatsnew/whatsnew-fr-FR
+          cat distribution/whatsnew/whatsnew-fr-FR
 
       # Reconstitue le keystore de release (secret du repo) : sans lui, le
       # build "release" retombe sur la clé debug (cf. android/app/build.gradle.kts)
@@ -72,6 +97,7 @@ jobs:
           packageName: net.microscotch.games.tenk
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
+          whatsNewDirectory: distribution/whatsnew
 
   build-ios:
     if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios'
