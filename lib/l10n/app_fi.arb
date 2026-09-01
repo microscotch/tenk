@@ -54,6 +54,7 @@
   "failureEndsIn50": "Et voi lopettaa pisteisiin, jotka päättyvät lukuun 50.",
   "failureMustContinueHotDice": "Sinun täytyy heittää uudelleen.",
   "failureNotRolledYet": "Sinun täytyy heittää nopat ennen kuin voit lopettaa.",
+  "failureWouldMakeWinningImpossible": "Lopettaminen nyt tekisi tarkalleen 10000 pisteen saavuttamisesta mahdotonta.",
   "settingsMainPlayerTitle": "Pääpelaaja",
   "settingsYourNameLabel": "Nimesi (laitteen omistaja)",
   "settingsDelaysTitle": "Viiveet",

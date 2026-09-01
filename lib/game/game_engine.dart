@@ -166,7 +166,8 @@ class GameEngine {
   /// retrouve barré (collision de score), qu'il porte ou non un tiret — y
   /// compris si le score en question est 10000.
   (GameEngine, BankAttempt) bank() {
-    final attempt = tryBank(activeTurn!, minimumRequired: minimumForCurrentPlayer);
+    final attempt =
+        tryBank(activeTurn!, minimumRequired: minimumForCurrentPlayer, currentTotal: currentPlayer.totalScore);
     if (!attempt.success) return (this, attempt);
 
     final updatedPlayer = currentPlayer.applySuccessfulTurn(attempt.bankedPoints!);

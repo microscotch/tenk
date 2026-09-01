@@ -222,6 +222,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get failureNotRolledYet => 'Du må kaste terningene før du kan stoppe.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Å stoppe nå ville gjort det umulig å nå nøyaktig 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Hovedspiller';
 
   @override

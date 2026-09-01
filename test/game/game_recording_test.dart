@@ -1,80 +1,17 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le10000/game/dice_off.dart';
-import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/game_setup.dart';
-import 'package:le10000/game/turn_state.dart';
 
-/// Joue une partie complète (départage + partie principale) avec des
-/// décisions volontairement simples et toujours légales (ne jamais décliner
-/// de 5, repartir à 5 dés neufs à chaque choix de main, banquer dès que
-/// possible) : ce qui compte pour ce test n'est pas le réalisme des
-/// décisions, mais que la MÊME séquence d'appels au moteur, rejouée depuis
-/// la même seed, retombe sur le même état.
-({GameEngine engine, List<GameAction> actions}) _playScripted(GameSetup setup, int seed) {
-  final random = Random(seed);
-  final actions = <GameAction>[];
-
-  var diceOff = DiceOffState.start(setup.playerNames.length);
-  while (!diceOff.isResolved) {
-    final idx = diceOff.nextToRoll;
-    if (idx != null) {
-      diceOff = diceOff.rollFor(idx, random: random);
-      actions.add(GameAction.diceOffRoll(idx));
-    } else {
-      diceOff = diceOff.resolveRound();
-      actions.add(GameAction.diceOffResolveRound());
-    }
-  }
-
-  final rotatedSetup = setup.rotated(diceOff.winnerIndex!);
-  var engine = GameEngine.newGame(rotatedSetup.playerNames);
-
-  var guard = 0;
-  while (!engine.gameOver) {
-    guard++;
-    assert(guard < 2000, 'la partie scriptée ne devrait pas prendre autant de tours');
-
-    final turn = engine.activeTurn;
-    if (turn == null) {
-      engine = engine.startTurn(useFullHand: true);
-      actions.add(GameAction.startTurn(useFullHand: true));
-      continue;
-    }
-    if (turn.busted) {
-      engine = engine.endBustedTurn();
-      actions.add(GameAction.endBustedTurn());
-      continue;
-    }
-    if (turn.pendingRoll != null) {
-      engine = engine.applyKeep(declineFivesCount: 0);
-      actions.add(GameAction.applyKeep(declineFivesCount: 0));
-      continue;
-    }
-    if (!turn.mustContinue) {
-      final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
-      if (attempt.success) {
-        final (next, _) = engine.bank();
-        engine = next;
-        actions.add(GameAction.bank());
-        continue;
-      }
-    }
-    engine = engine.roll(random: random);
-    actions.add(GameAction.roll());
-  }
-
-  return (engine: engine, actions: actions);
-}
+import '../test_helpers/scripted_game.dart';
 
 void main() {
   test('rejouer le journal depuis la seed reproduit exactement le même état final', () {
     const seed = 20260901;
     const setup = GameSetup(playerNames: ['A', 'B', 'C']);
 
-    final played = _playScripted(setup, seed);
+    final played = playScriptedGame(setup, seed);
     final replay = replayGame(setup, seed, played.actions);
 
     expect(replay.engine, isNotNull);
@@ -100,8 +37,8 @@ void main() {
 
   test('deux seeds différentes produisent des tirages différents (le test précédent teste bien quelque chose)', () {
     const setup = GameSetup(playerNames: ['A', 'B']);
-    final a = _playScripted(setup, 111).engine;
-    final b = _playScripted(setup, 222).engine;
+    final a = playScriptedGame(setup, 111).engine;
+    final b = playScriptedGame(setup, 222).engine;
 
     // Pas garanti à 100% en théorie (deux seeds pourraient coïncidentellement
     // produire la même issue), mais extrêmement improbable sur une partie
@@ -120,7 +57,7 @@ void main() {
 
     // Journal complet d'une partie de référence, pour en extraire un
     // journal PARTIEL représentatif d'une sauvegarde en cours de tour.
-    final full = _playScripted(setup, seed).actions;
+    final full = playScriptedGame(setup, seed).actions;
     final cut = full.length ~/ 2;
     final partialActions = full.sublist(0, cut);
 

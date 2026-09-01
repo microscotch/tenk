@@ -440,6 +440,12 @@ abstract class AppLocalizations {
   /// **'Vous devez lancer les dés avant de pouvoir vous arrêter.'**
   String get failureNotRolledYet;
 
+  /// Raison pour laquelle le joueur ne peut pas s'arrêter : le score obtenu serait trop proche de 10000 pour qu'un futur tour (minimum 200) puisse encore l'atteindre exactement.
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'arrêter rendrait la victoire à 10000 inatteignable.'**
+  String get failureWouldMakeWinningImpossible;
+
   /// Titre de la section réglages consacrée au joueur principal.
   ///
   /// In fr, this message translates to:

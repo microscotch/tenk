@@ -54,6 +54,7 @@
   "failureEndsIn50": "Não podes parar com uma pontuação que termine em 50.",
   "failureMustContinueHotDice": "Tens de relançar.",
   "failureNotRolledYet": "Tens de lançar os dados antes de poderes parar.",
+  "failureWouldMakeWinningImpossible": "Parar agora tornaria impossível chegar exatamente a 10000.",
   "settingsMainPlayerTitle": "Jogador principal",
   "settingsYourNameLabel": "O teu nome (dono do aparelho)",
   "settingsDelaysTitle": "Temporizações",

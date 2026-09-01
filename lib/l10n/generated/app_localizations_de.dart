@@ -225,6 +225,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du musst würfeln, bevor du aufhören kannst.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Jetzt aufzuhören würde es unmöglich machen, genau 10000 zu erreichen.';
+
+  @override
   String get settingsMainPlayerTitle => 'Hauptspieler';
 
   @override

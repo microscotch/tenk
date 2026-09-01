@@ -54,6 +54,7 @@
   "failureEndsIn50": "No puedes plantarte con una puntuación que termine en 50.",
   "failureMustContinueHotDice": "Debes volver a tirar.",
   "failureNotRolledYet": "Debes lanzar los dados antes de poder plantarte.",
+  "failureWouldMakeWinningImpossible": "Plantarte ahora haría imposible llegar exactamente a 10000.",
   "settingsMainPlayerTitle": "Jugador principal",
   "settingsYourNameLabel": "Tu nombre (propietario del dispositivo)",
   "settingsDelaysTitle": "Temporizaciones",

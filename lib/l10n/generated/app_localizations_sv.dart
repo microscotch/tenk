@@ -223,6 +223,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Du måste kasta tärningarna innan du kan stanna.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Att stanna nu skulle göra det omöjligt att nå exakt 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Huvudspelare';
 
   @override

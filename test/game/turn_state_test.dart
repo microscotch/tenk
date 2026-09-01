@@ -213,7 +213,7 @@ void main() {
     test('échoue sous le minimum requis', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 6]));
       state = applyKeepDecision(state); // 100 points
-      final attempt = tryBank(state, minimumRequired: 500);
+      final attempt = tryBank(state, minimumRequired: 500, currentTotal: 0);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.belowMinimum);
     });
@@ -222,23 +222,36 @@ void main() {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 5, 3, 4]));
       state = applyKeepDecision(state); // 100+100+50 = 250
       expect(state.bankedScore, 250);
-      final attempt = tryBank(state, minimumRequired: 200);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.endsIn50);
     });
 
-    test('échoue pendant un hot dice forcé', () {
-      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 1, 1, 1]));
-      state = applyKeepDecision(state); // quinte d'as, tout est gardé -> hot dice
-      final attempt = tryBank(state, minimumRequired: 200);
+    test('échoue pendant un hot dice forcé (qui n\'atteint pas exactement 10000)', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 5]));
+      state = applyKeepDecision(state); // suite, 500 points, tout est gardé -> hot dice
+      expect(state.mustContinue, isTrue);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.mustContinueHotDice);
+    });
+
+    test('réussit malgré un hot dice forcé si le total atteindrait exactement 10000 (quinte d\'as)', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 1, 1, 1]));
+      state = applyKeepDecision(state); // quinte d'as, 10000 points, tout est gardé -> hot dice
+      expect(state.mustContinue, isTrue);
+      expect(state.bankedScore, 10000);
+      // La victoire exacte prime sur l'obligation de continuer : les dés
+      // chauds existent pour empêcher un arrêt "facile", pas la victoire.
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
+      expect(attempt.success, isTrue);
+      expect(attempt.bankedPoints, 10000);
     });
 
     test('succès si minimum atteint et score valide', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
       state = applyKeepDecision(state); // 200
-      final attempt = tryBank(state, minimumRequired: 200);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
       expect(attempt.success, isTrue);
       expect(attempt.bankedPoints, 200);
     });
@@ -247,9 +260,36 @@ void main() {
       // Simule un tour qui démarre sur une main héritée : le score hérité
       // dépasse déjà le minimum, mais aucun dé n'a été relancé cette fois-ci.
       const state = TurnState(diceToRoll: 3, bankedScore: 500);
-      final attempt = tryBank(state, minimumRequired: 200);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.notRolledYet);
+    });
+
+    test('échoue si banquer laisserait un total trop proche de 10000 pour rester atteignable', () {
+      // 9700 + 200 = 9900 : au-dessus du minimum (200), ne finit pas par 50,
+      // mais désormais aucun tour futur (toujours ≥200) ne pourrait plus
+      // jamais retomber pile sur 10000 (9900+200 dépasserait).
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state); // 200
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9700);
+      expect(attempt.success, isFalse);
+      expect(attempt.reason, BankFailureReason.wouldMakeWinningImpossible);
+    });
+
+    test('succès à la limite exacte : 9600+200=9800 laisse tout juste un tour futur possible', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state); // 200
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9600);
+      expect(attempt.success, isTrue);
+      expect(attempt.bankedPoints, 200);
+    });
+
+    test('succès si banquer atteint exactement 10000 en partant de près de la cible', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state); // 200
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9800);
+      expect(attempt.success, isTrue);
+      expect(attempt.bankedPoints, 200);
     });
   });
 }

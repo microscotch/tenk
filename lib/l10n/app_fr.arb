@@ -203,6 +203,8 @@
 
   "failureNotRolledYet": "Vous devez lancer les dés avant de pouvoir vous arrêter.",
   "@failureNotRolledYet": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : aucun lancer effectué ce tour."},
+  "failureWouldMakeWinningImpossible": "S'arrêter rendrait la victoire à 10000 inatteignable.",
+  "@failureWouldMakeWinningImpossible": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : le score obtenu serait trop proche de 10000 pour qu'un futur tour (minimum 200) puisse encore l'atteindre exactement."},
 
   "settingsMainPlayerTitle": "Joueur principal",
   "@settingsMainPlayerTitle": {"description": "Titre de la section réglages consacrée au joueur principal."},

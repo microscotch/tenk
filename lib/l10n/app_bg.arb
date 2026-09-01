@@ -54,6 +54,7 @@
   "failureEndsIn50": "Не можеш да спреш на резултат, завършващ на 50.",
   "failureMustContinueHotDice": "Трябва да хвърлиш отново.",
   "failureNotRolledYet": "Трябва да хвърлиш заровете, преди да можеш да спреш.",
+  "failureWouldMakeWinningImpossible": "Ако спреш сега, ще стане невъзможно да достигнеш точно 10000.",
   "settingsMainPlayerTitle": "Основен играч",
   "settingsYourNameLabel": "Твоето име (собственик на устройството)",
   "settingsDelaysTitle": "Забавяния",

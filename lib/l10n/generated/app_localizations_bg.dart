@@ -223,6 +223,10 @@ class AppLocalizationsBg extends AppLocalizations {
       'Трябва да хвърлиш заровете, преди да можеш да спреш.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Ако спреш сега, ще стане невъзможно да достигнеш точно 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Основен играч';
 
   @override

@@ -54,6 +54,7 @@
   "failureEndsIn50": "Du kan inte stanna på ett poäng som slutar på 50.",
   "failureMustContinueHotDice": "Du måste kasta igen.",
   "failureNotRolledYet": "Du måste kasta tärningarna innan du kan stanna.",
+  "failureWouldMakeWinningImpossible": "Att stanna nu skulle göra det omöjligt att nå exakt 10000.",
   "settingsMainPlayerTitle": "Huvudspelare",
   "settingsYourNameLabel": "Ditt namn (enhetens ägare)",
   "settingsDelaysTitle": "Fördröjningar",

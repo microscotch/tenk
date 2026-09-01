@@ -222,6 +222,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You must roll the dice before you can stop.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Stopping now would make reaching exactly 10000 impossible.';
+
+  @override
   String get settingsMainPlayerTitle => 'Main player';
 
   @override

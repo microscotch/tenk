@@ -226,6 +226,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Debes lanzar los dados antes de poder plantarte.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Plantarte ahora haría imposible llegar exactamente a 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Jugador principal';
 
   @override

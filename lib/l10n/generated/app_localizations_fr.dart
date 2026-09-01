@@ -223,6 +223,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous devez lancer les dés avant de pouvoir vous arrêter.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'S\'arrêter rendrait la victoire à 10000 inatteignable.';
+
+  @override
   String get settingsMainPlayerTitle => 'Joueur principal';
 
   @override

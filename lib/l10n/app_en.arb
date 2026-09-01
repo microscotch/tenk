@@ -54,6 +54,7 @@
   "failureEndsIn50": "You can't stop on a score ending in 50.",
   "failureMustContinueHotDice": "You must reroll.",
   "failureNotRolledYet": "You must roll the dice before you can stop.",
+  "failureWouldMakeWinningImpossible": "Stopping now would make reaching exactly 10000 impossible.",
   "settingsMainPlayerTitle": "Main player",
   "settingsYourNameLabel": "Your name (device owner)",
   "settingsDelaysTitle": "Delays",

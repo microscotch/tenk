@@ -14,6 +14,14 @@ enum BankFailureReason {
   /// une main héritée dont le score de base atteindrait déjà le minimum) :
   /// il faut d'abord lancer les dés avant de pouvoir s'arrêter.
   notRolledYet,
+
+  /// S'arrêter maintenant laisserait un score total strictement inférieur à
+  /// 10000 mais à moins du minimum requis (200 une fois entré) de la cible :
+  /// aucun tour futur ne pourrait alors plus jamais atteindre exactement
+  /// 10000 (le minimum par tour l'en empêcherait systématiquement). Ne
+  /// s'applique jamais si le score total atteindrait exactement 10000 : ce
+  /// cas-là est toujours autorisé, y compris en dés chauds.
+  wouldMakeWinningImpossible,
 }
 
 /// Résultat d'une tentative de banquer (valider) le score du tour en cours.

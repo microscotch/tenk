@@ -224,6 +224,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Devi lanciare i dadi prima di poterti fermare.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Fermarti ora renderebbe impossibile raggiungere esattamente 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Giocatore principale';
 
   @override

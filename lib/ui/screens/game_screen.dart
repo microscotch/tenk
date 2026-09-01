@@ -248,7 +248,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       return;
     }
 
-    final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
+    final attempt = tryBank(
+      turn,
+      minimumRequired: engine.minimumForCurrentPlayer,
+      currentTotal: engine.currentPlayer.totalScore,
+    );
     if (attempt.success) {
       _cancelAutoAction();
       return;
@@ -532,7 +536,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final String label;
     if (turn.mustContinue) {
       label = l10n.reRollFullHandButton;
-    } else if (tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer).success && !notifier.previewAiContinue(turn)) {
+    } else if (tryBank(
+              turn,
+              minimumRequired: engine.minimumForCurrentPlayer,
+              currentTotal: engine.currentPlayer.totalScore,
+            ).success &&
+        !notifier.previewAiContinue(turn)) {
       label = l10n.stopButton;
     } else {
       label = l10n.rollDiceButton;
@@ -594,7 +603,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     // possible juste après : évite un écran intermédiaire "Valider" séparé
     // de la décision de continuer/s'arrêter.
     final hypothetical = applyKeepDecision(turn, declineFivesCount: declineCount);
-    final hypotheticalBank = tryBank(hypothetical, minimumRequired: engine.minimumForCurrentPlayer);
+    final hypotheticalBank = tryBank(
+      hypothetical,
+      minimumRequired: engine.minimumForCurrentPlayer,
+      currentTotal: engine.currentPlayer.totalScore,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -657,7 +670,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   Widget _buildIdleView(GameEngine engine, TurnState turn) {
     final l10n = AppLocalizations.of(context);
-    final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
+    final attempt = tryBank(
+      turn,
+      minimumRequired: engine.minimumForCurrentPlayer,
+      currentTotal: engine.currentPlayer.totalScore,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -708,6 +725,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         return l10n.failureMustContinueHotDice;
       case BankFailureReason.notRolledYet:
         return l10n.failureNotRolledYet;
+      case BankFailureReason.wouldMakeWinningImpossible:
+        return l10n.failureWouldMakeWinningImpossible;
       case null:
         return '';
     }

@@ -228,6 +228,10 @@ class AppLocalizationsRo extends AppLocalizations {
       'Trebuie să arunci zarurile înainte de a te putea opri.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Oprirea acum ar face imposibilă atingerea exactă a 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Jucătorul principal';
 
   @override

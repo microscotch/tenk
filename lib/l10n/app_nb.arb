@@ -54,6 +54,7 @@
   "failureEndsIn50": "Du kan ikke stoppe på en poengsum som ender på 50.",
   "failureMustContinueHotDice": "Du må kaste på nytt.",
   "failureNotRolledYet": "Du må kaste terningene før du kan stoppe.",
+  "failureWouldMakeWinningImpossible": "Å stoppe nå ville gjort det umulig å nå nøyaktig 10000.",
   "settingsMainPlayerTitle": "Hovedspiller",
   "settingsYourNameLabel": "Ditt navn (eier av enheten)",
   "settingsDelaysTitle": "Forsinkelser",

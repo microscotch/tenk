@@ -54,6 +54,7 @@
   "failureEndsIn50": "Non puoi fermarti con un punteggio che finisce in 50.",
   "failureMustContinueHotDice": "Devi rilanciare.",
   "failureNotRolledYet": "Devi lanciare i dadi prima di poterti fermare.",
+  "failureWouldMakeWinningImpossible": "Fermarti ora renderebbe impossibile raggiungere esattamente 10000.",
   "settingsMainPlayerTitle": "Giocatore principale",
   "settingsYourNameLabel": "Il tuo nome (proprietario del dispositivo)",
   "settingsDelaysTitle": "Temporizzazioni",

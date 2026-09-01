@@ -183,7 +183,11 @@ class GameNotifier extends Notifier<GameEngine?> {
     }
 
     if (!turn.mustContinue) {
-      final attempt = tryBank(turn, minimumRequired: engine.minimumForCurrentPlayer);
+      final attempt = tryBank(
+        turn,
+        minimumRequired: engine.minimumForCurrentPlayer,
+        currentTotal: engine.currentPlayer.totalScore,
+      );
       if (attempt.success && !previewAiContinue(turn)) {
         bank();
         return;

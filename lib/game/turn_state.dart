@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'combination.dart';
 import 'dice_roll.dart';
+import 'player.dart' show winningScore;
 import 'turn_result.dart';
 
 /// Un dé effectivement gardé (mis de côté) au cours du tour, avec la valeur
@@ -221,13 +222,30 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
   );
 }
 
-/// Tente de banquer (valider) le score du tour en cours.
-BankAttempt tryBank(TurnState state, {required int minimumRequired}) {
+/// Tente de banquer (valider) le score du tour en cours. [currentTotal] est
+/// le score déjà validé du joueur AVANT ce tour (hors tour en cours), pour
+/// détecter les deux cas limites autour de la victoire exacte à 10000 :
+/// - Si banquer atteindrait exactement [winningScore], c'est toujours
+///   autorisé, y compris pendant des dés chauds ou sur un score de tour
+///   finissant par 50 : ces restrictions existent pour éviter un arrêt
+///   "facile", pas pour empêcher la victoire elle-même.
+/// - Sinon, si banquer laisserait un total strictement inférieur à
+///   [winningScore] mais à moins de [minimumRequired] de la cible, aucun
+///   tour futur ne pourrait plus jamais valider exactement 10000 (le
+///   minimum par tour l'en empêcherait toujours) : refusé, pour ne pas
+///   piéger le joueur dans une position de victoire déjà mathématiquement
+///   impossible sans qu'il l'ait choisi explicitement en craquant.
+BankAttempt tryBank(TurnState state, {required int minimumRequired, required int currentTotal}) {
   if (state.pendingRoll != null) {
     throw StateError('Une décision est en attente sur le lancer précédent');
   }
   if (!state.hasRolledThisTurn) {
     return const BankAttempt.failure(BankFailureReason.notRolledYet);
+  }
+
+  final newTotal = currentTotal + state.bankedScore;
+  if (newTotal == winningScore) {
+    return BankAttempt.success(state.bankedScore);
   }
   if (state.mustContinue) {
     return const BankAttempt.failure(BankFailureReason.mustContinueHotDice);
@@ -237,6 +255,9 @@ BankAttempt tryBank(TurnState state, {required int minimumRequired}) {
   }
   if (state.turnScoreEndsIn50 == 50) {
     return const BankAttempt.failure(BankFailureReason.endsIn50);
+  }
+  if (newTotal > winningScore - minimumRequired) {
+    return const BankAttempt.failure(BankFailureReason.wouldMakeWinningImpossible);
   }
   return BankAttempt.success(state.bankedScore);
 }

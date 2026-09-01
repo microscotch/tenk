@@ -225,6 +225,10 @@ class AppLocalizationsFi extends AppLocalizations {
       'Sinun täytyy heittää nopat ennen kuin voit lopettaa.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Lopettaminen nyt tekisi tarkalleen 10000 pisteen saavuttamisesta mahdotonta.';
+
+  @override
   String get settingsMainPlayerTitle => 'Pääpelaaja';
 
   @override

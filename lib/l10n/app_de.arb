@@ -54,6 +54,7 @@
   "failureEndsIn50": "Du darfst nicht bei einer Punktzahl aufhören, die auf 50 endet.",
   "failureMustContinueHotDice": "Du musst erneut würfeln.",
   "failureNotRolledYet": "Du musst würfeln, bevor du aufhören kannst.",
+  "failureWouldMakeWinningImpossible": "Jetzt aufzuhören würde es unmöglich machen, genau 10000 zu erreichen.",
   "settingsMainPlayerTitle": "Hauptspieler",
   "settingsYourNameLabel": "Dein Name (Gerätebesitzer)",
   "settingsDelaysTitle": "Verzögerungen",

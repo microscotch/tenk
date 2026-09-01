@@ -223,6 +223,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Tens de lançar os dados antes de poderes parar.';
 
   @override
+  String get failureWouldMakeWinningImpossible =>
+      'Parar agora tornaria impossível chegar exatamente a 10000.';
+
+  @override
   String get settingsMainPlayerTitle => 'Jogador principal';
 
   @override
