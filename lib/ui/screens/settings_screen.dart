@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../game/ai/ai_profiles.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/settings_providers.dart';
 import '../widgets/app_title.dart';
@@ -109,6 +110,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 label: l10n.settingsAutoActionDelayLabel,
                 controller: _autoActionDelayController,
                 onChanged: (ms) => notifier.setAutoActionDelayMs(ms),
+              ),
+              const SizedBox(height: 28),
+              Text(l10n.botDifficultyTitle, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              SegmentedButton<AiDifficulty>(
+                segments: [
+                  ButtonSegment(value: AiDifficulty.prudent, label: Text(l10n.aiDifficultyCautious)),
+                  ButtonSegment(value: AiDifficulty.equilibre, label: Text(l10n.aiDifficultyBalanced)),
+                  ButtonSegment(value: AiDifficulty.agressif, label: Text(l10n.aiDifficultyAggressive)),
+                ],
+                selected: {settings.aiDifficulty},
+                onSelectionChanged: (s) => notifier.setAiDifficulty(s.first),
               ),
               const SizedBox(height: 28),
               Text(l10n.settingsDiceTitle, style: Theme.of(context).textTheme.titleMedium),

@@ -121,21 +121,36 @@ ReplayResult replayGame(GameSetup setup, int seed, List<GameAction> actions) {
           rotatedSetup = setup.rotated(diceOff.winnerIndex!);
           engine = GameEngine.newGame(rotatedSetup.playerNames);
         }
-      case GameActionType.startTurn:
-        engine = engine!.startTurn(useFullHand: action.params['useFullHand'] as bool? ?? false);
-      case GameActionType.roll:
-        engine = engine!.roll(random: random);
-      case GameActionType.applyKeep:
-        engine = engine!.applyKeep(declineFivesCount: action.params['declineFivesCount'] as int? ?? 0);
-      case GameActionType.endBustedTurn:
-        engine = engine!.endBustedTurn();
-      case GameActionType.bank:
-        final (next, _) = engine!.bank();
-        engine = next;
+      default:
+        engine = applyGameAction(engine!, action, random);
     }
   }
 
   return ReplayResult(diceOff: diceOff, engine: engine, rotatedSetup: rotatedSetup, random: random);
+}
+
+/// Applique une seule action de la PARTIE PRINCIPALE (pas le départage) à
+/// [engine] : le dispatch central réutilisé à la fois par [replayGame] (rejeu
+/// complet d'un coup) et par le rejeu pas-à-pas temporisé (voir
+/// `GameNotifier.applyNextReplayAction`), pour ne jamais faire diverger les
+/// deux.
+GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) {
+  switch (action.type) {
+    case GameActionType.startTurn:
+      return engine.startTurn(useFullHand: action.params['useFullHand'] as bool? ?? false);
+    case GameActionType.roll:
+      return engine.roll(random: random);
+    case GameActionType.applyKeep:
+      return engine.applyKeep(declineFivesCount: action.params['declineFivesCount'] as int? ?? 0);
+    case GameActionType.endBustedTurn:
+      return engine.endBustedTurn();
+    case GameActionType.bank:
+      final (next, _) = engine.bank();
+      return next;
+    case GameActionType.diceOffRoll:
+    case GameActionType.diceOffResolveRound:
+      throw ArgumentError('${action.type} concerne le départage, pas la partie principale');
+  }
 }
 
 /// Somme des écarts entre actions consécutives : la durée d'une partie,

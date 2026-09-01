@@ -46,7 +46,7 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get autoChipLabel => 'Auto';
+  String get autoChipLabel => 'AutoRoll';
 
   @override
   String get aiChipLabel => 'AI';
@@ -73,13 +73,19 @@ class AppLocalizationsFi extends AppLocalizations {
   String get startGameButton => 'Aloita peli';
 
   @override
-  String get newGameSectionLabel => 'Uusi peli...';
+  String get newGameSectionLabel => 'Uusi run...';
 
   @override
-  String get pausedGamesSectionLabel => 'Tauolla olevat pelit';
+  String get pausedGamesSectionLabel => 'Keskeytyneet runit';
+
+  @override
+  String get finishedRunsSectionLabel => 'Päättyneet runit';
 
   @override
   String get noPausedGamesMessage => 'Ei vielä tauolla olevia pelejä.';
+
+  @override
+  String get noFinishedRunsMessage => 'Ei vielä päättyneitä runeja.';
 
   @override
   String get deleteGameConfirmTitle => 'Poistetaanko tämä peli?';

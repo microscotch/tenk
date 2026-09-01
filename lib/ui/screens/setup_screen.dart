@@ -13,6 +13,7 @@ import '../ai_character_names.dart';
 import '../route_observer.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
+import '../widgets/finished_games_list.dart';
 import '../widgets/paused_games_list.dart';
 import 'dice_off_screen.dart';
 import 'settings_screen.dart';
@@ -26,11 +27,18 @@ class SetupScreen extends ConsumerStatefulWidget {
 
 class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
   late final List<TextEditingController> _names;
+  late final List<FocusNode> _nameFocusNodes;
   late final List<bool> _isBot;
   late final List<bool> _isAuto;
 
-  /// Difficulté partagée par tous les bots de la partie.
-  AiDifficulty _aiDifficulty = AiDifficulty.equilibre;
+  /// Index de la zone actuellement ouverte parmi les 3 (accordéon : une
+  /// seule à la fois), ou null si toutes sont fermées. "Nouveau run..."
+  /// (index 0) est ouverte par défaut.
+  int? _expandedSection = 0;
+
+  void _toggleSection(int index) {
+    setState(() => _expandedSection = _expandedSection == index ? null : index);
+  }
 
   final _random = math.Random();
 
@@ -44,6 +52,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
       TextEditingController(text: ownerName.isEmpty ? AppLocalizations.of(context).defaultPlayerName(1) : ownerName),
       TextEditingController(text: kAiCharacterNames[_random.nextInt(kAiCharacterNames.length)]),
     ];
+    _nameFocusNodes = [for (var i = 0; i < _names.length; i++) _newNameFocusNode()];
     _isBot = [false, true];
     _isAuto = [false, false];
 
@@ -51,6 +60,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
       WidgetsBinding.instance.addPostFrameCallback((_) => _promptForOwnerName());
     }
   }
+
+  /// Un `FocusNode` par champ de nom de joueur : le listener déclenche un
+  /// rebuild à la perte de focus, pour basculer le champ vers son rendu
+  /// tronqué en lecture seule (voir `_PlayerNameField`).
+  FocusNode _newNameFocusNode() => FocusNode()..addListener(() => setState(() {}));
 
   /// Demande son nom au propriétaire de l'appareil s'il n'est pas déjà
   /// renseigné dans les préférences ; sautable (le nom par défaut reste).
@@ -82,8 +96,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     ref.read(settingsProvider.notifier).setPlayerName(name);
     setState(() => _names[0].text = name);
   }
-
-  bool get _hasAnyBot => _isBot.any((b) => b);
 
   /// Choisit un nom de personnage du Guide du routard galactique non déjà
   /// utilisé par un autre joueur IA de la partie, si possible.
@@ -132,6 +144,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     for (final c in _names) {
       c.dispose();
     }
+    for (final f in _nameFocusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -139,6 +154,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     if (_names.length >= 6) return;
     setState(() {
       _names.add(TextEditingController(text: AppLocalizations.of(context).defaultPlayerName(_names.length + 1)));
+      _nameFocusNodes.add(_newNameFocusNode());
       _isBot.add(false);
       _isAuto.add(false);
     });
@@ -148,15 +164,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     if (_names.length <= 2) return;
     setState(() {
       _names.removeLast().dispose();
+      _nameFocusNodes.removeLast().dispose();
       _isBot.removeLast();
       _isAuto.removeLast();
     });
   }
 
   void _start() {
+    final aiDifficulty = ref.read(settingsProvider).aiDifficulty;
     final aiPlayers = <int, AiDifficulty>{
       for (var i = 0; i < _isBot.length; i++)
-        if (_isBot[i]) i: _aiDifficulty,
+        if (_isBot[i]) i: aiDifficulty,
     };
     final autoPlayers = {
       for (var i = 0; i < _isAuto.length; i++)
@@ -194,9 +212,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              BorderedSection(label: l10n.newGameSectionLabel, child: _buildNewGameSection(context, l10n)),
+              BorderedSection(
+                label: l10n.newGameSectionLabel,
+                isExpanded: _expandedSection == 0,
+                onHeaderTap: () => _toggleSection(0),
+                child: _buildNewGameSection(context, l10n),
+              ),
               const SizedBox(height: 20),
-              BorderedSection(label: l10n.pausedGamesSectionLabel, child: const PausedGamesList()),
+              BorderedSection(
+                label: l10n.pausedGamesSectionLabel,
+                isExpanded: _expandedSection == 1,
+                onHeaderTap: () => _toggleSection(1),
+                child: const PausedGamesList(),
+              ),
+              const SizedBox(height: 20),
+              BorderedSection(
+                label: l10n.finishedRunsSectionLabel,
+                isExpanded: _expandedSection == 2,
+                onHeaderTap: () => _toggleSection(2),
+                child: const FinishedGamesList(),
+              ),
             ],
           ),
         ),
@@ -216,25 +251,23 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: _PlayerNameField(
                     controller: _names[i],
-                    decoration: InputDecoration(
-                      labelText: l10n.playerNameFieldLabel(i + 1),
-                      border: const OutlineInputBorder(),
-                    ),
+                    focusNode: _nameFocusNodes[i],
+                    label: l10n.playerNameFieldLabel(i + 1),
                   ),
                 ),
                 const SizedBox(width: 8),
                 FilterChip(
                   label: Text(l10n.autoChipLabel),
-                  avatar: _isAuto[i] ? const Icon(Icons.bolt, size: 18) : null,
+                  avatar: const Icon(Icons.bolt, size: 18),
                   selected: _isAuto[i],
                   onSelected: (selected) => setState(() => _isAuto[i] = selected),
                 ),
                 const SizedBox(width: 8),
                 FilterChip(
                   label: Text(l10n.aiChipLabel),
-                  avatar: _isBot[i] ? const Icon(Icons.smart_toy, size: 18) : null,
+                  avatar: const Icon(Icons.smart_toy, size: 18),
                   selected: _isBot[i],
                   onSelected: (selected) => _toggleBot(i, selected),
                 ),
@@ -256,23 +289,44 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
             ),
           ],
         ),
-        if (_hasAnyBot) ...[
-          const SizedBox(height: 24),
-          Text(l10n.botDifficultyTitle, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          SegmentedButton<AiDifficulty>(
-            segments: [
-              ButtonSegment(value: AiDifficulty.prudent, label: Text(l10n.aiDifficultyCautious)),
-              ButtonSegment(value: AiDifficulty.equilibre, label: Text(l10n.aiDifficultyBalanced)),
-              ButtonSegment(value: AiDifficulty.agressif, label: Text(l10n.aiDifficultyAggressive)),
-            ],
-            selected: {_aiDifficulty},
-            onSelectionChanged: (s) => setState(() => _aiDifficulty = s.first),
-          ),
-        ],
         const SizedBox(height: 32),
         FilledButton(onPressed: _start, child: Text(l10n.startGameButton)),
       ],
+    );
+  }
+}
+
+/// Champ de nom de joueur à 2 rendus : un `TextField` éditable tant qu'il a
+/// le focus, remplacé par un `Text` tronqué (`…`) en lecture seule dès que
+/// le focus est perdu et que le nom dépasse la largeur disponible — le tap
+/// redonne le focus pour reprendre l'édition.
+class _PlayerNameField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String label;
+
+  const _PlayerNameField({required this.controller, required this.focusNode, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    if (focusNode.hasFocus) {
+      return TextField(
+        controller: controller,
+        focusNode: focusNode,
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+      );
+    }
+    return InkWell(
+      borderRadius: BorderRadius.circular(4),
+      onTap: focusNode.requestFocus,
+      child: InputDecorator(
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        child: Text(
+          controller.text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     );
   }
 }

@@ -8,7 +8,7 @@ import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
 import '../../state/settings_providers.dart';
 import '../screens/game_screen.dart';
-import 'player_avatar.dart';
+import 'game_run_tile.dart';
 
 /// Liste des parties en pause (voir [pausedGamesProvider]) : chaque ligne
 /// affiche l'alias de la partie et les avatars de ses joueurs, se purge par
@@ -43,7 +43,7 @@ class _PausedGamesListState extends ConsumerState<PausedGamesList> {
       data: (allGames) {
         final games = allGames.where((g) => !_hiddenSeeds.contains(g.seed)).toList();
         if (games.isEmpty) return _EmptyMessage(text: l10n.noPausedGamesMessage);
-        return Column(
+        return BoundedGameRunsList(
           children: [
             for (final game in games)
               _PausedGameRow(
@@ -135,25 +135,7 @@ class _PausedGameRow extends ConsumerWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(10),
             onTap: () => _resume(context, ref),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(game.alias, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  for (final name in game.setup.playerNames)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: PlayerAvatarWidget(name: name, size: 22),
-                    ),
-                ],
-              ),
-            ),
+            child: GameRunTile(game: game),
           ),
         ),
       ),

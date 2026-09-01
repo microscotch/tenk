@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// Libellé du bouton à bascule activant le mode automatique d'un joueur.
   ///
   /// In fr, this message translates to:
-  /// **'Auto'**
+  /// **'AutoRoll'**
   String get autoChipLabel;
 
   /// Libellé du bouton à bascule désignant un joueur comme IA.
@@ -233,20 +233,32 @@ abstract class AppLocalizations {
   /// Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie.
   ///
   /// In fr, this message translates to:
-  /// **'Nouvelle partie...'**
+  /// **'Nouveau run...'**
   String get newGameSectionLabel;
 
   /// Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables.
   ///
   /// In fr, this message translates to:
-  /// **'Parties en pause'**
+  /// **'Runs interrompus'**
   String get pausedGamesSectionLabel;
+
+  /// Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Runs terminés'**
+  String get finishedRunsSectionLabel;
 
   /// Message affiché quand la liste des parties en pause est vide.
   ///
   /// In fr, this message translates to:
   /// **'Aucune partie en pause pour l\'instant.'**
   String get noPausedGamesMessage;
+
+  /// Message affiché quand la liste des runs terminés est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun run terminé pour l\'instant.'**
+  String get noFinishedRunsMessage;
 
   /// Titre de la boîte de dialogue confirmant la suppression d'une partie en pause.
   ///

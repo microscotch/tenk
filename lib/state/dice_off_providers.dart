@@ -31,6 +31,12 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   // peuvent se marcher dessus (PathNotFoundException au renommage).
   Future<void> _persistChain = Future.value();
 
+  // Rejeu (spectateur) d'un run archivé : lecture seule, aucune écriture
+  // (voir [startReplay]) — distinct de l'état de partie live ci-dessus.
+  bool _isReplay = false;
+  List<GameAction> _replayActions = const [];
+  int _replayIndex = 0;
+
   @override
   DiceOffState? build() => null;
 
@@ -76,6 +82,52 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
     state = next;
     _enqueuePersist();
   }
+
+  bool get isReplay => _isReplay;
+
+  /// Démarre le rejeu spectateur d'un run archivé, depuis le tout début
+  /// (départage inclus) : aucune écriture disque (lecture seule), `_setup`
+  /// est posée (pour [buildRotatedSetup]) mais [_seed]/[_random] "live" ne
+  /// le sont pas — le générateur du rejeu est créé et consommé séparément
+  /// via [applyNextDiceOffReplayAction].
+  Random? _replayRandom;
+
+  void startReplay(SavedGame saved) {
+    _isReplay = true;
+    _setup = saved.setup;
+    _replayActions = saved.actions;
+    _replayIndex = 0;
+    _replayRandom = Random(saved.seed);
+    state = DiceOffState.start(saved.setup.playerNames.length);
+  }
+
+  /// Applique la prochaine action du journal tant que le départage n'est pas
+  /// résolu ; ne fait rien et renvoie false une fois résolu (le reste du
+  /// journal concerne la partie principale, à consommer via
+  /// `GameNotifier.applyNextReplayAction`).
+  bool applyNextDiceOffReplayAction() {
+    if (state!.isResolved) return false;
+    final action = _replayActions[_replayIndex++];
+    state = switch (action.type) {
+      GameActionType.diceOffRoll => state!.rollFor(action.params['index'] as int, random: _replayRandom),
+      GameActionType.diceOffResolveRound => state!.resolveRound(),
+      _ => throw StateError('action de rejeu inattendue pendant le départage : ${action.type}'),
+    };
+    return true;
+  }
+
+  /// Une fois le départage résolu en mode rejeu : transmet le générateur
+  /// (déjà avancé par [applyNextDiceOffReplayAction]) et le reste du journal
+  /// à `GameNotifier.startGameReplay` pour continuer le rejeu de la partie
+  /// principale sans jamais répéter un tirage déjà consommé.
+  GameRecordingHandoff replayHandoff() => GameRecordingHandoff(
+        seed: 0,
+        random: _replayRandom!,
+        originalSetup: _setup,
+        alias: '',
+        createdAt: DateTime.now(),
+        actions: _replayActions.sublist(_replayIndex),
+      );
 
   void _enqueuePersist() {
     // .catchError avale l'échec d'UNE persistance sans jamais laisser la

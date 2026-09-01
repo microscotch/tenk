@@ -10,11 +10,13 @@ import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
+import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/die_widget.dart';
+import '../widgets/replay_speed_control.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
@@ -88,8 +90,14 @@ int _previewPoints(RollAnalysis analysis, int selectedKeepCount) {
   return points;
 }
 
+/// [replayMode] : rejeu spectateur d'un run archivé (voir
+/// `GameNotifier.startGameReplay`) — écran entièrement inerte
+/// (`AbsorbPointer`), avance seul (vitesse x1/x2/x4, [ReplaySpeedControl])
+/// au lieu d'attendre une décision IA/humaine, jusqu'à l'écran de victoire.
 class GameScreen extends ConsumerStatefulWidget {
-  const GameScreen({super.key});
+  final bool replayMode;
+
+  const GameScreen({super.key, this.replayMode = false});
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -116,9 +124,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final initialPendingRoll = ref.read(gameProvider)?.activeTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll?.declinableFives?.diceCount ?? 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scheduleAiIfNeeded();
-      _scheduleAutoAdvanceIfNeeded();
+      if (widget.replayMode) {
+        _scheduleReplayStep();
+      } else {
+        _scheduleAiIfNeeded();
+        _scheduleAutoAdvanceIfNeeded();
+      }
       _scheduleBustRevealIfNeeded(ref.read(gameProvider));
+    });
+  }
+
+  /// Programme puis applique le pas suivant du rejeu spectateur (partie
+  /// principale), et se reprogramme lui-même jusqu'à épuisement du journal
+  /// (l'écran de victoire se déclenche alors normalement via le `ref.listen`
+  /// existant dès que `gameOver` devient vrai). Délai = `aiMessageDelay`
+  /// (réglages) divisé par [replaySpeedProvider] (x1/x2/x4).
+  void _scheduleReplayStep() {
+    final notifier = ref.read(gameProvider.notifier);
+    final engine = ref.read(gameProvider);
+    if (engine == null || engine.gameOver || !notifier.hasNextReplayAction) return;
+    final baseDelay = ref.read(settingsProvider).aiMessageDelay;
+    final speed = ref.read(replaySpeedProvider);
+    final delay = Duration(microseconds: baseDelay.inMicroseconds ~/ speed);
+    _pendingTimer?.cancel();
+    _pendingTimer = Timer(delay, () {
+      if (!mounted) return;
+      ref.read(gameProvider.notifier).applyNextReplayAction();
+      _scheduleReplayStep();
     });
   }
 
@@ -275,7 +307,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ));
         return;
       }
-      if (previous != null &&
+      if (!widget.replayMode &&
+          previous != null &&
           next.currentPlayerIndex != previous.currentPlayerIndex &&
           ref.read(gameProvider.notifier).shouldShowPassDevice(next.currentPlayerIndex)) {
         Navigator.of(context)
@@ -290,8 +323,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         // Par défaut, on garde tous les 5 déclinables.
         _selectedKeep = newPendingRoll?.declinableFives?.diceCount ?? 0;
       }
-      _scheduleAiIfNeeded();
-      _scheduleAutoAdvanceIfNeeded();
+      // En mode rejeu, _scheduleReplayStep s'auto-reprogramme lui-même
+      // (voir initState) : pas besoin de le redéclencher ici, et surtout pas
+      // la logique de décision IA/auto normale, qui ne s'applique pas.
+      if (!widget.replayMode) {
+        _scheduleAiIfNeeded();
+        _scheduleAutoAdvanceIfNeeded();
+      }
       _scheduleBustRevealIfNeeded(next);
     });
 
@@ -311,27 +349,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       // démarre réellement.
       return Scaffold(
         appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
-        body: GestureDetector(
-          onTap: _skipPendingAction,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  ScoreSheet(
-                    players: engine.players,
-                    currentPlayerIndex: engine.currentPlayerIndex,
-                    onTapPlayer: _openPlayerGrid,
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Center(
-                        child: isAiTurn ? _buildAiHandChoiceView(engine) : _buildHandChoiceView(engine),
+        body: AbsorbPointer(
+          absorbing: widget.replayMode,
+          child: GestureDetector(
+            onTap: _skipPendingAction,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    ScoreSheet(
+                      players: engine.players,
+                      currentPlayerIndex: engine.currentPlayerIndex,
+                      onTapPlayer: _openPlayerGrid,
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Center(
+                          child: isAiTurn ? _buildAiHandChoiceView(engine) : _buildHandChoiceView(engine),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -399,6 +440,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   List<Widget> _scoreGridAction(List<Player> players) {
+    // En mode rejeu, seul le retour compte (flèche standard de l'AppBar) :
+    // pas d'icône grille de score ni "quitter", juste le sélecteur de
+    // vitesse x1/x2/x4.
+    if (widget.replayMode) return const [ReplaySpeedControl()];
+
     final l10n = AppLocalizations.of(context);
     return [
       IconButton(

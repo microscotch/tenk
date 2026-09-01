@@ -98,6 +98,35 @@ class GameNotifier extends Notifier<GameEngine?> {
     state = replay.engine;
   }
 
+  // Rejeu (spectateur) d'un run archivé : lecture seule, aucune écriture —
+  // `_seed` n'est jamais posée sur ce chemin, donc `_record`/la persistance
+  // ne sont jamais impliqués.
+  bool _isReplay = false;
+  List<GameAction> _replayQueue = const [];
+  Random? _replayRandom;
+
+  bool get isReplay => _isReplay;
+  bool get hasNextReplayAction => _replayQueue.isNotEmpty;
+
+  /// Démarre le rejeu de la partie principale une fois le départage rejoué
+  /// (voir `DiceOffNotifier.startReplay`/`replayHandoff`) : même principe que
+  /// [startGame], mais sans seed donc sans aucune persistance.
+  void startGameReplay(GameSetup rotatedSetup, GameRecordingHandoff handoff) {
+    _setup = rotatedSetup;
+    _isReplay = true;
+    _replayRandom = handoff.random;
+    _replayQueue = List.of(handoff.actions);
+    state = GameEngine.newGame(rotatedSetup.playerNames);
+  }
+
+  /// Applique la prochaine action du journal de rejeu, via le même dispatch
+  /// que [replayGame] (voir [applyGameAction]), sans jamais persister.
+  void applyNextReplayAction() {
+    if (_replayQueue.isEmpty) return;
+    final action = _replayQueue.removeAt(0);
+    state = applyGameAction(state!, action, _replayRandom!);
+  }
+
   /// Charge un état de partie déjà construit, sans passer par [startGame].
   /// Réservé aux tests, pour vérifier des scénarios (craque, victoire...)
   /// sans dépendre de vrais lancers de dés aléatoires. N'active aucune
@@ -238,10 +267,10 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// fichier temporaire de l'autre).
   Future<void> _persistChain = Future.value();
 
-  /// Journalise [action] puis persiste (ou supprime, si la partie vient de
-  /// se terminer) la sauvegarde correspondante. Sans seed (ex:
-  /// [debugLoadState] en test), ne fait rien : il n'y a pas de partie à
-  /// persister.
+  /// Journalise [action] puis persiste (ou archive dans `over/` et retire de
+  /// `in-progress/`, si la partie vient de se terminer) la sauvegarde
+  /// correspondante. Sans seed (ex: [debugLoadState] en test), ne fait
+  /// rien : il n'y a pas de partie à persister.
   void _record(GameAction action) {
     _actions.add(action);
     if (_seed == null) return;
@@ -250,22 +279,31 @@ class GameNotifier extends Notifier<GameEngine?> {
     // sauvegarde suivante ne s'exécuterait (.then court-circuite sur une
     // future rejetée).
     if (state!.gameOver) {
-      _persistChain = _persistChain.then((_) => ref.read(gameSaveStoreProvider).delete(_seed!)).catchError((_) {});
+      _persistChain = _persistChain.then((_) => _archiveAndRemove()).catchError((_) {});
     } else {
       _persistChain = _persistChain.then((_) => _persist()).catchError((_) {});
     }
   }
 
+  SavedGame _currentSavedGame() => SavedGame(
+        seed: _seed!,
+        setup: _originalSetup!,
+        alias: _alias ?? '',
+        createdAt: _createdAt ?? DateTime.now(),
+        enteredPlayAt: _enteredPlayAt,
+        durationSeconds: durationSecondsFor(_actions),
+        actions: List.unmodifiable(_actions),
+      );
+
   Future<void> _persist() async {
-    final store = ref.read(gameSaveStoreProvider);
-    await store.write(SavedGame(
-      seed: _seed!,
-      setup: _originalSetup!,
-      alias: _alias ?? '',
-      createdAt: _createdAt ?? DateTime.now(),
-      enteredPlayAt: _enteredPlayAt,
-      durationSeconds: durationSecondsFor(_actions),
-      actions: List.unmodifiable(_actions),
-    ));
+    await ref.read(gameSaveStoreProvider).write(_currentSavedGame());
+  }
+
+  /// Une partie terminée n'est plus "en pause" : son fichier passe de
+  /// `in-progress/` à `over/` (archivage) au lieu d'être simplement effacé,
+  /// pour rester rejouable depuis la zone "Runs terminés".
+  Future<void> _archiveAndRemove() async {
+    await ref.read(archivedGameSaveStoreProvider).write(_currentSavedGame());
+    await ref.read(gameSaveStoreProvider).delete(_seed!);
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../game/ai/ai_profiles.dart';
+
 /// Rendu des dés : une seule couleur pour tous, ou une couleur différente
 /// par dé (façon set de dés de casino).
 enum DiceColorMode { uniform, varied }
@@ -21,6 +23,10 @@ class AppSettings {
   /// l'écran d'accueil). Désactivable pour une suppression immédiate.
   final bool confirmBeforeDeleteGame;
 
+  /// Difficulté par défaut des joueurs IA sur une nouvelle partie (réglage
+  /// global, plus de sélecteur par partie sur l'écran de configuration).
+  final AiDifficulty aiDifficulty;
+
   /// Code de langue forcé (ex. "en", "es") ; null = suit la langue de
   /// l'appareil.
   final String? languageOverride;
@@ -33,6 +39,7 @@ class AppSettings {
     this.musicEnabled = true,
     this.soundEffectsEnabled = true,
     this.confirmBeforeDeleteGame = true,
+    this.aiDifficulty = AiDifficulty.prudent,
     this.languageOverride,
   });
 
@@ -47,6 +54,7 @@ class AppSettings {
     bool? musicEnabled,
     bool? soundEffectsEnabled,
     bool? confirmBeforeDeleteGame,
+    AiDifficulty? aiDifficulty,
     Object? languageOverride = _unset,
   }) {
     return AppSettings(
@@ -57,6 +65,7 @@ class AppSettings {
       musicEnabled: musicEnabled ?? this.musicEnabled,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
+      aiDifficulty: aiDifficulty ?? this.aiDifficulty,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
     );
   }
@@ -74,6 +83,7 @@ const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
+const _keyAiDifficulty = 'settings.aiDifficulty';
 const _keyLanguageOverride = 'settings.languageOverride';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
@@ -98,6 +108,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
         musicEnabled: prefs.getBool(_keyMusicEnabled) ?? true,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
+        aiDifficulty: AiDifficulty.values.firstWhere(
+          (d) => d.name == prefs.getString(_keyAiDifficulty),
+          orElse: () => AiDifficulty.prudent,
+        ),
         languageOverride: prefs.getString(_keyLanguageOverride),
       );
     } catch (_) {
@@ -157,6 +171,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setConfirmBeforeDeleteGame(bool enabled) {
     state = state.copyWith(confirmBeforeDeleteGame: enabled);
     _save(_keyConfirmBeforeDeleteGame, enabled);
+  }
+
+  void setAiDifficulty(AiDifficulty difficulty) {
+    state = state.copyWith(aiDifficulty: difficulty);
+    _save(_keyAiDifficulty, difficulty.name);
   }
 
   /// [code] est un code de langue supporté (ex. "en"), ou null pour suivre à

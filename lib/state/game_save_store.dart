@@ -22,6 +22,22 @@ final pausedGamesProvider = FutureProvider<List<SavedGame>>((ref) {
   return store.list();
 });
 
+/// Le [GameSaveStore] des runs archivés (terminés), racine `over/` plutôt
+/// que `in-progress/` — même format `.run`, même classe.
+final archivedGameSaveStoreProvider = Provider<GameSaveStore>(
+  (ref) => GameSaveStore(rootDirectory: () async {
+    final docs = await getApplicationDocumentsDirectory();
+    return Directory('${docs.path}/over');
+  }),
+);
+
+/// Les runs terminés (archivés), pour la 3e zone de l'écran d'accueil. Même
+/// pattern que [pausedGamesProvider].
+final finishedGamesProvider = FutureProvider<List<SavedGame>>((ref) {
+  final store = ref.watch(archivedGameSaveStoreProvider);
+  return store.list();
+});
+
 /// Snapshot persistable d'une partie en cours : tout ce qu'il faut pour la
 /// reconstruire à l'identique via `replayGame` (voir
 /// `lib/game/game_recording.dart`), plus les métadonnées d'affichage (alias,

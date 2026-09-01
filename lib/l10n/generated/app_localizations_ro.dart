@@ -46,7 +46,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get autoChipLabel => 'Auto';
+  String get autoChipLabel => 'AutoRoll';
 
   @override
   String get aiChipLabel => 'IA';
@@ -73,13 +73,19 @@ class AppLocalizationsRo extends AppLocalizations {
   String get startGameButton => 'Începe jocul';
 
   @override
-  String get newGameSectionLabel => 'Joc nou...';
+  String get newGameSectionLabel => 'Run nou...';
 
   @override
-  String get pausedGamesSectionLabel => 'Jocuri în pauză';
+  String get pausedGamesSectionLabel => 'Run-uri întrerupte';
+
+  @override
+  String get finishedRunsSectionLabel => 'Run-uri terminate';
 
   @override
   String get noPausedGamesMessage => 'Niciun joc în pauză momentan.';
+
+  @override
+  String get noFinishedRunsMessage => 'Niciun run terminat momentan.';
 
   @override
   String get deleteGameConfirmTitle => 'Ștergi acest joc?';

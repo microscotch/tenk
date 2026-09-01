@@ -3,11 +3,11 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le10000/game/dice_off.dart';
-import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
+
+import '../test_helpers/scripted_game.dart';
 
 /// Laisse la chaîne de persistances fire-and-forget de GameNotifier
 /// s'exécuter avant d'inspecter le disque : de vraies E/S dart:io prennent
@@ -28,46 +28,28 @@ Future<bool> _waitUntil(Future<bool> Function() condition, {required Duration ti
   return condition();
 }
 
-/// Construit une sauvegarde authentique et reprenable : départage résolu +
-/// un tour entamé (un lancer déjà effectué, pendingRoll en attente).
-SavedGame _buildResumableSave({required int seed, List<String> playerNames = const ['A', 'B']}) {
-  final random = Random(seed);
-  final actions = <GameAction>[];
-  var diceOff = DiceOffState.start(playerNames.length);
-  while (!diceOff.isResolved) {
-    final idx = diceOff.nextToRoll;
-    if (idx != null) {
-      diceOff = diceOff.rollFor(idx, random: random);
-      actions.add(GameAction.diceOffRoll(idx));
-    } else {
-      diceOff = diceOff.resolveRound();
-      actions.add(GameAction.diceOffResolveRound());
-    }
-  }
-  final setup = GameSetup(playerNames: playerNames);
-  final rotated = setup.rotated(diceOff.winnerIndex!);
-  var engine = GameEngine.newGame(rotated.playerNames).startTurn();
-  actions.add(GameAction.startTurn(useFullHand: false));
-  engine = engine.roll(random: random);
-  actions.add(GameAction.roll());
-
-  return SavedGame(seed: seed, setup: setup, alias: 'Test', createdAt: DateTime(2026, 1, 1), actions: actions);
-}
-
 void main() {
   late Directory tempDir;
+  late Directory archiveTempDir;
   late GameSaveStore store;
+  late GameSaveStore archiveStore;
   late ProviderContainer container;
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('tenk_game_providers_test_');
+    archiveTempDir = await Directory.systemTemp.createTemp('tenk_game_providers_test_over_');
     store = GameSaveStore(rootDirectory: () async => tempDir);
-    container = ProviderContainer(overrides: [gameSaveStoreProvider.overrideWithValue(store)]);
+    archiveStore = GameSaveStore(rootDirectory: () async => archiveTempDir);
+    container = ProviderContainer(overrides: [
+      gameSaveStoreProvider.overrideWithValue(store),
+      archivedGameSaveStoreProvider.overrideWithValue(archiveStore),
+    ]);
   });
 
   tearDown(() async {
     container.dispose();
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    if (await archiveTempDir.exists()) await archiveTempDir.delete(recursive: true);
   });
 
   test('startGame avec un handoff persiste un fichier .run identifié par la seed', () async {
@@ -102,6 +84,11 @@ void main() {
 
   test('une partie jouée jusqu\'à sa fin supprime le fichier de sauvegarde', () async {
     const seed = 20260901;
+    // La règle qui refuse de banquer trop près de 10000 (voir
+    // turn_state.dart, wouldMakeWinningImpossible) force davantage de
+    // relances près de la cible, donc davantage de tours/écritures qu'avant
+    // pour converger avec cette stratégie naïve "toujours banquer dès que
+    // possible" : marge généreuse (guard + timeouts) pour absorber ça.
     // 2 joueurs plutôt que 3 : converge nettement plus vite vers une fin de
     // partie avec cette stratégie "jamais décliner, banquer dès que possible"
     // (moins de cycles de collision/barrage entre joueurs), ce qui limite le
@@ -129,7 +116,7 @@ void main() {
     var guard = 0;
     while (!container.read(gameProvider)!.gameOver) {
       guard++;
-      assert(guard < 2000);
+      assert(guard < 20000);
       final engine = container.read(gameProvider)!;
       final turn = engine.activeTurn;
       if (turn == null) {
@@ -153,12 +140,18 @@ void main() {
     // persistance peut donc avoir des centaines d'écritures réelles encore à
     // vider. On sonde au lieu d'un délai fixe, pour rester rapide dans le
     // cas courant sans être fragile sur une machine plus lente.
-    final deleted = await _waitUntil(() async => !await store.exists(seed), timeout: const Duration(seconds: 30));
-    expect(deleted, isTrue, reason: 'une partie terminée n\'est plus "en pause"');
-  });
+    final removedFromInProgress =
+        await _waitUntil(() async => !await store.exists(seed), timeout: const Duration(seconds: 90));
+    expect(removedFromInProgress, isTrue, reason: 'une partie terminée n\'est plus "en pause"');
+
+    final archived = await _waitUntil(() async => await archiveStore.exists(seed), timeout: const Duration(seconds: 5));
+    expect(archived, isTrue, reason: 'elle doit être archivée dans over/, pas juste effacée');
+    final savedInArchive = await archiveStore.read(seed);
+    expect(savedInArchive!.actions.length, greaterThanOrEqualTo(guard));
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test('resumeFromSave reconstruit l\'état exact et permet de continuer sans planter', () async {
-    final saved = _buildResumableSave(seed: 42);
+    final saved = buildResumableSavedGame(seed: 42, alias: 'Test', playerNames: const ['A', 'B']);
     final notifier = container.read(gameProvider.notifier);
 
     notifier.resumeFromSave(saved);

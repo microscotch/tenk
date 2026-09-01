@@ -46,7 +46,7 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get autoChipLabel => 'Авто';
+  String get autoChipLabel => 'AutoRoll';
 
   @override
   String get aiChipLabel => 'ИИ';
@@ -73,13 +73,19 @@ class AppLocalizationsBg extends AppLocalizations {
   String get startGameButton => 'Започни играта';
 
   @override
-  String get newGameSectionLabel => 'Нова игра...';
+  String get newGameSectionLabel => 'Нов run...';
 
   @override
-  String get pausedGamesSectionLabel => 'Игри на пауза';
+  String get pausedGamesSectionLabel => 'Прекъснати runs';
+
+  @override
+  String get finishedRunsSectionLabel => 'Завършени runs';
 
   @override
   String get noPausedGamesMessage => 'Все още няма игри на пауза.';
+
+  @override
+  String get noFinishedRunsMessage => 'Все още няма завършени runs.';
 
   @override
   String get deleteGameConfirmTitle => 'Изтриване на тази игра?';

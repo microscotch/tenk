@@ -46,7 +46,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get autoChipLabel => 'Auto';
+  String get autoChipLabel => 'AutoRoll';
 
   @override
   String get aiChipLabel => 'IA';
@@ -73,13 +73,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get startGameButton => 'Começar jogo';
 
   @override
-  String get newGameSectionLabel => 'Novo jogo...';
+  String get newGameSectionLabel => 'Nova run...';
 
   @override
-  String get pausedGamesSectionLabel => 'Jogos em pausa';
+  String get pausedGamesSectionLabel => 'Runs interrompidas';
+
+  @override
+  String get finishedRunsSectionLabel => 'Runs terminadas';
 
   @override
   String get noPausedGamesMessage => 'Ainda não há jogos em pausa.';
+
+  @override
+  String get noFinishedRunsMessage => 'Ainda não há runs terminadas.';
 
   @override
   String get deleteGameConfirmTitle => 'Eliminar este jogo?';

@@ -7,17 +7,27 @@ import '../../game/dice_off.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
 import '../sound_effects.dart';
 import '../widgets/die_widget.dart';
+import '../widgets/replay_speed_control.dart';
 import 'game_screen.dart';
 import 'pass_device_screen.dart';
 
 /// Détermine qui commence la partie : chaque joueur lance un dé, le score le
 /// plus faible commence (égalité = relance entre les ex-aequo uniquement).
+///
+/// [replayMode] : rejeu spectateur d'un run archivé (voir
+/// `DiceOffNotifier.startReplay`) — écran entièrement inerte (AbsorbPointer),
+/// avance seul (vitesse x1/x2/x4, [ReplaySpeedControl]) sans jamais afficher
+/// [PassDeviceScreen], jusqu'à enchaîner automatiquement sur `GameScreen` en
+/// mode rejeu une fois le départage résolu.
 class DiceOffScreen extends ConsumerStatefulWidget {
-  const DiceOffScreen({super.key});
+  final bool replayMode;
+
+  const DiceOffScreen({super.key, this.replayMode = false});
 
   @override
   ConsumerState<DiceOffScreen> createState() => _DiceOffScreenState();
@@ -31,9 +41,43 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.replayMode) {
+        _scheduleReplayStep();
+        return;
+      }
       _scheduleAiIfNeeded();
       _scheduleAutoStartIfNeeded();
     });
+  }
+
+  /// Programme puis applique le pas suivant du rejeu spectateur (départage),
+  /// et se reprogramme lui-même jusqu'à ce que le départage soit résolu, où
+  /// il enchaîne directement sur le rejeu de la partie principale. Délai =
+  /// `aiMessageDelay` (réglages) divisé par [replaySpeedProvider] (x1/x2/x4).
+  void _scheduleReplayStep() {
+    final s = ref.read(diceOffProvider);
+    if (s == null) return;
+    if (s.isResolved) {
+      _startGameReplay();
+      return;
+    }
+    final baseDelay = ref.read(settingsProvider).aiMessageDelay;
+    final speed = ref.read(replaySpeedProvider);
+    final delay = Duration(microseconds: baseDelay.inMicroseconds ~/ speed);
+    _pendingTimer?.cancel();
+    _pendingTimer = Timer(delay, () {
+      if (!mounted) return;
+      ref.read(diceOffProvider.notifier).applyNextDiceOffReplayAction();
+      _scheduleReplayStep();
+    });
+  }
+
+  void _startGameReplay() {
+    if (!mounted) return;
+    final diceOffNotifier = ref.read(diceOffProvider.notifier);
+    final rotated = diceOffNotifier.buildRotatedSetup();
+    ref.read(gameProvider.notifier).startGameReplay(rotated, diceOffNotifier.replayHandoff());
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const GameScreen(replayMode: true)));
   }
 
   @override
@@ -112,7 +156,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(diceOffProvider, (previous, next) {
-      if (next == null) return;
+      if (next == null || widget.replayMode) return; // le rejeu s'auto-pilote via _scheduleReplayStep
       if (!next.isResolved) {
         if (previous != null &&
             previous.nextToRoll != next.nextToRoll &&
@@ -139,14 +183,20 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).diceOffTitle)),
-      body: GestureDetector(
-        onTap: _skipPendingAction,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Center(
-              child: state.isResolved ? _buildResult(state, notifier) : _buildRollView(state, notifier),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).diceOffTitle),
+        actions: widget.replayMode ? [const ReplaySpeedControl()] : null,
+      ),
+      body: AbsorbPointer(
+        absorbing: widget.replayMode,
+        child: GestureDetector(
+          onTap: _skipPendingAction,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: state.isResolved ? _buildResult(state, notifier) : _buildRollView(state, notifier),
+              ),
             ),
           ),
         ),

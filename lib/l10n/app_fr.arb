@@ -40,7 +40,7 @@
     "placeholders": {"number": {"type": "int"}}
   },
 
-  "autoChipLabel": "Auto",
+  "autoChipLabel": "AutoRoll",
   "@autoChipLabel": {"description": "Libellé du bouton à bascule activant le mode automatique d'un joueur."},
 
   "aiChipLabel": "IA",
@@ -67,14 +67,20 @@
   "startGameButton": "Commencer la partie",
   "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},
 
-  "newGameSectionLabel": "Nouvelle partie...",
+  "newGameSectionLabel": "Nouveau run...",
   "@newGameSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie."},
 
-  "pausedGamesSectionLabel": "Parties en pause",
+  "pausedGamesSectionLabel": "Runs interrompus",
   "@pausedGamesSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables."},
+
+  "finishedRunsSectionLabel": "Runs terminés",
+  "@finishedRunsSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur."},
 
   "noPausedGamesMessage": "Aucune partie en pause pour l'instant.",
   "@noPausedGamesMessage": {"description": "Message affiché quand la liste des parties en pause est vide."},
+
+  "noFinishedRunsMessage": "Aucun run terminé pour l'instant.",
+  "@noFinishedRunsMessage": {"description": "Message affiché quand la liste des runs terminés est vide."},
 
   "deleteGameConfirmTitle": "Supprimer cette partie ?",
   "@deleteGameConfirmTitle": {"description": "Titre de la boîte de dialogue confirmant la suppression d'une partie en pause."},
@@ -203,6 +209,7 @@
 
   "failureNotRolledYet": "Vous devez lancer les dés avant de pouvoir vous arrêter.",
   "@failureNotRolledYet": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : aucun lancer effectué ce tour."},
+
   "failureWouldMakeWinningImpossible": "S'arrêter rendrait la victoire à 10000 inatteignable.",
   "@failureWouldMakeWinningImpossible": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : le score obtenu serait trop proche de 10000 pour qu'un futur tour (minimum 200) puisse encore l'atteindre exactement."},
 

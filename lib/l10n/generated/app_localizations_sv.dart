@@ -46,7 +46,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get autoChipLabel => 'Auto';
+  String get autoChipLabel => 'AutoRoll';
 
   @override
   String get aiChipLabel => 'AI';
@@ -73,13 +73,19 @@ class AppLocalizationsSv extends AppLocalizations {
   String get startGameButton => 'Starta spelet';
 
   @override
-  String get newGameSectionLabel => 'Nytt spel...';
+  String get newGameSectionLabel => 'Ny run...';
 
   @override
-  String get pausedGamesSectionLabel => 'Pausade spel';
+  String get pausedGamesSectionLabel => 'Avbrutna runs';
+
+  @override
+  String get finishedRunsSectionLabel => 'Avslutade runs';
 
   @override
   String get noPausedGamesMessage => 'Inga pausade spel än.';
+
+  @override
+  String get noFinishedRunsMessage => 'Inga avslutade runs än.';
 
   @override
   String get deleteGameConfirmTitle => 'Radera det här spelet?';
