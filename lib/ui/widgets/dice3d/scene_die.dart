@@ -47,6 +47,7 @@ class Scene3DDie extends StatefulWidget {
   final VoidCallback? onTap;
   final Object? rollToken;
   final Color? bodyColor;
+  final double size;
 
   const Scene3DDie({
     super.key,
@@ -55,6 +56,7 @@ class Scene3DDie extends StatefulWidget {
     this.onTap,
     this.rollToken,
     this.bodyColor,
+    required this.size,
   });
 
   /// Vrai si Flutter GPU/Impeller est disponible sur ce moteur, calculé une
@@ -78,7 +80,7 @@ class Scene3DDie extends StatefulWidget {
 }
 
 class _Scene3DDieState extends State<Scene3DDie> {
-  static const _size = 76.0;
+  double get _size => widget.size;
   static const _half = 0.5;
   // Inclinaison de repos (dé immobile) : vue plongeante donnant l'impression
   // de regarder le dé du dessus (la face "top" domine), avec juste assez

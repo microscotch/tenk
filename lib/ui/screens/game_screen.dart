@@ -428,16 +428,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         Text(l10n.currentScoreLabel(engine.inheritedScore),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Wrap(
-          alignment: WrapAlignment.center,
-          children: [
-            for (final (i, d) in engine.inheritedKeptDice.indexed)
-              DieWidget(
-                value: d.value,
-                state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
-                bodyColor: _diceColor(i),
-              ),
-          ],
+        _fittedDiceRow(
+          engine.inheritedKeptDice.length,
+          (i, size) => DieWidget(
+            value: engine.inheritedKeptDice[i].value,
+            state: engine.inheritedKeptDice[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
+            bodyColor: _diceColor(i),
+            size: size,
+          ),
         ),
         const SizedBox(height: 24),
         if (canContinue)
@@ -483,16 +481,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         Text(l10n.currentScoreLabel(engine.inheritedScore),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Wrap(
-          alignment: WrapAlignment.center,
-          children: [
-            for (final (i, d) in engine.inheritedKeptDice.indexed)
-              DieWidget(
-                value: d.value,
-                state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
-                bodyColor: _diceColor(i),
-              ),
-          ],
+        _fittedDiceRow(
+          engine.inheritedKeptDice.length,
+          (i, size) => DieWidget(
+            value: engine.inheritedKeptDice[i].value,
+            state: engine.inheritedKeptDice[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
+            bodyColor: _diceColor(i),
+            size: size,
+          ),
         ),
         const SizedBox(height: 24),
         FilledButton(
@@ -712,26 +708,50 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   Widget _diceRow(RollAnalysis analysis, int selectedKeep) {
     final states = _classifyDiceForDisplay(analysis, selectedKeep);
-    return Wrap(
-      alignment: WrapAlignment.center,
-      children: [
-        for (var i = 0; i < analysis.faces.length; i++)
-          DieWidget(value: analysis.faces[i], state: states[i], rollToken: analysis, bodyColor: _diceColor(i)),
-      ],
+    return _fittedDiceRow(
+      analysis.faces.length,
+      (i, size) => DieWidget(
+        value: analysis.faces[i],
+        state: states[i],
+        rollToken: analysis,
+        bodyColor: _diceColor(i),
+        size: size,
+      ),
     );
   }
 
   Widget _keptDiceRow(TurnState turn) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      children: [
-        for (final (i, d) in turn.keptDiceThisTurn.indexed)
-          DieWidget(
-            value: d.value,
-            state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
-            bodyColor: _diceColor(i),
-          ),
-      ],
+    final kept = turn.keptDiceThisTurn;
+    return _fittedDiceRow(
+      kept.length,
+      (i, size) => DieWidget(
+        value: kept[i].value,
+        state: kept[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
+        bodyColor: _diceColor(i),
+        size: size,
+      ),
     );
   }
+}
+
+/// Construit une rangée d'exactement [count] dés qui tient toujours sur une
+/// seule ligne : la taille de chaque dé est réduite (jamais en dessous de
+/// 40px, jamais au-dessus de la taille par défaut) pour que
+/// `count * (taille + marge)` ne dépasse jamais la largeur disponible — donc
+/// adaptée à la fois à la largeur de l'écran et à son orientation.
+Widget _fittedDiceRow(int count, Widget Function(int index, double size) builder) {
+  if (count == 0) return const SizedBox.shrink();
+  const dieMargin = 8.0; // EdgeInsets.all(4) appliqué de chaque côté par DieWidget
+  const minSize = 40.0;
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final available = constraints.maxWidth.isFinite ? constraints.maxWidth : DieWidget.defaultSize * count;
+      final size = ((available / count) - dieMargin).clamp(minSize, DieWidget.defaultSize);
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [for (var i = 0; i < count; i++) builder(i, size)],
+      );
+    },
+  );
 }

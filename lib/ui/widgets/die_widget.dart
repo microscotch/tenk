@@ -33,6 +33,13 @@ class DieWidget extends StatelessWidget {
   /// "panaché", qui attribue une couleur différente par dé de la rangée.
   final Color? bodyColor;
 
+  /// Taille du dé (côté du cube, en logical pixels). Par défaut la taille
+  /// "pleine" historique ; une rangée de plusieurs dés peut la réduire pour
+  /// tenir sur une seule ligne (voir `_fittedDiceRow` dans game_screen.dart).
+  final double size;
+
+  static const double defaultSize = 76.0;
+
   const DieWidget({
     super.key,
     required this.value,
@@ -40,14 +47,16 @@ class DieWidget extends StatelessWidget {
     this.onTap,
     this.rollToken,
     this.bodyColor,
+    this.size = defaultSize,
   });
 
   @override
   Widget build(BuildContext context) {
     if (Scene3DDie.isSupported) {
-      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor);
+      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size);
     }
-    return _TransformCubeDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor);
+    return _TransformCubeDie(
+        value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size);
   }
 }
 
@@ -60,6 +69,7 @@ class _TransformCubeDie extends StatefulWidget {
   final VoidCallback? onTap;
   final Object? rollToken;
   final Color? bodyColor;
+  final double size;
 
   const _TransformCubeDie({
     required this.value,
@@ -67,6 +77,7 @@ class _TransformCubeDie extends StatefulWidget {
     this.onTap,
     this.rollToken,
     this.bodyColor,
+    required this.size,
   });
 
   @override
@@ -98,8 +109,8 @@ Map<String, int> _faceValues(int top) {
 }
 
 class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerProviderStateMixin {
-  static const _size = 76.0;
-  static const _half = _size / 2;
+  double get _size => widget.size;
+  double get _half => _size / 2;
   // Inclinaison de repos (dé immobile) : assez pour voir le dessus et le
   // côté du cube, pas assez pour gêner la lecture de la face avant.
   // Vue plongeante (impression de regarder le dé du dessus), cohérente avec
@@ -195,7 +206,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.copy(face.placement)..translateByDouble(0.0, 0.0, _half, 1.0),
-                  child: _DieFace(value: face.value, state: widget.state, bodyColor: widget.bodyColor),
+                  child: _DieFace(value: face.value, state: widget.state, bodyColor: widget.bodyColor, size: _size),
                 ),
             ],
           ),
@@ -209,15 +220,16 @@ class _DieFace extends StatelessWidget {
   final int value;
   final DieVisualState state;
   final Color? bodyColor;
+  final double size;
 
-  const _DieFace({required this.value, required this.state, this.bodyColor});
+  const _DieFace({required this.value, required this.state, this.bodyColor, required this.size});
 
   @override
   Widget build(BuildContext context) {
     final body = bodyColorFor(state, bodyColor);
     return Container(
-      width: _TransformCubeDieState._size,
-      height: _TransformCubeDieState._size,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
