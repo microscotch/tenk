@@ -58,6 +58,21 @@ jobs:
           name: le10000-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
+      # Envoie l'AAB vers Google Play (track "internal") via un compte de
+      # service dédié (secret du repo) — indépendant d'une session développeur
+      # connectée. Ne bloque pas le job si l'envoi échoue, par exemple à cause
+      # d'un versionCode déjà utilisé ou tant que l'app n'a pas encore reçu sa
+      # toute première release manuelle depuis la console (prérequis Google
+      # avant tout envoi via l'API).
+      - name: Envoie vers Google Play (internal)
+        continue-on-error: true
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: net.microscotch.games.tenk
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+
   build-ios:
     if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios'
     runs-on: macos-latest
