@@ -12,6 +12,9 @@ import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
+import 'package:le10000/ui/widgets/player_avatar.dart';
+
+import '../test_helpers/scripted_game.dart';
 
 /// Ces scénarios (craque, victoire) sont difficiles à obtenir de façon
 /// fiable via de vrais lancers aléatoires en un temps raisonnable ; on
@@ -58,11 +61,11 @@ void main() {
 
     // Le message ne doit pas gâcher le suspense : il n'apparaît pas tant que
     // l'animation de lancer des dés n'est pas terminée.
-    expect(find.text('Craqué !'), findsNothing);
+    expect(find.textContaining('Craqué'), findsNothing);
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Craqué !'), findsOneWidget);
+    expect(find.textContaining('Craqué'), findsOneWidget);
 
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
@@ -146,7 +149,7 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull, reason: 'ne doit pas planter faute de lancer en attente');
-    expect(find.text('Craqué !'), findsOneWidget);
+    expect(find.textContaining('Craqué'), findsOneWidget);
 
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
@@ -226,7 +229,7 @@ void main() {
     // Avant le second craque : le score affiché est 1000, avec le tiret visible.
     expect(find.text('1000'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
-    expect(find.text('Craqué !'), findsOneWidget);
+    expect(find.textContaining('Craqué'), findsOneWidget);
 
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
@@ -618,5 +621,31 @@ void main() {
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
     }
+  });
+
+  testWidgets('reprendre une partie en pause recharge le journal depuis l\'historique déjà persisté',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Journal minimal mais authentique (départage réellement rejoué, voir
+    // buildResumableActionLog) : départage + startTurn + un premier roll,
+    // sans aucune décision de garde encore appliquée dessus.
+    final saved = buildResumableSavedGame(seed: 7, alias: 'Reprise', playerNames: const ['A', 'B']);
+    container.read(gameProvider.notifier).resumeFromSave(saved);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    // Rien n'a encore été joué depuis que l'écran a été monté : cette entrée
+    // ne peut venir que du rejeu de l'historique déjà dans le .run (voir
+    // GameNotifier.actions/_seedLogFromHistory), pas du suivi en direct.
+    expect(find.textContaining('5 dés à lancer'), findsOneWidget);
+    expect(find.byType(PlayerAvatarWidget), findsWidgets);
   });
 }

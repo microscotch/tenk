@@ -308,19 +308,19 @@ abstract class AppLocalizations {
   /// **'Tour final : un joueur a atteint 10000 !'**
   String get finalRoundBanner;
 
-  /// Préfixe (non coloré) de la ligne de score du tour, suivi du score et du minimum requis, tous deux colorés indépendamment en Dart.
+  /// Libellé de la zone bordurée affichant le lancer de dés en attente de décision, sans lancer en attente.
   ///
   /// In fr, this message translates to:
-  /// **'Score du tour'**
-  String get turnScoreTitle;
-
-  /// Libellé de la zone bordurée affichant le lancer de dés en attente de décision.
-  ///
-  /// In fr, this message translates to:
-  /// **'Lancé'**
+  /// **'Piste'**
   String get currentRollZoneLabel;
 
-  /// Libellé de la zone bordurée affichant les dés gardés ce tour.
+  /// Libellé de la zone "Piste" quand un lancer est en attente de décision, avec son score entre parenthèses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Piste ({points})'**
+  String currentRollZoneLabelWithScore(int points);
+
+  /// Préfixe du libellé de la zone bordurée affichant les dés gardés ce tour, suivi du score du tour et du minimum requis (colorés en Dart, voir game_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Main courante'**
@@ -427,12 +427,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer'**
   String get continueButton;
-
-  /// Score que rapporterait le lancer en attente selon la sélection actuelle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Score de ce lancer : {score}'**
-  String thisRollScoreLabel(int score);
 
   /// Question posée quand le joueur peut choisir combien de 5 garder sur un lancer.
   ///

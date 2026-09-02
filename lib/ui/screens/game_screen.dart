@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/combination.dart';
 import '../../game/game_engine.dart';
+import '../../game/game_recording.dart';
 import '../../game/player.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
@@ -17,6 +18,7 @@ import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/die_widget.dart';
+import '../widgets/player_avatar.dart';
 import '../widgets/replay_speed_control.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
@@ -145,15 +147,78 @@ String _describeRollResult(RollAnalysis analysis, int roundPoints) {
   return '${parts.join(' et ')} => $roundPoints';
 }
 
-/// Une entrée horodatée du journal de partie (voir [_GameScreenState._log]).
+/// Une entrée horodatée du journal de partie (voir [_GameScreenState._log]),
+/// rattachée au joueur concerné (pour son blason, voir [PlayerAvatarWidget]).
 class _LogEntry {
   final DateTime timestamp;
+  final String playerName;
   final String text;
-  const _LogEntry(this.timestamp, this.text);
+  const _LogEntry(this.timestamp, this.playerName, this.text);
 }
+
+String _formatLogDate(DateTime t) =>
+    '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}/${t.year}';
 
 String _formatLogTime(DateTime t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
+
+/// Dérive 0 à N entrées de journal pour la transition [previous] -> [next]
+/// (un pas de la partie principale, humain, IA ou rejoué) : pure fonction
+/// d'état, sans dépendance à comment cette transition a été obtenue — utilisée
+/// aussi bien pour le suivi en direct (voir `ref.listen` dans `build()`) que
+/// pour reconstruire tout l'historique d'une partie reprise (voir
+/// `_seedLogFromHistory`, qui rejoue `GameNotifier.actions` depuis zéro).
+///
+/// [includeBust] contrôle si un craque fraîchement détecté génère lui-même
+/// son entrée ici : en direct, le craque est plutôt logué au moment de sa
+/// révélation visuelle (voir `_scheduleBustRevealIfNeeded`), pour rester
+/// synchrone avec le suspense déjà à l'écran — mais lors d'une reconstruction
+/// d'historique, il n'y a pas d'animation à attendre, donc `true`.
+List<_LogEntry> _logEntriesForStep(
+  GameEngine? previous,
+  GameEngine next, {
+  required AppLocalizations l10n,
+  required DateTime at,
+  required bool includeBust,
+}) {
+  final nextTurn = next.activeTurn;
+  if (nextTurn == null) return const [];
+  final prevTurn = previous?.activeTurn;
+  final playerName = next.currentPlayer.name;
+  final entries = <_LogEntry>[];
+
+  // Un tour tout juste démarré (encore aucun lancer effectué) : annonce le
+  // nombre de dés à lancer. `!hasRolledThisTurn` est un marqueur exclusif —
+  // il ne redevient jamais vrai une fois passé à faux pour ce tour — donc ce
+  // test seul suffit à détecter l'entrée dans cet état, quelle que soit son
+  // origine (nouvelle partie, après un craque, main héritée acceptée...).
+  if (!nextTurn.busted && nextTurn.pendingRoll == null && !nextTurn.hasRolledThisTurn) {
+    entries.add(_LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)));
+  }
+
+  // Une décision de garde vient d'être appliquée sur le lancer précédent
+  // (`prevTurn!.busted` exclut un `prevTurn` qui serait un craque déjà
+  // révolu dont le `pendingRoll` traînerait encore — jamais un vrai choix).
+  if (prevTurn?.pendingRoll != null &&
+      !prevTurn!.busted &&
+      nextTurn.pendingRoll == null &&
+      !nextTurn.busted) {
+    final analysis = prevTurn.pendingRoll!;
+    final roundPoints = nextTurn.bankedScore - prevTurn.bankedScore;
+    entries.add(_LogEntry(at, playerName, _describeRollResult(analysis, roundPoints)));
+    if (nextTurn.mustContinue) {
+      entries.add(_LogEntry(at, playerName, l10n.logHotDiceMessage));
+    } else {
+      entries.add(_LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)));
+    }
+  }
+
+  if (includeBust && nextTurn.busted && !(prevTurn?.busted ?? false)) {
+    entries.add(_LogEntry(at, playerName, l10n.bustedTitle));
+  }
+
+  return entries;
+}
 
 /// [replayMode] : rejeu spectateur d'un run archivé (voir
 /// `GameNotifier.startGameReplay`) — écran entièrement inerte
@@ -175,9 +240,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   Timer? _pendingTimer;
   VoidCallback? _pendingAction;
 
-  /// Journal de partie : horodaté, trié par ordre d'ajout (ascendant), rempli
-  /// par comparaison d'état (voir [_appendLogEntriesForTransition]) — état
-  /// local à l'écran, pas de changement côté moteur ni [GameNotifier].
+  /// Journal de partie : horodaté, affiché du plus récent au plus ancien
+  /// (voir [_buildGameLog]). Rempli au montage par rejeu de l'historique déjà
+  /// persisté (voir [_seedLogFromHistory]), puis tenu à jour en direct par
+  /// comparaison d'état (voir [_logEntriesForStep], appelée depuis
+  /// `ref.listen` dans `build()`) — état local à l'écran, jamais écrit dans
+  /// [GameNotifier] : dérivé du même journal d'actions que celui déjà
+  /// persisté dans le `.run`, pas dupliqué.
   final List<_LogEntry> _log = [];
   final ScrollController _logScrollController = ScrollController();
 
@@ -197,7 +266,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final initialPendingRoll = initialTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll != null ? _defaultKeepCount(initialTurn!, initialPendingRoll) : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (initialEngine != null) _appendLogEntriesForTransition(null, initialEngine);
+      _seedLogFromHistory();
       if (widget.replayMode) {
         _scheduleReplayStep();
       } else {
@@ -236,49 +305,37 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.dispose();
   }
 
-  /// Ajoute une entrée au journal et fait défiler vers le bas une fois le
-  /// nouveau contenu monté.
-  void _appendLog(String text) {
-    setState(() => _log.add(_LogEntry(DateTime.now(), text)));
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_logScrollController.hasClients) return;
-      _logScrollController.animateTo(
-        _logScrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-    });
-  }
+  /// Ajoute une entrée au journal (le plus récent apparaît en premier, voir
+  /// [_buildGameLog] — pas d'auto-scroll nécessaire, une nouvelle entrée
+  /// apparaît directement en haut, déjà visible).
+  void _appendLog(_LogEntry entry) => setState(() => _log.add(entry));
 
-  /// Peuple le journal par simple comparaison d'état (avant/après), pas par
-  /// interception des actions : fonctionne donc identiquement pour un
-  /// humain, une IA, et le mode rejeu. Le craque ("Craqué !") n'est PAS géré
-  /// ici : il est loggé au moment de sa révélation visuelle, voir
-  /// [_scheduleBustRevealIfNeeded], pour rester synchrone avec le suspense
-  /// déjà en place à l'écran.
-  void _appendLogEntriesForTransition(GameEngine? previous, GameEngine next) {
-    final nextTurn = next.activeTurn;
-    if (nextTurn == null) return;
-    final prevTurn = previous?.activeTurn;
+  /// Reconstruit tout l'historique du journal en rejouant le journal
+  /// d'actions déjà persisté par [GameNotifier] (même source que le `.run` —
+  /// rien n'est dupliqué), au montage de l'écran : couvre aussi bien une
+  /// partie qui vient de démarrer (un seul `startTurn` à rejouer) qu'une
+  /// partie reprise (tout son historique). Sans effet si la partie n'est pas
+  /// persistée (`debugLoadState` en test, ou mode rejeu — ce dernier peuple
+  /// son propre journal en direct au fil de la lecture, voir `ref.listen`).
+  void _seedLogFromHistory() {
+    final notifier = ref.read(gameProvider.notifier);
+    final seed = notifier.seed;
+    final originalSetup = notifier.originalSetup;
+    final actions = notifier.actions;
+    if (seed == null || originalSetup == null || actions.isEmpty) return;
+
     final l10n = AppLocalizations.of(context);
-
-    // Tout début d'un tour (nouveau tour, ou premier affichage de l'écran,
-    // y compris une partie reprise) : annonce le nombre de dés à lancer.
-    if (prevTurn == null && !nextTurn.busted && nextTurn.pendingRoll == null) {
-      _appendLog(l10n.diceToRollLabel(nextTurn.diceToRoll));
-    }
-
-    // Une décision de garde vient d'être appliquée sur le lancer précédent.
-    if (prevTurn?.pendingRoll != null && nextTurn.pendingRoll == null && !nextTurn.busted) {
-      final analysis = prevTurn!.pendingRoll!;
-      final roundPoints = nextTurn.bankedScore - prevTurn.bankedScore;
-      _appendLog(_describeRollResult(analysis, roundPoints));
-      if (nextTurn.mustContinue) {
-        _appendLog(l10n.logHotDiceMessage);
-      } else {
-        _appendLog(l10n.diceToRollLabel(nextTurn.diceToRoll));
-      }
-    }
+    final entries = <_LogEntry>[];
+    replayGame(
+      originalSetup,
+      seed,
+      actions,
+      onGameAction: (previous, next, action) {
+        entries.addAll(_logEntriesForStep(previous, next, l10n: l10n, at: action.at, includeBust: true));
+      },
+    );
+    if (entries.isEmpty) return;
+    setState(() => _log.addAll(entries));
   }
 
   /// Programme la révélation du message "Craqué !" une fois l'animation de
@@ -302,7 +359,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     if (turn.pendingRoll == null) {
       SoundEffects.instance.playBust();
-      _appendLog(AppLocalizations.of(context).bustedTitle);
+      _appendLog(_LogEntry(DateTime.now(), engine!.currentPlayer.name, AppLocalizations.of(context).bustedTitle));
       setState(() => _bustRevealed = true);
       return;
     }
@@ -310,7 +367,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _bustRevealTimer = Timer(_bustRevealDelay, () {
       if (!mounted) return;
       SoundEffects.instance.playBust();
-      _appendLog(AppLocalizations.of(context).bustedTitle);
+      _appendLog(_LogEntry(DateTime.now(), engine!.currentPlayer.name, AppLocalizations.of(context).bustedTitle));
       setState(() => _bustRevealed = true);
     });
   }
@@ -439,7 +496,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ))
             .then((_) => _scheduleAiIfNeeded());
       }
-      _appendLogEntriesForTransition(previous, next);
+      for (final entry
+          in _logEntriesForStep(previous, next, l10n: AppLocalizations.of(context), at: DateTime.now(), includeBust: false)) {
+        _appendLog(entry);
+      }
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
@@ -555,22 +615,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
                     ),
-                  Center(
-                    child: Text.rich(
-                      TextSpan(
-                        style: Theme.of(context).textTheme.titleLarge,
-                        children: [
-                          TextSpan(text: '${l10n.turnScoreTitle} : '),
-                          TextSpan(text: '$liveScore', style: TextStyle(color: scoreColor, fontWeight: FontWeight.bold)),
-                          TextSpan(text: ' (>$minimum)', style: TextStyle(color: minimumColor)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   _buildRollZone(turn, rollZoneSelectedKeep),
                   const SizedBox(height: 12),
-                  _buildHandZone(turn),
+                  _buildHandZone(turn, liveScore: liveScore, minimum: minimum, scoreColor: scoreColor, minimumColor: minimumColor),
                   const SizedBox(height: 12),
                   Center(
                     child: turn.busted
@@ -711,40 +758,52 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  /// Zone bordurée "Lancé" : le lancer de dés en attente de décision et son
-  /// résultat (score), ou un texte de substitution s'il n'y en a aucun en
-  /// attente. `selectedKeep` ne pèse que sur l'aperçu visuel (voir
-  /// `_classifyDiceForDisplay`) : 0 pour l'IA/un craque (rien n'est encore
-  /// "décidé" à afficher), la sélection réelle du joueur sinon.
+  /// Hauteur fixe de la zone "Piste" (dés uniquement désormais) : une seule
+  /// rangée de dés à leur taille par défaut, quel que soit l'état (lancer en
+  /// attente ou non) — évite que la zone change de hauteur selon le contenu.
+  static const double _rollZoneHeight = DieWidget.defaultSize + 16;
+
+  /// Zone bordurée "Piste" : uniquement les dés du lancer en attente de
+  /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
+  /// le libellé lui-même, entre parenthèses. `selectedKeep` ne pèse que sur
+  /// l'aperçu visuel (voir `_classifyDiceForDisplay`) : 0 pour l'IA/un
+  /// craque (rien n'est encore "décidé" à afficher), la sélection réelle du
+  /// joueur sinon.
   Widget _buildRollZone(TurnState turn, int selectedKeep) {
     final l10n = AppLocalizations.of(context);
     final analysis = turn.pendingRoll;
+    final label = analysis != null
+        ? l10n.currentRollZoneLabelWithScore(_previewPoints(analysis, selectedKeep))
+        : l10n.currentRollZoneLabel;
     return BorderedSection(
-      label: l10n.currentRollZoneLabel,
+      label: label,
       fillAvailableSpace: false,
-      child: analysis != null
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _diceRow(analysis, selectedKeep),
-                const SizedBox(height: 8),
-                Text(l10n.thisRollScoreLabel(_previewPoints(analysis, selectedKeep)),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            )
-          : Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(l10n.awaitingRollPlaceholder, style: TextStyle(color: Colors.grey.shade400)),
-            ),
+      child: SizedBox(
+        height: _rollZoneHeight,
+        child: Center(child: analysis != null ? _diceRow(analysis, selectedKeep) : const SizedBox.shrink()),
+      ),
     );
   }
 
-  /// Zone bordurée "Main courante" : les dés gardés ce tour.
-  Widget _buildHandZone(TurnState turn) {
+  /// Zone bordurée "Main courante" : les dés gardés ce tour, avec le score du
+  /// tour (et le minimum requis) dans le libellé, coloré comme avant cette
+  /// refonte (juste déplacé depuis sa propre ligne).
+  Widget _buildHandZone(
+    TurnState turn, {
+    required int liveScore,
+    required int minimum,
+    required Color scoreColor,
+    required Color minimumColor,
+  }) {
     final l10n = AppLocalizations.of(context);
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
+      labelSuffix: [
+        const TextSpan(text: ' '),
+        TextSpan(text: '$liveScore', style: TextStyle(color: scoreColor)),
+        TextSpan(text: ' (>$minimum)', style: TextStyle(color: minimumColor)),
+      ],
       child: turn.keptDiceThisTurn.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -754,8 +813,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  /// Journal de partie : lecture seule, horodaté, défile automatiquement
-  /// vers le bas à l'ajout d'une entrée (voir [_appendLog]).
+  /// Journal de partie : lecture seule, horodaté, du plus récent (en haut) au
+  /// plus ancien — pas besoin de gérer le défilement, une nouvelle entrée
+  /// apparaît directement en haut, déjà dans la zone visible.
   Widget _buildGameLog() {
     return Container(
       width: double.infinity,
@@ -774,19 +834,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 controller: _logScrollController,
                 itemCount: _log.length,
                 itemBuilder: (context, i) {
-                  final entry = _log[i];
+                  final entry = _log[_log.length - 1 - i];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${_formatLogTime(entry.timestamp)}  ',
-                            style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                          ),
-                          TextSpan(text: entry.text, style: const TextStyle(fontSize: 13)),
-                        ],
-                      ),
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_formatLogDate(entry.timestamp)} - ${_formatLogTime(entry.timestamp)} - ',
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: PlayerAvatarWidget(name: entry.playerName, size: 16),
+                        ),
+                        Expanded(
+                          child: Text(' : ${entry.text}', style: const TextStyle(fontSize: 13)),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -846,13 +911,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         if (!revealed)
           const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
         else ...[
-          Text(l10n.bustedTitle, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
+          // Pas de titre "Craqué !" ici : il apparaît déjà dans le journal de
+          // partie (voir _scheduleBustRevealIfNeeded), pas besoin de le
+          // répéter en double au-dessus du bouton.
           if (turn.pendingRoll == null)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Text(l10n.bustExceedsTarget, style: const TextStyle(color: Colors.orange)),
             ),
-          const SizedBox(height: 16),
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
             child: Text(l10n.continueButton),

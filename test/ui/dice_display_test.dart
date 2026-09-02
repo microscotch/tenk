@@ -76,7 +76,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Par défaut, les deux 5 sont gardés : 200 (deux 1) + 100 (deux 5) = 300.
-    expect(find.text('Score de ce lancer : 300'), findsOneWidget);
+    // Le score de ce lancer est affiché dans le libellé de la zone "Piste".
+    expect(find.text('Piste (300)'), findsOneWidget);
     expect(tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5).map((d) => d.state),
         everyElement(DieVisualState.kept));
 
@@ -84,7 +85,7 @@ void main() {
     await tester.pump();
 
     // Un seul 5 gardé : 200 + 50 = 250, l'aperçu doit se mettre à jour.
-    expect(find.text('Score de ce lancer : 250'), findsOneWidget);
+    expect(find.text('Piste (250)'), findsOneWidget);
     final fiveStates =
         tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5).map((d) => d.state).toList();
     expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));

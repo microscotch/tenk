@@ -119,10 +119,12 @@ class AppLocalizationsFi extends AppLocalizations {
       'Viimeinen kierros: pelaaja on saavuttanut 10000!';
 
   @override
-  String get turnScoreTitle => 'Score du tour';
+  String get currentRollZoneLabel => 'Piste';
 
   @override
-  String get currentRollZoneLabel => 'Lancé';
+  String currentRollZoneLabelWithScore(int points) {
+    return 'Piste ($points)';
+  }
 
   @override
   String get currentHandZoneLabel => 'Main courante';
@@ -212,11 +214,6 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get continueButton => 'Jatka';
-
-  @override
-  String thisRollScoreLabel(int score) {
-    return 'Tämän heiton pisteet: $score';
-  }
 
   @override
   String get howManyFivesToKeep => 'Kuinka monta viittä säilytät?';

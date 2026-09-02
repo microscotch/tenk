@@ -117,14 +117,17 @@
   "finalRoundBanner": "Tour final : un joueur a atteint 10000 !",
   "@finalRoundBanner": {"description": "Bandeau affiché quand un joueur a atteint 10000 et que les autres jouent leur dernier tour."},
 
-  "turnScoreTitle": "Score du tour",
-  "@turnScoreTitle": {"description": "Préfixe (non coloré) de la ligne de score du tour, suivi du score et du minimum requis, tous deux colorés indépendamment en Dart."},
+  "currentRollZoneLabel": "Piste",
+  "@currentRollZoneLabel": {"description": "Libellé de la zone bordurée affichant le lancer de dés en attente de décision, sans lancer en attente."},
 
-  "currentRollZoneLabel": "Lancé",
-  "@currentRollZoneLabel": {"description": "Libellé de la zone bordurée affichant le lancer de dés en attente de décision."},
+  "currentRollZoneLabelWithScore": "Piste ({points})",
+  "@currentRollZoneLabelWithScore": {
+    "description": "Libellé de la zone \"Piste\" quand un lancer est en attente de décision, avec son score entre parenthèses.",
+    "placeholders": {"points": {"type": "int"}}
+  },
 
   "currentHandZoneLabel": "Main courante",
-  "@currentHandZoneLabel": {"description": "Libellé de la zone bordurée affichant les dés gardés ce tour."},
+  "@currentHandZoneLabel": {"description": "Préfixe du libellé de la zone bordurée affichant les dés gardés ce tour, suivi du score du tour et du minimum requis (colorés en Dart, voir game_screen.dart)."},
 
   "awaitingRollPlaceholder": "En attente du prochain lancer",
   "@awaitingRollPlaceholder": {"description": "Texte de substitution dans la zone \"Lancé\" quand aucun lancer n'est en attente de décision."},
@@ -194,12 +197,6 @@
 
   "continueButton": "Continuer",
   "@continueButton": {"description": "Bouton pour passer la main après un craque."},
-
-  "thisRollScoreLabel": "Score de ce lancer : {score}",
-  "@thisRollScoreLabel": {
-    "description": "Score que rapporterait le lancer en attente selon la sélection actuelle.",
-    "placeholders": {"score": {"type": "int"}}
-  },
 
   "howManyFivesToKeep": "Combien de 5 garder ?",
   "@howManyFivesToKeep": {"description": "Question posée quand le joueur peut choisir combien de 5 garder sur un lancer."},

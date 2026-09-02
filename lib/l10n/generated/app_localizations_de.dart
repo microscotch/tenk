@@ -119,10 +119,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Letzte Runde: Ein Spieler hat 10000 erreicht!';
 
   @override
-  String get turnScoreTitle => 'Score du tour';
+  String get currentRollZoneLabel => 'Piste';
 
   @override
-  String get currentRollZoneLabel => 'Lancé';
+  String currentRollZoneLabelWithScore(int points) {
+    return 'Piste ($points)';
+  }
 
   @override
   String get currentHandZoneLabel => 'Main courante';
@@ -213,11 +215,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get continueButton => 'Weiter';
-
-  @override
-  String thisRollScoreLabel(int score) {
-    return 'Punkte dieses Wurfs: $score';
-  }
 
   @override
   String get howManyFivesToKeep => 'Wie viele 5en behalten?';

@@ -17,11 +17,18 @@ class BorderedSection extends StatelessWidget {
   /// (sans enfant non-positionné) de se dimensionner.
   final bool fillAvailableSpace;
 
+  /// Segments supplémentaires ajoutés à la suite de [label] dans le libellé,
+  /// chacun avec sa propre couleur (ex: score coloré rouge/orange/vert) — le
+  /// libellé reste alors un seul `Text.rich`, [label] en formant le premier
+  /// segment (non coloré, style par défaut de la puce).
+  final List<InlineSpan>? labelSuffix;
+
   const BorderedSection({
     super.key,
     required this.label,
     required this.child,
     this.fillAvailableSpace = true,
+    this.labelSuffix,
   });
 
   @override
@@ -52,7 +59,12 @@ class BorderedSection extends StatelessWidget {
                 border: Border.all(color: scheme.primary, width: 1),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text(label, style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+              child: Text.rich(
+                TextSpan(
+                  style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
+                  children: [TextSpan(text: label), ...?labelSuffix],
+                ),
+              ),
             ),
           ),
         ],

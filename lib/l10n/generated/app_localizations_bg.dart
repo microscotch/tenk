@@ -118,10 +118,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get finalRoundBanner => 'Последен рунд: играч достигна 10000!';
 
   @override
-  String get turnScoreTitle => 'Score du tour';
+  String get currentRollZoneLabel => 'Piste';
 
   @override
-  String get currentRollZoneLabel => 'Lancé';
+  String currentRollZoneLabelWithScore(int points) {
+    return 'Piste ($points)';
+  }
 
   @override
   String get currentHandZoneLabel => 'Main courante';
@@ -211,11 +213,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get continueButton => 'Продължи';
-
-  @override
-  String thisRollScoreLabel(int score) {
-    return 'Точки от това хвърляне: $score';
-  }
 
   @override
   String get howManyFivesToKeep => 'Колко петици да запазиш?';

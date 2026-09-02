@@ -105,7 +105,21 @@ class ReplayResult {
 /// [setup] est la configuration d'origine, telle que saisie avant le
 /// départage (non réordonnée) : c'est elle qui sert de base pour calculer la
 /// configuration finale une fois le vainqueur du départage connu.
-ReplayResult replayGame(GameSetup setup, int seed, List<GameAction> actions) {
+///
+/// [onGameAction], quand fourni, est appelé pour chaque action de la PARTIE
+/// PRINCIPALE (pas le départage) avec l'état juste avant (null pour la toute
+/// première) et juste après son application — pas pour reconstruire l'état
+/// final (déjà fait par cette fonction), mais pour permettre à l'appelant de
+/// dériver autre chose de cette même séquence (ex: le journal de partie
+/// affiché à l'écran, voir `game_screen.dart`) sans dupliquer la logique de
+/// rejeu. Type de callback pur (aucune dépendance Flutter), conforme à la
+/// séparation moteur/UI du projet.
+ReplayResult replayGame(
+  GameSetup setup,
+  int seed,
+  List<GameAction> actions, {
+  void Function(GameEngine? previous, GameEngine next, GameAction action)? onGameAction,
+}) {
   final random = Random(seed);
   var diceOff = DiceOffState.start(setup.playerNames.length);
   GameSetup? rotatedSetup;
@@ -122,7 +136,9 @@ ReplayResult replayGame(GameSetup setup, int seed, List<GameAction> actions) {
           engine = GameEngine.newGame(rotatedSetup.playerNames);
         }
       default:
+        final previous = engine;
         engine = applyGameAction(engine!, action, random);
+        onGameAction?.call(previous, engine, action);
     }
   }
 

@@ -38,6 +38,15 @@ class GameNotifier extends Notifier<GameEngine?> {
   @override
   GameEngine? build() => null;
 
+  /// Seed/config d'origine/journal d'actions de la partie en cours, pour
+  /// dériver le journal de partie affiché à l'écran (voir
+  /// `game_screen.dart`, `_seedLogFromHistory`) — mêmes valeurs que celles
+  /// écrites dans le `.run`, exposées en lecture seule. Toutes nulles/vides
+  /// hors partie persistée (ex: `debugLoadState` en test, ou mode rejeu).
+  int? get seed => _seed;
+  GameSetup? get originalSetup => _originalSetup;
+  List<GameAction> get actions => List.unmodifiable(_actions);
+
   bool isAiPlayer(int index) => _setup?.isAi(index) ?? false;
 
   /// Vrai si les actions du joueur [index] doivent se valider seules après
