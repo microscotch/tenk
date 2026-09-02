@@ -9,6 +9,7 @@ import '../widgets/bordered_section.dart';
 import '../widgets/finished_games_list.dart';
 import '../widgets/paused_games_list.dart';
 import 'new_game_screen.dart';
+import 'rules_screen.dart';
 import 'settings_screen.dart';
 
 /// Écran d'accueil : un bouton pour démarrer une nouvelle partie (ouvre
@@ -60,6 +61,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
       appBar: AppBar(
         title: const AppTitle(),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.helpTooltip,
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RulesScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: l10n.settingsTooltip,

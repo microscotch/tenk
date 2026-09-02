@@ -78,6 +78,26 @@ bool _hasRealChoice(RollAnalysis analysis) {
   return fives.diceCount > minKeep;
 }
 
+/// Détermine, parmi les choix légaux de nombre de 5 à garder, le meilleur
+/// par défaut : le score de tour résultant le plus élevé, en évitant si
+/// possible qu'il ne finisse par 50 (score sur lequel il est interdit de
+/// s'arrêter volontairement) — le joueur reste libre d'ajuster ensuite via
+/// les ChoiceChip (certains préfèrent délibérément garder moins de 5).
+/// Repli sur le score le plus élevé si toutes les options finissent par 50
+/// (possible seulement via la règle d'extension, où chaque 5 vaut 100 : le
+/// dernier chiffre ne varie alors jamais avec le nombre gardé).
+int _defaultKeepCount(TurnState turn, RollAnalysis analysis) {
+  final fives = analysis.declinableFives;
+  if (fives == null) return 0;
+  final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
+  final maxKeep = fives.diceCount;
+  for (var keep = maxKeep; keep >= minKeep; keep--) {
+    final hypothetical = applyKeepDecision(turn, declineFivesCount: maxKeep - keep);
+    if (hypothetical.bankedScore % 100 != 50) return keep;
+  }
+  return maxKeep;
+}
+
 /// Points que rapporterait ce lancer si le joueur valide sa sélection
 /// actuelle (combien de 5 garder).
 int _previewPoints(RollAnalysis analysis, int selectedKeepCount) {
@@ -121,8 +141,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
-    final initialPendingRoll = ref.read(gameProvider)?.activeTurn?.pendingRoll;
-    _selectedKeep = initialPendingRoll?.declinableFives?.diceCount ?? 0;
+    final initialTurn = ref.read(gameProvider)?.activeTurn;
+    final initialPendingRoll = initialTurn?.pendingRoll;
+    _selectedKeep = initialPendingRoll != null ? _defaultKeepCount(initialTurn!, initialPendingRoll) : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.replayMode) {
         _scheduleReplayStep();
@@ -320,8 +341,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
-        // Par défaut, on garde tous les 5 déclinables.
-        _selectedKeep = newPendingRoll?.declinableFives?.diceCount ?? 0;
+        // Par défaut, on tend vers le score optimal (voir _defaultKeepCount).
+        _selectedKeep = newPendingRoll != null ? _defaultKeepCount(next.activeTurn!, newPendingRoll) : 0;
       }
       // En mode rejeu, _scheduleReplayStep s'auto-reprogramme lui-même
       // (voir initState) : pas besoin de le redéclencher ici, et surtout pas
@@ -678,38 +699,36 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FilledButton(
+        ],
+        // Pas de bouton "Garder les dés" générique : s'il n'y a aucun 5 à
+        // éliminer (pas de vrai choix), la décision de garde forcée est
+        // appliquée directement en même temps que l'action suivante — comme
+        // quand un choix existe (voir CLAUDE.md, pas d'écran "Valider"
+        // intermédiaire).
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FilledButton(
+              onPressed: () {
+                final notifier = ref.read(gameProvider.notifier);
+                notifier.applyKeep(declineFivesCount: declineCount);
+                notifier.roll();
+              },
+              child: Text(l10n.rollDiceButton),
+            ),
+            if (hypotheticalBank.success) ...[
+              const SizedBox(width: 16),
+              OutlinedButton(
                 onPressed: () {
                   final notifier = ref.read(gameProvider.notifier);
                   notifier.applyKeep(declineFivesCount: declineCount);
-                  notifier.roll();
+                  notifier.bank();
                 },
-                child: Text(l10n.rollDiceButton),
+                child: Text(l10n.stopButton),
               ),
-              if (hypotheticalBank.success) ...[
-                const SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: () {
-                    final notifier = ref.read(gameProvider.notifier);
-                    notifier.applyKeep(declineFivesCount: declineCount);
-                    notifier.bank();
-                  },
-                  child: Text(l10n.stopButton),
-                ),
-              ],
             ],
-          ),
-        ] else
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: FilledButton(
-              onPressed: () => ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0),
-              child: Text(l10n.keepDiceButton),
-            ),
-          ),
+          ],
+        ),
       ],
     );
   }

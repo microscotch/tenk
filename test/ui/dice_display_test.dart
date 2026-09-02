@@ -10,7 +10,8 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 
 void main() {
-  testWidgets('1-3-4-5-6 : le 1 et le 5 (gardé par défaut) sont verts, le reste est junk', (tester) async {
+  testWidgets('1-3-4-5-6 : le 1 est gardé (obligatoire), le 5 décliné par défaut pour éviter un total finissant par 50',
+      (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -31,6 +32,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // Garder le 5 donnerait 100 (le 1) + 50 (le 5) = 150, un total qui finit
+    // par 50 : interdit de s'arrêter dessus. Le décliner donne 100, un total
+    // valide et bancable tout de suite. Le score optimal par défaut préfère
+    // donc le décliner, même si 150 > 100 en valeur brute (voir
+    // _defaultKeepCount dans game_screen.dart).
     final dice = tester.widgetList<DieWidget>(find.byType(DieWidget)).toList();
     expect(dice.length, 5);
     for (final d in dice) {
@@ -38,7 +44,8 @@ void main() {
         case 1:
           expect(d.state, DieVisualState.kept, reason: 'le 1 doit être gardé (obligatoire)');
         case 5:
-          expect(d.state, DieVisualState.kept, reason: 'le 5 isolé est gardé par défaut (aucun rejet sélectionné)');
+          expect(d.state, DieVisualState.declined,
+              reason: 'le garder finirait sur un total de 150 (interdit de s\'arrêter sur un 50)');
         case 3:
         case 4:
         case 6:
