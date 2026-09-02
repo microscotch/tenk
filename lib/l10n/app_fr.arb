@@ -70,11 +70,17 @@
   "newGameSectionLabel": "Nouveau run...",
   "@newGameSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie."},
 
-  "pausedGamesSectionLabel": "Runs interrompus",
-  "@pausedGamesSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables."},
+  "pausedGamesSectionLabel": "Runs interrompus ({count})",
+  "@pausedGamesSectionLabel": {
+    "description": "Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables, avec leur nombre.",
+    "placeholders": {"count": {"type": "int"}}
+  },
 
-  "finishedRunsSectionLabel": "Runs terminés",
-  "@finishedRunsSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur."},
+  "finishedRunsSectionLabel": "Runs terminés ({count})",
+  "@finishedRunsSectionLabel": {
+    "description": "Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur, avec leur nombre.",
+    "placeholders": {"count": {"type": "int"}}
+  },
 
   "noPausedGamesMessage": "Aucune partie en pause pour l'instant.",
   "@noPausedGamesMessage": {"description": "Message affiché quand la liste des parties en pause est vide."},

@@ -35,10 +35,7 @@ class _PausedGamesListState extends ConsumerState<PausedGamesList> {
     final asyncGames = ref.watch(pausedGamesProvider);
 
     return asyncGames.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => _EmptyMessage(text: l10n.noPausedGamesMessage),
       data: (allGames) {
         final games = allGames.where((g) => !_hiddenSeeds.contains(g.seed)).toList();
@@ -76,10 +73,7 @@ class _EmptyMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Text(text, style: TextStyle(color: Colors.grey.shade400)),
-    );
+    return Center(child: Text(text, style: TextStyle(color: Colors.grey.shade400)));
   }
 }
 

@@ -35,12 +35,11 @@ class GameRunTile extends StatelessWidget {
   }
 }
 
-/// Enveloppe une liste de runs dans une hauteur bornée avec un ascenseur
-/// fin, visible seulement quand le contenu dépasse cette hauteur (sinon la
-/// liste se contente de sa hauteur naturelle).
+/// Enveloppe une liste de runs pour qu'elle occupe toute la hauteur allouée
+/// par son parent (typiquement l'`Expanded` d'une [BorderedSection] sur
+/// l'écran d'accueil), avec un ascenseur fin visible seulement quand le
+/// contenu dépasse cette hauteur.
 class BoundedGameRunsList extends StatefulWidget {
-  static const double maxListHeight = 320;
-
   final List<Widget> children;
 
   const BoundedGameRunsList({super.key, required this.children});
@@ -51,8 +50,7 @@ class BoundedGameRunsList extends StatefulWidget {
 
 class _BoundedGameRunsListState extends State<BoundedGameRunsList> {
   // Scrollbar(thumbVisibility: true) exige un ScrollController explicite :
-  // il ne trouve pas de PrimaryScrollController pour un ListView shrinkWrap
-  // niché dans un SingleChildScrollView parent (celui de SetupScreen).
+  // il ne trouve pas de PrimaryScrollController pour ce ListView.
   final _controller = ScrollController();
 
   @override
@@ -63,14 +61,11 @@ class _BoundedGameRunsListState extends State<BoundedGameRunsList> {
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: BoundedGameRunsList.maxListHeight),
-      child: Scrollbar(
-        controller: _controller,
-        thumbVisibility: true,
-        thickness: 3,
-        child: ListView(controller: _controller, shrinkWrap: true, children: widget.children),
-      ),
+    return Scrollbar(
+      controller: _controller,
+      thumbVisibility: true,
+      thickness: 3,
+      child: ListView(controller: _controller, children: widget.children),
     );
   }
 }

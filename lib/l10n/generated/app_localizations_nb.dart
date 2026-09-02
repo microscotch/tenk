@@ -76,10 +76,14 @@ class AppLocalizationsNb extends AppLocalizations {
   String get newGameSectionLabel => 'Ny run...';
 
   @override
-  String get pausedGamesSectionLabel => 'Avbrutte runs';
+  String pausedGamesSectionLabel(int count) {
+    return 'Avbrutte runs ($count)';
+  }
 
   @override
-  String get finishedRunsSectionLabel => 'Fullførte runs';
+  String finishedRunsSectionLabel(int count) {
+    return 'Fullførte runs ($count)';
+  }
 
   @override
   String get noPausedGamesMessage => 'Ingen pausede spill ennå.';

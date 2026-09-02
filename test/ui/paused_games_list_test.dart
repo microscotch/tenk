@@ -17,16 +17,16 @@ void main() {
     store = FakeGameSaveStore();
   });
 
-  // Enveloppé dans un SingleChildScrollView comme en production
-  // (SetupScreen) : PausedGamesList seul dans un Scaffold.body déborderait
-  // verticalement dès que le contenu dépasse la hauteur de l'écran.
+  // Scaffold.body donne une hauteur bornée (comme la zone Expanded qui
+  // héberge PausedGamesList en production, voir SetupScreen) : la liste
+  // interne défile elle-même plutôt que de déborder.
   Widget wrap(ProviderContainer container) {
     return UncontrolledProviderScope(
       container: container,
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: SingleChildScrollView(child: PausedGamesList())),
+        home: Scaffold(body: PausedGamesList()),
       ),
     );
   }

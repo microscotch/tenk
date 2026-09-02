@@ -76,10 +76,14 @@ class AppLocalizationsFi extends AppLocalizations {
   String get newGameSectionLabel => 'Uusi run...';
 
   @override
-  String get pausedGamesSectionLabel => 'Keskeytyneet runit';
+  String pausedGamesSectionLabel(int count) {
+    return 'Keskeytyneet runit ($count)';
+  }
 
   @override
-  String get finishedRunsSectionLabel => 'Päättyneet runit';
+  String finishedRunsSectionLabel(int count) {
+    return 'Päättyneet runit ($count)';
+  }
 
   @override
   String get noPausedGamesMessage => 'Ei vielä tauolla olevia pelejä.';

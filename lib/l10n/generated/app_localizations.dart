@@ -236,17 +236,17 @@ abstract class AppLocalizations {
   /// **'Nouveau run...'**
   String get newGameSectionLabel;
 
-  /// Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables.
+  /// Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables, avec leur nombre.
   ///
   /// In fr, this message translates to:
-  /// **'Runs interrompus'**
-  String get pausedGamesSectionLabel;
+  /// **'Runs interrompus ({count})'**
+  String pausedGamesSectionLabel(int count);
 
-  /// Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur.
+  /// Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur, avec leur nombre.
   ///
   /// In fr, this message translates to:
-  /// **'Runs terminés'**
-  String get finishedRunsSectionLabel;
+  /// **'Runs terminés ({count})'**
+  String finishedRunsSectionLabel(int count);
 
   /// Message affiché quand la liste des parties en pause est vide.
   ///
