@@ -118,17 +118,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get finalRoundBanner => 'Tour final : un joueur a atteint 10000 !';
 
   @override
-  String turnScoreLabel(int score) {
-    return 'Score du tour : $score';
-  }
+  String get turnScoreTitle => 'Score du tour';
 
   @override
-  String minimumRequiredLabel(int minimum) {
-    return 'Minimum requis : $minimum';
-  }
+  String get currentRollZoneLabel => 'Lancé';
 
   @override
-  String get keptDiceThisTurnLabel => 'Dés gardés ce tour';
+  String get currentHandZoneLabel => 'Main courante';
+
+  @override
+  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+
+  @override
+  String get logHotDiceMessage => 'Main pleine !';
 
   @override
   String inheritedHandMessage(String playerName, int diceCount) {
@@ -154,7 +156,7 @@ class AppLocalizationsFr extends AppLocalizations {
       other: '$count dés',
       one: '$count dé',
     );
-    return 'Continuer avec $_temp0';
+    return 'Reprendre avec $_temp0';
   }
 
   @override

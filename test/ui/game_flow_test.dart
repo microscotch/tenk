@@ -185,7 +185,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Continuer avec'), findsNothing,
+    expect(find.textContaining('Reprendre avec'), findsNothing,
         reason: 'reprendre cette main garantirait un dépassement de 10000');
     expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
     expect(find.textContaining('dépasserait déjà 10000'), findsOneWidget);
@@ -354,12 +354,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('hérite de 3 dés'), findsOneWidget);
-    expect(find.text('Continuer avec 3 dés'), findsOneWidget);
+    expect(find.text('Reprendre avec 3 dés'), findsOneWidget);
     expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
     // Tant que le choix n'est pas fait, aucun lancer n'est possible.
     expect(find.text('Lancer les dés'), findsNothing);
 
-    await tester.tap(find.text('Continuer avec 3 dés'));
+    await tester.tap(find.text('Reprendre avec 3 dés'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
@@ -393,7 +393,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Continuer avec 3 dés'));
+    await tester.tap(find.text('Reprendre avec 3 dés'));
     await tester.pump();
 
     expect(find.text('Lancer les dés'), findsOneWidget);
@@ -403,6 +403,7 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull,
         reason: 'sans mode auto, rien ne doit se déclencher sans clic, quel que soit le délai écoulé');
 
+    await tester.ensureVisible(find.text('Lancer les dés'));
     await tester.tap(find.text('Lancer les dés'));
     await tester.pump();
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
@@ -433,7 +434,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Continuer avec 3 dés'));
+    await tester.tap(find.text('Reprendre avec 3 dés'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.bankedScore, 500);
@@ -483,6 +484,7 @@ void main() {
     expect(find.text('Lancer les dés'), findsOneWidget);
     expect(find.text('S\'arrêter'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('S\'arrêter'));
     await tester.tap(find.text('S\'arrêter'));
     await tester.pumpAndSettle();
 
@@ -519,6 +521,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Lancer les dés'));
     await tester.tap(find.text('Lancer les dés'));
     await tester.pump();
 

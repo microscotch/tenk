@@ -117,20 +117,20 @@
   "finalRoundBanner": "Tour final : un joueur a atteint 10000 !",
   "@finalRoundBanner": {"description": "Bandeau affiché quand un joueur a atteint 10000 et que les autres jouent leur dernier tour."},
 
-  "turnScoreLabel": "Score du tour : {score}",
-  "@turnScoreLabel": {
-    "description": "Score cumulé du tour en cours.",
-    "placeholders": {"score": {"type": "int"}}
-  },
+  "turnScoreTitle": "Score du tour",
+  "@turnScoreTitle": {"description": "Préfixe (non coloré) de la ligne de score du tour, suivi du score et du minimum requis, tous deux colorés indépendamment en Dart."},
 
-  "minimumRequiredLabel": "Minimum requis : {minimum}",
-  "@minimumRequiredLabel": {
-    "description": "Score minimum requis pour que le joueur courant puisse s'arrêter.",
-    "placeholders": {"minimum": {"type": "int"}}
-  },
+  "currentRollZoneLabel": "Lancé",
+  "@currentRollZoneLabel": {"description": "Libellé de la zone bordurée affichant le lancer de dés en attente de décision."},
 
-  "keptDiceThisTurnLabel": "Dés gardés ce tour",
-  "@keptDiceThisTurnLabel": {"description": "Étiquette au-dessus de la rangée de dés déjà gardés pendant le tour en cours."},
+  "currentHandZoneLabel": "Main courante",
+  "@currentHandZoneLabel": {"description": "Libellé de la zone bordurée affichant les dés gardés ce tour."},
+
+  "awaitingRollPlaceholder": "En attente du prochain lancer",
+  "@awaitingRollPlaceholder": {"description": "Texte de substitution dans la zone \"Lancé\" quand aucun lancer n'est en attente de décision."},
+
+  "logHotDiceMessage": "Main pleine !",
+  "@logHotDiceMessage": {"description": "Entrée du journal de partie quand un lancer déclenche des dés chauds (tous les dés ont scoré)."},
 
   "inheritedHandMessage": "{playerName} hérite de {diceCount, plural, one{{diceCount} dé} other{{diceCount} dés}} du tour précédent.",
   "@inheritedHandMessage": {
@@ -147,7 +147,7 @@
     "placeholders": {"score": {"type": "int"}}
   },
 
-  "continueWithDiceButton": "Continuer avec {count, plural, one{{count} dé} other{{count} dés}}",
+  "continueWithDiceButton": "Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}",
   "@continueWithDiceButton": {
     "description": "Bouton pour reprendre la main héritée avec le nombre de dés restants (joueur humain).",
     "placeholders": {"count": {"type": "int"}}

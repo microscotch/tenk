@@ -308,23 +308,35 @@ abstract class AppLocalizations {
   /// **'Tour final : un joueur a atteint 10000 !'**
   String get finalRoundBanner;
 
-  /// Score cumulé du tour en cours.
+  /// Préfixe (non coloré) de la ligne de score du tour, suivi du score et du minimum requis, tous deux colorés indépendamment en Dart.
   ///
   /// In fr, this message translates to:
-  /// **'Score du tour : {score}'**
-  String turnScoreLabel(int score);
+  /// **'Score du tour'**
+  String get turnScoreTitle;
 
-  /// Score minimum requis pour que le joueur courant puisse s'arrêter.
+  /// Libellé de la zone bordurée affichant le lancer de dés en attente de décision.
   ///
   /// In fr, this message translates to:
-  /// **'Minimum requis : {minimum}'**
-  String minimumRequiredLabel(int minimum);
+  /// **'Lancé'**
+  String get currentRollZoneLabel;
 
-  /// Étiquette au-dessus de la rangée de dés déjà gardés pendant le tour en cours.
+  /// Libellé de la zone bordurée affichant les dés gardés ce tour.
   ///
   /// In fr, this message translates to:
-  /// **'Dés gardés ce tour'**
-  String get keptDiceThisTurnLabel;
+  /// **'Main courante'**
+  String get currentHandZoneLabel;
+
+  /// Texte de substitution dans la zone "Lancé" quand aucun lancer n'est en attente de décision.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du prochain lancer'**
+  String get awaitingRollPlaceholder;
+
+  /// Entrée du journal de partie quand un lancer déclenche des dés chauds (tous les dés ont scoré).
+  ///
+  /// In fr, this message translates to:
+  /// **'Main pleine !'**
+  String get logHotDiceMessage;
 
   /// Annonce qu'un joueur hérite de dés d'un tour précédent réussi.
   ///
@@ -341,7 +353,7 @@ abstract class AppLocalizations {
   /// Bouton pour reprendre la main héritée avec le nombre de dés restants (joueur humain).
   ///
   /// In fr, this message translates to:
-  /// **'Continuer avec {count, plural, one{{count} dé} other{{count} dés}}'**
+  /// **'Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}'**
   String continueWithDiceButton(int count);
 
   /// Message expliquant pourquoi la main héritée ne peut pas être reprise.

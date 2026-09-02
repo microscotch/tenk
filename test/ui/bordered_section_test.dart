@@ -31,4 +31,23 @@ void main() {
     final screenSize = tester.view.physicalSize / tester.view.devicePixelRatio;
     expect(sectionSize.height, screenSize.height);
   });
+
+  testWidgets('fillAvailableSpace: false se dimensionne à son contenu dans un Column non contraint',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              BorderedSection(fillAvailableSpace: false, label: 'Ma zone', child: Text('Contenu')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final sectionSize = tester.getSize(find.byType(BorderedSection));
+    final screenSize = tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(sectionSize.height, lessThan(screenSize.height));
+  });
 }

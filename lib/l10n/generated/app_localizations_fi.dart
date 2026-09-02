@@ -119,17 +119,19 @@ class AppLocalizationsFi extends AppLocalizations {
       'Viimeinen kierros: pelaaja on saavuttanut 10000!';
 
   @override
-  String turnScoreLabel(int score) {
-    return 'Vuoron pisteet: $score';
-  }
+  String get turnScoreTitle => 'Score du tour';
 
   @override
-  String minimumRequiredLabel(int minimum) {
-    return 'Vaadittu minimi: $minimum';
-  }
+  String get currentRollZoneLabel => 'Lancé';
 
   @override
-  String get keptDiceThisTurnLabel => 'Tällä vuorolla säästetyt nopat';
+  String get currentHandZoneLabel => 'Main courante';
+
+  @override
+  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+
+  @override
+  String get logHotDiceMessage => 'Main pleine !';
 
   @override
   String inheritedHandMessage(String playerName, int diceCount) {

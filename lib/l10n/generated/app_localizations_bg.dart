@@ -118,17 +118,19 @@ class AppLocalizationsBg extends AppLocalizations {
   String get finalRoundBanner => 'Последен рунд: играч достигна 10000!';
 
   @override
-  String turnScoreLabel(int score) {
-    return 'Точки от хода: $score';
-  }
+  String get turnScoreTitle => 'Score du tour';
 
   @override
-  String minimumRequiredLabel(int minimum) {
-    return 'Изискван минимум: $minimum';
-  }
+  String get currentRollZoneLabel => 'Lancé';
 
   @override
-  String get keptDiceThisTurnLabel => 'Запазени зарове този ход';
+  String get currentHandZoneLabel => 'Main courante';
+
+  @override
+  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+
+  @override
+  String get logHotDiceMessage => 'Main pleine !';
 
   @override
   String inheritedHandMessage(String playerName, int diceCount) {

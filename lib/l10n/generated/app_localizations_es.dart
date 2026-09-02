@@ -119,17 +119,19 @@ class AppLocalizationsEs extends AppLocalizations {
       '¡Última ronda: un jugador ha alcanzado 10000!';
 
   @override
-  String turnScoreLabel(int score) {
-    return 'Puntos del turno: $score';
-  }
+  String get turnScoreTitle => 'Score du tour';
 
   @override
-  String minimumRequiredLabel(int minimum) {
-    return 'Mínimo requerido: $minimum';
-  }
+  String get currentRollZoneLabel => 'Lancé';
 
   @override
-  String get keptDiceThisTurnLabel => 'Dados guardados este turno';
+  String get currentHandZoneLabel => 'Main courante';
+
+  @override
+  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+
+  @override
+  String get logHotDiceMessage => 'Main pleine !';
 
   @override
   String inheritedHandMessage(String playerName, int diceCount) {
