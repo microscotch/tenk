@@ -108,6 +108,20 @@
   "deleteButton": "Supprimer",
   "@deleteButton": {"description": "Bouton générique pour confirmer une suppression (ex: boîte de dialogue de confirmation)."},
 
+  "resumeLastGameDialogTitle": "Reprendre la partie ?",
+  "@resumeLastGameDialogTitle": {"description": "Titre de la boîte de dialogue proposant de reprendre la dernière partie interrompue, affichée à l'ouverture de l'écran d'accueil."},
+
+  "resumeLastGameDialogMessage": "Une partie « {alias} » est en cours. Voulez-vous la reprendre ?",
+  "@resumeLastGameDialogMessage": {
+    "description": "Message de la boîte de dialogue proposant de reprendre la dernière partie interrompue.",
+    "placeholders": {
+      "alias": {"type": "String"}
+    }
+  },
+
+  "resumeGameButton": "Reprendre",
+  "@resumeGameButton": {"description": "Bouton pour confirmer la reprise de la dernière partie interrompue."},
+
   "leaveGameTooltip": "Quitter la partie",
   "@leaveGameTooltip": {"description": "Infobulle de l'icône permettant de quitter une partie en cours pour revenir à l'écran d'accueil (la partie reste sauvegardée)."},
 
@@ -182,6 +196,12 @@
 
   "rollDiceButton": "Lancer les dés",
   "@rollDiceButton": {"description": "Bouton pour lancer les dés."},
+
+  "rollDiceButtonWithCount": "Lancer {count, plural, one{{count} dé} other{{count} dés}}",
+  "@rollDiceButtonWithCount": {
+    "description": "Bouton pour lancer les dés, avec leur nombre inclus (remplace diceToRollLabel affiché séparément au-dessus).",
+    "placeholders": {"count": {"type": "int"}}
+  },
 
   "diceToRollLabel": "{count, plural, one{{count} dé} other{{count} dés}} à lancer",
   "@diceToRollLabel": {

@@ -165,9 +165,6 @@ class _LogEntry {
   const _LogEntry(this.timestamp, this.playerName, this.text);
 }
 
-String _formatLogDate(DateTime t) =>
-    '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}/${t.year}';
-
 String _formatLogTime(DateTime t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
 
@@ -242,7 +239,7 @@ class GameScreen extends ConsumerStatefulWidget {
   ConsumerState<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends ConsumerState<GameScreen> {
+class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObserver {
   /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
   int _selectedKeep = 0;
 
@@ -289,20 +286,46 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final initialEngine = ref.read(gameProvider);
     final initialTurn = initialEngine?.activeTurn;
     final initialPendingRoll = initialTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll != null ? _defaultKeepCount(initialTurn!, initialPendingRoll) : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _seedLogFromHistory();
-      if (widget.replayMode) {
-        _scheduleReplayStep();
-      } else {
-        _scheduleAiIfNeeded();
-        _scheduleAutoAdvanceIfNeeded();
-      }
+      _scheduleAutoProgressIfNeeded();
       _scheduleBustRevealIfNeeded(initialEngine);
     });
+  }
+
+  /// (Re)programme l'avancement automatique du tour — IA, ou humain en mode
+  /// auto — après un changement d'état, ou après un retour au premier plan
+  /// (voir [didChangeAppLifecycleState]). Un seul point d'entrée pour ne pas
+  /// dupliquer le dispatch rejeu/IA/humain entre `initState` et le retour de
+  /// premier plan.
+  void _scheduleAutoProgressIfNeeded() {
+    if (widget.replayMode) {
+      _scheduleReplayStep();
+    } else {
+      _scheduleAiIfNeeded();
+      _scheduleAutoAdvanceIfNeeded();
+    }
+  }
+
+  /// Le jeu ne doit pas continuer à avancer seul (IA, auto-jeu — et donc les
+  /// sons qui vont avec) pendant que l'app est en arrière-plan (bouton
+  /// d'accueil, autre app au premier plan...) : coupe la temporisation en
+  /// cours dès que l'app quitte l'état "resumed", la reprogramme à son
+  /// retour. La musique/les effets sonores se coupent séparément (voir
+  /// `SoundEffects`, qui observe le cycle de vie indépendamment de cet
+  /// écran).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _scheduleAutoProgressIfNeeded();
+    } else {
+      _cancelAutoAction();
+    }
   }
 
   /// Programme puis applique le pas suivant du rejeu spectateur (partie
@@ -327,6 +350,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pendingTimer?.cancel();
     _bustRevealTimer?.cancel();
     _rollSettleTimer?.cancel();
@@ -944,7 +968,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         height: _diceZoneHeight,
         child: Center(
           child: totalCount == 0
-              ? Text('—', style: TextStyle(color: Colors.grey.shade400))
+              ? const SizedBox.shrink()
               : _fittedDiceRow(totalCount, (i, size) {
                   if (i < kept.length) {
                     final d = kept[i];
@@ -975,6 +999,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// Journal de partie : lecture seule, horodaté, du plus récent (en haut) au
   /// plus ancien — pas besoin de gérer le défilement, une nouvelle entrée
   /// apparaît directement en haut, déjà dans la zone visible.
+  /// Colonnes "qui / quand / quoi" (voir [_buildGameLog]) : largeurs fixes
+  /// pour "qui" (blason) et "quand" (heure), le reste à "quoi" (message, qui
+  /// enchaîne sur plusieurs lignes si besoin plutôt que d'être tronqué).
+  static const _logWhoColumnWidth = 26.0;
+  static const _logWhenColumnWidth = 52.0;
+
   Widget _buildGameLog() {
     return Container(
       width: double.infinity,
@@ -989,31 +1019,41 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               controller: _logScrollController,
               thumbVisibility: true,
               thickness: 3,
-              child: ListView.builder(
+              child: SingleChildScrollView(
                 controller: _logScrollController,
-                itemCount: _log.length,
-                itemBuilder: (context, i) {
-                  final entry = _log[_log.length - 1 - i];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_formatLogDate(entry.timestamp)} - ${_formatLogTime(entry.timestamp)} - ',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 1),
-                          child: PlayerAvatarWidget(name: entry.playerName, size: 16),
-                        ),
-                        Expanded(
-                          child: Text(' : ${entry.text}', style: const TextStyle(fontSize: 13)),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                child: Table(
+                  defaultVerticalAlignment: TableCellVerticalAlignment.top,
+                  columnWidths: const {
+                    0: FixedColumnWidth(_logWhoColumnWidth),
+                    1: FixedColumnWidth(_logWhenColumnWidth),
+                    2: FlexColumnWidth(),
+                  },
+                  children: [
+                    // Le plus récent en haut (voir la doc de classe) : on
+                    // parcourt _log à l'envers plutôt que de le retourner
+                    // (évite une copie à chaque rebuild).
+                    for (var i = _log.length - 1; i >= 0; i--)
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: PlayerAvatarWidget(name: _log[i].playerName, size: 18),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: Text(
+                              _formatLogTime(_log[i].timestamp),
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: Text(': ${_log[i].text}', style: const TextStyle(fontSize: 13)),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
     );
@@ -1044,17 +1084,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         !notifier.previewAiContinue(turn)) {
       label = l10n.stopButton;
     } else {
-      label = l10n.rollDiceButton;
+      // Le nombre de dés à lancer est porté par le bouton lui-même, pas par
+      // un texte séparé au-dessus (voir aussi _buildIdleView).
+      label = l10n.rollDiceButtonWithCount(turn.diceToRoll);
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(l10n.diceToRollLabel(turn.diceToRoll), style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 16),
-        FilledButton(onPressed: action, child: Text(label)),
-      ],
-    );
+    return FilledButton(onPressed: action, child: Text(label));
   }
 
   Widget _buildBustedView(TurnState turn) {
@@ -1164,21 +1199,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: engine.currentPlayer.totalScore,
     );
+    // Le nombre de dés à lancer est porté par le bouton lui-même (voir plus
+    // bas), pas par un texte séparé au-dessus.
+    final rollLabel = l10n.rollDiceButtonWithCount(turn.diceToRoll);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(l10n.diceToRollLabel(turn.diceToRoll), style: Theme.of(context).textTheme.titleMedium),
         if (turn.mustContinue)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(l10n.fullHandMustReroll,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
-          )
-        else if (!attempt.success)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(_failureMessage(l10n, attempt), style: TextStyle(color: Colors.grey.shade400)),
-          ),
+          Text(l10n.fullHandMustReroll, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange))
+        // "Vous devez lancer les dés avant de pouvoir vous arrêter" ne dit
+        // rien que l'absence du bouton "S'arrêter" ne dise déjà : pas
+        // affiché pour ce cas précis (voir BankFailureReason.notRolledYet),
+        // contrairement aux autres raisons d'échec.
+        else if (!attempt.success && attempt.reason != BankFailureReason.notRolledYet)
+          Text(_failureMessage(l10n, attempt), style: TextStyle(color: Colors.grey.shade400)),
         const SizedBox(height: 24),
         if (attempt.success)
           Row(
@@ -1186,7 +1220,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             children: [
               FilledButton(
                 onPressed: () => ref.read(gameProvider.notifier).roll(),
-                child: Text(l10n.rollDiceButton),
+                child: Text(rollLabel),
               ),
               const SizedBox(width: 16),
               OutlinedButton(
@@ -1198,7 +1232,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         else
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).roll(),
-            child: Text(turn.mustContinue ? l10n.reRollFullHandButton : l10n.rollDiceButton),
+            child: Text(turn.mustContinue ? l10n.reRollFullHandButton : rollLabel),
           ),
       ],
     );

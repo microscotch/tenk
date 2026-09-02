@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
 import '../route_observer.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/finished_games_list.dart';
 import '../widgets/paused_games_list.dart';
+import 'game_screen.dart';
 import 'new_game_screen.dart';
 import 'rules_screen.dart';
 import 'settings_screen.dart';
@@ -24,6 +26,40 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
+  @override
+  void initState() {
+    super.initState();
+    // postFrameCallback : la popup a besoin d'un BuildContext déjà inséré
+    // dans l'arbre (Navigator, thème...) pour showDialog. Cet écran n'étant
+    // jamais re-poussé (voir didPopNext ci-dessous), initState ne se
+    // déclenche qu'une fois par session — pas de popup répétée à chaque
+    // retour au menu principal après une partie.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeOfferResume());
+  }
+
+  Future<void> _maybeOfferResume() async {
+    if (!mounted) return;
+    final games = await ref.read(pausedGamesProvider.future);
+    if (!mounted || games.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final mostRecent = games.first; // trié par date de modif décroissante
+    final resume = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.resumeLastGameDialogTitle),
+        content: Text(l10n.resumeLastGameDialogMessage(mostRecent.alias)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancelButton)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.resumeGameButton)),
+        ],
+      ),
+    );
+    if (resume == true && mounted) {
+      ref.read(gameProvider.notifier).resumeFromSave(mostRecent);
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GameScreen()));
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

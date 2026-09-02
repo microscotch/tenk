@@ -109,6 +109,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteButton => 'Delete';
 
   @override
+  String get resumeLastGameDialogTitle => 'Reprendre la partie ?';
+
+  @override
+  String resumeLastGameDialogMessage(String alias) {
+    return 'Une partie « $alias » est en cours. Voulez-vous la reprendre ?';
+  }
+
+  @override
+  String get resumeGameButton => 'Reprendre';
+
+  @override
   String get leaveGameTooltip => 'Leave game';
 
   @override
@@ -193,6 +204,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rollDiceButton => 'Roll the dice';
+
+  @override
+  String rollDiceButtonWithCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dés',
+      one: '$count dé',
+    );
+    return 'Lancer $_temp0';
+  }
 
   @override
   String diceToRollLabel(int count) {

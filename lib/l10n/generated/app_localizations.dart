@@ -290,6 +290,24 @@ abstract class AppLocalizations {
   /// **'Supprimer'**
   String get deleteButton;
 
+  /// Titre de la boîte de dialogue proposant de reprendre la dernière partie interrompue, affichée à l'ouverture de l'écran d'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la partie ?'**
+  String get resumeLastGameDialogTitle;
+
+  /// Message de la boîte de dialogue proposant de reprendre la dernière partie interrompue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une partie « {alias} » est en cours. Voulez-vous la reprendre ?'**
+  String resumeLastGameDialogMessage(String alias);
+
+  /// Bouton pour confirmer la reprise de la dernière partie interrompue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre'**
+  String get resumeGameButton;
+
   /// Infobulle de l'icône permettant de quitter une partie en cours pour revenir à l'écran d'accueil (la partie reste sauvegardée).
   ///
   /// In fr, this message translates to:
@@ -403,6 +421,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Lancer les dés'**
   String get rollDiceButton;
+
+  /// Bouton pour lancer les dés, avec leur nombre inclus (remplace diceToRollLabel affiché séparément au-dessus).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lancer {count, plural, one{{count} dé} other{{count} dés}}'**
+  String rollDiceButtonWithCount(int count);
 
   /// Nombre de dés que le joueur courant s'apprête à lancer.
   ///

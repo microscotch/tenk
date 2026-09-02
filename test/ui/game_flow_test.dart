@@ -361,16 +361,16 @@ void main() {
     expect(find.text('Reprendre avec 3 dés'), findsOneWidget);
     expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
     // Tant que le choix n'est pas fait, aucun lancer n'est possible.
-    expect(find.text('Lancer les dés'), findsNothing);
+    expect(find.text('Lancer 3 dés'), findsNothing);
 
     await tester.tap(find.text('Reprendre avec 3 dés'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
     // Score de tour à 0 (aucun score hérité ici) : insuffisant pour
-    // s'arrêter ; le bouton "Lancer les dés" est affiché immédiatement et se
+    // s'arrêter ; le bouton "Lancer 3 dés" est affiché immédiatement et se
     // valide seul (joueur en mode auto).
-    expect(find.text('Lancer les dés'), findsOneWidget);
+    expect(find.text('Lancer 3 dés'), findsOneWidget);
     await tester.pump(_autoActionPump);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le lancer forcé doit se déclencher sans confirmation (joueur en mode auto)');
@@ -400,15 +400,15 @@ void main() {
     await tester.tap(find.text('Reprendre avec 3 dés'));
     await tester.pump();
 
-    expect(find.text('Lancer les dés'), findsOneWidget);
+    expect(find.text('Lancer 3 dés'), findsOneWidget);
     // Un délai bien plus long que l'auto-validation habituelle ne doit rien
     // déclencher tout seul : le mode auto est désactivé pour ce joueur.
     await tester.pump(const Duration(seconds: 30));
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull,
         reason: 'sans mode auto, rien ne doit se déclencher sans clic, quel que soit le délai écoulé');
 
-    await tester.ensureVisible(find.text('Lancer les dés'));
-    await tester.tap(find.text('Lancer les dés'));
+    await tester.ensureVisible(find.text('Lancer 3 dés'));
+    await tester.tap(find.text('Lancer 3 dés'));
     await tester.pump();
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le clic manuel sur le bouton doit toujours fonctionner');
@@ -443,10 +443,10 @@ void main() {
 
     expect(container.read(gameProvider)!.activeTurn!.bankedScore, 500);
     // Score largement au-dessus du minimum, mais aucun lancer encore fait ce
-    // tour-ci : impossible de s'arrêter. Le bouton "Lancer les dés" est
+    // tour-ci : impossible de s'arrêter. Le bouton "Lancer 3 dés" est
     // affiché immédiatement et se valide seul (joueur en mode auto).
     expect(find.text('S\'arrêter'), findsNothing);
-    expect(find.text('Lancer les dés'), findsOneWidget);
+    expect(find.text('Lancer 3 dés'), findsOneWidget);
     await tester.pump(_autoActionPump);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le lancer forcé doit se déclencher sans confirmation, même avec un score déjà suffisant');
@@ -614,10 +614,10 @@ void main() {
         await tester.pump();
       }
 
-      // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer
-      // les dés" est affiché immédiatement et se valide seul (joueur humain
-      // en mode auto).
-      expect(find.text('Lancer les dés'), findsOneWidget);
+      // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer 5
+      // dés" est affiché immédiatement et se valide seul (joueur humain en
+      // mode auto).
+      expect(find.text('Lancer 5 dés'), findsOneWidget);
       await tester.pump(_autoActionPump);
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
