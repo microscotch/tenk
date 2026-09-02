@@ -100,11 +100,16 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
-      # Notes de version Play Store = titres des commits de ce push (celui
-      # dont la fiche apparaît juste avant sur le dépôt distant). Retombe sur
-      # le commit précédent si `before` est absent/inconnu (workflow_dispatch,
-      # ou historique local trop court) ; sur le titre du commit HEAD si la
-      # plage est vide (re-run sans nouveau commit).
+      # Notes de version Play Store = titres des commits `feat:`/`fix:` de ce
+      # push (celui dont la fiche apparaît juste avant sur le dépôt distant) :
+      # seuls ceux-là parlent à un joueur, contrairement à `chore:`/`docs:`/...
+      # (dont le commit de bump de build number, présent sur quasi tous les
+      # push). Retombe sur le commit précédent si `before` est absent/inconnu
+      # (workflow_dispatch, ou historique local trop court) ; sur le titre du
+      # commit HEAD si la plage est vide (re-run sans nouveau commit). Si
+      # aucun commit feat:/fix: n'est trouvé (push uniquement chore:/docs:),
+      # aucun fichier n'est écrit : les notes de version publiées restent
+      # celles déjà en place sur le Play Store plutôt que d'être vidées.
       - name: Prépare les notes de version depuis les titres de commit
         run: |
           BASE="${{ github.event.before }}"
@@ -112,14 +117,19 @@ jobs:
             BASE="HEAD~1"
           fi
           mkdir -p distribution/whatsnew
-          git log --pretty=format:'- %s' "$BASE"..HEAD > distribution/whatsnew/whatsnew-fr-FR
+          git log --pretty=format:'%s' "$BASE"..HEAD | grep -E '^(feat|fix):' | sed 's/^/- /' > distribution/whatsnew/whatsnew-fr-FR || true
           if [ ! -s distribution/whatsnew/whatsnew-fr-FR ]; then
-            git log -1 --pretty=format:'- %s' > distribution/whatsnew/whatsnew-fr-FR
+            git log -1 --pretty=format:'%s' | grep -E '^(feat|fix):' | sed 's/^/- /' > distribution/whatsnew/whatsnew-fr-FR || true
           fi
-          # Limite imposée par Google Play sur le texte des notes de version.
-          head -c 500 distribution/whatsnew/whatsnew-fr-FR > distribution/whatsnew/whatsnew-fr-FR.tmp
-          mv distribution/whatsnew/whatsnew-fr-FR.tmp distribution/whatsnew/whatsnew-fr-FR
-          cat distribution/whatsnew/whatsnew-fr-FR
+          if [ -s distribution/whatsnew/whatsnew-fr-FR ]; then
+            # Limite imposée par Google Play sur le texte des notes de version.
+            head -c 500 distribution/whatsnew/whatsnew-fr-FR > distribution/whatsnew/whatsnew-fr-FR.tmp
+            mv distribution/whatsnew/whatsnew-fr-FR.tmp distribution/whatsnew/whatsnew-fr-FR
+            cat distribution/whatsnew/whatsnew-fr-FR
+          else
+            rm -f distribution/whatsnew/whatsnew-fr-FR
+            echo "Aucun commit feat:/fix: dans ce push : notes de version Play Store inchangées."
+          fi
 
       # Reconstitue le keystore de release (secret du repo) : sans lui, le
       # build "release" retombe sur la clé debug (cf. android/app/build.gradle.kts)
