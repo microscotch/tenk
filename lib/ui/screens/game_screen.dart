@@ -92,8 +92,17 @@ bool _hasRealChoice(RollAnalysis analysis) {
 int _defaultKeepCount(TurnState turn, RollAnalysis analysis) {
   final fives = analysis.declinableFives;
   if (fives == null) return 0;
-  final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
   final maxKeep = fives.diceCount;
+  // Décliner un 5 n'est physiquement possible que s'il reste un dé "junk"
+  // pour l'accompagner au relancer (voir RollAnalysis.canDeclineFives) :
+  // sans ça, tout garder est la SEULE option légale, quel que soit le score
+  // résultant (même s'il finit par 50) — tenter quand même un
+  // declineFivesCount > 0 ferait planter applyKeepDecision plus bas (bug
+  // vécu en jeu réel : un lancer de deux 5 sans aucun autre dé, où garder
+  // les deux finissait sur un total en 50, faisait planter cette recherche
+  // de repli en tentant d'en décliner un).
+  if (!analysis.canDeclineFives) return maxKeep;
+  final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
   for (var keep = maxKeep; keep >= minKeep; keep--) {
     final hypothetical = applyKeepDecision(turn, declineFivesCount: maxKeep - keep);
     if (hypothetical.bankedScore % 100 != 50) return keep;

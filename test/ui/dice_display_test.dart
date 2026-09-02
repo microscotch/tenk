@@ -133,4 +133,43 @@ void main() {
     expect(dice.firstWhere((d) => d.value == 4).state, DieVisualState.extended,
         reason: 'le 4 étendu déjà gardé (persistant) doit aussi ressortir en rouge');
   });
+
+  testWidgets(
+      'régression : deux 5 sans aucun autre dé, un total tout gardé finissant par 50, ne plante pas',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Aucun dé "junk" dans ce lancer (2 dés, tous les deux des 5) : décliner
+    // un 5 est physiquement impossible (RollAnalysis.canDeclineFives est
+    // faux), même si tout garder (100 pts) amène le score du tour à 450 —
+    // un total qui finit par 50, sur lequel _defaultKeepCount cherchait
+    // auparavant une meilleure option en tentant de décliner un 5 quand même,
+    // ce qui faisait planter applyKeepDecision (StateError).
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn:
+          TurnState(diceToRoll: 2, bankedScore: 350, pendingRoll: analyzeRoll([5, 5]), hasRolledThisTurn: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull, reason: 'calculer le défaut ne doit jamais planter');
+    expect(find.text('Combien de 5 garder ?'), findsNothing,
+        reason: 'aucun vrai choix : pas de dé junk pour relancer avec un 5 décliné');
+    final fives = tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5);
+    expect(fives, isNotEmpty);
+    expect(fives.every((d) => d.state != DieVisualState.declined), isTrue,
+        reason: 'les deux 5 sont forcément gardés, seule option légale');
+  });
 }
