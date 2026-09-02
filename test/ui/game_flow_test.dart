@@ -326,6 +326,7 @@ void main() {
 
     expect(find.textContaining('Tour final'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('S\'arrêter'));
     await tester.tap(find.text('S\'arrêter'));
     await tester.pumpAndSettle();
 

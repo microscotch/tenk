@@ -40,6 +40,12 @@ class DieWidget extends StatelessWidget {
 
   static const double defaultSize = 76.0;
 
+  /// Durée de l'animation de lancer (tumble), identique entre le rendu 3D
+  /// ([Scene3DDie]) et son repli Matrix4/Transform ([_TransformCubeDie]) —
+  /// exposée pour que l'UI (voir `game_screen.dart`) sache quand les dés se
+  /// sont immobilisés, par ex. pour temporiser l'affichage d'un score.
+  static const Duration rollAnimationDuration = Duration(milliseconds: 650);
+
   const DieWidget({
     super.key,
     required this.value,
@@ -129,7 +135,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
   void initState() {
     super.initState();
     _lastRollToken = widget.rollToken;
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 650))
+    _controller = AnimationController(vsync: this, duration: DieWidget.rollAnimationDuration)
       ..addListener(() => setState(() {}));
     if (widget.rollToken != null) {
       _rollRandomTurns();

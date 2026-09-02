@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart' hide Matrix4;
 import 'package:flutter_scene/scene.dart';
 import 'package:vector_math/vector_math.dart' show Matrix4, Vector3;
 
-import '../die_widget.dart' show DieVisualState;
+import '../die_widget.dart' show DieVisualState, DieWidget;
 import 'dice_face_texture.dart';
 
 /// Valeurs des 6 faces d'un dé standard (faces opposées = 7) pour un [top]
@@ -88,7 +88,7 @@ class _Scene3DDieState extends State<Scene3DDie> {
   // latérales et garder un rendu clairement 3D (pas un carré plat).
   static const _restTiltX = -0.95;
   static const _restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
-  static const _rollSeconds = 0.65;
+  static final _rollSeconds = DieWidget.rollAnimationDuration.inMilliseconds / 1000.0;
 
   final _random = math.Random();
   final Scene _scene = Scene();

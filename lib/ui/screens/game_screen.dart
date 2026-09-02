@@ -240,6 +240,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   Timer? _pendingTimer;
   VoidCallback? _pendingAction;
 
+  /// Les scores affichés dans les libellés (zone "Piste" et zone "Main
+  /// courante") ne doivent se rafraîchir qu'une fois les dés du lancer en
+  /// attente immobilisés (fin de l'animation de lancer, voir
+  /// [DieWidget.rollAnimationDuration]), pas dès que le lancer est connu côté
+  /// moteur — sinon le score apparaît avant que le joueur ait vu le résultat.
+  /// `true` par défaut : un lancer déjà en attente au montage de l'écran
+  /// (partie reprise) n'a pas d'animation à attendre.
+  bool _rollSettled = true;
+  Timer? _rollSettleTimer;
+
+  /// Une fois le lancer immobilisé, encore un délai avant que les dés
+  /// retenus par défaut (groupes obligatoires + nombre de 5 par défaut, voir
+  /// [_defaultKeepCount]) ne migrent en fondu de la zone "Piste" vers la zone
+  /// "Main courante" — purement visuel : la décision réelle n'est appliquée
+  /// qu'au clic sur Lancer/Arrêter, comme avant. `true` par défaut, même
+  /// raison que [_rollSettled].
+  bool _previewMoveRevealed = true;
+  Timer? _previewMoveTimer;
+
   /// Journal de partie : horodaté, affiché du plus récent au plus ancien
   /// (voir [_buildGameLog]). Rempli au montage par rejeu de l'historique déjà
   /// persisté (voir [_seedLogFromHistory]), puis tenu à jour en direct par
@@ -301,6 +320,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   void dispose() {
     _pendingTimer?.cancel();
     _bustRevealTimer?.cancel();
+    _rollSettleTimer?.cancel();
+    _previewMoveTimer?.cancel();
     _logScrollController.dispose();
     super.dispose();
   }
@@ -336,6 +357,35 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
     if (entries.isEmpty) return;
     setState(() => _log.addAll(entries));
+  }
+
+  /// Programme, pour un [pendingRoll] fraîchement apparu (null = décision
+  /// déjà appliquée, rien à programmer), la révélation du score dans les
+  /// libellés une fois les dés immobilisés, puis — encore un peu plus tard —
+  /// le fondu des dés retenus par défaut vers la zone "Main courante" (voir
+  /// [_rollSettled]/[_previewMoveRevealed]). Appelé uniquement quand le
+  /// lancer en attente change réellement (voir `ref.listen`).
+  void _scheduleRollSettleAndPreviewMove(RollAnalysis? pendingRoll) {
+    _rollSettleTimer?.cancel();
+    _previewMoveTimer?.cancel();
+    if (pendingRoll == null) {
+      _rollSettled = true;
+      _previewMoveRevealed = true;
+      return;
+    }
+    _rollSettled = false;
+    _previewMoveRevealed = false;
+    _rollSettleTimer = Timer(DieWidget.rollAnimationDuration, () {
+      if (!mounted) return;
+      setState(() => _rollSettled = true);
+      _previewMoveTimer = Timer(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        // Le lancer a peut-être déjà été décidé (ou remplacé) entre-temps :
+        // rien à révéler dans ce cas, la zone "Piste" ne l'affiche plus.
+        if (ref.read(gameProvider)?.activeTurn?.pendingRoll != pendingRoll) return;
+        setState(() => _previewMoveRevealed = true);
+      });
+    });
   }
 
   /// Programme la révélation du message "Craqué !" une fois l'animation de
@@ -505,6 +555,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
         // Par défaut, on tend vers le score optimal (voir _defaultKeepCount).
         _selectedKeep = newPendingRoll != null ? _defaultKeepCount(next.activeTurn!, newPendingRoll) : 0;
+        _scheduleRollSettleAndPreviewMove(newPendingRoll);
       }
       // En mode rejeu, _scheduleReplayStep s'auto-reprogramme lui-même
       // (voir initState) : pas besoin de le redéclencher ici, et surtout pas
@@ -568,11 +619,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final l10n = AppLocalizations.of(context);
 
     // Score "live" : score du tour déjà banqué + aperçu de la sélection de 5
-    // en cours si un choix humain est en attente (même valeur qu'avant cette
-    // refonte, juste renommée pour la ligne de score colorée ci-dessous).
-    final liveScore = !isAiTurn && turn.pendingRoll != null
-        ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep)
-        : turn.bankedScore;
+    // en cours si un choix humain est en attente ET que les dés du lancer se
+    // sont immobilisés (voir _rollSettled) — pas avant, sinon le score
+    // apparaît avant que le joueur ait vu le résultat du lancer.
+    final showRollPreview = !isAiTurn && turn.pendingRoll != null && _rollSettled;
+    final liveScore =
+        showRollPreview ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep) : turn.bankedScore;
     final minimum = engine.minimumForCurrentPlayer;
     final belowMinimum = liveScore < minimum;
     final scoreColor = belowMinimum ? Colors.redAccent : (liveScore % 100 == 50 ? Colors.orange : Colors.lightGreenAccent);
@@ -582,6 +634,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     // y en a un à afficher, sont montrés "tels quels" (rien n'est encore
     // décidé côté joueur).
     final rollZoneSelectedKeep = (!turn.busted && !isAiTurn && turn.pendingRoll != null) ? _selectedKeep : 0;
+
+    // Dés "retenus par défaut" du lancer en attente (groupes obligatoires +
+    // le nombre de 5 par défaut, voir _defaultKeepCount) : ceux qui migrent
+    // en fondu de "Piste" vers "Main courante" une fois _previewMoveRevealed
+    // — recalculé à chaque build (pur, pas besoin d'être figé), seule la
+    // temporisation de la révélation est un vrai état (voir
+    // _scheduleRollSettleAndPreviewMove).
+    final pendingAnalysis = turn.pendingRoll;
+    var previewIndices = const <int>{};
+    List<DieVisualState>? previewStates;
+    if (pendingAnalysis != null) {
+      final defaultKeep = _defaultKeepCount(turn, pendingAnalysis);
+      previewStates = _classifyDiceForDisplay(pendingAnalysis, defaultKeep);
+      previewIndices = {
+        for (var i = 0; i < previewStates.length; i++)
+          if (previewStates[i] == DieVisualState.kept || previewStates[i] == DieVisualState.extended) i,
+      };
+    }
 
     return Scaffold(
       appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
@@ -615,9 +685,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
                     ),
-                  _buildRollZone(turn, rollZoneSelectedKeep),
+                  _buildRollZone(
+                    turn,
+                    rollZoneSelectedKeep,
+                    showScore: pendingAnalysis != null && _rollSettled,
+                    previewIndices: previewIndices,
+                    previewRevealed: _previewMoveRevealed,
+                  ),
                   const SizedBox(height: 12),
-                  _buildHandZone(turn, liveScore: liveScore, minimum: minimum, scoreColor: scoreColor, minimumColor: minimumColor),
+                  _buildHandZone(
+                    turn,
+                    liveScore: liveScore,
+                    minimum: minimum,
+                    scoreColor: scoreColor,
+                    minimumColor: minimumColor,
+                    pendingAnalysis: pendingAnalysis,
+                    previewIndices: previewIndices,
+                    previewStates: previewStates,
+                    previewRevealed: _previewMoveRevealed,
+                  ),
                   const SizedBox(height: 12),
                   Center(
                     child: turn.busted
@@ -758,44 +844,85 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  /// Hauteur fixe de la zone "Piste" (dés uniquement désormais) : une seule
-  /// rangée de dés à leur taille par défaut, quel que soit l'état (lancer en
-  /// attente ou non) — évite que la zone change de hauteur selon le contenu.
-  static const double _rollZoneHeight = DieWidget.defaultSize + 16;
+  /// Hauteur fixe des zones "Piste" et "Main courante" : une seule rangée de
+  /// dés à leur taille par défaut, quel que soit le contenu (dés, vide, ou
+  /// texte de substitution) — évite que les zones changent de hauteur.
+  static const double _diceZoneHeight = DieWidget.defaultSize + 16;
+
+  static const _previewFadeDuration = Duration(milliseconds: 300);
 
   /// Zone bordurée "Piste" : uniquement les dés du lancer en attente de
   /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
-  /// le libellé lui-même, entre parenthèses. `selectedKeep` ne pèse que sur
+  /// le libellé lui-même, entre parenthèses, une fois [showScore] (les dés
+  /// immobilisés, voir `_rollSettled`). `selectedKeep` ne pèse que sur
   /// l'aperçu visuel (voir `_classifyDiceForDisplay`) : 0 pour l'IA/un
   /// craque (rien n'est encore "décidé" à afficher), la sélection réelle du
-  /// joueur sinon.
-  Widget _buildRollZone(TurnState turn, int selectedKeep) {
+  /// joueur sinon. Les dés d'indice dans [previewIndices] s'effacent en
+  /// fondu une fois [previewRevealed] (migration visuelle vers "Main
+  /// courante", voir `_scheduleRollSettleAndPreviewMove`).
+  Widget _buildRollZone(
+    TurnState turn,
+    int selectedKeep, {
+    required bool showScore,
+    required Set<int> previewIndices,
+    required bool previewRevealed,
+  }) {
     final l10n = AppLocalizations.of(context);
     final analysis = turn.pendingRoll;
-    final label = analysis != null
-        ? l10n.currentRollZoneLabelWithScore(_previewPoints(analysis, selectedKeep))
+    final label = showScore
+        ? l10n.currentRollZoneLabelWithScore(_previewPoints(analysis!, selectedKeep))
         : l10n.currentRollZoneLabel;
     return BorderedSection(
       label: label,
       fillAvailableSpace: false,
       child: SizedBox(
-        height: _rollZoneHeight,
-        child: Center(child: analysis != null ? _diceRow(analysis, selectedKeep) : const SizedBox.shrink()),
+        height: _diceZoneHeight,
+        child: Center(
+          child: analysis == null
+              ? const SizedBox.shrink()
+              : _fittedDiceRow(analysis.faces.length, (i, size) {
+                  final states = _classifyDiceForDisplay(analysis, selectedKeep);
+                  final die = DieWidget(
+                    value: analysis.faces[i],
+                    state: states[i],
+                    rollToken: analysis,
+                    bodyColor: _diceColor(i),
+                    size: size,
+                  );
+                  if (!previewIndices.contains(i)) return die;
+                  return AnimatedOpacity(
+                    opacity: previewRevealed ? 0 : 1,
+                    duration: _previewFadeDuration,
+                    child: die,
+                  );
+                }),
+        ),
       ),
     );
   }
 
   /// Zone bordurée "Main courante" : les dés gardés ce tour, avec le score du
   /// tour (et le minimum requis) dans le libellé, coloré comme avant cette
-  /// refonte (juste déplacé depuis sa propre ligne).
+  /// refonte (juste déplacé depuis sa propre ligne). Affiche en plus, en
+  /// fondu, les dés du lancer en attente d'indice dans [previewIndices] une
+  /// fois [previewRevealed] : une prévisualisation de ce que "garder par
+  /// défaut" donnerait, purement visuelle (la décision réelle n'est
+  /// appliquée qu'au clic sur Lancer/Arrêter).
   Widget _buildHandZone(
     TurnState turn, {
     required int liveScore,
     required int minimum,
     required Color scoreColor,
     required Color minimumColor,
+    required RollAnalysis? pendingAnalysis,
+    required Set<int> previewIndices,
+    required List<DieVisualState>? previewStates,
+    required bool previewRevealed,
   }) {
     final l10n = AppLocalizations.of(context);
+    final kept = turn.keptDiceThisTurn;
+    final previewFaceIndices = previewIndices.toList(growable: false);
+    final totalCount = kept.length + previewFaceIndices.length;
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
@@ -804,12 +931,35 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         TextSpan(text: '$liveScore', style: TextStyle(color: scoreColor)),
         TextSpan(text: ' (>$minimum)', style: TextStyle(color: minimumColor)),
       ],
-      child: turn.keptDiceThisTurn.isEmpty
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text('—', style: TextStyle(color: Colors.grey.shade400)),
-            )
-          : _keptDiceRow(turn),
+      child: SizedBox(
+        height: _diceZoneHeight,
+        child: Center(
+          child: totalCount == 0
+              ? Text('—', style: TextStyle(color: Colors.grey.shade400))
+              : _fittedDiceRow(totalCount, (i, size) {
+                  if (i < kept.length) {
+                    final d = kept[i];
+                    return DieWidget(
+                      value: d.value,
+                      state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+                      bodyColor: _diceColor(i),
+                      size: size,
+                    );
+                  }
+                  final faceIndex = previewFaceIndices[i - kept.length];
+                  return AnimatedOpacity(
+                    opacity: previewRevealed ? 1 : 0,
+                    duration: _previewFadeDuration,
+                    child: DieWidget(
+                      value: pendingAnalysis!.faces[faceIndex],
+                      state: previewStates![faceIndex],
+                      bodyColor: _diceColor(i),
+                      size: size,
+                    ),
+                  );
+                }),
+        ),
+      ),
     );
   }
 
@@ -1063,48 +1213,27 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Color? _diceColor(int index) => diceBodyColorFor(ref.watch(settingsProvider).diceColorMode, index);
-
-  Widget _diceRow(RollAnalysis analysis, int selectedKeep) {
-    final states = _classifyDiceForDisplay(analysis, selectedKeep);
-    return _fittedDiceRow(
-      analysis.faces.length,
-      (i, size) => DieWidget(
-        value: analysis.faces[i],
-        state: states[i],
-        rollToken: analysis,
-        bodyColor: _diceColor(i),
-        size: size,
-      ),
-    );
-  }
-
-  Widget _keptDiceRow(TurnState turn) {
-    final kept = turn.keptDiceThisTurn;
-    return _fittedDiceRow(
-      kept.length,
-      (i, size) => DieWidget(
-        value: kept[i].value,
-        state: kept[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
-        bodyColor: _diceColor(i),
-        size: size,
-      ),
-    );
-  }
 }
 
 /// Construit une rangée d'exactement [count] dés qui tient toujours sur une
-/// seule ligne : la taille de chaque dé est réduite (jamais en dessous de
-/// 40px, jamais au-dessus de la taille par défaut) pour que
-/// `count * (taille + marge)` ne dépasse jamais la largeur disponible — donc
-/// adaptée à la fois à la largeur de l'écran et à son orientation.
+/// seule ligne. La taille est calculée pour [_diceRowReferenceCount] dés
+/// (jamais en dessous de 40px, jamais au-dessus de la taille par défaut) —
+/// PAS pour [count] : la taille d'un dé doit rester la même quel que soit le
+/// nombre de dés affichés dans la rangée (1 dé n'est pas plus gros qu'une
+/// main pleine), donc toujours calculée comme si les 5 dés y étaient, la
+/// taille "idéale". Adaptée à la fois à la largeur de l'écran et à son
+/// orientation.
+const int _diceRowReferenceCount = 5;
+
 Widget _fittedDiceRow(int count, Widget Function(int index, double size) builder) {
   if (count == 0) return const SizedBox.shrink();
   const dieMargin = 8.0; // EdgeInsets.all(4) appliqué de chaque côté par DieWidget
   const minSize = 40.0;
   return LayoutBuilder(
     builder: (context, constraints) {
-      final available = constraints.maxWidth.isFinite ? constraints.maxWidth : DieWidget.defaultSize * count;
-      final size = ((available / count) - dieMargin).clamp(minSize, DieWidget.defaultSize);
+      final available =
+          constraints.maxWidth.isFinite ? constraints.maxWidth : DieWidget.defaultSize * _diceRowReferenceCount;
+      final size = ((available / _diceRowReferenceCount) - dieMargin).clamp(minSize, DieWidget.defaultSize);
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
