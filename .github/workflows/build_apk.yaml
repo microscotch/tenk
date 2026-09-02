@@ -14,15 +14,83 @@ on:
         options: [all, android, ios]
 
 jobs:
-  build-android:
-    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android'
+  # Filet de sécurité côté CI pour le hook local .githooks/pre-push : celui-ci
+  # ne s'applique qu'à un `git push` passant par un clone local qui a
+  # configuré core.hooksPath — un merge de PR ou une édition depuis
+  # l'interface GitHub le contournent entièrement. Vérifie donc ici aussi
+  # que le build number de pubspec.yaml a bien augmenté par rapport à avant
+  # ce push, et le corrige sinon (commit + push direct sur main, avec
+  # [skip ci] pour ne pas redéclencher un run en double) avant que
+  # build-android/build-ios ne démarrent — les deux dépendent de ce job pour
+  # utiliser le commit potentiellement corrigé, sinon iOS et Android
+  # partiraient chacun d'un état différent.
+  bump-build-number:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
     steps:
-      # fetch-depth: 0 (historique complet) : nécessaire pour lister les
-      # commits de ce push via `git log` ci-dessous (notes de version).
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Vérifie/incrémente le build number si besoin
+        id: resolve
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            BASE="HEAD~1"
+          fi
+          if ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "Pas de commit précédent à comparer, vérification ignorée."
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          current_pubspec=$(git show HEAD:pubspec.yaml)
+          base_pubspec=$(git show "$BASE:pubspec.yaml" 2>/dev/null) || base_pubspec=""
+
+          current_build=$(printf '%s\n' "$current_pubspec" | sed -n 's/^version: [0-9]*\.[0-9]*\.[0-9]*+\([0-9]*\)$/\1/p')
+          base_build=$(printf '%s\n' "$base_pubspec" | sed -n 's/^version: [0-9]*\.[0-9]*\.[0-9]*+\([0-9]*\)$/\1/p')
+          semver=$(printf '%s\n' "$current_pubspec" | sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\)+[0-9]*$/\1/p')
+
+          if [ -z "$current_build" ] || [ -z "$semver" ] || [ -z "$base_build" ]; then
+            echo "Ligne 'version:' illisible ou introuvable, vérification ignorée."
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$current_build" -gt "$base_build" ]; then
+            echo "Build number déjà correct ($current_build > $base_build)."
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          new_build=$((base_build + 1))
+          sed -i "s/^version: .*/version: ${semver}+${new_build}/" pubspec.yaml
+          git commit pubspec.yaml -m "chore: bump build number (${semver}+${new_build}) [skip ci]"
+          git push origin HEAD:main
+          echo "Build number corrigé automatiquement : ${semver}+${new_build}."
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build-android:
+    needs: bump-build-number
+    if: ${{ !failure() && !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android') }}
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 (historique complet) : nécessaire pour lister les
+      # commits de ce push via `git log` ci-dessous (notes de version). ref:
+      # le commit potentiellement corrigé par bump-build-number, pas
+      # forcément celui qui a déclenché le workflow.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.bump-build-number.outputs.sha || github.sha }}
 
       - uses: subosito/flutter-action@v2
         with:
@@ -100,14 +168,17 @@ jobs:
           whatsNewDirectory: distribution/whatsnew
 
   build-ios:
-    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios'
+    needs: bump-build-number
+    if: ${{ !failure() && !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios') }}
     runs-on: macos-latest
     steps:
       # fetch-depth: 0 (historique complet) : nécessaire pour lister les
       # commits de ce push via `git log` ci-dessous (notes "What to Test").
+      # ref: le commit potentiellement corrigé par bump-build-number.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.bump-build-number.outputs.sha || github.sha }}
 
       - uses: subosito/flutter-action@v2
         with:
