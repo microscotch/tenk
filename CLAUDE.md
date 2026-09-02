@@ -49,6 +49,23 @@ command locally — they will fail on this host.
 on this machine already; if `flutter run -d linux` ever fails with a `gstreamer-1.0` CMake error again
 (e.g. after a fresh machine/container), reinstall via apt before assuming it's a code problem.
 
+## Git hooks
+
+`.githooks/pre-push` auto-bumps the `pubspec.yaml` build number before a push to `main` whenever
+it hasn't already increased past what's on the remote — CI attempts a Google Play upload on
+*every* push to `main` (`.github/workflows/build_apk.yaml`), and Google Play rejects any reused
+`versionCode`, which is exactly the recurring failure this hook exists to prevent. It cannot inject
+a commit into the push already in flight (git resolves which refs to push before invoking
+`pre-push` — verified empirically, not just per docs), so instead it commits the bump locally and
+**blocks that push** (exit 1) with a message asking to run `git push` again; the retry then goes
+through cleanly since the local build number is now ahead of the remote's.
+
+This hook is tracked in the repo but, like all git hooks, never activates on its own — after a
+fresh clone, run once:
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Architecture
 
 ### Strict engine/UI separation

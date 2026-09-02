@@ -1,0 +1,75 @@
+#!/bin/sh
+# Bloque un push vers main si le build number de pubspec.yaml n'a pas
+# augmenté par rapport à ce que le remote a déjà : la CI tente un envoi
+# Google Play à CHAQUE push sur main (voir .github/workflows/build_apk.yaml),
+# et Google Play rejette tout versionCode déjà utilisé. Corrige
+# automatiquement (bump + commit) puis redemande un push plutôt que de
+# laisser passer un push non incrémenté.
+#
+# Un hook pre-push ne peut pas injecter un commit dans le push en cours :
+# git a déjà figé les refs à pousser avant d'invoquer le hook (vérifié
+# empiriquement). La seule stratégie fiable est donc de bloquer ce push,
+# créer le commit de bump localement, et redemander un `git push`.
+set -e
+
+remote="$1"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  [ "$local_sha" != "0000000000000000000000000000000000000000" ] || continue
+
+  # Ne gère que le cas courant : on pousse la branche actuellement
+  # checkoutée, à son tip actuel. Sinon, on ne touche à rien (pas de
+  # manipulation risquée d'une branche non checkoutée).
+  current_ref=$(git symbolic-ref -q HEAD || true)
+  current_sha=$(git rev-parse HEAD)
+  if [ "$current_ref" != "$local_ref" ] || [ "$current_sha" != "$local_sha" ]; then
+    echo "pre-push: push non standard (branche non checkoutée ou détachée), vérification du build number ignorée." >&2
+    continue
+  fi
+
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    # Rien sur le remote pour comparer (première création de la branche).
+    continue
+  fi
+
+  remote_pubspec=$(git show "$remote_sha:pubspec.yaml" 2>/dev/null) || {
+    git fetch "$remote" main -q 2>/dev/null || true
+    remote_pubspec=$(git show "$remote_sha:pubspec.yaml" 2>/dev/null) || {
+      echo "pre-push: impossible de lire pubspec.yaml sur le remote, vérification ignorée." >&2
+      continue
+    }
+  }
+
+  local_pubspec=$(git show "$local_sha:pubspec.yaml")
+
+  remote_build=$(printf '%s\n' "$remote_pubspec" | sed -n 's/^version: [0-9]*\.[0-9]*\.[0-9]*+\([0-9]*\)$/\1/p')
+  local_build=$(printf '%s\n' "$local_pubspec" | sed -n 's/^version: [0-9]*\.[0-9]*\.[0-9]*+\([0-9]*\)$/\1/p')
+  semver=$(printf '%s\n' "$local_pubspec" | sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\)+[0-9]*$/\1/p')
+
+  if [ -z "$remote_build" ] || [ -z "$local_build" ] || [ -z "$semver" ]; then
+    echo "pre-push: ligne 'version:' de pubspec.yaml illisible, vérification ignorée." >&2
+    continue
+  fi
+
+  if [ "$local_build" -gt "$remote_build" ]; then
+    continue
+  fi
+
+  if ! git diff --quiet HEAD -- pubspec.yaml; then
+    echo "pre-push: pubspec.yaml a des modifications non commitées, bump automatique annulé." >&2
+    echo "pre-push: incrémente le build number toi-même avant de pousser." >&2
+    exit 1
+  fi
+
+  new_build=$((remote_build + 1))
+  new_version="version: ${semver}+${new_build}"
+  sed -i "s/^version: .*/${new_version}/" pubspec.yaml
+  git commit pubspec.yaml -q -m "chore: bump build number (${semver}+${new_build})"
+
+  echo "pre-push: build number incrémenté automatiquement (${semver}+${new_build}), commit $(git rev-parse --short HEAD)." >&2
+  echo "pre-push: relance 'git push' pour envoyer ce commit." >&2
+  exit 1
+done
+
+exit 0
