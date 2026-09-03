@@ -33,15 +33,16 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
   void initState() {
     super.initState();
     final ownerName = ref.read(settingsProvider).playerName.trim();
-    // Par défaut : le propriétaire de l'appareil (humain) et une IA, tous
-    // deux en mode auto désactivé (chaque action attend un clic manuel).
+    // Par défaut : le propriétaire de l'appareil (humain, auto désactivé —
+    // chaque action attend un clic manuel) et une IA (auto activé, puisque
+    // rien ne justifie de cliquer manuellement à travers le tour d'un bot).
     _names = [
       TextEditingController(text: ownerName.isEmpty ? AppLocalizations.of(context).defaultPlayerName(1) : ownerName),
       TextEditingController(text: kAiCharacterNames[_random.nextInt(kAiCharacterNames.length)]),
     ];
     _nameFocusNodes = [for (var i = 0; i < _names.length; i++) _newNameFocusNode()];
     _isBot = [false, true];
-    _isAuto = [false, false];
+    _isAuto = [false, true];
 
     if (ownerName.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _promptForOwnerName());
@@ -98,10 +99,13 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
 
   /// Bascule le statut IA du joueur [i] : un nom de personnage lui est
   /// attribué dynamiquement dès qu'il devient IA, et le nom par défaut est
-  /// restauré s'il redevient humain.
+  /// restauré s'il redevient humain. Le mode auto suit le même bascule par
+  /// défaut (activé pour une IA, désactivé pour un humain) — l'utilisateur
+  /// garde la main pour l'ajuster ensuite via le chip "AutoRoll".
   void _toggleBot(int i, bool isBot) {
     setState(() {
       _isBot[i] = isBot;
+      _isAuto[i] = isBot;
       if (isBot) {
         _names[i].text = _randomAiName();
       } else if (kAiCharacterNames.contains(_names[i].text)) {
