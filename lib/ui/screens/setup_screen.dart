@@ -5,6 +5,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
 import '../route_observer.dart';
+import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/finished_games_list.dart';
@@ -97,6 +98,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
       appBar: AppBar(
         title: const AppTitle(),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: l10n.aboutTooltip,
+            onPressed: () => showAppAboutDialog(context),
+          ),
           IconButton(
             icon: const Icon(Icons.help_outline),
             tooltip: l10n.helpTooltip,

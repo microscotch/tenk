@@ -31,6 +31,17 @@ class AppLocalizationsNb extends AppLocalizations {
   String get helpTooltip => 'Règles du jeu';
 
   @override
+  String get aboutTooltip => 'À propos';
+
+  @override
+  String aboutVersionLabel(String version, String buildNumber) {
+    return 'Version $version ($buildNumber)';
+  }
+
+  @override
+  String get closeButton => 'Fermer';
+
+  @override
   String playersCountTitle(int count) {
     return 'Spillere ($count)';
   }

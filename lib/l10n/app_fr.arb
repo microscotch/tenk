@@ -22,6 +22,18 @@
   "helpTooltip": "Règles du jeu",
   "@helpTooltip": {"description": "Infobulle de l'icône d'accès à l'écran des règles du jeu, sur l'écran d'accueil."},
 
+  "aboutTooltip": "À propos",
+  "@aboutTooltip": {"description": "Infobulle de l'icône d'accès au dialogue \"À propos\", sur l'écran d'accueil."},
+
+  "aboutVersionLabel": "Version {version} ({buildNumber})",
+  "@aboutVersionLabel": {
+    "description": "Ligne affichant le numéro de version et le code de version (versionCode Android / CFBundleVersion iOS) dans le dialogue \"À propos\".",
+    "placeholders": {"version": {"type": "String"}, "buildNumber": {"type": "String"}}
+  },
+
+  "closeButton": "Fermer",
+  "@closeButton": {"description": "Bouton générique pour fermer un dialogue."},
+
   "playersCountTitle": "Joueurs ({count})",
   "@playersCountTitle": {
     "description": "Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.",

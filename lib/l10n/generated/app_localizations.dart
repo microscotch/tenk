@@ -158,6 +158,24 @@ abstract class AppLocalizations {
   /// **'Règles du jeu'**
   String get helpTooltip;
 
+  /// Infobulle de l'icône d'accès au dialogue "À propos", sur l'écran d'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'À propos'**
+  String get aboutTooltip;
+
+  /// Ligne affichant le numéro de version et le code de version (versionCode Android / CFBundleVersion iOS) dans le dialogue "À propos".
+  ///
+  /// In fr, this message translates to:
+  /// **'Version {version} ({buildNumber})'**
+  String aboutVersionLabel(String version, String buildNumber);
+
+  /// Bouton générique pour fermer un dialogue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer'**
+  String get closeButton;
+
   /// Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.
   ///
   /// In fr, this message translates to:

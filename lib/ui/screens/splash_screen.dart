@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../widgets/about_dialog.dart' show kAppTagline;
 import '../widgets/die_widget.dart';
 import '../sound_effects.dart';
 import 'setup_screen.dart';
@@ -224,7 +225,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 24),
                   child: Text(
-                    'a fully vibe-coded app from a raspberry pi 5 with claude-code',
+                    kAppTagline,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.6),
                           letterSpacing: 0.5,
