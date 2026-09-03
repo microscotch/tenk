@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Fermer'**
   String get closeButton;
 
+  /// Bouton d'acquittement de l'écran de fin de partie, qui ramène à l'écran d'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'OK'**
+  String get okButton;
+
   /// Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.
   ///
   /// In fr, this message translates to:
@@ -619,12 +625,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{name} : {score}'**
   String playerScoreLine(String name, int score);
-
-  /// Bouton pour revenir à l'écran de configuration après une partie.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nouvelle partie'**
-  String get newGameButton;
 
   /// Instruction affichée entre deux tours, avant le nom du joueur suivant.
   ///

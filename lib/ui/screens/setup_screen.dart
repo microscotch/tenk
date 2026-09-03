@@ -20,6 +20,14 @@ import 'settings_screen.dart';
 /// sur le reste de l'écran — les runs interrompus (reprenables) et les
 /// runs terminés (rejouables en mode spectateur temporisé).
 class SetupScreen extends ConsumerStatefulWidget {
+  /// Nom de route de l'écran d'accueil, posé par [SplashScreen] au moment de
+  /// le pousser. Revenir ici depuis n'importe quelle profondeur se fait par
+  /// `popUntil` sur ce nom (voir [GameOverScreen], `game_screen.dart`) plutôt
+  /// qu'en se fiant à `route.isFirst` : le nom désigne explicitement CET
+  /// écran, là où `isFirst` désigne juste « le bas de la pile », quel qu'il
+  /// soit.
+  static const routeName = '/home';
+
   const SetupScreen({super.key});
 
   @override

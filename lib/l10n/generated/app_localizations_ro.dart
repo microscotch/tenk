@@ -42,6 +42,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get closeButton => 'Fermer';
 
   @override
+  String get okButton => 'OK';
+
+  @override
   String playersCountTitle(int count) {
     return 'Jucători ($count)';
   }
@@ -315,9 +318,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String playerScoreLine(String name, int score) {
     return '$name: $score';
   }
-
-  @override
-  String get newGameButton => 'Joc nou';
 
   @override
   String get passDeviceInstruction => 'Dă dispozitivul mai departe lui';

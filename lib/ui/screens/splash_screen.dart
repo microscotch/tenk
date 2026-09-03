@@ -120,6 +120,9 @@ class _SplashScreenState extends State<SplashScreen> {
     }
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
+        // Route nommée : c'est ce nom qui permet à n'importe quel écran plus
+        // profond de revenir ici à coup sûr (voir [SetupScreen.routeName]).
+        settings: const RouteSettings(name: SetupScreen.routeName),
         transitionDuration: _fadeOutDuration,
         pageBuilder: (_, _, _) => const SetupScreen(),
         transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),

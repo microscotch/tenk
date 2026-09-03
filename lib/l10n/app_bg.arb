@@ -79,7 +79,6 @@
   "gameOverTitle": "Край на играта",
   "winnerAnnouncement": "{playerName} печели!",
   "playerScoreLine": "{name}: {score}",
-  "newGameButton": "Нова игра",
   "passDeviceInstruction": "Подай устройството на",
   "readyButton": "Готово",
   "notEnteredLabel": "(не е влязъл)",

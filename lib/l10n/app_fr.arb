@@ -34,6 +34,9 @@
   "closeButton": "Fermer",
   "@closeButton": {"description": "Bouton générique pour fermer un dialogue."},
 
+  "okButton": "OK",
+  "@okButton": {"description": "Bouton d'acquittement de l'écran de fin de partie, qui ramène à l'écran d'accueil."},
+
   "playersCountTitle": "Joueurs ({count})",
   "@playersCountTitle": {
     "description": "Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.",
@@ -308,8 +311,6 @@
     }
   },
 
-  "newGameButton": "Nouvelle partie",
-  "@newGameButton": {"description": "Bouton pour revenir à l'écran de configuration après une partie."},
 
   "passDeviceInstruction": "Passez l'appareil à",
   "@passDeviceInstruction": {"description": "Instruction affichée entre deux tours, avant le nom du joueur suivant."},

@@ -79,7 +79,6 @@
   "gameOverTitle": "Spelet är slut",
   "winnerAnnouncement": "{playerName} vinner!",
   "playerScoreLine": "{name}: {score}",
-  "newGameButton": "Nytt spel",
   "passDeviceInstruction": "Lämna över enheten till",
   "readyButton": "Klar",
   "notEnteredLabel": "(inte inne än)",

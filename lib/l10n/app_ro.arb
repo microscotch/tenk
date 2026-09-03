@@ -79,7 +79,6 @@
   "gameOverTitle": "Sfârșitul jocului",
   "winnerAnnouncement": "{playerName} câștigă!",
   "playerScoreLine": "{name}: {score}",
-  "newGameButton": "Joc nou",
   "passDeviceInstruction": "Dă dispozitivul mai departe lui",
   "readyButton": "Gata",
   "notEnteredLabel": "(neintrat)",

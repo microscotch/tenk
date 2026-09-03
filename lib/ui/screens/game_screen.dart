@@ -15,6 +15,7 @@ import '../../state/game_providers.dart';
 import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
+import '../navigation.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
@@ -957,8 +958,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // La partie est déjà sauvegardée en continu après chaque transition
         // (voir GameNotifier) : quitter ne nécessite aucune action explicite
         // de sauvegarde, juste revenir à l'écran d'accueil.
-        onPressed: () =>
-            Navigator.of(context).popUntil((route) => route.isFirst),
+        onPressed: () => popToHome(context),
       ),
     ];
   }

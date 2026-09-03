@@ -42,6 +42,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get closeButton => 'Fermer';
 
   @override
+  String get okButton => 'OK';
+
+  @override
   String playersCountTitle(int count) {
     return 'Pelaajat ($count)';
   }
@@ -314,9 +317,6 @@ class AppLocalizationsFi extends AppLocalizations {
   String playerScoreLine(String name, int score) {
     return '$name: $score';
   }
-
-  @override
-  String get newGameButton => 'Uusi peli';
 
   @override
   String get passDeviceInstruction => 'Anna laite eteenpäin pelaajalle';

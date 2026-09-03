@@ -79,7 +79,6 @@
   "gameOverTitle": "Peli päättyi",
   "winnerAnnouncement": "{playerName} voittaa!",
   "playerScoreLine": "{name}: {score}",
-  "newGameButton": "Uusi peli",
   "passDeviceInstruction": "Anna laite eteenpäin pelaajalle",
   "readyButton": "Valmis",
   "notEnteredLabel": "(ei vielä mukana)",

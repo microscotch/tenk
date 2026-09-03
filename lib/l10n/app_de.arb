@@ -79,7 +79,6 @@
   "gameOverTitle": "Spielende",
   "winnerAnnouncement": "{playerName} gewinnt!",
   "playerScoreLine": "{name}: {score}",
-  "newGameButton": "Neues Spiel",
   "passDeviceInstruction": "Gib das Gerät weiter an",
   "readyButton": "Bereit",
   "notEnteredLabel": "(noch nicht eingestiegen)",

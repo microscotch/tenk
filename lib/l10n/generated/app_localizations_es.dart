@@ -42,6 +42,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get closeButton => 'Fermer';
 
   @override
+  String get okButton => 'OK';
+
+  @override
   String playersCountTitle(int count) {
     return 'Jugadores ($count)';
   }
@@ -314,9 +317,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String playerScoreLine(String name, int score) {
     return '$name: $score';
   }
-
-  @override
-  String get newGameButton => 'Nueva partida';
 
   @override
   String get passDeviceInstruction => 'Pasa el dispositivo a';

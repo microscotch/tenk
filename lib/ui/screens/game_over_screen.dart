@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../navigation.dart';
 import 'score_grid_screen.dart';
 
 class GameOverScreen extends StatelessWidget {
@@ -70,9 +71,8 @@ class GameOverScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () =>
-                      Navigator.of(context).popUntil((route) => route.isFirst),
-                  child: Text(l10n.newGameButton),
+                  onPressed: () => popToHome(context),
+                  child: Text(l10n.okButton),
                 ),
               ],
             ),

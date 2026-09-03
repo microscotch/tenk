@@ -79,7 +79,6 @@
   "gameOverTitle": "Game over",
   "winnerAnnouncement": "{playerName} wins!",
   "playerScoreLine": "{name}: {score}",
-  "newGameButton": "New game",
   "passDeviceInstruction": "Pass the device to",
   "readyButton": "Ready",
   "notEnteredLabel": "(not entered)",
