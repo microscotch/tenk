@@ -1376,7 +1376,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: engine.currentPlayer.totalScore,
     );
-    final rollLabel = turn.mustContinue
+    // mustContinue doit refléter l'état hypothétique (`effective`), pas
+    // l'état déjà commité (`turn`) : tant qu'un lancer reste en attente sans
+    // choix réel, la décision de garde n'a pas encore été appliquée côté
+    // moteur, donc `turn.mustContinue` est toujours celui d'AVANT ce lancer
+    // (un tour de retard sur les dés chauds qui viennent d'être complétés).
+    final rollLabel = effective.mustContinue
         ? l10n.logHotDiceMessage
         : _scorePercentLabel(effective.diceToRoll, effective.extendedValues);
 
@@ -1395,7 +1400,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (turn.mustContinue)
+        if (effective.mustContinue)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
