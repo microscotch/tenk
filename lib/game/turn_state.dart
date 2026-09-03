@@ -57,6 +57,18 @@ List<KeptDie> _keptDiceFrom(RollAnalysis analysis, int declineFivesCount) {
   return result;
 }
 
+/// Pourquoi un tour s'est terminé par un craque — l'UI n'a pas à le déduire
+/// de la forme de l'état (voir `game_screen.dart`, qui affichait auparavant
+/// son message d'explication en se fiant à l'absence de lancer en attente).
+enum BustReason {
+  /// Aucun dé du lancer ne marque : le craque classique.
+  noScore,
+
+  /// Le lancer marque, mais même en écartant tous les 5 que le joueur a le
+  /// droit d'écarter, son total dépasserait 10000 (voir [GameEngine.roll]).
+  exceedsTarget,
+}
+
 /// État immuable d'un tour en cours. Un tour s'étend sur un ou plusieurs
 /// lancers ; chaque lancer produit une [RollAnalysis] en attente de décision
 /// ([pendingRoll]) tant que le joueur n'a pas choisi quels dés garder.
@@ -85,6 +97,9 @@ class TurnState {
   /// partie (GameEngine), pas ici.
   final bool busted;
 
+  /// Motif du craque, null hors craque.
+  final BustReason? bustReason;
+
   /// Tous les dés gardés depuis le début du tour (persiste à travers les
   /// lancers successifs, y compris après des dés chauds), pour un affichage
   /// permanent à l'écran.
@@ -104,6 +119,7 @@ class TurnState {
     this.pendingRoll,
     this.mustContinue = false,
     this.busted = false,
+    this.bustReason,
     this.keptDiceThisTurn = const [],
     this.hasRolledThisTurn = false,
   });
@@ -122,6 +138,7 @@ class TurnState {
     bool clearPendingRoll = false,
     bool? mustContinue,
     bool? busted,
+    BustReason? bustReason,
     List<KeptDie>? keptDiceThisTurn,
     bool? hasRolledThisTurn,
   }) {
@@ -132,6 +149,7 @@ class TurnState {
       pendingRoll: clearPendingRoll ? null : (pendingRoll ?? this.pendingRoll),
       mustContinue: mustContinue ?? this.mustContinue,
       busted: busted ?? this.busted,
+      bustReason: bustReason ?? this.bustReason,
       keptDiceThisTurn: keptDiceThisTurn ?? this.keptDiceThisTurn,
       hasRolledThisTurn: hasRolledThisTurn ?? this.hasRolledThisTurn,
     );
@@ -153,9 +171,62 @@ TurnState rollTurn(TurnState state, {Random? random}) {
   final analysis = analyzeRoll(faces, extendedValues: state.extendedValues);
 
   if (!analysis.hasAnyScore) {
-    return state.copyWith(pendingRoll: analysis, busted: true, hasRolledThisTurn: true);
+    return state.copyWith(
+      pendingRoll: analysis,
+      busted: true,
+      bustReason: BustReason.noScore,
+      hasRolledThisTurn: true,
+    );
   }
   return state.copyWith(pendingRoll: analysis, hasRolledThisTurn: true);
+}
+
+/// Nombre de 5 isolés déclinables que le joueur est OBLIGÉ de garder sur ce
+/// lancer. Encode les mêmes contraintes que [applyKeepDecision] :
+/// - sans dé non-marquant pour les accompagner au relancer, aucun 5 ne peut
+///   être écarté (voir [RollAnalysis.canDeclineFives]) : ils sont tous forcés ;
+/// - si le lancer ne contient aucun groupe obligatoire, au moins un dé
+///   marquant doit être gardé, donc au moins un 5 ;
+/// - sinon, les groupes obligatoires suffisent et tous les 5 sont écartables.
+int minKeepableFives(RollAnalysis analysis) {
+  final fives = analysis.declinableFives;
+  if (fives == null) return 0;
+  if (!analysis.canDeclineFives) return fives.diceCount;
+  return analysis.mandatoryGroups.isEmpty ? 1 : 0;
+}
+
+/// Points que ce lancer rapportera au minimum, quoi que le joueur décide :
+/// groupes obligatoires + les 5 qu'il ne peut pas écarter.
+int minimumUnavoidableGain(RollAnalysis analysis) {
+  var points = 0;
+  for (final group in analysis.mandatoryGroups) {
+    points += group.points;
+  }
+  final fives = analysis.declinableFives;
+  if (fives != null) {
+    points += minKeepableFives(analysis) * (fives.points ~/ fives.diceCount);
+  }
+  return points;
+}
+
+/// Nombre maximum de 5 isolés que le joueur peut garder sans faire dépasser
+/// [winningScore] à son total — garder au-delà ne lui est jamais proposé
+/// (côté humain comme côté IA). Peut être inférieur à [minKeepableFives] :
+/// c'est alors qu'aucune décision de garde ne sauve le tour, et le craque est
+/// prononcé dès le lancer (voir [GameEngine.roll]).
+int maxKeepableFives(TurnState state, RollAnalysis analysis, {required int currentTotal}) {
+  final fives = analysis.declinableFives;
+  if (fives == null) return 0;
+  final perDie = fives.points ~/ fives.diceCount;
+  var mandatoryPoints = 0;
+  for (final group in analysis.mandatoryGroups) {
+    mandatoryPoints += group.points;
+  }
+  final base = currentTotal + state.bankedScore + mandatoryPoints;
+  for (var keep = fives.diceCount; keep >= 0; keep--) {
+    if (base + keep * perDie <= winningScore) return keep;
+  }
+  return 0;
 }
 
 /// Applique la décision du joueur sur le lancer en attente : combien de 5

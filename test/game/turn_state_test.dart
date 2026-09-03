@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/turn_result.dart';
 import 'package:le10000/game/turn_state.dart';
 
@@ -290,6 +291,65 @@ void main() {
       final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9800);
       expect(attempt.success, isTrue);
       expect(attempt.bankedPoints, 200);
+    });
+  });
+
+  group('bornes de garde des 5 (plafond 10000)', () {
+    test('sans dé non-marquant, aucun 5 ne peut être écarté : tous sont forcés', () {
+      final analysis = analyzeRoll([5, 5]); // deux 5, rien pour les accompagner
+      expect(analysis.canDeclineFives, isFalse);
+      expect(minKeepableFives(analysis), 2);
+      expect(minimumUnavoidableGain(analysis), 100);
+    });
+
+    test('sans groupe obligatoire, au moins un 5 doit être gardé', () {
+      final analysis = analyzeRoll([5, 2, 3]); // un 5 déclinable + du junk
+      expect(minKeepableFives(analysis), 1);
+      expect(minimumUnavoidableGain(analysis), 50);
+    });
+
+    test('avec un groupe obligatoire, tous les 5 sont écartables', () {
+      final analysis = analyzeRoll([1, 5, 2]); // le 1 (100) est obligatoire
+      expect(minKeepableFives(analysis), 0);
+      expect(minimumUnavoidableGain(analysis), 100, reason: 'le 5 peut être écarté, pas le 1');
+    });
+
+    test('une suite n\'a aucun 5 déclinable : son score entier est incompressible', () {
+      final analysis = analyzeRoll([1, 2, 3, 4, 5]);
+      expect(minKeepableFives(analysis), 0);
+      expect(minimumUnavoidableGain(analysis), 500);
+    });
+
+    test('maxKeepableFives borne la garde au score exact de 10000', () {
+      final analysis = analyzeRoll([5, 5, 2]); // deux 5 (100) + un junk
+      const turn = TurnState(diceToRoll: 3);
+
+      expect(
+        maxKeepableFives(turn, analysis, currentTotal: 9900),
+        2,
+        reason: 'garder les deux 5 amène pile à 10000 : autorisé',
+      );
+      expect(
+        maxKeepableFives(turn, analysis, currentTotal: 9950),
+        1,
+        reason: 'garder les deux dépasserait, un seul reste possible',
+      );
+    });
+
+    test('maxKeepableFives tient compte du score déjà accumulé ce tour', () {
+      final analysis = analyzeRoll([5, 5, 2]);
+      const turn = TurnState(diceToRoll: 3, bankedScore: 100);
+
+      expect(maxKeepableFives(turn, analysis, currentTotal: 9800), 2);
+      expect(maxKeepableFives(turn, analysis, currentTotal: 9850), 1);
+    });
+
+    test('maxKeepableFives passe sous le minimum quand aucune garde ne sauve le tour', () {
+      final analysis = analyzeRoll([5, 2, 3]); // au moins un 5 obligatoire
+      const turn = TurnState(diceToRoll: 3);
+
+      expect(maxKeepableFives(turn, analysis, currentTotal: 10000), 0);
+      expect(minKeepableFives(analysis), 1, reason: 'garder 0 est illégal : le tour est perdu');
     });
   });
 }

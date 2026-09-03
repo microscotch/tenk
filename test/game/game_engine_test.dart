@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
@@ -210,6 +211,46 @@ void main() {
     });
   });
 
+  test('un lancer qui ne peut que dépasser 10000 craque dès le lancer, dés conservés à l\'écran', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        Player(name: 'A', totalScore: 9900, hasEntered: true),
+        Player(name: 'B'),
+      ],
+      activeTurn: const TurnState(diceToRoll: 2),
+    );
+
+    // Deux 1 : 200 points incompressibles (aucun 5 à écarter), 9900 + 200
+    // dépasserait 10000 quoi que le joueur décide.
+    final result = engine.roll(random: _ScriptedRandom([1, 1]));
+
+    expect(result.activeTurn!.busted, isTrue);
+    expect(result.activeTurn!.bustReason, BustReason.exceedsTarget);
+    expect(
+      result.activeTurn!.pendingRoll,
+      isNotNull,
+      reason: 'les dés restent affichables : le craque est annoncé après leur révélation',
+    );
+  });
+
+  test('un lancer qui peut encore tomber juste ne craque pas au lancer', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        Player(name: 'A', totalScore: 9800, hasEntered: true),
+        Player(name: 'B'),
+      ],
+      activeTurn: const TurnState(diceToRoll: 3),
+    );
+
+    // Deux 5 + un dé non-marquant : garder les deux amène pile à 10000.
+    final result = engine.roll(random: _ScriptedRandom([5, 5, 2]));
+
+    expect(result.activeTurn!.busted, isFalse);
+    expect(result.activeTurn!.bustReason, isNull);
+  });
+
   test('dépasser 10000 fait craquer le tour même sans intervention du joueur', () {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
@@ -335,4 +376,22 @@ void main() {
     expect(finalEngine.gameOver, isTrue);
     expect(finalEngine.winnerIndex, 2); // C conserve la couronne jusqu'au bout
   });
+}
+
+/// Random rejouant une séquence de faces fixée, pour provoquer un lancer
+/// précis (voir `rollDice`, qui appelle `nextInt(6)` et ajoute 1).
+class _ScriptedRandom implements Random {
+  final List<int> _faces;
+  int _index = 0;
+
+  _ScriptedRandom(this._faces);
+
+  @override
+  int nextInt(int max) => _faces[_index++] - 1;
+
+  @override
+  bool nextBool() => throw UnimplementedError();
+
+  @override
+  double nextDouble() => throw UnimplementedError();
 }

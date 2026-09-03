@@ -216,7 +216,22 @@ class GameNotifier extends Notifier<GameEngine?> {
     }
 
     if (turn.pendingRoll != null) {
-      applyKeep(declineFivesCount: _currentStrategy().decideDeclineFives(turn.pendingRoll!, turn));
+      final analysis = turn.pendingRoll!;
+      final fives = analysis.declinableFives?.diceCount ?? 0;
+      // La stratégie raisonne sur le seul tour en cours : elle ignore le score
+      // déjà acquis par le joueur, et donc le plafond de 10000. On borne donc
+      // sa réponse ici, au seul endroit qui connaît les deux — exactement les
+      // mêmes bornes que celles proposées à un joueur humain (voir
+      // `_buildHumanControlRow`), pour que les deux jouent la même règle.
+      final minKeep = minKeepableFives(analysis);
+      final maxKeep = maxKeepableFives(
+        turn,
+        analysis,
+        currentTotal: engine.currentPlayer.totalScore,
+      );
+      final wantedKeep = fives - _currentStrategy().decideDeclineFives(analysis, turn);
+      final keep = wantedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
+      applyKeep(declineFivesCount: fives - keep);
       return;
     }
 

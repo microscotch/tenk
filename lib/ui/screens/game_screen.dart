@@ -86,11 +86,13 @@ DieVisualState _consume(
 /// Vrai s'il existe un choix réel sur le nombre de 5 à garder (plusieurs
 /// valeurs possibles), pas juste une case techniquement "déclinable" dont la
 /// seule valeur légale serait de tout garder.
-bool _hasRealChoice(RollAnalysis analysis) {
+/// Vrai s'il reste un vrai choix à faire sur les 5 : au moins deux nombres
+/// de 5 gardables sont légaux, une fois retirés ceux qui feraient dépasser
+/// 10000 (voir [maxKeepableFives]).
+bool _hasRealChoice(TurnState turn, RollAnalysis analysis, {required int currentTotal}) {
   final fives = analysis.declinableFives;
   if (fives == null || !analysis.canDeclineFives) return false;
-  final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
-  return fives.diceCount > minKeep;
+  return maxKeepableFives(turn, analysis, currentTotal: currentTotal) > minKeepableFives(analysis);
 }
 
 /// Détermine, parmi les choix légaux de nombre de 5 à garder, le meilleur
@@ -101,10 +103,12 @@ bool _hasRealChoice(RollAnalysis analysis) {
 /// Repli sur le score le plus élevé si toutes les options finissent par 50
 /// (possible seulement via la règle d'extension, où chaque 5 vaut 100 : le
 /// dernier chiffre ne varie alors jamais avec le nombre gardé).
-int _defaultKeepCount(TurnState turn, RollAnalysis analysis) {
+int _defaultKeepCount(TurnState turn, RollAnalysis analysis, {required int currentTotal}) {
   final fives = analysis.declinableFives;
   if (fives == null) return 0;
-  final maxKeep = fives.diceCount;
+  // Borne haute légale plutôt que "tous les 5" : garder au-delà ferait
+  // dépasser 10000, ce qui n'est jamais proposé au joueur.
+  final maxKeep = maxKeepableFives(turn, analysis, currentTotal: currentTotal);
   // Décliner un 5 n'est physiquement possible que s'il reste un dé "junk"
   // pour l'accompagner au relancer (voir RollAnalysis.canDeclineFives) :
   // sans ça, tout garder est la SEULE option légale, quel que soit le score
@@ -114,7 +118,7 @@ int _defaultKeepCount(TurnState turn, RollAnalysis analysis) {
   // les deux finissait sur un total en 50, faisait planter cette recherche
   // de repli en tentant d'en décliner un).
   if (!analysis.canDeclineFives) return maxKeep;
-  final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
+  final minKeep = minKeepableFives(analysis);
   for (var keep = maxKeep; keep >= minKeep; keep--) {
     final hypothetical = applyKeepDecision(
       turn,
@@ -421,7 +425,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final initialTurn = initialEngine?.activeTurn;
     final initialPendingRoll = initialTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll != null
-        ? _defaultKeepCount(initialTurn!, initialPendingRoll)
+        ? _defaultKeepCount(
+            initialTurn!,
+            initialPendingRoll,
+            currentTotal: initialEngine!.currentPlayer.totalScore,
+          )
         : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _seedLogFromHistory();
@@ -689,7 +697,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     if (turn.pendingRoll != null) {
       final analysis = turn.pendingRoll!;
-      if (_hasRealChoice(analysis)) {
+      if (_hasRealChoice(turn, analysis, currentTotal: engine.currentPlayer.totalScore)) {
         _cancelAutoAction();
         return;
       }
@@ -761,7 +769,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
         // Par défaut, on tend vers le score optimal (voir _defaultKeepCount).
         _selectedKeep = newPendingRoll != null
-            ? _defaultKeepCount(next.activeTurn!, newPendingRoll)
+            ? _defaultKeepCount(
+                next.activeTurn!,
+                newPendingRoll,
+                currentTotal: next.currentPlayer.totalScore,
+              )
             : 0;
         _scheduleRollSettleAndPreviewMove(newPendingRoll);
       }
@@ -841,7 +853,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (pendingAnalysis != null) {
       final previewKeep = (!turn.busted && !isAiTurn)
           ? _selectedKeep
-          : _defaultKeepCount(turn, pendingAnalysis);
+          : _defaultKeepCount(turn, pendingAnalysis, currentTotal: engine.currentPlayer.totalScore);
       previewStates = _classifyDiceForDisplay(pendingAnalysis, previewKeep);
       previewIndices = {
         for (var i = 0; i < previewStates.length; i++)
@@ -1350,7 +1362,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // Pas de titre "Craqué !" ici : il apparaît déjà dans le journal de
           // partie (voir _scheduleBustRevealIfNeeded), pas besoin de le
           // répéter en double au-dessus du bouton.
-          if (turn.pendingRoll == null)
+          if (turn.bustReason == BustReason.exceedsTarget)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
@@ -1381,13 +1393,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
   Widget _buildHumanControlRow(GameEngine engine, TurnState turn) {
     final l10n = AppLocalizations.of(context);
     final pending = turn.pendingRoll;
-    final canChoose = pending != null && _hasRealChoice(pending);
+    final currentTotal = engine.currentPlayer.totalScore;
+    final canChoose = pending != null && _hasRealChoice(turn, pending, currentTotal: currentTotal);
     final fives = pending?.declinableFives;
-    final minKeep = (pending != null && pending.mandatoryGroups.isEmpty)
-        ? 1
-        : 0;
+    final minKeep = pending != null ? minKeepableFives(pending) : 0;
+    // Garder plus que cette borne ferait dépasser 10000 : ces options ne sont
+    // pas proposées du tout (voir maxKeepableFives).
+    final maxKeep = pending != null ? maxKeepableFives(turn, pending, currentTotal: currentTotal) : 0;
+    final selectedKeep = _selectedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
     final declineCount = pending != null
-        ? (fives?.diceCount ?? 0) - _selectedKeep
+        ? (fives?.diceCount ?? 0) - selectedKeep
         : 0;
 
     // État hypothétique si la sélection en cours était appliquée (ou déjà
@@ -1466,7 +1481,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 const SizedBox(width: 12),
                 const Icon(Icons.recycling, size: 18),
                 RadioGroup<int>(
-                  groupValue: _selectedKeep,
+                  groupValue: selectedKeep,
                   onChanged: (v) => setState(() => _selectedKeep = v!),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1474,7 +1489,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       // Toute la ligne (dé + libellé), pas seulement le petit
                       // rond du Radio, doit réagir au tap — comme les
                       // ChoiceChip qu'elle remplace.
-                      for (var i = minKeep; i <= fives!.diceCount; i++)
+                      for (var i = minKeep; i <= maxKeep; i++)
                         GestureDetector(
                           onTap: () => setState(() => _selectedKeep = i),
                           child: Row(

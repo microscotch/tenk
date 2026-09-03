@@ -152,6 +152,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   alone gets barred with no effect on their current score; only a collision on their *current* line
   drops them back to their previous score. Barring the current line back down to 0 also revokes
   "entered" status.
+- Overshooting 10000 busts the turn, and that is decided at *roll* time, not after the keep decision:
+  as soon as a roll's minimum unavoidable gain (mandatory groups + the 5s the player isn't allowed to
+  decline, see `minimumUnavoidableGain`) would take them past 10000, the turn busts with the roll
+  still on screen. Keep counts that would overshoot are never offered either, to human or AI
+  (`maxKeepableFives`). `TurnState.bustReason` says which of the two bust causes applied.
 - Victory: first exact 10000 triggers a final round giving every other player one more turn to match
   it; if another player also reaches exactly 10000 during that round, they bar the previous holder and
   a fresh final round starts around them.

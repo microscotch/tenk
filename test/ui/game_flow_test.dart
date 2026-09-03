@@ -691,4 +691,89 @@ void main() {
     expect(find.textContaining('5 dés à lancer'), findsOneWidget);
     expect(find.byType(PlayerAvatarWidget), findsWidgets);
   });
+
+  testWidgets('un lancer qui ne peut que dépasser 10000 : les dés sont montrés, puis le craque est annoncé',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // État tel que GameEngine.roll le produit désormais : le lancer marque
+    // (deux 1 = 200 incompressibles) mais 9900 + 200 dépasserait 10000, donc
+    // craque immédiat AVEC le lancer conservé pour l'afficher.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9900, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 2,
+        pendingRoll: analyzeRoll([1, 1]),
+        busted: true,
+        bustReason: BustReason.exceedsTarget,
+        hasRolledThisTurn: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('Craqué'), findsNothing,
+        reason: 'le lancer doit d\'abord être montré, comme pour un craque classique');
+
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Craqué'), findsWidgets);
+    expect(find.textContaining('dépasser 10000'), findsOneWidget,
+        reason: 'le motif du craque est explicité, malgré un lancer en attente');
+
+    await tester.tap(find.text('Craqué !'));
+    await tester.pumpAndSettle();
+
+    final after = container.read(gameProvider)!;
+    expect(after.currentPlayerIndex, 1);
+    expect(after.players[0].totalScore, 9900, reason: 'le craque ne retire pas le score déjà acquis');
+  });
+
+  testWidgets('les gardes de 5 qui feraient dépasser 10000 ne sont pas proposées', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A est à 9850. Le lancer contient un 1 obligatoire (100) et deux 5
+    // déclinables : garder un seul 5 amène pile à 10000, en garder deux
+    // dépasserait — cette option ne doit pas apparaître.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9850, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 4,
+        pendingRoll: analyzeRoll([1, 5, 5, 2]),
+        hasRolledThisTurn: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // On lit les valeurs proposées sur les radios plutôt que du texte brut :
+    // des chiffres isolés apparaissent ailleurs sur l'écran.
+    final offered = tester.widgetList<Radio<int>>(find.byType(Radio<int>)).map((r) => r.value).toList();
+    expect(offered, [0, 1],
+        reason: 'garder 0 ou 1 cinq reste légal, en garder 2 dépasserait 10000');
+  });
 }

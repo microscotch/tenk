@@ -132,17 +132,35 @@ class GameEngine {
   }
 
   /// Lance les dés disponibles du tour en cours.
+  ///
+  /// Un lancer qui marque mais dont le gain minimum incompressible ferait
+  /// déjà dépasser 10000 est un craque prononcé ICI, dès le lancer : aucune
+  /// décision de garde ne pourrait le sauver, autant l'annoncer pendant que
+  /// les dés sont affichés plutôt qu'après un choix qui ne change rien. Le
+  /// [TurnState.pendingRoll] est conservé, comme pour un craque classique,
+  /// pour que l'UI puisse révéler les dés avant d'annoncer le craque.
   GameEngine roll({Random? random}) {
-    final t = rollTurn(activeTurn!, random: random);
+    var t = rollTurn(activeTurn!, random: random);
+    final analysis = t.pendingRoll;
+    if (!t.busted &&
+        analysis != null &&
+        currentPlayer.totalScore + t.bankedScore + minimumUnavoidableGain(analysis) > winningScore) {
+      t = t.copyWith(busted: true, bustReason: BustReason.exceedsTarget);
+    }
     return copyWith(activeTurn: t);
   }
 
   /// Applique la décision de garde du joueur sur le lancer en attente.
-  /// Un craque est déclenché si le score total dépasserait 10000.
+  ///
+  /// Le contrôle de dépassement de 10000 reste ici en filet de sécurité : en
+  /// jeu normal il est désormais inatteignable, [roll] ayant déjà craqué les
+  /// lancers sans issue et les options de garde trop généreuses n'étant plus
+  /// proposées (voir [maxKeepableFives]). Il protège encore le rejeu d'une
+  /// partie sauvegardée avant ce changement.
   GameEngine applyKeep({int declineFivesCount = 0}) {
     var t = applyKeepDecision(activeTurn!, declineFivesCount: declineFivesCount);
     if (currentPlayer.totalScore + t.bankedScore > winningScore) {
-      t = t.copyWith(busted: true);
+      t = t.copyWith(busted: true, bustReason: BustReason.exceedsTarget);
     }
     return copyWith(activeTurn: t);
   }
