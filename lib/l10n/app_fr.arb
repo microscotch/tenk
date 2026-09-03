@@ -333,6 +333,15 @@
   "previousScoreHadTiretTooltip": "Le score précédent portait un tiret",
   "@previousScoreHadTiretTooltip": {"description": "Infobulle indiquant que la ligne de score précédente portait un tiret."},
 
+  "rankFirstTooltip": "En tête",
+  "@rankFirstTooltip": {"description": "Infobulle de la médaille d'or, sur la ligne du joueur en tête des scores."},
+
+  "rankSecondTooltip": "2e au score",
+  "@rankSecondTooltip": {"description": "Infobulle de la médaille d'argent, sur la ligne du deuxième joueur au score."},
+
+  "rankThirdTooltip": "3e au score",
+  "@rankThirdTooltip": {"description": "Infobulle de la médaille de bronze, sur la ligne du troisième joueur au score."},
+
   "rulesScreenTitle": "Règles du jeu",
   "@rulesScreenTitle": {"description": "Titre de l'écran expliquant les règles du jeu."},
 

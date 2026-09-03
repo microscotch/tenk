@@ -668,6 +668,24 @@ abstract class AppLocalizations {
   /// **'Le score précédent portait un tiret'**
   String get previousScoreHadTiretTooltip;
 
+  /// Infobulle de la médaille d'or, sur la ligne du joueur en tête des scores.
+  ///
+  /// In fr, this message translates to:
+  /// **'En tête'**
+  String get rankFirstTooltip;
+
+  /// Infobulle de la médaille d'argent, sur la ligne du deuxième joueur au score.
+  ///
+  /// In fr, this message translates to:
+  /// **'2e au score'**
+  String get rankSecondTooltip;
+
+  /// Infobulle de la médaille de bronze, sur la ligne du troisième joueur au score.
+  ///
+  /// In fr, this message translates to:
+  /// **'3e au score'**
+  String get rankThirdTooltip;
+
   /// Titre de l'écran expliquant les règles du jeu.
   ///
   /// In fr, this message translates to:

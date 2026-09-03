@@ -344,6 +344,15 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die vorige Punktzahl trug einen Strich';
 
   @override
+  String get rankFirstTooltip => 'En tête';
+
+  @override
+  String get rankSecondTooltip => '2e au score';
+
+  @override
+  String get rankThirdTooltip => '3e au score';
+
+  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

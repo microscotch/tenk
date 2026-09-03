@@ -341,6 +341,15 @@ class AppLocalizationsPt extends AppLocalizations {
       'A pontuação anterior tinha um traço';
 
   @override
+  String get rankFirstTooltip => 'En tête';
+
+  @override
+  String get rankSecondTooltip => '2e au score';
+
+  @override
+  String get rankThirdTooltip => '3e au score';
+
+  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

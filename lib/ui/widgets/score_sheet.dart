@@ -22,6 +22,7 @@ class ScoreSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarColors = assignAvatarColors(players.map((p) => p.name));
+    final ranks = podiumRanks(players);
     return Column(
       children: [
         for (var i = 0; i < players.length; i++)
@@ -31,10 +32,41 @@ class ScoreSheet extends StatelessWidget {
             gaps: _scoreGaps(players, i),
             onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
             avatarColor: avatarColors[players[i].name],
+            podiumRank: ranks[i],
           ),
       ],
     );
   }
+}
+
+/// Teintes des trois médailles, assez saturées pour rester lisibles sur le
+/// fond sombre des lignes de joueur.
+Color _medalColor(int podiumRank) => switch (podiumRank) {
+      1 => const Color(0xFFD4AF37), // or
+      2 => const Color(0xFFC0C0C0), // argent
+      _ => const Color(0xFFCD7F32), // bronze
+    };
+
+/// Rang sur le podium (1 = or, 2 = argent, 3 = bronze, null = pas de
+/// médaille) de chaque joueur, dans l'ordre de [players].
+///
+/// Deux règles volontaires :
+/// - un score de 0 ne vaut jamais de médaille, sinon toute la table en
+///   arborerait une au premier tour, avant que quiconque ait marqué ;
+/// - à égalité, les joueurs concernés partagent la même médaille sans
+///   consommer le rang suivant (deux premiers ex æquo, puis un argent). La
+///   règle de collision de score empêche de toute façon deux joueurs de
+///   partager durablement un total non nul.
+List<int?> podiumRanks(List<Player> players) {
+  final scoresDescending = players.map((p) => p.totalScore).where((s) => s > 0).toSet().toList()
+    ..sort((a, b) => b.compareTo(a));
+  return [for (final player in players) _podiumRankOf(player.totalScore, scoresDescending)];
+}
+
+int? _podiumRankOf(int score, List<int> scoresDescending) {
+  if (score <= 0) return null;
+  final index = scoresDescending.indexOf(score);
+  return index >= 0 && index < 3 ? index + 1 : null;
 }
 
 /// Écart entre le score d'un joueur et ceux de ses adversaires les plus
@@ -62,9 +94,6 @@ _ScoreGaps _scoreGaps(List<Player> players, int index) {
   );
 }
 
-/// Couleur de la fraction de probabilité de marquer, du rouge (risqué) au
-/// vert (favorable) : 1/5 (20%) sert d'ancrage rouge, 1/2 (50%) d'ancrage
-/// vert, la valeur est interpolée (et bornée) entre les deux.
 class _PlayerRow extends StatelessWidget {
   final Player player;
   final bool isCurrent;
@@ -72,12 +101,17 @@ class _PlayerRow extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? avatarColor;
 
+  /// 1/2/3 pour or/argent/bronze, null si le joueur n'est pas sur le podium
+  /// (voir [podiumRanks]).
+  final int? podiumRank;
+
   const _PlayerRow({
     required this.player,
     required this.isCurrent,
     required this.gaps,
     required this.onTap,
     required this.avatarColor,
+    required this.podiumRank,
   });
 
   @override
@@ -118,6 +152,18 @@ class _PlayerRow extends StatelessWidget {
                       child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
                     ),
                     Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    if (podiumRank != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: Tooltip(
+                          message: switch (podiumRank!) {
+                            1 => l10n.rankFirstTooltip,
+                            2 => l10n.rankSecondTooltip,
+                            _ => l10n.rankThirdTooltip,
+                          },
+                          child: Icon(Icons.military_tech, size: 18, color: _medalColor(podiumRank!)),
+                        ),
+                      ),
                     if (!player.hasEntered)
                       Padding(
                         padding: const EdgeInsets.only(left: 8),

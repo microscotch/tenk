@@ -108,4 +108,62 @@ void main() {
 
     expect(tapped?.name, 'B');
   });
+
+  group('médailles du podium', () {
+    Future<void> pumpSheet(WidgetTester tester, List<Player> players) => tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: ScoreSheet(players: players, currentPlayerIndex: 0),
+          ),
+        );
+
+    Color medalColorIn(WidgetTester tester, String playerName) => tester
+        .widget<Icon>(find.descendant(of: _rowOf(playerName), matching: find.byIcon(Icons.military_tech)))
+        .color!;
+
+    testWidgets('or, argent et bronze vont aux trois meilleurs scores', (tester) async {
+      await pumpSheet(tester, [
+        Player(name: 'A', totalScore: 1200, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+        Player(name: 'C', totalScore: 2000, hasEntered: true),
+      ]);
+
+      expect(find.byIcon(Icons.military_tech), findsNWidgets(3));
+      expect(medalColorIn(tester, 'B'), const Color(0xFFD4AF37), reason: 'meilleur score : or');
+      expect(medalColorIn(tester, 'C'), const Color(0xFFC0C0C0), reason: 'deuxième : argent');
+      expect(medalColorIn(tester, 'A'), const Color(0xFFCD7F32), reason: 'troisième : bronze');
+    });
+
+    testWidgets('au-delà du podium, plus aucune médaille', (tester) async {
+      await pumpSheet(tester, [
+        Player(name: 'A', totalScore: 4000, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+        Player(name: 'C', totalScore: 2000, hasEntered: true),
+        Player(name: 'D', totalScore: 1000, hasEntered: true),
+      ]);
+
+      expect(find.byIcon(Icons.military_tech), findsNWidgets(3));
+      expect(find.descendant(of: _rowOf('D'), matching: find.byIcon(Icons.military_tech)), findsNothing);
+    });
+
+    testWidgets('aucune médaille tant que personne n\'a marqué', (tester) async {
+      await pumpSheet(tester, [Player(name: 'A'), Player(name: 'B'), Player(name: 'C')]);
+
+      expect(find.byIcon(Icons.military_tech), findsNothing,
+          reason: 'tout le monde à 0 en début de partie : personne n\'est en tête');
+    });
+
+    testWidgets('deux joueurs à égalité partagent la même médaille', (tester) async {
+      await pumpSheet(tester, [
+        Player(name: 'A', totalScore: 3000, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+        Player(name: 'C', totalScore: 1000, hasEntered: true),
+      ]);
+
+      expect(medalColorIn(tester, 'A'), const Color(0xFFD4AF37));
+      expect(medalColorIn(tester, 'B'), const Color(0xFFD4AF37));
+      expect(medalColorIn(tester, 'C'), const Color(0xFFC0C0C0), reason: 'le suivant prend l\'argent');
+    });
+  });
 }
