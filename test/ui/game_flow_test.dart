@@ -295,10 +295,53 @@ void main() {
         reason: 'la collision de score doit apparaître dans le journal de partie');
     expect(find.byIcon(Icons.priority_high), findsNothing);
 
+    // ... précédée par l'annonce de la prise de mise de B elle-même (score
+    // pris + nombre de dés restants hérités par A).
+    expect(find.textContaining('500 3 dés'), findsOneWidget,
+        reason: 'la prise de mise de B doit annoncer le score pris et les dés restants');
+
     final after = container.read(gameProvider)!;
     expect(after.players[1].totalScore, 2000);
     expect(after.players[0].totalScore, 1800, reason: 'A retombe à son score précédent : collision à 2000');
     expect(after.players[0].hasTiret, isFalse);
+  });
+
+  testWidgets('prendre la mise annonce le score pris et les dés restants dans le journal', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Un seul dé restant hérité par le joueur suivant : vérifie l'accord au
+    // singulier ("1 dé"), le pluriel étant déjà couvert par le test de
+    // collision ci-dessus ("3 dés").
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 0), Player(name: 'B', totalScore: 0)],
+      currentPlayerIndex: 0,
+      activeTurn: const TurnState(diceToRoll: 1, bankedScore: 500, hasRolledThisTurn: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('S\'arrêter'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PassDeviceScreen), findsOneWidget);
+    await tester.tap(find.text('Prêt'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('500 1 dé'), findsOneWidget,
+        reason: 'accord au singulier pour un seul dé restant');
+    expect(find.textContaining('500 1 dés'), findsNothing);
   });
 
   testWidgets('atteindre exactement 10000 lors du tour final affiche l\'écran de victoire', (tester) async {

@@ -150,6 +150,17 @@ class AppLocalizationsFi extends AppLocalizations {
   String get logScoreCollisionMessage => 'Score barré :';
 
   @override
+  String logBankedMessage(int score, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dés',
+      one: '$count dé',
+    );
+    return '$score $_temp0';
+  }
+
+  @override
   String get inheritedHandExceedsWinning =>
       'Tämän käden ottaminen ylittäisi jo 10000: et voi lopettaa.';
 

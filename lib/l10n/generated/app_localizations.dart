@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Score barré :'**
   String get logScoreCollisionMessage;
 
+  /// Entrée du journal de partie quand le joueur prend la mise (banque son score) : score pris, suivi du nombre de dés restants hérités par le joueur suivant.
+  ///
+  /// In fr, this message translates to:
+  /// **'{score} {count, plural, one{{count} dé} other{{count} dés}}'**
+  String logBankedMessage(int score, int count);
+
   /// Message expliquant pourquoi la main héritée ne peut pas être reprise.
   ///
   /// In fr, this message translates to:

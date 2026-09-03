@@ -152,6 +152,12 @@
   "logScoreCollisionMessage": "Score barré :",
   "@logScoreCollisionMessage": {"description": "Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné."},
 
+  "logBankedMessage": "{score} {count, plural, one{{count} dé} other{{count} dés}}",
+  "@logBankedMessage": {
+    "description": "Entrée du journal de partie quand le joueur prend la mise (banque son score) : score pris, suivi du nombre de dés restants hérités par le joueur suivant.",
+    "placeholders": {"score": {"type": "int"}, "count": {"type": "int"}}
+  },
+
   "inheritedHandExceedsWinning": "Reprendre cette main dépasserait déjà 10000 : impossible de banquer.",
   "@inheritedHandExceedsWinning": {"description": "Message expliquant pourquoi la main héritée ne peut pas être reprise."},
 

@@ -263,6 +263,25 @@ List<_LogEntry> _logEntriesForStep(
 }) {
   final entries = <_LogEntry>[];
 
+  // Prise de mise (bank() réussi) : GameEngine.activeTurn ne devient jamais
+  // null en dehors de bank()/endBustedTurn() (les deux seuls appelants de
+  // _advance(..., clearActiveTurn: true)) — et `!prevActiveTurn.busted`
+  // exclut le second (endBustedTurn() exige toujours un tour déjà craqué en
+  // entrée). Un tour sain qui se termine ainsi ne peut donc être qu'une mise
+  // prise avec succès. Détecté avant la collision de score ci-dessous, pour
+  // que le message apparaisse en premier dans le journal (la collision en
+  // est une conséquence directe).
+  final prevActiveTurn = previous?.activeTurn;
+  if (prevActiveTurn != null && !prevActiveTurn.busted && next.activeTurn == null) {
+    entries.add(
+      _LogEntry(
+        at,
+        previous!.currentPlayer.name,
+        l10n.logBankedMessage(prevActiveTurn.bankedScore, prevActiveTurn.diceToRoll),
+      ),
+    );
+  }
+
   // Collision de score (voir GameEngine.bank()) : un autre joueur que celui
   // qui vient de banquer se retrouve barré si son score égalait exactement
   // le nouveau total. bank() ne fait rien d'autre à la grille des AUTRES
