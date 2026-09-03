@@ -147,49 +147,14 @@ class AppLocalizationsFi extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String inheritedHandMessage(String playerName, int diceCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      diceCount,
-      locale: localeName,
-      other: '$diceCount noppaa',
-      one: '$diceCount nopan',
-    );
-    return '$playerName perii $_temp0 edelliseltä vuorolta.';
-  }
-
-  @override
-  String currentScoreLabel(int score) {
-    return 'Nykyiset pisteet: $score';
-  }
-
-  @override
-  String continueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count nopalla',
-      one: '$count nopalla',
-    );
-    return 'Jatka $_temp0';
-  }
+  String get logScoreCollisionMessage => 'Score barré :';
 
   @override
   String get inheritedHandExceedsWinning =>
       'Tämän käden ottaminen ylittäisi jo 10000: et voi lopettaa.';
 
   @override
-  String get restartWithFreshDiceButton => 'Aloita alusta 5 uudella nopalla';
-
-  @override
-  String aiContinueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count nopalla',
-      one: '$count nopalla',
-    );
-    return 'Jatka $_temp0';
-  }
+  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get aiRestartWithFreshDiceLabel => 'Aloita alusta 5 uudella nopalla';
@@ -198,24 +163,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get keepDiceButton => 'Säilytä nopat';
 
   @override
-  String get reRollFullHandButton => 'Heitä uudelleen (kuumat nopat)';
-
-  @override
   String get stopButton => 'Lopeta';
-
-  @override
-  String get rollDiceButton => 'Heitä noppaa';
-
-  @override
-  String rollDiceButtonWithCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Lancer $_temp0';
-  }
 
   @override
   String diceToRollLabel(int count) {
@@ -233,12 +181,6 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get bustExceedsTarget => 'Tämä heitto ylittäisi 10000.';
-
-  @override
-  String get continueButton => 'Jatka';
-
-  @override
-  String get howManyFivesToKeep => 'Kuinka monta viittä säilytät?';
 
   @override
   String get fullHandMustReroll =>

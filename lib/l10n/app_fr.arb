@@ -149,38 +149,14 @@
   "logHotDiceMessage": "Main pleine !",
   "@logHotDiceMessage": {"description": "Entrée du journal de partie quand un lancer déclenche des dés chauds (tous les dés ont scoré)."},
 
-  "inheritedHandMessage": "{playerName} hérite de {diceCount, plural, one{{diceCount} dé} other{{diceCount} dés}} du tour précédent.",
-  "@inheritedHandMessage": {
-    "description": "Annonce qu'un joueur hérite de dés d'un tour précédent réussi.",
-    "placeholders": {
-      "playerName": {"type": "String"},
-      "diceCount": {"type": "int"}
-    }
-  },
-
-  "currentScoreLabel": "Score en cours : {score}",
-  "@currentScoreLabel": {
-    "description": "Score déjà accumulé sur la main héritée proposée au joueur.",
-    "placeholders": {"score": {"type": "int"}}
-  },
-
-  "continueWithDiceButton": "Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}",
-  "@continueWithDiceButton": {
-    "description": "Bouton pour reprendre la main héritée avec le nombre de dés restants (joueur humain).",
-    "placeholders": {"count": {"type": "int"}}
-  },
+  "logScoreCollisionMessage": "Score barré :",
+  "@logScoreCollisionMessage": {"description": "Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné."},
 
   "inheritedHandExceedsWinning": "Reprendre cette main dépasserait déjà 10000 : impossible de banquer.",
   "@inheritedHandExceedsWinning": {"description": "Message expliquant pourquoi la main héritée ne peut pas être reprise."},
 
-  "restartWithFreshDiceButton": "Recommencer avec 5 dés neufs",
-  "@restartWithFreshDiceButton": {"description": "Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain)."},
-
-  "aiContinueWithDiceButton": "Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}",
-  "@aiContinueWithDiceButton": {
-    "description": "Libellé du bouton unique de l'IA quand elle décide de reprendre la main héritée.",
-    "placeholders": {"count": {"type": "int"}}
-  },
+  "declineInheritedHandButton": "Refuser",
+  "@declineInheritedHandButton": {"description": "Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain)."},
 
   "aiRestartWithFreshDiceLabel": "Repartir avec 5 dés neufs",
   "@aiRestartWithFreshDiceLabel": {"description": "Libellé du bouton unique de l'IA quand elle décide de repartir avec une main pleine."},
@@ -188,20 +164,8 @@
   "keepDiceButton": "Garder les dés",
   "@keepDiceButton": {"description": "Bouton reflétant l'action de l'IA sur un lancer en attente de décision (tour IA uniquement)."},
 
-  "reRollFullHandButton": "Relancer (main pleine)",
-  "@reRollFullHandButton": {"description": "Bouton pour relancer quand tous les dés ont scoré (main pleine, relance obligatoire)."},
-
   "stopButton": "S'arrêter",
   "@stopButton": {"description": "Bouton pour arrêter son tour et banquer le score."},
-
-  "rollDiceButton": "Lancer les dés",
-  "@rollDiceButton": {"description": "Bouton pour lancer les dés."},
-
-  "rollDiceButtonWithCount": "Lancer {count, plural, one{{count} dé} other{{count} dés}}",
-  "@rollDiceButtonWithCount": {
-    "description": "Bouton pour lancer les dés, avec leur nombre inclus (remplace diceToRollLabel affiché séparément au-dessus).",
-    "placeholders": {"count": {"type": "int"}}
-  },
 
   "diceToRollLabel": "{count, plural, one{{count} dé} other{{count} dés}} à lancer",
   "@diceToRollLabel": {
@@ -214,12 +178,6 @@
 
   "bustExceedsTarget": "Ce lancer ferait dépasser 10000.",
   "@bustExceedsTarget": {"description": "Explique un craque déclenché par un dépassement de 10000 points."},
-
-  "continueButton": "Continuer",
-  "@continueButton": {"description": "Bouton pour passer la main après un craque."},
-
-  "howManyFivesToKeep": "Combien de 5 garder ?",
-  "@howManyFivesToKeep": {"description": "Question posée quand le joueur peut choisir combien de 5 garder sur un lancer."},
 
   "fullHandMustReroll": "Main pleine : vous devez relancer !",
   "@fullHandMustReroll": {"description": "Avertissement affiché quand tous les dés ont scoré, obligeant à relancer."},

@@ -146,49 +146,14 @@ class AppLocalizationsBg extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String inheritedHandMessage(String playerName, int diceCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      diceCount,
-      locale: localeName,
-      other: '$diceCount зара',
-      one: '$diceCount зар',
-    );
-    return '$playerName наследява $_temp0 от предишния ход.';
-  }
-
-  @override
-  String currentScoreLabel(int score) {
-    return 'Текущ резултат: $score';
-  }
-
-  @override
-  String continueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count зара',
-      one: '$count зар',
-    );
-    return 'Продължи с $_temp0';
-  }
+  String get logScoreCollisionMessage => 'Score barré :';
 
   @override
   String get inheritedHandExceedsWinning =>
       'Поемането на тази ръка вече би надвишило 10000: не може да запишеш резултата.';
 
   @override
-  String get restartWithFreshDiceButton => 'Започни отначало с 5 нови зара';
-
-  @override
-  String aiContinueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count зара',
-      one: '$count зар',
-    );
-    return 'Поеми с $_temp0';
-  }
+  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get aiRestartWithFreshDiceLabel => 'Започни отначало с 5 нови зара';
@@ -197,24 +162,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get keepDiceButton => 'Запази заровете';
 
   @override
-  String get reRollFullHandButton => 'Хвърли отново (горещи зарове)';
-
-  @override
   String get stopButton => 'Спри се';
-
-  @override
-  String get rollDiceButton => 'Хвърли заровете';
-
-  @override
-  String rollDiceButtonWithCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Lancer $_temp0';
-  }
 
   @override
   String diceToRollLabel(int count) {
@@ -232,12 +180,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get bustExceedsTarget => 'Това хвърляне би надвишило 10000.';
-
-  @override
-  String get continueButton => 'Продължи';
-
-  @override
-  String get howManyFivesToKeep => 'Колко петици да запазиш?';
 
   @override
   String get fullHandMustReroll => 'Горещи зарове: трябва да хвърлиш отново!';

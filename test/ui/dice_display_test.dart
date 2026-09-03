@@ -37,15 +37,16 @@ void main() {
     // valide et bancable tout de suite. Le score optimal par défaut préfère
     // donc le décliner, même si 150 > 100 en valeur brute (voir
     // _defaultKeepCount dans game_screen.dart).
-    // 5 dans "Piste" + 1 dans "Main courante" : le 1 (obligatoire, retenu par
-    // défaut) y est déjà prévisualisé en fondu — un lancer déjà en attente au
-    // montage de l'écran (comme ici, via debugLoadState) saute l'animation
-    // d'apparition et affiche l'état "immobilisé" direct (voir _rollSettled/
-    // _previewMoveRevealed dans game_screen.dart) : les deux copies du dé "1"
-    // existent donc dans l'arbre dès le premier frame (celle de "Piste" à
-    // opacité 0, celle de "Main courante" à opacité 1).
+    // 5 dans "Piste" + 5 dans "Main courante" (une place réservée pour
+    // CHAQUE dé du lancer en attente, invisible sauf pour ceux prévisualisés
+    // "gardés" — composition fixe pour un fondu propre dans les deux sens,
+    // voir _buildHandZone) : un lancer déjà en attente au montage de l'écran
+    // (comme ici, via debugLoadState) saute l'animation d'apparition et
+    // affiche l'état "immobilisé" direct (voir _rollSettled/
+    // _previewMoveRevealed dans game_screen.dart), donc les 10 dés existent
+    // déjà dans l'arbre dès le premier frame.
     final dice = tester.widgetList<DieWidget>(find.byType(DieWidget)).toList();
-    expect(dice.length, 6);
+    expect(dice.length, 10);
     for (final d in dice) {
       switch (d.value) {
         case 1:

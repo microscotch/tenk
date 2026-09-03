@@ -146,49 +146,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String inheritedHandMessage(String playerName, int diceCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      diceCount,
-      locale: localeName,
-      other: '$diceCount dés',
-      one: '$diceCount dé',
-    );
-    return '$playerName hérite de $_temp0 du tour précédent.';
-  }
-
-  @override
-  String currentScoreLabel(int score) {
-    return 'Score en cours : $score';
-  }
-
-  @override
-  String continueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Reprendre avec $_temp0';
-  }
+  String get logScoreCollisionMessage => 'Score barré :';
 
   @override
   String get inheritedHandExceedsWinning =>
       'Reprendre cette main dépasserait déjà 10000 : impossible de banquer.';
 
   @override
-  String get restartWithFreshDiceButton => 'Recommencer avec 5 dés neufs';
-
-  @override
-  String aiContinueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Reprendre avec $_temp0';
-  }
+  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get aiRestartWithFreshDiceLabel => 'Repartir avec 5 dés neufs';
@@ -197,24 +162,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get keepDiceButton => 'Garder les dés';
 
   @override
-  String get reRollFullHandButton => 'Relancer (main pleine)';
-
-  @override
   String get stopButton => 'S\'arrêter';
-
-  @override
-  String get rollDiceButton => 'Lancer les dés';
-
-  @override
-  String rollDiceButtonWithCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Lancer $_temp0';
-  }
 
   @override
   String diceToRollLabel(int count) {
@@ -232,12 +180,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bustExceedsTarget => 'Ce lancer ferait dépasser 10000.';
-
-  @override
-  String get continueButton => 'Continuer';
-
-  @override
-  String get howManyFivesToKeep => 'Combien de 5 garder ?';
 
   @override
   String get fullHandMustReroll => 'Main pleine : vous devez relancer !';

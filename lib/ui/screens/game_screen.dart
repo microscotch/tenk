@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../game/ai/ai_profiles.dart';
 import '../../game/combination.dart';
 import '../../game/game_engine.dart';
 import '../../game/game_recording.dart';
@@ -27,14 +28,18 @@ import 'score_grid_screen.dart';
 
 /// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
 /// nombre de 5 que le joueur envisage de garder (aperçu avant validation).
-List<DieVisualState> _classifyDiceForDisplay(RollAnalysis analysis, int selectedKeepCount) {
+List<DieVisualState> _classifyDiceForDisplay(
+  RollAnalysis analysis,
+  int selectedKeepCount,
+) {
   if (analysis.groups.any((g) => g.isSuite)) {
     return List.filled(analysis.faces.length, DieVisualState.kept);
   }
 
   final mandatoryRemaining = <int, int>{};
   for (final g in analysis.mandatoryGroups) {
-    mandatoryRemaining[g.value] = (mandatoryRemaining[g.value] ?? 0) + g.diceCount;
+    mandatoryRemaining[g.value] =
+        (mandatoryRemaining[g.value] ?? 0) + g.diceCount;
   }
 
   final fives = analysis.declinableFives;
@@ -49,7 +54,9 @@ List<DieVisualState> _classifyDiceForDisplay(RollAnalysis analysis, int selected
           if (keepRemaining > 0) {
             keepRemaining--;
             final perDie = fives.points ~/ fives.diceCount;
-            return perDie == 100 ? DieVisualState.extended : DieVisualState.kept;
+            return perDie == 100
+                ? DieVisualState.extended
+                : DieVisualState.kept;
           }
           return DieVisualState.declined;
         })()
@@ -66,7 +73,11 @@ DieVisualState _mandatoryVisualState(RollAnalysis analysis, int value) {
   return isExtended ? DieVisualState.extended : DieVisualState.kept;
 }
 
-DieVisualState _consume(Map<int, int> remaining, int value, DieVisualState result) {
+DieVisualState _consume(
+  Map<int, int> remaining,
+  int value,
+  DieVisualState result,
+) {
   remaining[value] = remaining[value]! - 1;
   return result;
 }
@@ -104,7 +115,10 @@ int _defaultKeepCount(TurnState turn, RollAnalysis analysis) {
   if (!analysis.canDeclineFives) return maxKeep;
   final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
   for (var keep = maxKeep; keep >= minKeep; keep--) {
-    final hypothetical = applyKeepDecision(turn, declineFivesCount: maxKeep - keep);
+    final hypothetical = applyKeepDecision(
+      turn,
+      declineFivesCount: maxKeep - keep,
+    );
     if (hypothetical.bankedScore % 100 != 50) return keep;
   }
   return maxKeep;
@@ -113,13 +127,37 @@ int _defaultKeepCount(TurnState turn, RollAnalysis analysis) {
 /// Points que rapporterait ce lancer si le joueur valide sa sélection
 /// actuelle (combien de 5 garder).
 int _previewPoints(RollAnalysis analysis, int selectedKeepCount) {
-  var points = analysis.mandatoryGroups.fold<int>(0, (sum, g) => sum + g.points);
+  var points = analysis.mandatoryGroups.fold<int>(
+    0,
+    (sum, g) => sum + g.points,
+  );
   final fives = analysis.declinableFives;
   if (fives != null) {
     final perDie = fives.points ~/ fives.diceCount;
     points += selectedKeepCount * perDie;
   }
   return points;
+}
+
+/// Libellé "icône dé + pourcentage" (ex. "76 %") pour un bouton "Lancer" :
+/// remplace le nombre de dés ou un texte fixe par la probabilité réelle de
+/// marquer au moins un point sur ce lancer, cf. [scoreProbabilityFraction].
+String _scorePercentLabel(int diceCount, Set<int> extendedValues) {
+  final (num, den) = scoreProbabilityFraction(diceCount, extendedValues);
+  final p = den == 0 ? 0.0 : num / den;
+  return '${(p * 100).round()} %';
+}
+
+/// Bouton "Lancer" (icône dé + libellé), partagé entre la ligne de contrôle
+/// humaine et le choix de main héritée.
+Widget _rollButton({required VoidCallback onPressed, required String label}) {
+  return FilledButton(
+    onPressed: onPressed,
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [const Icon(Icons.casino, size: 18), const SizedBox(width: 8), Text(label)],
+    ),
+  );
 }
 
 /// Décrit en français un groupe scorant pour le journal de partie (ex.
@@ -129,10 +167,18 @@ int _previewPoints(RollAnalysis analysis, int selectedKeepCount) {
 String _describeGroup(ScoringGroup g) {
   if (g.isSuite) return 'suite';
   if (g.diceCount >= 3) {
-    final name = switch (g.diceCount) { 3 => 'brelan', 4 => 'carré', _ => 'quinte' };
+    final name = switch (g.diceCount) {
+      3 => 'brelan',
+      4 => 'carré',
+      _ => 'quinte',
+    };
     return g.value == 1 ? "$name d'as" : '$name de ${g.value}';
   }
-  final noun = switch (g.value) { 1 => 'as', 5 => 'cinq', _ => '${g.value}' };
+  final noun = switch (g.value) {
+    1 => 'as',
+    5 => 'cinq',
+    _ => '${g.value}',
+  };
   return '${g.diceCount} $noun';
 }
 
@@ -146,11 +192,22 @@ String _describeRollResult(RollAnalysis analysis, int roundPoints) {
   final parts = [for (final g in analysis.mandatoryGroups) _describeGroup(g)];
   final fives = analysis.declinableFives;
   if (fives != null) {
-    final mandatoryPoints = analysis.mandatoryGroups.fold<int>(0, (sum, g) => sum + g.points);
+    final mandatoryPoints = analysis.mandatoryGroups.fold<int>(
+      0,
+      (sum, g) => sum + g.points,
+    );
     final perDie = fives.points ~/ fives.diceCount;
     final keptFives = (roundPoints - mandatoryPoints) ~/ perDie;
     if (keptFives > 0) {
-      parts.add(_describeGroup(ScoringGroup(value: 5, diceCount: keptFives, points: keptFives * perDie)));
+      parts.add(
+        _describeGroup(
+          ScoringGroup(
+            value: 5,
+            diceCount: keptFives,
+            points: keptFives * perDie,
+          ),
+        ),
+      );
     }
   }
   return '${parts.join(' et ')} => $roundPoints';
@@ -158,11 +215,28 @@ String _describeRollResult(RollAnalysis analysis, int roundPoints) {
 
 /// Une entrée horodatée du journal de partie (voir [_GameScreenState._log]),
 /// rattachée au joueur concerné (pour son blason, voir [PlayerAvatarWidget]).
+///
+/// [barredScore]/[barredPlayerName] ne sont renseignés que pour une entrée
+/// de collision de score (voir [_logEntriesForStep]) : le score barré
+/// s'affiche alors en barré, suivi du blason du joueur concerné, à la place
+/// du texte normal (voir [_GameScreenState._buildGameLog]).
 class _LogEntry {
   final DateTime timestamp;
   final String playerName;
   final String text;
-  const _LogEntry(this.timestamp, this.playerName, this.text);
+  final int? barredScore;
+  final String? barredPlayerName;
+
+  const _LogEntry(this.timestamp, this.playerName, this.text)
+    : barredScore = null,
+      barredPlayerName = null;
+
+  const _LogEntry.scoreBarred(
+    this.timestamp,
+    this.playerName,
+    this.barredPlayerName,
+    this.barredScore,
+  ) : text = '';
 }
 
 String _formatLogTime(DateTime t) =>
@@ -187,19 +261,50 @@ List<_LogEntry> _logEntriesForStep(
   required DateTime at,
   required bool includeBust,
 }) {
+  final entries = <_LogEntry>[];
+
+  // Collision de score (voir GameEngine.bank()) : un autre joueur que celui
+  // qui vient de banquer se retrouve barré si son score égalait exactement
+  // le nouveau total. bank() ne fait rien d'autre à la grille des AUTRES
+  // joueurs (aucune ligne ajoutée/retirée) : une ligne qui passe de
+  // non-barrée à barrée au même indice ne peut être que cette collision.
+  // Indépendant de l'état du tour suivant (nextTurn), donc détecté avant le
+  // guard ci-dessous.
+  if (previous != null) {
+    for (var i = 0; i < next.players.length; i++) {
+      final prevGrid = previous.players[i].grid;
+      final nextGrid = next.players[i].grid;
+      for (var idx = 0; idx < prevGrid.length && idx < nextGrid.length; idx++) {
+        if (!prevGrid[idx].isBarred && nextGrid[idx].isBarred) {
+          entries.add(
+            _LogEntry.scoreBarred(
+              at,
+              previous.currentPlayer.name,
+              next.players[i].name,
+              nextGrid[idx].value,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   final nextTurn = next.activeTurn;
-  if (nextTurn == null) return const [];
+  if (nextTurn == null) return entries;
   final prevTurn = previous?.activeTurn;
   final playerName = next.currentPlayer.name;
-  final entries = <_LogEntry>[];
 
   // Un tour tout juste démarré (encore aucun lancer effectué) : annonce le
   // nombre de dés à lancer. `!hasRolledThisTurn` est un marqueur exclusif —
   // il ne redevient jamais vrai une fois passé à faux pour ce tour — donc ce
   // test seul suffit à détecter l'entrée dans cet état, quelle que soit son
   // origine (nouvelle partie, après un craque, main héritée acceptée...).
-  if (!nextTurn.busted && nextTurn.pendingRoll == null && !nextTurn.hasRolledThisTurn) {
-    entries.add(_LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)));
+  if (!nextTurn.busted &&
+      nextTurn.pendingRoll == null &&
+      !nextTurn.hasRolledThisTurn) {
+    entries.add(
+      _LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)),
+    );
   }
 
   // Une décision de garde vient d'être appliquée sur le lancer précédent
@@ -211,11 +316,15 @@ List<_LogEntry> _logEntriesForStep(
       !nextTurn.busted) {
     final analysis = prevTurn.pendingRoll!;
     final roundPoints = nextTurn.bankedScore - prevTurn.bankedScore;
-    entries.add(_LogEntry(at, playerName, _describeRollResult(analysis, roundPoints)));
+    entries.add(
+      _LogEntry(at, playerName, _describeRollResult(analysis, roundPoints)),
+    );
     if (nextTurn.mustContinue) {
       entries.add(_LogEntry(at, playerName, l10n.logHotDiceMessage));
     } else {
-      entries.add(_LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)));
+      entries.add(
+        _LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)),
+      );
     }
   }
 
@@ -239,7 +348,8 @@ class GameScreen extends ConsumerStatefulWidget {
   ConsumerState<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObserver {
+class _GameScreenState extends ConsumerState<GameScreen>
+    with WidgetsBindingObserver {
   /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
   int _selectedKeep = 0;
 
@@ -290,7 +400,9 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
     final initialEngine = ref.read(gameProvider);
     final initialTurn = initialEngine?.activeTurn;
     final initialPendingRoll = initialTurn?.pendingRoll;
-    _selectedKeep = initialPendingRoll != null ? _defaultKeepCount(initialTurn!, initialPendingRoll) : 0;
+    _selectedKeep = initialPendingRoll != null
+        ? _defaultKeepCount(initialTurn!, initialPendingRoll)
+        : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _seedLogFromHistory();
       _scheduleAutoProgressIfNeeded();
@@ -336,7 +448,9 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
   void _scheduleReplayStep() {
     final notifier = ref.read(gameProvider.notifier);
     final engine = ref.read(gameProvider);
-    if (engine == null || engine.gameOver || !notifier.hasNextReplayAction) return;
+    if (engine == null || engine.gameOver || !notifier.hasNextReplayAction) {
+      return;
+    }
     final baseDelay = ref.read(settingsProvider).aiMessageDelay;
     final speed = ref.read(replaySpeedProvider);
     final delay = Duration(microseconds: baseDelay.inMicroseconds ~/ speed);
@@ -385,7 +499,15 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
       seed,
       actions,
       onGameAction: (previous, next, action) {
-        entries.addAll(_logEntriesForStep(previous, next, l10n: l10n, at: action.at, includeBust: true));
+        entries.addAll(
+          _logEntriesForStep(
+            previous,
+            next,
+            l10n: l10n,
+            at: action.at,
+            includeBust: true,
+          ),
+        );
       },
     );
     if (entries.isEmpty) return;
@@ -415,7 +537,9 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
         if (!mounted) return;
         // Le lancer a peut-être déjà été décidé (ou remplacé) entre-temps :
         // rien à révéler dans ce cas, la zone "Piste" ne l'affiche plus.
-        if (ref.read(gameProvider)?.activeTurn?.pendingRoll != pendingRoll) return;
+        if (ref.read(gameProvider)?.activeTurn?.pendingRoll != pendingRoll) {
+          return;
+        }
         setState(() => _previewMoveRevealed = true);
       });
     });
@@ -442,7 +566,13 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
 
     if (turn.pendingRoll == null) {
       SoundEffects.instance.playBust();
-      _appendLog(_LogEntry(DateTime.now(), engine!.currentPlayer.name, AppLocalizations.of(context).bustedTitle));
+      _appendLog(
+        _LogEntry(
+          DateTime.now(),
+          engine!.currentPlayer.name,
+          AppLocalizations.of(context).bustedTitle,
+        ),
+      );
       setState(() => _bustRevealed = true);
       return;
     }
@@ -450,7 +580,13 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
     _bustRevealTimer = Timer(_bustRevealDelay, () {
       if (!mounted) return;
       SoundEffects.instance.playBust();
-      _appendLog(_LogEntry(DateTime.now(), engine!.currentPlayer.name, AppLocalizations.of(context).bustedTitle));
+      _appendLog(
+        _LogEntry(
+          DateTime.now(),
+          engine!.currentPlayer.name,
+          AppLocalizations.of(context).bustedTitle,
+        ),
+      );
       setState(() => _bustRevealed = true);
     });
   }
@@ -522,7 +658,9 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
-    if (notifier.isAiPlayer(engine.currentPlayerIndex)) return; // géré par _scheduleAiIfNeeded
+    if (notifier.isAiPlayer(engine.currentPlayerIndex)) {
+      return; // géré par _scheduleAiIfNeeded
+    }
     final turn = engine.activeTurn;
     if (turn == null || turn.busted) {
       _cancelAutoAction();
@@ -564,30 +702,47 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
       if (next == null) return;
       if (next.gameOver) {
         SoundEffects.instance.playVictory();
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => GameOverScreen(players: next.players, winnerIndex: next.winnerIndex!),
-        ));
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GameOverScreen(
+              players: next.players,
+              winnerIndex: next.winnerIndex!,
+            ),
+          ),
+        );
         return;
       }
       if (!widget.replayMode &&
           previous != null &&
           next.currentPlayerIndex != previous.currentPlayerIndex &&
-          ref.read(gameProvider.notifier).shouldShowPassDevice(next.currentPlayerIndex)) {
+          ref
+              .read(gameProvider.notifier)
+              .shouldShowPassDevice(next.currentPlayerIndex)) {
         Navigator.of(context)
-            .push(MaterialPageRoute(
-              builder: (_) => PassDeviceScreen(nextPlayerName: next.currentPlayer.name),
-            ))
+            .push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    PassDeviceScreen(nextPlayerName: next.currentPlayer.name),
+              ),
+            )
             .then((_) => _scheduleAiIfNeeded());
       }
-      for (final entry
-          in _logEntriesForStep(previous, next, l10n: AppLocalizations.of(context), at: DateTime.now(), includeBust: false)) {
+      for (final entry in _logEntriesForStep(
+        previous,
+        next,
+        l10n: AppLocalizations.of(context),
+        at: DateTime.now(),
+        includeBust: false,
+      )) {
         _appendLog(entry);
       }
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
         // Par défaut, on tend vers le score optimal (voir _defaultKeepCount).
-        _selectedKeep = newPendingRoll != null ? _defaultKeepCount(next.activeTurn!, newPendingRoll) : 0;
+        _selectedKeep = newPendingRoll != null
+            ? _defaultKeepCount(next.activeTurn!, newPendingRoll)
+            : 0;
         _scheduleRollSettleAndPreviewMove(newPendingRoll);
       }
       // En mode rejeu, _scheduleReplayStep s'auto-reprogramme lui-même
@@ -610,146 +765,147 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
     final notifier = ref.read(gameProvider.notifier);
     final isAiTurn = notifier.isAiPlayer(engine.currentPlayerIndex);
 
-    if (engine.activeTurn == null) {
-      // Dés hérités d'un tour précédent : le joueur doit choisir de les
-      // garder ou de repartir avec une main pleine, avant que le tour ne
-      // démarre réellement. Écran distinct, pas encore de TurnState à
-      // afficher dans les zones "Lancé"/"Main courante".
-      return Scaffold(
-        appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
-        body: AbsorbPointer(
-          absorbing: widget.replayMode,
-          child: GestureDetector(
-            onTap: _skipPendingAction,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    ScoreSheet(
-                      players: engine.players,
-                      currentPlayerIndex: engine.currentPlayerIndex,
-                      onTapPlayer: _openPlayerGrid,
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Center(
-                          child: isAiTurn ? _buildAiHandChoiceView(engine) : _buildHandChoiceView(engine),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    final turn = engine.activeTurn!;
+    // Dés hérités d'un tour précédent, en attente du choix du joueur (les
+    // garder ou repartir avec une main pleine) : pas encore de vrai
+    // TurnState côté moteur. Un TurnState de substitution (jamais commité)
+    // permet de réutiliser tel quel tout le reste de cet écran (zones
+    // "Piste"/"Main courante", ScoreSheet) au lieu d'un écran séparé — seul
+    // le widget de contrôle en bas change (voir plus bas).
+    final isInheritedChoice = engine.activeTurn == null;
+    final turn =
+        engine.activeTurn ??
+        TurnState(
+          diceToRoll: engine.nextTurnDice,
+          bankedScore: engine.inheritedScore,
+          extendedValues: engine.inheritedExtendedValues,
+          keptDiceThisTurn: engine.inheritedKeptDice,
+        );
     final l10n = AppLocalizations.of(context);
 
     // Score "live" : score du tour déjà banqué + aperçu de la sélection de 5
     // en cours si un choix humain est en attente ET que les dés du lancer se
     // sont immobilisés (voir _rollSettled) — pas avant, sinon le score
     // apparaît avant que le joueur ait vu le résultat du lancer.
-    final showRollPreview = !isAiTurn && turn.pendingRoll != null && _rollSettled;
-    final liveScore =
-        showRollPreview ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep) : turn.bankedScore;
+    final showRollPreview =
+        !isAiTurn && turn.pendingRoll != null && _rollSettled;
+    final liveScore = showRollPreview
+        ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep)
+        : turn.bankedScore;
     final minimum = engine.minimumForCurrentPlayer;
     final belowMinimum = liveScore < minimum;
-    final scoreColor = belowMinimum ? Colors.redAccent : (liveScore % 100 == 50 ? Colors.orange : Colors.lightGreenAccent);
-    final minimumColor = belowMinimum ? Colors.redAccent : Colors.lightGreenAccent;
+    final scoreColor = belowMinimum
+        ? Colors.redAccent
+        : (liveScore % 100 == 50 ? Colors.orange : Colors.lightGreenAccent);
+    final minimumColor = belowMinimum
+        ? Colors.redAccent
+        : Colors.lightGreenAccent;
     // Aperçu (ChoiceChip) seulement pertinent pour un lancer humain en
     // attente de décision ; sinon (IA, craque, idle) les dés du lancer, s'il
     // y en a un à afficher, sont montrés "tels quels" (rien n'est encore
     // décidé côté joueur).
-    final rollZoneSelectedKeep = (!turn.busted && !isAiTurn && turn.pendingRoll != null) ? _selectedKeep : 0;
+    final rollZoneSelectedKeep =
+        (!turn.busted && !isAiTurn && turn.pendingRoll != null)
+        ? _selectedKeep
+        : 0;
 
-    // Dés "retenus par défaut" du lancer en attente (groupes obligatoires +
-    // le nombre de 5 par défaut, voir _defaultKeepCount) : ceux qui migrent
-    // en fondu de "Piste" vers "Main courante" une fois _previewMoveRevealed
-    // — recalculé à chaque build (pur, pas besoin d'être figé), seule la
-    // temporisation de la révélation est un vrai état (voir
-    // _scheduleRollSettleAndPreviewMove).
+    // Dés à faire migrer en fondu de "Piste" vers "Main courante" une fois
+    // _previewMoveRevealed : pour un choix humain interactif, suit
+    // _selectedKeep EN DIRECT (se recalcule à chaque tap sur les boutons
+    // radio, voir _buildHumanControlRow) ; pour l'IA ou un craque (aucune
+    // sélection modifiable), reste sur le choix par défaut. Recalculé à
+    // chaque build (pur), seule la temporisation de la révélation est un
+    // vrai état (voir _scheduleRollSettleAndPreviewMove).
     final pendingAnalysis = turn.pendingRoll;
     var previewIndices = const <int>{};
     List<DieVisualState>? previewStates;
     if (pendingAnalysis != null) {
-      final defaultKeep = _defaultKeepCount(turn, pendingAnalysis);
-      previewStates = _classifyDiceForDisplay(pendingAnalysis, defaultKeep);
+      final previewKeep = (!turn.busted && !isAiTurn)
+          ? _selectedKeep
+          : _defaultKeepCount(turn, pendingAnalysis);
+      previewStates = _classifyDiceForDisplay(pendingAnalysis, previewKeep);
       previewIndices = {
         for (var i = 0; i < previewStates.length; i++)
-          if (previewStates[i] == DieVisualState.kept || previewStates[i] == DieVisualState.extended) i,
+          if (previewStates[i] == DieVisualState.kept ||
+              previewStates[i] == DieVisualState.extended)
+            i,
       };
     }
 
     return Scaffold(
-      appBar: AppBar(title: const AppTitle(), actions: _scoreGridAction(engine.players)),
-      body: GestureDetector(
-        onTap: _skipPendingAction,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            // Le contenu (liste des joueurs + score + 2 zones bordurées +
-            // boutons + journal) peut dépasser la hauteur disponible sur un
-            // petit écran (ou un choix de 5 avec beaucoup de ChoiceChip) :
-            // tout défile ensemble, le journal gardant une hauteur fixe
-            // plutôt que de se répartir l'espace restant, pour qu'il reste
-            // toujours visible sans avoir à tout faire défiler.
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ScoreSheet(
-                    players: engine.players,
-                    currentPlayerIndex: engine.currentPlayerIndex,
-                    activeTurn: turn,
-                    onTapPlayer: _openPlayerGrid,
-                  ),
-                  const SizedBox(height: 12),
-                  if (engine.isInFinalRound)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(l10n.finalRoundBanner,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+      appBar: AppBar(
+        title: const AppTitle(),
+        actions: _scoreGridAction(engine.players),
+      ),
+      body: AbsorbPointer(
+        absorbing: widget.replayMode,
+        child: GestureDetector(
+          onTap: _skipPendingAction,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              // Le contenu (liste des joueurs + score + 2 zones bordurées +
+              // boutons + journal) peut dépasser la hauteur disponible sur un
+              // petit écran (ou un choix de 5 avec beaucoup de ChoiceChip) :
+              // tout défile ensemble, le journal gardant une hauteur fixe
+              // plutôt que de se répartir l'espace restant, pour qu'il reste
+              // toujours visible sans avoir à tout faire défiler.
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ScoreSheet(
+                      players: engine.players,
+                      currentPlayerIndex: engine.currentPlayerIndex,
+                      activeTurn: turn,
+                      onTapPlayer: _openPlayerGrid,
                     ),
-                  _buildRollZone(
-                    turn,
-                    rollZoneSelectedKeep,
-                    showScore: pendingAnalysis != null && _rollSettled,
-                    previewIndices: previewIndices,
-                    previewRevealed: _previewMoveRevealed,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildHandZone(
-                    turn,
-                    liveScore: liveScore,
-                    minimum: minimum,
-                    scoreColor: scoreColor,
-                    minimumColor: minimumColor,
-                    pendingAnalysis: pendingAnalysis,
-                    previewIndices: previewIndices,
-                    previewStates: previewStates,
-                    previewRevealed: _previewMoveRevealed,
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: turn.busted
-                        ? _buildBustedView(turn)
-                        : (isAiTurn
-                            ? _buildAiTurnView(engine, turn)
-                            : (turn.pendingRoll != null
-                                ? _buildPendingRollView(engine, turn)
-                                : _buildIdleView(engine, turn))),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(height: 240, child: _buildGameLog()),
-                ],
+                    const SizedBox(height: 12),
+                    if (engine.isInFinalRound)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          l10n.finalRoundBanner,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                      ),
+                    _buildRollZone(
+                      turn,
+                      rollZoneSelectedKeep,
+                      showScore: pendingAnalysis != null && _rollSettled,
+                      previewIndices: previewIndices,
+                      previewRevealed: _previewMoveRevealed,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildHandZone(
+                      turn,
+                      liveScore: liveScore,
+                      minimum: minimum,
+                      scoreColor: scoreColor,
+                      minimumColor: minimumColor,
+                      pendingAnalysis: pendingAnalysis,
+                      previewIndices: previewIndices,
+                      previewStates: previewStates,
+                      previewRevealed: _previewMoveRevealed,
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: turn.busted
+                          ? _buildBustedView(turn)
+                          : (isAiTurn
+                                ? _buildAiTurnView(engine)
+                                : (isInheritedChoice
+                                      ? _buildInheritedChoiceRow(engine)
+                                      : _buildHumanControlRow(engine, turn))),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(height: 240, child: _buildGameLog()),
+                  ],
+                ),
               ),
             ),
           ),
@@ -779,7 +935,8 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
         // La partie est déjà sauvegardée en continu après chaque transition
         // (voir GameNotifier) : quitter ne nécessite aucune action explicite
         // de sauvegarde, juste revenir à l'écran d'accueil.
-        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+        onPressed: () =>
+            Navigator.of(context).popUntil((route) => route.isFirst),
       ),
     ];
   }
@@ -788,40 +945,25 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
   /// dans le [ScoreSheet]) : son nom complet sert alors de libellé de
   /// colonne plutôt que des initiales.
   void _openPlayerGrid(Player player) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ScoreGridScreen(players: [player])));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ScoreGridScreen(players: [player])),
+    );
   }
 
-  Widget _buildHandChoiceView(GameEngine engine) {
+  /// Choix de main héritée (dés d'un tour précédent) pour un joueur humain :
+  /// pas d'écran dédié (voir CLAUDE.md) — la même ligne de contrôle
+  /// compacte que le reste du tour (bouton "Lancer" au pourcentage de
+  /// chance de marquer, qui reprend la main héritée ET lance en un seul
+  /// geste), avec "Refuser" à la place de "Stop" pour repartir à 5 dés
+  /// neufs à la place.
+  Widget _buildInheritedChoiceRow(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
+    final notifier = ref.read(gameProvider.notifier);
     final canContinue = !engine.inheritedHandExceedsWinningScore;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          l10n.inheritedHandMessage(engine.currentPlayer.name, engine.nextTurnDice),
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 16),
-        Text(l10n.currentScoreLabel(engine.inheritedScore),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        _fittedDiceRow(
-          engine.inheritedKeptDice.length,
-          (i, size) => DieWidget(
-            value: engine.inheritedKeptDice[i].value,
-            state: engine.inheritedKeptDice[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
-            bodyColor: _diceColor(i),
-            size: size,
-          ),
-        ),
-        const SizedBox(height: 24),
-        if (canContinue)
-          FilledButton(
-            onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: false),
-            child: Text(l10n.continueWithDiceButton(engine.nextTurnDice)),
-          )
-        else
+        if (!canContinue)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
@@ -830,48 +972,27 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
               style: TextStyle(color: Colors.grey.shade400),
             ),
           ),
-        const SizedBox(height: 12),
-        OutlinedButton(
-          onPressed: () => ref.read(gameProvider.notifier).startTurn(useFullHand: true),
-          child: Text(l10n.restartWithFreshDiceButton),
-        ),
-      ],
-    );
-  }
-
-  /// Choix de main hérité pour l'IA : un unique bouton reflétant la décision
-  /// qu'elle prendrait (voir [GameNotifier.previewAiAcceptInheritedHand]),
-  /// qui déclenche cette même décision (via [GameNotifier.playAiTurnStep]).
-  Widget _buildAiHandChoiceView(GameEngine engine) {
-    final l10n = AppLocalizations.of(context);
-    final notifier = ref.read(gameProvider.notifier);
-    final accepts = notifier.previewAiAcceptInheritedHand();
-    final label = accepts ? l10n.aiContinueWithDiceButton(engine.nextTurnDice) : l10n.aiRestartWithFreshDiceLabel;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          l10n.inheritedHandMessage(engine.currentPlayer.name, engine.nextTurnDice),
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 16),
-        Text(l10n.currentScoreLabel(engine.inheritedScore),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        _fittedDiceRow(
-          engine.inheritedKeptDice.length,
-          (i, size) => DieWidget(
-            value: engine.inheritedKeptDice[i].value,
-            state: engine.inheritedKeptDice[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
-            bodyColor: _diceColor(i),
-            size: size,
-          ),
-        ),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: () => ref.read(gameProvider.notifier).playAiTurnStep(),
-          child: Text(label),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (canContinue) ...[
+              _rollButton(
+                onPressed: () {
+                  notifier.startTurn(useFullHand: false);
+                  notifier.roll();
+                },
+                label: _scorePercentLabel(
+                  engine.nextTurnDice,
+                  engine.inheritedExtendedValues,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            OutlinedButton(
+              onPressed: () => notifier.startTurn(useFullHand: true),
+              child: Text(l10n.declineInheritedHandButton),
+            ),
+          ],
         ),
       ],
     );
@@ -880,7 +1001,14 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
   /// Hauteur fixe des zones "Piste" et "Main courante" : une seule rangée de
   /// dés à leur taille par défaut, quel que soit le contenu (dés, vide, ou
   /// texte de substitution) — évite que les zones changent de hauteur.
-  static const double _diceZoneHeight = DieWidget.defaultSize + 16;
+  /// Marge réduite au minimum (le DieWidget a déjà 4px de marge propre de
+  /// chaque côté) pour des zones aussi compactes que possible.
+  static const double _diceZoneHeight = DieWidget.defaultSize + 8;
+
+  /// Marge interne réduite des zones "Piste"/"Main courante" (contrairement
+  /// au défaut de [BorderedSection], pensé pour les zones plus hautes de
+  /// l'écran d'accueil).
+  static const _diceZonePadding = EdgeInsets.fromLTRB(16, 14, 16, 6);
 
   static const _previewFadeDuration = Duration(milliseconds: 300);
 
@@ -903,18 +1031,29 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
     final l10n = AppLocalizations.of(context);
     final analysis = turn.pendingRoll;
     final label = showScore
-        ? l10n.currentRollZoneLabelWithScore(_previewPoints(analysis!, selectedKeep))
+        ? l10n.currentRollZoneLabelWithScore(
+            _previewPoints(analysis!, selectedKeep),
+          )
         : l10n.currentRollZoneLabel;
     return BorderedSection(
       label: label,
       fillAvailableSpace: false,
+      padding: _diceZonePadding,
       child: SizedBox(
         height: _diceZoneHeight,
         child: Center(
           child: analysis == null
               ? const SizedBox.shrink()
+              // Chaque dé du lancer est TOUJOURS rendu ici (composition
+              // fixe) : seule son opacité varie selon previewIndices, pour
+              // un fondu propre dans les deux sens (garder <-> redonner —
+              // voir aussi _buildHandZone) plutôt qu'une apparition/
+              // disparition instantanée si le widget était conditionnel.
               : _fittedDiceRow(analysis.faces.length, (i, size) {
-                  final states = _classifyDiceForDisplay(analysis, selectedKeep);
+                  final states = _classifyDiceForDisplay(
+                    analysis,
+                    selectedKeep,
+                  );
                   final die = DieWidget(
                     value: analysis.faces[i],
                     state: states[i],
@@ -922,9 +1061,12 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
                     bodyColor: _diceColor(i),
                     size: size,
                   );
-                  if (!previewIndices.contains(i)) return die;
+                  final opacity =
+                      (previewRevealed && previewIndices.contains(i))
+                      ? 0.0
+                      : 1.0;
                   return AnimatedOpacity(
-                    opacity: previewRevealed ? 0 : 1,
+                    opacity: opacity,
                     duration: _previewFadeDuration,
                     child: die,
                   );
@@ -954,15 +1096,29 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
   }) {
     final l10n = AppLocalizations.of(context);
     final kept = turn.keptDiceThisTurn;
-    final previewFaceIndices = previewIndices.toList(growable: false);
-    final totalCount = kept.length + previewFaceIndices.length;
+    // Composition fixe, symétrique à _buildRollZone : une place est TOUJOURS
+    // réservée pour chaque dé du lancer en attente (pas seulement ceux
+    // actuellement dans previewIndices), invisible par défaut — sans ça, le
+    // nombre de dés affichés changerait avec la sélection et un dé qui
+    // quitte previewIndices disparaîtrait instantanément plutôt qu'en
+    // fondu. kept.length + pendingCount ne dépasse jamais 5 (partition des
+    // dés du tour entre déjà-gardés et en-attente).
+    final pendingCount = pendingAnalysis?.faces.length ?? 0;
+    final totalCount = kept.length + pendingCount;
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
+      padding: _diceZonePadding,
       labelSuffix: [
         const TextSpan(text: ' '),
-        TextSpan(text: '$liveScore', style: TextStyle(color: scoreColor)),
-        TextSpan(text: ' (>$minimum)', style: TextStyle(color: minimumColor)),
+        TextSpan(
+          text: '$liveScore',
+          style: TextStyle(color: scoreColor),
+        ),
+        TextSpan(
+          text: ' (>$minimum)',
+          style: TextStyle(color: minimumColor),
+        ),
       ],
       child: SizedBox(
         height: _diceZoneHeight,
@@ -974,14 +1130,18 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
                     final d = kept[i];
                     return DieWidget(
                       value: d.value,
-                      state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+                      state: d.isExtended
+                          ? DieVisualState.extended
+                          : DieVisualState.kept,
                       bodyColor: _diceColor(i),
                       size: size,
                     );
                   }
-                  final faceIndex = previewFaceIndices[i - kept.length];
+                  final faceIndex = i - kept.length;
+                  final visible =
+                      previewRevealed && previewIndices.contains(faceIndex);
                   return AnimatedOpacity(
-                    opacity: previewRevealed ? 1 : 0,
+                    opacity: visible ? 1 : 0,
                     duration: _previewFadeDuration,
                     child: DieWidget(
                       value: pendingAnalysis!.faces[faceIndex],
@@ -1005,6 +1165,34 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
   static const _logWhoColumnWidth = 26.0;
   static const _logWhenColumnWidth = 52.0;
 
+  /// Cellule "quoi" d'une ligne de journal : texte simple, sauf pour une
+  /// entrée de collision de score ([_LogEntry.scoreBarred]), qui affiche en
+  /// plus le score barré (barré visuellement) suivi du blason du joueur
+  /// concerné.
+  Widget _buildLogWhatCell(_LogEntry entry) {
+    if (entry.barredScore == null) {
+      return Text(': ${entry.text}', style: const TextStyle(fontSize: 13));
+    }
+    final l10n = AppLocalizations.of(context);
+    return Text.rich(
+      TextSpan(
+        style: const TextStyle(fontSize: 13, color: Colors.white),
+        children: [
+          TextSpan(text: ': ${l10n.logScoreCollisionMessage} '),
+          TextSpan(
+            text: '${entry.barredScore}',
+            style: const TextStyle(decoration: TextDecoration.lineThrough),
+          ),
+          const WidgetSpan(child: SizedBox(width: 4)),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: PlayerAvatarWidget(name: entry.barredPlayerName!, size: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGameLog() {
     return Container(
       width: double.infinity,
@@ -1014,7 +1202,9 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
         borderRadius: BorderRadius.circular(12),
       ),
       child: _log.isEmpty
-          ? Center(child: Text('—', style: TextStyle(color: Colors.grey.shade400)))
+          ? Center(
+              child: Text('—', style: TextStyle(color: Colors.grey.shade400)),
+            )
           : Scrollbar(
               controller: _logScrollController,
               thumbVisibility: true,
@@ -1037,18 +1227,24 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: PlayerAvatarWidget(name: _log[i].playerName, size: 18),
+                            child: PlayerAvatarWidget(
+                              name: _log[i].playerName,
+                              size: 18,
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
                             child: Text(
                               _formatLogTime(_log[i].timestamp),
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: Text(': ${_log[i].text}', style: const TextStyle(fontSize: 13)),
+                            child: _buildLogWhatCell(_log[i]),
                           ),
                         ],
                       ),
@@ -1061,12 +1257,30 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
 
   /// Tour de l'IA en cours : un unique bouton explicite reflétant l'action
   /// qu'elle va effectuer, qui déclenche cette même action (les deux
-  /// s'appuient sur la même logique de décision, voir [GameNotifier]).
-  /// Le craque est géré séparément par [_buildBustedView] (appelé avant
-  /// celle-ci par l'appelant, IA ou humain confondus).
-  Widget _buildAiTurnView(GameEngine engine, TurnState turn) {
+  /// s'appuient sur la même logique de décision, voir [GameNotifier]). Gère
+  /// aussi elle-même le choix de main héritée (`engine.activeTurn == null`)
+  /// — plus d'écran séparé, voir CLAUDE.md. Le craque est géré séparément
+  /// par [_buildBustedView] (appelé avant celle-ci par l'appelant, IA ou
+  /// humain confondus).
+  Widget _buildAiTurnView(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
     final notifier = ref.read(gameProvider.notifier);
+
+    if (engine.activeTurn == null) {
+      final accepts = notifier.previewAiAcceptInheritedHand();
+      final label = accepts
+          ? _scorePercentLabel(
+              engine.nextTurnDice,
+              engine.inheritedExtendedValues,
+            )
+          : l10n.aiRestartWithFreshDiceLabel;
+      return FilledButton(
+        onPressed: notifier.playAiTurnStep,
+        child: Text(label),
+      );
+    }
+
+    final turn = engine.activeTurn!;
     void action() => ref.read(gameProvider.notifier).playAiTurnStep();
 
     if (turn.pendingRoll != null) {
@@ -1075,18 +1289,16 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
 
     final String label;
     if (turn.mustContinue) {
-      label = l10n.reRollFullHandButton;
+      label = l10n.logHotDiceMessage;
     } else if (tryBank(
-              turn,
-              minimumRequired: engine.minimumForCurrentPlayer,
-              currentTotal: engine.currentPlayer.totalScore,
-            ).success &&
+          turn,
+          minimumRequired: engine.minimumForCurrentPlayer,
+          currentTotal: engine.currentPlayer.totalScore,
+        ).success &&
         !notifier.previewAiContinue(turn)) {
       label = l10n.stopButton;
     } else {
-      // Le nombre de dés à lancer est porté par le bouton lui-même, pas par
-      // un texte séparé au-dessus (voir aussi _buildIdleView).
-      label = l10n.rollDiceButtonWithCount(turn.diceToRoll);
+      label = _scorePercentLabel(turn.diceToRoll, turn.extendedValues);
     }
 
     return FilledButton(onPressed: action, child: Text(label));
@@ -1103,7 +1315,11 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!revealed)
-          const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          )
         else ...[
           // Pas de titre "Craqué !" ici : il apparaît déjà dans le journal de
           // partie (voir _scheduleBustRevealIfNeeded), pas besoin de le
@@ -1111,129 +1327,140 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
           if (turn.pendingRoll == null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(l10n.bustExceedsTarget, style: const TextStyle(color: Colors.orange)),
+              child: Text(
+                l10n.bustExceedsTarget,
+                style: const TextStyle(color: Colors.orange),
+              ),
             ),
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
-            child: Text(l10n.continueButton),
+            child: Text(l10n.bustedTitle),
           ),
         ],
       ],
     );
   }
 
-  Widget _buildPendingRollView(GameEngine engine, TurnState turn) {
+  /// Ligne de contrôle unique pour un tour humain, que le joueur soit en
+  /// train de choisir combien de 5 garder sur un lancer en attente ou
+  /// simplement idle (rien en attente) — même méthode dans les deux cas,
+  /// pour que la zone de contrôle garde toujours la même forme (voir
+  /// CLAUDE.md, "espace entre main courante et le journal"). Le bouton
+  /// "Lancer" porte le pourcentage de chance de marquer au lancer suivant
+  /// (dé + %), "Stop" est toujours affiché mais désactivé quand banquer
+  /// n'est pas légal, et le pictogramme de recyclage + les boutons radio de
+  /// choix des 5 ne sont présents QUE quand un vrai choix existe (sinon la
+  /// décision forcée est appliquée directement avec l'action suivante, pas
+  /// d'écran "Valider" intermédiaire).
+  Widget _buildHumanControlRow(GameEngine engine, TurnState turn) {
     final l10n = AppLocalizations.of(context);
-    final analysis = turn.pendingRoll!;
-    final fives = analysis.declinableFives;
-    final canChoose = _hasRealChoice(analysis);
-    final minKeep = analysis.mandatoryGroups.isEmpty ? 1 : 0;
-    final declineCount = (fives?.diceCount ?? 0) - _selectedKeep;
+    final pending = turn.pendingRoll;
+    final canChoose = pending != null && _hasRealChoice(pending);
+    final fives = pending?.declinableFives;
+    final minKeep = (pending != null && pending.mandatoryGroups.isEmpty)
+        ? 1
+        : 0;
+    final declineCount = pending != null
+        ? (fives?.diceCount ?? 0) - _selectedKeep
+        : 0;
 
-    // Simule la décision de garde en cours pour savoir si s'arrêter serait
-    // possible juste après : évite un écran intermédiaire "Valider" séparé
-    // de la décision de continuer/s'arrêter.
-    final hypothetical = applyKeepDecision(turn, declineFivesCount: declineCount);
-    final hypotheticalBank = tryBank(
-      hypothetical,
+    // État hypothétique si la sélection en cours était appliquée (ou déjà
+    // décidé si aucun lancer en attente) : sert à la fois au pourcentage du
+    // bouton "Lancer" et à la légalité de "Stop" — évite un écran "Valider"
+    // séparé de la décision de continuer/s'arrêter.
+    final effective = pending != null
+        ? applyKeepDecision(turn, declineFivesCount: declineCount)
+        : turn;
+    final bankAttempt = tryBank(
+      effective,
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: engine.currentPlayer.totalScore,
     );
+    final rollLabel = turn.mustContinue
+        ? l10n.logHotDiceMessage
+        : _scorePercentLabel(effective.diceToRoll, effective.extendedValues);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (canChoose) ...[
-          Text(l10n.howManyFivesToKeep),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (var i = minKeep; i <= fives!.diceCount; i++)
-                ChoiceChip(
-                  label: Text('$i'),
-                  selected: _selectedKeep == i,
-                  onSelected: (_) => setState(() => _selectedKeep = i),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
-        // Pas de bouton "Garder les dés" générique : s'il n'y a aucun 5 à
-        // éliminer (pas de vrai choix), la décision de garde forcée est
-        // appliquée directement en même temps que l'action suivante — comme
-        // quand un choix existe (voir CLAUDE.md, pas d'écran "Valider"
-        // intermédiaire).
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FilledButton(
-              onPressed: () {
-                final notifier = ref.read(gameProvider.notifier);
-                notifier.applyKeep(declineFivesCount: declineCount);
-                notifier.roll();
-              },
-              child: Text(l10n.rollDiceButton),
-            ),
-            if (hypotheticalBank.success) ...[
-              const SizedBox(width: 16),
-              OutlinedButton(
-                onPressed: () {
-                  final notifier = ref.read(gameProvider.notifier);
-                  notifier.applyKeep(declineFivesCount: declineCount);
-                  notifier.bank();
-                },
-                child: Text(l10n.stopButton),
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
+    void onRoll() {
+      final notifier = ref.read(gameProvider.notifier);
+      if (pending != null) notifier.applyKeep(declineFivesCount: declineCount);
+      notifier.roll();
+    }
 
-  Widget _buildIdleView(GameEngine engine, TurnState turn) {
-    final l10n = AppLocalizations.of(context);
-    final attempt = tryBank(
-      turn,
-      minimumRequired: engine.minimumForCurrentPlayer,
-      currentTotal: engine.currentPlayer.totalScore,
-    );
-    // Le nombre de dés à lancer est porté par le bouton lui-même (voir plus
-    // bas), pas par un texte séparé au-dessus.
-    final rollLabel = l10n.rollDiceButtonWithCount(turn.diceToRoll);
+    void onStop() {
+      final notifier = ref.read(gameProvider.notifier);
+      if (pending != null) notifier.applyKeep(declineFivesCount: declineCount);
+      notifier.bank();
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (turn.mustContinue)
-          Text(l10n.fullHandMustReroll, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange))
-        // "Vous devez lancer les dés avant de pouvoir vous arrêter" ne dit
-        // rien que l'absence du bouton "S'arrêter" ne dise déjà : pas
-        // affiché pour ce cas précis (voir BankFailureReason.notRolledYet),
-        // contrairement aux autres raisons d'échec.
-        else if (!attempt.success && attempt.reason != BankFailureReason.notRolledYet)
-          Text(_failureMessage(l10n, attempt), style: TextStyle(color: Colors.grey.shade400)),
-        const SizedBox(height: 24),
-        if (attempt.success)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FilledButton(
-                onPressed: () => ref.read(gameProvider.notifier).roll(),
-                child: Text(rollLabel),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              l10n.fullHandMustReroll,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.deepOrange,
               ),
-              const SizedBox(width: 16),
+            ),
+          )
+        // "Vous devez lancer les dés avant de pouvoir vous arrêter" ne dit
+        // rien que l'absence/désactivation de "Stop" ne dise déjà (voir
+        // BankFailureReason.notRolledYet) ; jamais affiché non plus pendant
+        // un choix de 5 en cours (pas d'équivalent avant cette refonte).
+        else if (pending == null &&
+            !bankAttempt.success &&
+            bankAttempt.reason != BankFailureReason.notRolledYet)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              _failureMessage(l10n, bankAttempt),
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+          ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _rollButton(onPressed: onRoll, label: rollLabel),
+              const SizedBox(width: 8),
               OutlinedButton(
-                onPressed: () => ref.read(gameProvider.notifier).bank(),
+                onPressed: bankAttempt.success ? onStop : null,
                 child: Text(l10n.stopButton),
               ),
+              if (canChoose) ...[
+                const SizedBox(width: 12),
+                const Icon(Icons.recycling, size: 18),
+                RadioGroup<int>(
+                  groupValue: _selectedKeep,
+                  onChanged: (v) => setState(() => _selectedKeep = v!),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Toute la ligne (dé + libellé), pas seulement le petit
+                      // rond du Radio, doit réagir au tap — comme les
+                      // ChoiceChip qu'elle remplace.
+                      for (var i = minKeep; i <= fives!.diceCount; i++)
+                        GestureDetector(
+                          onTap: () => setState(() => _selectedKeep = i),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Radio<int>(value: i),
+                              Text('$i'),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          )
-        else
-          FilledButton(
-            onPressed: () => ref.read(gameProvider.notifier).roll(),
-            child: Text(turn.mustContinue ? l10n.reRollFullHandButton : rollLabel),
           ),
+        ),
       ],
     );
   }
@@ -1255,7 +1482,8 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
     }
   }
 
-  Color? _diceColor(int index) => diceBodyColorFor(ref.watch(settingsProvider).diceColorMode, index);
+  Color? _diceColor(int index) =>
+      diceBodyColorFor(ref.watch(settingsProvider).diceColorMode, index);
 }
 
 /// Construit une rangée d'exactement [count] dés qui tient toujours sur une
@@ -1268,15 +1496,23 @@ class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObse
 /// orientation.
 const int _diceRowReferenceCount = 5;
 
-Widget _fittedDiceRow(int count, Widget Function(int index, double size) builder) {
+Widget _fittedDiceRow(
+  int count,
+  Widget Function(int index, double size) builder,
+) {
   if (count == 0) return const SizedBox.shrink();
-  const dieMargin = 8.0; // EdgeInsets.all(4) appliqué de chaque côté par DieWidget
+  const dieMargin =
+      8.0; // EdgeInsets.all(4) appliqué de chaque côté par DieWidget
   const minSize = 40.0;
   return LayoutBuilder(
     builder: (context, constraints) {
-      final available =
-          constraints.maxWidth.isFinite ? constraints.maxWidth : DieWidget.defaultSize * _diceRowReferenceCount;
-      final size = ((available / _diceRowReferenceCount) - dieMargin).clamp(minSize, DieWidget.defaultSize);
+      final available = constraints.maxWidth.isFinite
+          ? constraints.maxWidth
+          : DieWidget.defaultSize * _diceRowReferenceCount;
+      final size = ((available / _diceRowReferenceCount) - dieMargin).clamp(
+        minSize,
+        DieWidget.defaultSize,
+      );
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

@@ -23,12 +23,18 @@ class BorderedSection extends StatelessWidget {
   /// segment (non coloré, style par défaut de la puce).
   final List<InlineSpan>? labelSuffix;
 
+  /// Marge interne du contenu, entre le trait de bordure et [child]. Le haut
+  /// doit rester assez grand pour ne pas passer sous l'étiquette incrustée
+  /// (voir le décalage `top: -10` plus bas).
+  final EdgeInsetsGeometry padding;
+
   const BorderedSection({
     super.key,
     required this.label,
     required this.child,
     this.fillAvailableSpace = true,
     this.labelSuffix,
+    this.padding = const EdgeInsets.fromLTRB(16, 22, 16, 16),
   });
 
   @override
@@ -36,7 +42,7 @@ class BorderedSection extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final bordered = Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
+      padding: padding,
       decoration: BoxDecoration(
         border: Border.all(color: scheme.primary, width: 1),
         borderRadius: BorderRadius.circular(12),
@@ -61,8 +67,15 @@ class BorderedSection extends StatelessWidget {
               ),
               child: Text.rich(
                 TextSpan(
-                  style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
-                  children: [TextSpan(text: label), ...?labelSuffix],
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  children: [
+                    TextSpan(text: label),
+                    ...?labelSuffix,
+                  ],
                 ),
               ),
             ),

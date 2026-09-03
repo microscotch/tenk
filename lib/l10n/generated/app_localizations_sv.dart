@@ -146,49 +146,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String inheritedHandMessage(String playerName, int diceCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      diceCount,
-      locale: localeName,
-      other: '$diceCount tärningar',
-      one: '$diceCount tärning',
-    );
-    return '$playerName ärver $_temp0 från föregående runda.';
-  }
-
-  @override
-  String currentScoreLabel(int score) {
-    return 'Aktuellt poäng: $score';
-  }
-
-  @override
-  String continueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count tärningar',
-      one: '$count tärning',
-    );
-    return 'Fortsätt med $_temp0';
-  }
+  String get logScoreCollisionMessage => 'Score barré :';
 
   @override
   String get inheritedHandExceedsWinning =>
       'Att ta över denna hand skulle redan överskrida 10000: kan inte stanna.';
 
   @override
-  String get restartWithFreshDiceButton => 'Börja om med 5 nya tärningar';
-
-  @override
-  String aiContinueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count tärningar',
-      one: '$count tärning',
-    );
-    return 'Ta över med $_temp0';
-  }
+  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get aiRestartWithFreshDiceLabel => 'Börja om med 5 nya tärningar';
@@ -197,24 +162,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get keepDiceButton => 'Behåll tärningarna';
 
   @override
-  String get reRollFullHandButton => 'Kasta igen (heta tärningar)';
-
-  @override
   String get stopButton => 'Stanna';
-
-  @override
-  String get rollDiceButton => 'Kasta tärningarna';
-
-  @override
-  String rollDiceButtonWithCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Lancer $_temp0';
-  }
 
   @override
   String diceToRollLabel(int count) {
@@ -232,12 +180,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get bustExceedsTarget => 'Detta kast skulle överskrida 10000.';
-
-  @override
-  String get continueButton => 'Fortsätt';
-
-  @override
-  String get howManyFivesToKeep => 'Hur många femmor vill du behålla?';
 
   @override
   String get fullHandMustReroll => 'Heta tärningar: du måste kasta igen!';

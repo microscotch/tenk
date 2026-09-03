@@ -356,23 +356,11 @@ abstract class AppLocalizations {
   /// **'Main pleine !'**
   String get logHotDiceMessage;
 
-  /// Annonce qu'un joueur hérite de dés d'un tour précédent réussi.
+  /// Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné.
   ///
   /// In fr, this message translates to:
-  /// **'{playerName} hérite de {diceCount, plural, one{{diceCount} dé} other{{diceCount} dés}} du tour précédent.'**
-  String inheritedHandMessage(String playerName, int diceCount);
-
-  /// Score déjà accumulé sur la main héritée proposée au joueur.
-  ///
-  /// In fr, this message translates to:
-  /// **'Score en cours : {score}'**
-  String currentScoreLabel(int score);
-
-  /// Bouton pour reprendre la main héritée avec le nombre de dés restants (joueur humain).
-  ///
-  /// In fr, this message translates to:
-  /// **'Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}'**
-  String continueWithDiceButton(int count);
+  /// **'Score barré :'**
+  String get logScoreCollisionMessage;
 
   /// Message expliquant pourquoi la main héritée ne peut pas être reprise.
   ///
@@ -383,14 +371,8 @@ abstract class AppLocalizations {
   /// Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain).
   ///
   /// In fr, this message translates to:
-  /// **'Recommencer avec 5 dés neufs'**
-  String get restartWithFreshDiceButton;
-
-  /// Libellé du bouton unique de l'IA quand elle décide de reprendre la main héritée.
-  ///
-  /// In fr, this message translates to:
-  /// **'Reprendre avec {count, plural, one{{count} dé} other{{count} dés}}'**
-  String aiContinueWithDiceButton(int count);
+  /// **'Refuser'**
+  String get declineInheritedHandButton;
 
   /// Libellé du bouton unique de l'IA quand elle décide de repartir avec une main pleine.
   ///
@@ -404,29 +386,11 @@ abstract class AppLocalizations {
   /// **'Garder les dés'**
   String get keepDiceButton;
 
-  /// Bouton pour relancer quand tous les dés ont scoré (main pleine, relance obligatoire).
-  ///
-  /// In fr, this message translates to:
-  /// **'Relancer (main pleine)'**
-  String get reRollFullHandButton;
-
   /// Bouton pour arrêter son tour et banquer le score.
   ///
   /// In fr, this message translates to:
   /// **'S\'arrêter'**
   String get stopButton;
-
-  /// Bouton pour lancer les dés.
-  ///
-  /// In fr, this message translates to:
-  /// **'Lancer les dés'**
-  String get rollDiceButton;
-
-  /// Bouton pour lancer les dés, avec leur nombre inclus (remplace diceToRollLabel affiché séparément au-dessus).
-  ///
-  /// In fr, this message translates to:
-  /// **'Lancer {count, plural, one{{count} dé} other{{count} dés}}'**
-  String rollDiceButtonWithCount(int count);
 
   /// Nombre de dés que le joueur courant s'apprête à lancer.
   ///
@@ -445,18 +409,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce lancer ferait dépasser 10000.'**
   String get bustExceedsTarget;
-
-  /// Bouton pour passer la main après un craque.
-  ///
-  /// In fr, this message translates to:
-  /// **'Continuer'**
-  String get continueButton;
-
-  /// Question posée quand le joueur peut choisir combien de 5 garder sur un lancer.
-  ///
-  /// In fr, this message translates to:
-  /// **'Combien de 5 garder ?'**
-  String get howManyFivesToKeep;
 
   /// Avertissement affiché quand tous les dés ont scoré, obligeant à relancer.
   ///

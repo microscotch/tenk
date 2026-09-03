@@ -146,52 +146,14 @@ class AppLocalizationsRo extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String inheritedHandMessage(String playerName, int diceCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      diceCount,
-      locale: localeName,
-      other: '$diceCount de zaruri',
-      few: '$diceCount zaruri',
-      one: '$diceCount zar',
-    );
-    return '$playerName moștenește $_temp0 din tura precedentă.';
-  }
-
-  @override
-  String currentScoreLabel(int score) {
-    return 'Scor curent: $score';
-  }
-
-  @override
-  String continueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count de zaruri',
-      few: '$count zaruri',
-      one: '$count zar',
-    );
-    return 'Continuă cu $_temp0';
-  }
+  String get logScoreCollisionMessage => 'Score barré :';
 
   @override
   String get inheritedHandExceedsWinning =>
       'Reluarea acestei mâini ar depăși deja 10000: nu te poți opri.';
 
   @override
-  String get restartWithFreshDiceButton => 'Reia cu 5 zaruri noi';
-
-  @override
-  String aiContinueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count de zaruri',
-      few: '$count zaruri',
-      one: '$count zar',
-    );
-    return 'Reia cu $_temp0';
-  }
+  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get aiRestartWithFreshDiceLabel => 'Reîncepe cu 5 zaruri noi';
@@ -200,24 +162,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get keepDiceButton => 'Păstrează zarurile';
 
   @override
-  String get reRollFullHandButton => 'Aruncă din nou (zaruri fierbinți)';
-
-  @override
   String get stopButton => 'Oprește-te';
-
-  @override
-  String get rollDiceButton => 'Aruncă zarurile';
-
-  @override
-  String rollDiceButtonWithCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Lancer $_temp0';
-  }
 
   @override
   String diceToRollLabel(int count) {
@@ -236,12 +181,6 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get bustExceedsTarget => 'Această aruncare ar depăși 10000.';
-
-  @override
-  String get continueButton => 'Continuă';
-
-  @override
-  String get howManyFivesToKeep => 'Câte cifre de 5 păstrezi?';
 
   @override
   String get fullHandMustReroll =>

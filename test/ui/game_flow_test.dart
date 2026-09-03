@@ -65,9 +65,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Craqué'), findsOneWidget);
+    // Le message est désormais visible à deux endroits une fois révélé : le
+    // journal de partie ET le bouton lui-même (voir CLAUDE.md, libellés
+    // contextuels).
+    expect(find.textContaining('Craqué'), findsWidgets);
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Craqué !'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -102,7 +105,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Craqué !'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -149,9 +152,9 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull, reason: 'ne doit pas planter faute de lancer en attente');
-    expect(find.textContaining('Craqué'), findsOneWidget);
+    expect(find.textContaining('Craqué'), findsWidgets);
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Craqué !'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -188,9 +191,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Reprendre avec'), findsNothing,
+    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsNothing,
         reason: 'reprendre cette main garantirait un dépassement de 10000');
-    expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
+    expect(find.text('Refuser'), findsOneWidget);
     expect(find.textContaining('dépasserait déjà 10000'), findsOneWidget);
   });
 
@@ -229,9 +232,9 @@ void main() {
     // Avant le second craque : le score affiché est 1000, avec le tiret visible.
     expect(find.text('1000'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
-    expect(find.textContaining('Craqué'), findsOneWidget);
+    expect(find.textContaining('Craqué'), findsWidgets);
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Craqué !'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -286,6 +289,10 @@ void main() {
     // 1800 (barré par la collision) et n'a plus son tiret.
     expect(find.text('2000'), findsOneWidget); // B
     expect(find.text('1800'), findsOneWidget); // A, barré
+
+    // Le journal de partie mentionne le score barré de A par collision.
+    expect(find.textContaining('Score barré'), findsOneWidget,
+        reason: 'la collision de score doit apparaître dans le journal de partie');
     expect(find.byIcon(Icons.priority_high), findsNothing);
 
     final after = container.read(gameProvider)!;
@@ -338,7 +345,7 @@ void main() {
     expect(after.winnerIndex, 0, reason: 'A doit gagner malgré le tour final joué par B');
   });
 
-  testWidgets('le choix de main hérité propose bien de continuer ou de repartir à 5 dés', (tester) async {
+  testWidgets('le choix de main hérité relance directement, sans écran séparé', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -357,26 +364,24 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('hérite de 3 dés'), findsOneWidget);
-    expect(find.text('Reprendre avec 3 dés'), findsOneWidget);
-    expect(find.text('Recommencer avec 5 dés neufs'), findsOneWidget);
-    // Tant que le choix n'est pas fait, aucun lancer n'est possible.
-    expect(find.text('Lancer 3 dés'), findsNothing);
+    // Pas d'écran dédié : la même ligne de contrôle que le reste du tour,
+    // avec le bouton "Lancer" (pourcentage de chance de marquer) qui
+    // reprend la main héritée ET lance en un seul geste, et "Refuser" pour
+    // repartir à 5 dés neufs à la place.
+    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
+    expect(find.text('Refuser'), findsOneWidget);
+    expect(container.read(gameProvider)!.activeTurn, isNull, reason: 'rien n\'est encore décidé');
 
-    await tester.tap(find.text('Reprendre avec 3 dés'));
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
     await tester.pump();
 
-    expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 3);
-    // Score de tour à 0 (aucun score hérité ici) : insuffisant pour
-    // s'arrêter ; le bouton "Lancer 3 dés" est affiché immédiatement et se
-    // valide seul (joueur en mode auto).
-    expect(find.text('Lancer 3 dés'), findsOneWidget);
-    await tester.pump(_autoActionPump);
-    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
-        reason: 'le lancer forcé doit se déclencher sans confirmation (joueur en mode auto)');
+    final after = container.read(gameProvider)!;
+    expect(after.activeTurn!.diceToRoll, 3);
+    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'reprendre la main héritée lance directement, sans étape intermédiaire');
   });
 
-  testWidgets('sans le mode auto, le bouton "Lancer les dés" attend un clic manuel, même après un long délai',
+  testWidgets(
+      'sans le mode auto, la main héritée n\'est reprise/lancée que sur clic manuel, même après un long délai',
       (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -397,26 +402,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Reprendre avec 3 dés'));
-    await tester.pump();
-
-    expect(find.text('Lancer 3 dés'), findsOneWidget);
     // Un délai bien plus long que l'auto-validation habituelle ne doit rien
-    // déclencher tout seul : le mode auto est désactivé pour ce joueur.
+    // déclencher tout seul.
     await tester.pump(const Duration(seconds: 30));
-    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull,
+    expect(container.read(gameProvider)!.activeTurn, isNull,
         reason: 'sans mode auto, rien ne doit se déclencher sans clic, quel que soit le délai écoulé');
 
-    await tester.ensureVisible(find.text('Lancer 3 dés'));
-    await tester.tap(find.text('Lancer 3 dés'));
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
     await tester.pump();
-    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
-        reason: 'le clic manuel sur le bouton doit toujours fonctionner');
+    final after = container.read(gameProvider)!;
+    expect(after.activeTurn!.diceToRoll, 3);
+    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'le clic manuel reprend la main ET lance en un seul geste');
   });
 
   testWidgets(
       'continuer une main héritée dont le score dépasse déjà le minimum '
-      'oblige quand même à relancer avant de pouvoir s\'arrêter', (tester) async {
+      'lance quand même directement (impossible de s\'arrêter avant d\'avoir relancé)', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -427,7 +428,7 @@ void main() {
     engine = engine.copyWith(nextTurnDice: 3, inheritedScore: 500);
     container.read(gameProvider.notifier).debugLoadState(
           engine,
-          const GameSetup(playerNames: ['A', 'B'], autoPlayers: {0}),
+          const GameSetup(playerNames: ['A', 'B']),
         );
 
     await tester.pumpWidget(
@@ -438,18 +439,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Reprendre avec 3 dés'));
+    expect(find.text('S\'arrêter'), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
+
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
     await tester.pump();
 
-    expect(container.read(gameProvider)!.activeTurn!.bankedScore, 500);
-    // Score largement au-dessus du minimum, mais aucun lancer encore fait ce
-    // tour-ci : impossible de s'arrêter. Le bouton "Lancer 3 dés" est
-    // affiché immédiatement et se valide seul (joueur en mode auto).
-    expect(find.text('S\'arrêter'), findsNothing);
-    expect(find.text('Lancer 3 dés'), findsOneWidget);
-    await tester.pump(_autoActionPump);
-    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
-        reason: 'le lancer forcé doit se déclencher sans confirmation, même avec un score déjà suffisant');
+    final after = container.read(gameProvider)!;
+    expect(after.activeTurn!.bankedScore, 500);
+    expect(after.activeTurn!.pendingRoll, isNotNull,
+        reason: 'le score hérité seul ne suffit pas à s\'arrêter : reprendre relance directement');
   });
 
   testWidgets('après un lancer avec un choix de 5 à garder, "S\'arrêter" banque directement', (tester) async {
@@ -485,7 +483,7 @@ void main() {
     // Aucun écran intermédiaire "Valider" : le choix de garde propose
     // directement de continuer ou de s'arrêter.
     expect(find.text('Valider'), findsNothing);
-    expect(find.text('Lancer les dés'), findsOneWidget);
+    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
     expect(find.text('S\'arrêter'), findsOneWidget);
 
     await tester.ensureVisible(find.text('S\'arrêter'));
@@ -525,8 +523,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Lancer les dés'));
-    await tester.tap(find.text('Lancer les dés'));
+    await tester.ensureVisible(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
     await tester.pump();
 
     final after = container.read(gameProvider)!;
@@ -553,7 +551,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Recommencer avec 5 dés neufs'));
+    await tester.tap(find.text('Refuser'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
@@ -608,16 +606,17 @@ void main() {
 
       if (after.activeTurn == null) {
         // L'IA a laissé des dés hérités : le joueur humain doit d'abord
-        // choisir sa main avant de pouvoir lancer les dés.
-        expect(find.textContaining('hérite de'), findsOneWidget);
-        await tester.tap(find.text('Recommencer avec 5 dés neufs'));
+        // choisir sa main avant de pouvoir lancer les dés (pas d'écran
+        // séparé : "Refuser" repart à 5 dés neufs dans la même ligne de
+        // contrôle).
+        await tester.tap(find.text('Refuser'));
         await tester.pump();
       }
 
-      // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer 5
-      // dés" est affiché immédiatement et se valide seul (joueur humain en
-      // mode auto).
-      expect(find.text('Lancer 5 dés'), findsOneWidget);
+      // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer"
+      // (icône dé + pourcentage) est affiché immédiatement et se valide
+      // seul (joueur humain en mode auto).
+      expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
       await tester.pump(_autoActionPump);
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');

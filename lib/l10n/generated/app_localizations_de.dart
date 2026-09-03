@@ -147,49 +147,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String inheritedHandMessage(String playerName, int diceCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      diceCount,
-      locale: localeName,
-      other: '$diceCount Würfel',
-      one: '$diceCount Würfel',
-    );
-    return '$playerName übernimmt $_temp0 von der vorigen Runde.';
-  }
-
-  @override
-  String currentScoreLabel(int score) {
-    return 'Aktuelle Punktzahl: $score';
-  }
-
-  @override
-  String continueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Würfeln',
-      one: '$count Würfel',
-    );
-    return 'Weiter mit $_temp0';
-  }
+  String get logScoreCollisionMessage => 'Score barré :';
 
   @override
   String get inheritedHandExceedsWinning =>
       'Diese Hand zu übernehmen würde bereits 10000 überschreiten: Einlösen nicht möglich.';
 
   @override
-  String get restartWithFreshDiceButton => 'Neu starten mit 5 frischen Würfeln';
-
-  @override
-  String aiContinueWithDiceButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Würfeln',
-      one: '$count Würfel',
-    );
-    return 'Übernehmen mit $_temp0';
-  }
+  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get aiRestartWithFreshDiceLabel =>
@@ -199,24 +164,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get keepDiceButton => 'Würfel behalten';
 
   @override
-  String get reRollFullHandButton => 'Erneut würfeln (heiße Würfel)';
-
-  @override
   String get stopButton => 'Aufhören';
-
-  @override
-  String get rollDiceButton => 'Würfeln';
-
-  @override
-  String rollDiceButtonWithCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Lancer $_temp0';
-  }
 
   @override
   String diceToRollLabel(int count) {
@@ -234,12 +182,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get bustExceedsTarget => 'Dieser Wurf würde 10000 überschreiten.';
-
-  @override
-  String get continueButton => 'Weiter';
-
-  @override
-  String get howManyFivesToKeep => 'Wie viele 5en behalten?';
 
   @override
   String get fullHandMustReroll => 'Heiße Würfel: Du musst erneut würfeln!';

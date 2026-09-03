@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'l10n/generated/app_localizations.dart';
@@ -10,6 +11,14 @@ import 'ui/theme.dart';
 import 'ui/widgets/casino_felt_background.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Le jeu n'est pensé que pour le portrait : la rotation vers le paysage
+  // casserait la mise en page (zones bordurées, ligne de contrôle) sans
+  // apporter de bénéfice.
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(const ProviderScope(child: Le10000App()));
 }
 
@@ -21,7 +30,10 @@ class Le10000App extends ConsumerWidget {
     // Démarre/arrête la musique de fond et active/désactive les effets
     // sonores dès que les préférences changent (y compris au tout premier
     // build, avec les valeurs par défaut).
-    ref.listen(settingsProvider, (previous, next) => SoundEffects.instance.applySettings(next));
+    ref.listen(
+      settingsProvider,
+      (previous, next) => SoundEffects.instance.applySettings(next),
+    );
     SoundEffects.instance.applySettings(ref.watch(settingsProvider));
 
     final languageOverride = ref.watch(settingsProvider).languageOverride;
@@ -40,18 +52,16 @@ class Le10000App extends ConsumerWidget {
         if (locales != null) {
           for (final locale in locales) {
             for (final supported in supportedLocales) {
-              if (supported.languageCode == locale.languageCode) return supported;
+              if (supported.languageCode == locale.languageCode) {
+                return supported;
+              }
             }
           }
         }
         return const Locale('fr');
       },
-      builder: (context, child) => Stack(
-        children: [
-          const CasinoFeltBackground(),
-          ?child,
-        ],
-      ),
+      builder: (context, child) =>
+          Stack(children: [const CasinoFeltBackground(), ?child]),
       navigatorObservers: [routeObserver],
       home: const SplashScreen(),
     );
