@@ -162,9 +162,14 @@ class GameEngine {
   /// par le joueur suivant). En cas d'échec, retourne l'état inchangé avec
   /// la raison de l'échec.
   ///
-  /// Si le nouveau score égale celui d'un autre joueur, ce dernier se
-  /// retrouve barré (collision de score), qu'il porte ou non un tiret — y
-  /// compris si le score en question est 10000.
+  /// Si le nouveau score égale un score qu'un autre joueur a déjà eu à un
+  /// moment quelconque de la partie — sa ligne courante, ou une ligne plus
+  /// ancienne de sa grille déjà dépassée depuis — cette ligne se retrouve
+  /// barrée (collision de score), qu'elle porte ou non un tiret — y compris
+  /// si le score en question est 10000. Si c'est sa ligne courante, il
+  /// retombe sur son score précédent (comme avant) ; si c'est une ligne déjà
+  /// dépassée, seule cette ligne historique est marquée barrée, sans
+  /// affecter son score courant (voir [Player.applyScoreCollisionBarAt]).
   (GameEngine, BankAttempt) bank() {
     final attempt =
         tryBank(activeTurn!, minimumRequired: minimumForCurrentPlayer, currentTotal: currentPlayer.totalScore);
@@ -176,9 +181,7 @@ class GameEngine {
 
     for (var i = 0; i < newPlayers.length; i++) {
       if (i == currentPlayerIndex) continue;
-      if (newPlayers[i].totalScore == updatedPlayer.totalScore) {
-        newPlayers[i] = newPlayers[i].applyScoreCollisionBar();
-      }
+      newPlayers[i] = newPlayers[i].applyScoreCollisionBarAt(updatedPlayer.totalScore);
     }
 
     final leftoverDice = activeTurn!.diceToRoll;

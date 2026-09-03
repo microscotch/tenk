@@ -185,6 +185,29 @@ void main() {
       expect(after.players[0].totalScore, 1800);
       expect(after.players[0].hasTiret, isFalse, reason: 'la collision consomme aussi le tiret');
     });
+
+    // Régression signalée en jeu : A passe par 700 puis progresse à 900 ;
+    // quand B banque ensuite exactement 700, la collision passait inaperçue
+    // car seul le score COURANT de A (900) était comparé, jamais son
+    // historique de grille.
+    test('un tour réussi qui égale un ancien score (déjà dépassé) d\'un autre joueur barre cette ligne, sans toucher à son score courant', () {
+      var engine = GameEngine.newGame(['A', 'B']).startTurn();
+      engine = engine.copyWith(
+        players: [
+          Player(name: 'A', totalScore: 700, hasEntered: true).applySuccessfulTurn(200), // A: 0 -> 700 -> 900
+          Player(name: 'B', totalScore: 500, hasEntered: true),
+        ],
+        currentPlayerIndex: 1,
+        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true), // B: 500 -> 700
+      );
+
+      final (after, attempt) = engine.bank();
+
+      expect(attempt.success, isTrue);
+      expect(after.players[1].totalScore, 700, reason: 'B a bien validé son tour à 700');
+      expect(after.players[0].totalScore, 900, reason: 'A garde sa progression : seule son ancienne ligne 700 est barrée');
+      expect(after.players[0].grid.firstWhere((e) => e.value == 700).isBarred, isTrue);
+    });
   });
 
   test('dépasser 10000 fait craquer le tour même sans intervention du joueur', () {

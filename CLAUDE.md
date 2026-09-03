@@ -146,8 +146,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   This resets whenever hot dice occurs (all dice scored → forced reroll of a fresh 5).
 - Tiret/barré: a bust marks the player's current score-grid line with a tiret if it doesn't have one;
   if it already does, the line is barred and a fresh line is added at the previous value. A score
-  collision with another player's exact total always bars that other player the same way, tiret or
-  not. Barring back down to 0 also revokes "entered" status.
+  collision bars that line the same way, tiret or not — checked against *every* non-barred line in
+  every other player's grid, not just their current total: if another player ever had this exact score
+  at any earlier point in the game (since superseded by a later successful turn), that historical line
+  alone gets barred with no effect on their current score; only a collision on their *current* line
+  drops them back to their previous score. Barring the current line back down to 0 also revokes
+  "entered" status.
 - Victory: first exact 10000 triggers a final round giving every other player one more turn to match
   it; if another player also reaches exactly 10000 during that round, they bar the previous holder and
   a fresh final round starts around them.

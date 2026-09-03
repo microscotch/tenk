@@ -43,9 +43,11 @@ class ScoreEntry {
 /// elle affiche encore un tiret historique d'un cycle antérieur.
 ///
 /// Un score peut aussi être barré par un autre mécanisme, indépendant du
-/// tiret : si un autre joueur termine son tour exactement sur le même score,
-/// ce joueur-ci se retrouve barré (voir [applyScoreCollisionBar]), qu'il
-/// porte ou non un tiret actif.
+/// tiret : si un autre joueur termine son tour exactement sur un score que
+/// celui-ci a DÉJÀ eu à un moment quelconque de la partie — sa ligne
+/// courante, ou une ligne plus ancienne déjà dépassée depuis — cette ligne
+/// se retrouve barrée (voir [applyScoreCollisionBarAt]), qu'elle porte ou
+/// non un tiret actif.
 class Player {
   final String name;
   final List<ScoreEntry> grid;
@@ -150,6 +152,33 @@ class Player {
   /// de terminer son tour avec exactement le même score que celui-ci. Barre
   /// toujours la ligne courante, qu'elle porte ou non un tiret actif.
   Player applyScoreCollisionBar() => _bar();
+
+  /// Recherche, dans TOUTE la grille (pas seulement la ligne courante), une
+  /// ligne non barrée valant exactement [value] — un autre joueur vient de
+  /// terminer son tour sur ce score, qui a donc déjà été "pris" par celui-ci
+  /// à un moment quelconque de la partie, même s'il a progressé depuis.
+  /// - Si c'est la ligne courante : comportement inchangé, repli sur la
+  ///   ligne précédente (voir [_bar]).
+  /// - Si c'est une ligne plus ancienne déjà dépassée par un tour réussi
+  ///   depuis : seule cette ligne est marquée barrée (biffée dans la grille
+  ///   de score), sans remettre en cause la progression faite depuis — son
+  ///   score courant ne change pas.
+  /// - Si [value] n'apparaît nulle part (ou seulement sur une ligne déjà
+  ///   barrée) : aucun effet.
+  Player applyScoreCollisionBarAt(int value) {
+    if (currentEntry.value == value) return _bar();
+    final idx = grid.indexWhere((e) => !e.isBarred && e.value == value);
+    if (idx == -1) return this;
+    final newGrid = List<ScoreEntry>.of(grid);
+    newGrid[idx] = newGrid[idx].copyWith(isBarred: true);
+    return Player._raw(
+      name: name,
+      grid: newGrid,
+      currentIndex: currentIndex,
+      currentHasTiret: _currentHasTiret,
+      hasEntered: hasEntered,
+    );
+  }
 
   Player _bar() {
     final newGrid = List<ScoreEntry>.of(grid);

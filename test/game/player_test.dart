@@ -111,4 +111,47 @@ void main() {
       expect(p.hasTiret, isFalse);
     });
   });
+
+  group('applyScoreCollisionBarAt', () {
+    test('collision sur la ligne courante : comportement inchangé (repli sur le score précédent)', () {
+      var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
+      p = p.applyScoreCollisionBarAt(700);
+      expect(p.totalScore, 0);
+      expect(p.grid.last.isBarred, isTrue);
+    });
+
+    // Régression : un adversaire qui a DÉJÀ eu 700 (avant de progresser à
+    // 900) doit être barré sur cette ligne même si 700 n'est plus son score
+    // courant — signalé en jeu : la collision passait inaperçue.
+    test('collision sur une ligne plus ancienne déjà dépassée : seule cette ligne est barrée, le score courant ne bouge pas', () {
+      var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
+      p = p.applySuccessfulTurn(200); // 700 -> 900
+
+      p = p.applyScoreCollisionBarAt(700);
+
+      expect(p.totalScore, 900, reason: 'la progression depuis 700 -> 900 n\'est pas remise en cause');
+      expect(p.hasEntered, isTrue);
+      expect(p.grid[1].value, 700);
+      expect(p.grid[1].isBarred, isTrue, reason: 'la ligne 700 est barrée dans l\'historique');
+      expect(p.grid[2].isBarred, isFalse, reason: 'la ligne courante (900) n\'est pas affectée');
+    });
+
+    test('aucune ligne ne correspond : sans effet', () {
+      var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
+      final unchanged = p.applyScoreCollisionBarAt(1234);
+      expect(unchanged.totalScore, 700);
+      expect(unchanged.grid.every((e) => !e.isBarred), isTrue);
+    });
+
+    test('une ligne déjà barrée ne peut pas l\'être une seconde fois par une nouvelle collision', () {
+      var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
+      p = p.applySuccessfulTurn(200); // 700 -> 900
+      p = p.applyScoreCollisionBarAt(700); // barre la ligne 700
+      expect(p.grid[1].isBarred, isTrue);
+
+      final again = p.applyScoreCollisionBarAt(700); // déjà barrée : sans effet
+      expect(again.totalScore, 900);
+      expect(again.grid[1].isBarred, isTrue);
+    });
+  });
 }
