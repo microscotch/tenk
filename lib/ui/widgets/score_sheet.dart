@@ -42,7 +42,10 @@ class ScoreSheet extends StatelessWidget {
 /// Teintes des trois médailles, assez saturées pour rester lisibles sur le
 /// fond sombre des lignes de joueur.
 Color _medalColor(int podiumRank) => switch (podiumRank) {
-      1 => const Color(0xFFD4AF37), // or
+      // Or volontairement clair : la ligne du joueur courant a un fond ambré,
+      // sur lequel un or plus sombre passait à ~2,9:1 de contraste. Cette
+      // teinte tient au-dessus de 5:1 sur les deux fonds de ligne.
+      1 => const Color(0xFFF2C94C), // or
       2 => const Color(0xFFC0C0C0), // argent
       _ => const Color(0xFFCD7F32), // bronze
     };

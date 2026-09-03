@@ -130,7 +130,7 @@ void main() {
       ]);
 
       expect(find.byIcon(Icons.military_tech), findsNWidgets(3));
-      expect(medalColorIn(tester, 'B'), const Color(0xFFD4AF37), reason: 'meilleur score : or');
+      expect(medalColorIn(tester, 'B'), const Color(0xFFF2C94C), reason: 'meilleur score : or');
       expect(medalColorIn(tester, 'C'), const Color(0xFFC0C0C0), reason: 'deuxième : argent');
       expect(medalColorIn(tester, 'A'), const Color(0xFFCD7F32), reason: 'troisième : bronze');
     });
@@ -161,8 +161,8 @@ void main() {
         Player(name: 'C', totalScore: 1000, hasEntered: true),
       ]);
 
-      expect(medalColorIn(tester, 'A'), const Color(0xFFD4AF37));
-      expect(medalColorIn(tester, 'B'), const Color(0xFFD4AF37));
+      expect(medalColorIn(tester, 'A'), const Color(0xFFF2C94C));
+      expect(medalColorIn(tester, 'B'), const Color(0xFFF2C94C));
       expect(medalColorIn(tester, 'C'), const Color(0xFFC0C0C0), reason: 'le suivant prend l\'argent');
     });
   });
