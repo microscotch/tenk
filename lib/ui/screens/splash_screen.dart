@@ -13,7 +13,7 @@ import 'setup_screen.dart';
 /// les dés apparaissent réellement à l'écran, jamais avant — sinon le joueur
 /// ne voit qu'un résultat déjà figé) qui tombe sur une quinte d'as (5x1 =
 /// 10000, victoire immédiate dans les règles du jeu). Une fois le lancer
-/// immobilisé, une courte pause puis "TenK" zoome au centre, et enfin la
+/// immobilisé, une courte pause puis "10K" zoome au centre, et enfin la
 /// mention de paternité apparaît en bas. Une fois la mise en scène terminée,
 /// reste affiché [displayDuration] de plus avant un fondu vers l'écran de
 /// configuration ; sautable à tout moment en touchant l'écran.
@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
   // déclenchement de chaque étape à un événement réel plutôt qu'à une
   // fraction arbitraire d'une durée totale — en particulier, les dés ne
   // doivent devenir visibles ET commencer à tourner qu'au même instant (sinon
-  // le lancer est déjà terminé quand on peut enfin le voir), et "TenK" ne
+  // le lancer est déjà terminé quand on peut enfin le voir), et "10K" ne
   // doit apparaître qu'après la fin RÉELLE du lancer
   // ([DieWidget.rollAnimationDuration]) plus une pause fixe de 250 ms.
   static const _avatarFadeIn = Duration(milliseconds: 500);
@@ -204,7 +204,7 @@ class _SplashScreenState extends State<SplashScreen> {
                               end: Alignment.bottomCenter,
                             ).createShader(rect),
                             child: Text(
-                              'TenK',
+                              '10K',
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 2,
