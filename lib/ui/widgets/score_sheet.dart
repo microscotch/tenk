@@ -29,6 +29,7 @@ class ScoreSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final avatarColors = assignAvatarColors(players.map((p) => p.name));
     return Column(
       children: [
         for (var i = 0; i < players.length; i++)
@@ -38,6 +39,7 @@ class ScoreSheet extends StatelessWidget {
             gaps: _scoreGaps(players, i),
             turnForProbability: i == currentPlayerIndex ? activeTurn : null,
             onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
+            avatarColor: avatarColors[players[i].name],
           ),
       ],
     );
@@ -83,6 +85,7 @@ class _PlayerRow extends StatelessWidget {
   final _ScoreGaps gaps;
   final TurnState? turnForProbability;
   final VoidCallback? onTap;
+  final Color? avatarColor;
 
   const _PlayerRow({
     required this.player,
@@ -90,6 +93,7 @@ class _PlayerRow extends StatelessWidget {
     required this.gaps,
     required this.turnForProbability,
     required this.onTap,
+    required this.avatarColor,
   });
 
   @override
@@ -128,7 +132,7 @@ class _PlayerRow extends StatelessWidget {
                       ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: PlayerAvatarWidget(name: player.name, size: 24),
+                      child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
                     ),
                     Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                     if (!player.hasEntered)

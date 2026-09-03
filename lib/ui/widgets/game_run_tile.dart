@@ -13,6 +13,7 @@ class GameRunTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final avatarColors = assignAvatarColors(game.setup.playerNames);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -27,7 +28,7 @@ class GameRunTile extends StatelessWidget {
           for (final name in game.setup.playerNames)
             Padding(
               padding: const EdgeInsets.only(left: 4),
-              child: PlayerAvatarWidget(name: name, size: 22),
+              child: PlayerAvatarWidget(name: name, size: 22, color: avatarColors[name]),
             ),
         ],
       ),

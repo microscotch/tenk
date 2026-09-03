@@ -13,30 +13,69 @@ const List<Color> kAvatarColorPalette = [
   Color(0xFF4E5D6C), // ardoise
 ];
 
+int _paletteIndexFor(String name) {
+  final hash = name.codeUnits.fold<int>(0, (acc, c) => acc + c);
+  return hash % kAvatarColorPalette.length;
+}
+
 /// Couleur de fond du blason d'un joueur : déterministe à partir de son nom
 /// (même joueur = même couleur d'un affichage à l'autre, sans état à gérer).
-Color avatarColorFor(String name) {
-  final hash = name.codeUnits.fold<int>(0, (acc, c) => acc + c);
-  return kAvatarColorPalette[hash % kAvatarColorPalette.length];
+/// Ne garantit PAS l'absence de collision entre plusieurs joueurs d'une même
+/// partie (voir [assignAvatarColors]) — à réserver aux affichages hors
+/// contexte de partie (ex. l'aperçu du nom dans l'écran de configuration).
+Color avatarColorFor(String name) => kAvatarColorPalette[_paletteIndexFor(name)];
+
+/// Attribue une couleur de blason à chaque nom de [names], sans jamais
+/// répéter une couleur tant que la palette n'est pas épuisée : chaque nom
+/// se voit d'abord proposer sa couleur "naturelle" ([avatarColorFor]), et en
+/// cas de collision avec un nom déjà traité, la première couleur libre
+/// suivante dans la palette (en balayant circulairement) lui est assignée à
+/// la place. Déterministe pour un ordre de [names] donné (celui des joueurs
+/// dans la partie), donc stable d'un affichage à l'autre tant que la liste
+/// de joueurs ne change pas. Palette et effectif max de joueurs valent tous
+/// deux 6 (voir `new_game_screen.dart`), donc une collision irrésolvable
+/// (plus de joueurs que de couleurs) ne devrait jamais se produire ; le cas
+/// échéant, les couleurs recommencent à se répéter au-delà de la 6e entrée
+/// plutôt que de boucler indéfiniment.
+Map<String, Color> assignAvatarColors(Iterable<String> names) {
+  final colors = <String, Color>{};
+  final used = <int>{};
+  for (final name in names) {
+    if (colors.containsKey(name)) continue;
+    var index = _paletteIndexFor(name);
+    var attempts = 0;
+    while (used.contains(index) && attempts < kAvatarColorPalette.length) {
+      index = (index + 1) % kAvatarColorPalette.length;
+      attempts++;
+    }
+    used.add(index);
+    colors[name] = kAvatarColorPalette[index];
+  }
+  return colors;
 }
 
 /// Avatar d'un joueur : un blason (écusson) portant ses 2 initiales en
-/// police gothique, sur un fond de couleur déterministe propre à son nom.
+/// police gothique, sur un fond de couleur propre à son nom. [color] permet
+/// d'imposer une couleur résolue au niveau de la partie entière (voir
+/// [assignAvatarColors], à préférer dès que la liste des autres joueurs est
+/// connue) ; par défaut, retombe sur [avatarColorFor] (déterministe mais
+/// sans garantie anti-collision, pour les affichages isolés).
 class PlayerAvatarWidget extends StatelessWidget {
   final String name;
   final double size;
+  final Color? color;
 
-  const PlayerAvatarWidget({super.key, required this.name, this.size = 40});
+  const PlayerAvatarWidget({super.key, required this.name, this.size = 40, this.color});
 
   @override
   Widget build(BuildContext context) {
     final initials = avatarInitialsFor(name);
-    final color = avatarColorFor(name);
+    final resolvedColor = color ?? avatarColorFor(name);
     return SizedBox(
       width: size,
       height: size * 1.15,
       child: CustomPaint(
-        painter: _ShieldPainter(color),
+        painter: _ShieldPainter(resolvedColor),
         child: Padding(
           padding: EdgeInsets.only(bottom: size * 0.12),
           child: Center(

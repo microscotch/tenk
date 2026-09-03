@@ -903,7 +903,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       : _buildHumanControlRow(engine, turn))),
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(height: 240, child: _buildGameLog()),
+                    SizedBox(
+                      height: 240,
+                      child: _buildGameLog(assignAvatarColors(engine.players.map((p) => p.name))),
+                    ),
                   ],
                 ),
               ),
@@ -1169,7 +1172,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// entrée de collision de score ([_LogEntry.scoreBarred]), qui affiche en
   /// plus le score barré (barré visuellement) suivi du blason du joueur
   /// concerné.
-  Widget _buildLogWhatCell(_LogEntry entry) {
+  Widget _buildLogWhatCell(_LogEntry entry, Map<String, Color> avatarColors) {
     if (entry.barredScore == null) {
       return Text(': ${entry.text}', style: const TextStyle(fontSize: 13));
     }
@@ -1186,14 +1189,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
           const WidgetSpan(child: SizedBox(width: 4)),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: PlayerAvatarWidget(name: entry.barredPlayerName!, size: 16),
+            child: PlayerAvatarWidget(
+              name: entry.barredPlayerName!,
+              size: 16,
+              color: avatarColors[entry.barredPlayerName!],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGameLog() {
+  Widget _buildGameLog(Map<String, Color> avatarColors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(8),
@@ -1230,6 +1237,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             child: PlayerAvatarWidget(
                               name: _log[i].playerName,
                               size: 18,
+                              color: avatarColors[_log[i].playerName],
                             ),
                           ),
                           Padding(
@@ -1244,7 +1252,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: _buildLogWhatCell(_log[i]),
+                            child: _buildLogWhatCell(_log[i], avatarColors),
                           ),
                         ],
                       ),
