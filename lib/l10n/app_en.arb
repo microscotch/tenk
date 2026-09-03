@@ -85,6 +85,5 @@
   "opportunityTooltip": "200 points away from crossing out the player just above!",
   "dangerTooltip": "Danger: the player just below is only 200 points away, risking crossing you out",
   "tiretTooltip": "Strike: a second bust will cross out the score",
-  "previousScoreHadTiretTooltip": "The previous score had a strike",
-  "scoreProbabilityTooltip": "Probability of scoring with {count, plural, one{{count} die} other{{count} dice}}"
+  "previousScoreHadTiretTooltip": "The previous score had a strike"
 }

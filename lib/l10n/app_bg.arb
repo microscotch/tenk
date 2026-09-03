@@ -85,6 +85,5 @@
   "opportunityTooltip": "На 200 точки от зачеркването на играча точно отгоре!",
   "dangerTooltip": "Опасност: играчът точно отдолу е само на 200 точки, риск да те зачеркне",
   "tiretTooltip": "Черта: втори провал ще зачеркне резултата",
-  "previousScoreHadTiretTooltip": "Предишният резултат имаше черта",
-  "scoreProbabilityTooltip": "Вероятност за отбелязване с {count, plural, one{{count} зар} other{{count} зара}}"
+  "previousScoreHadTiretTooltip": "Предишният резултат имаше черта"
 }

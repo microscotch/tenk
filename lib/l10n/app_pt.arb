@@ -85,6 +85,5 @@
   "opportunityTooltip": "A 200 pontos de riscar o jogador logo acima!",
   "dangerTooltip": "Perigo: o jogador logo abaixo está a apenas 200 pontos, risco de te riscar",
   "tiretTooltip": "Traço: um segundo rebentamento risca a pontuação",
-  "previousScoreHadTiretTooltip": "A pontuação anterior tinha um traço",
-  "scoreProbabilityTooltip": "Probabilidade de pontuar com {count, plural, one{{count} dado} other{{count} dados}}"
+  "previousScoreHadTiretTooltip": "A pontuação anterior tinha um traço"
 }

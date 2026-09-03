@@ -341,17 +341,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le score précédent portait un tiret';
 
   @override
-  String scoreProbabilityTooltip(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return 'Probabilité de marquer sur $_temp0';
-  }
-
-  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

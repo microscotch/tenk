@@ -344,17 +344,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die vorige Punktzahl trug einen Strich';
 
   @override
-  String scoreProbabilityTooltip(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Würfeln',
-      one: '$count Würfel',
-    );
-    return 'Trefferwahrscheinlichkeit mit $_temp0';
-  }
-
-  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

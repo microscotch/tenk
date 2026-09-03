@@ -85,6 +85,5 @@
   "opportunityTooltip": "200 pisteen päässä yliviivaamasta juuri yläpuolella olevan pelaajan!",
   "dangerTooltip": "Vaara: juuri alapuolella oleva pelaaja on vain 200 pisteen päässä, riski että hän viivaa sinut yli",
   "tiretTooltip": "Viiva: toinen epäonnistuminen viivaa pisteet yli",
-  "previousScoreHadTiretTooltip": "Edellisissä pisteissä oli viiva",
-  "scoreProbabilityTooltip": "Todennäköisyys pisteyttää {count, plural, one{{count} nopalla} other{{count} nopalla}}"
+  "previousScoreHadTiretTooltip": "Edellisissä pisteissä oli viiva"
 }

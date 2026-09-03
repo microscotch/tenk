@@ -877,7 +877,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ScoreSheet(
                       players: engine.players,
                       currentPlayerIndex: engine.currentPlayerIndex,
-                      activeTurn: turn,
                       onTapPlayer: _openPlayerGrid,
                     ),
                     const SizedBox(height: 12),

@@ -340,17 +340,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get previousScoreHadTiretTooltip => 'Предишният резултат имаше черта';
 
   @override
-  String scoreProbabilityTooltip(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count зара',
-      one: '$count зар',
-    );
-    return 'Вероятност за отбелязване с $_temp0';
-  }
-
-  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

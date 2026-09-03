@@ -85,6 +85,5 @@
   "opportunityTooltip": "La 200 de puncte distanță de a-l anula pe jucătorul de deasupra!",
   "dangerTooltip": "Pericol: jucătorul de dedesubt este la doar 200 de puncte, risc să te anuleze",
   "tiretTooltip": "Liniuță: un al doilea eșec va anula scorul",
-  "previousScoreHadTiretTooltip": "Scorul anterior avea o liniuță",
-  "scoreProbabilityTooltip": "Probabilitate de a marca cu {count, plural, one{{count} zar} few{{count} zaruri} other{{count} de zaruri}}"
+  "previousScoreHadTiretTooltip": "Scorul anterior avea o liniuță"
 }

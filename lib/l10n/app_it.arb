@@ -85,6 +85,5 @@
   "opportunityTooltip": "A 200 punti dal cancellare il giocatore appena sopra!",
   "dangerTooltip": "Pericolo: il giocatore appena sotto è a soli 200 punti, rischia di cancellarti",
   "tiretTooltip": "Trattino: un secondo sballo cancellerà il punteggio",
-  "previousScoreHadTiretTooltip": "Il punteggio precedente aveva un trattino",
-  "scoreProbabilityTooltip": "Probabilità di segnare con {count, plural, one{{count} dado} other{{count} dadi}}"
+  "previousScoreHadTiretTooltip": "Il punteggio precedente aveva un trattino"
 }

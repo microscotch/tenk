@@ -668,12 +668,6 @@ abstract class AppLocalizations {
   /// **'Le score précédent portait un tiret'**
   String get previousScoreHadTiretTooltip;
 
-  /// Infobulle sur la fraction de probabilité de marquer avec les dés restants.
-  ///
-  /// In fr, this message translates to:
-  /// **'Probabilité de marquer sur {count, plural, one{{count} dé} other{{count} dés}}'**
-  String scoreProbabilityTooltip(int count);
-
   /// Titre de l'écran expliquant les règles du jeu.
   ///
   /// In fr, this message translates to:

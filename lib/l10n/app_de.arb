@@ -85,6 +85,5 @@
   "opportunityTooltip": "Nur 200 Punkte davon entfernt, den Spieler direkt darüber zu streichen!",
   "dangerTooltip": "Gefahr: Der Spieler direkt darunter ist nur 200 Punkte entfernt und könnte dich streichen",
   "tiretTooltip": "Strich: Ein zweiter Fehlwurf streicht die Punktzahl",
-  "previousScoreHadTiretTooltip": "Die vorige Punktzahl trug einen Strich",
-  "scoreProbabilityTooltip": "Trefferwahrscheinlichkeit mit {count, plural, one{{count} Würfel} other{{count} Würfeln}}"
+  "previousScoreHadTiretTooltip": "Die vorige Punktzahl trug einen Strich"
 }

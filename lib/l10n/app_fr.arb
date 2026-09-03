@@ -333,12 +333,6 @@
   "previousScoreHadTiretTooltip": "Le score précédent portait un tiret",
   "@previousScoreHadTiretTooltip": {"description": "Infobulle indiquant que la ligne de score précédente portait un tiret."},
 
-  "scoreProbabilityTooltip": "Probabilité de marquer sur {count, plural, one{{count} dé} other{{count} dés}}",
-  "@scoreProbabilityTooltip": {
-    "description": "Infobulle sur la fraction de probabilité de marquer avec les dés restants.",
-    "placeholders": {"count": {"type": "int"}}
-  },
-
   "rulesScreenTitle": "Règles du jeu",
   "@rulesScreenTitle": {"description": "Titre de l'écran expliquant les règles du jeu."},
 

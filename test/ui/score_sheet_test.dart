@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/player.dart';
-import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/ui/widgets/score_sheet.dart';
 
 /// La ligne (le [Container]) affichant le nom [playerName], pour vérifier
@@ -91,30 +90,6 @@ void main() {
     expect(find.text('300'), findsOneWidget);
     expect(find.text('(0)'), findsOneWidget, reason: 'la ligne 500 est barrée : on remonte jusqu\'à 0');
     expect(find.text('(500)'), findsNothing);
-  });
-
-  testWidgets('affiche la probabilité de marquer (fraction irréductible) pour le joueur courant seulement',
-      (tester) async {
-    final players = [
-      Player(name: 'A', totalScore: 500, hasEntered: true),
-      Player(name: 'B', totalScore: 500, hasEntered: true),
-    ];
-
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
-      home: ScoreSheet(
-        players: players,
-        currentPlayerIndex: 0,
-        activeTurn: const TurnState(diceToRoll: 1, bankedScore: 0), // 1 dé : 2/6 réduit à 1/3
-      ),
-    ));
-
-    expect(find.text('1/3 (33.33%)'), findsOneWidget,
-        reason: '2/6 doit être affiché sous forme réduite, avec le pourcentage à 2 décimales');
-    expect(
-      find.descendant(of: _rowOf('B'), matching: find.textContaining('/')),
-      findsNothing,
-      reason: 'seul le joueur courant (avec un tour actif) affiche une probabilité',
-    );
   });
 
   testWidgets('un joueur cliqué déclenche onTapPlayer avec ce joueur', (tester) async {

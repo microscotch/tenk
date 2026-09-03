@@ -339,17 +339,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previousScoreHadTiretTooltip => 'The previous score had a strike';
 
   @override
-  String scoreProbabilityTooltip(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dice',
-      one: '$count die',
-    );
-    return 'Probability of scoring with $_temp0';
-  }
-
-  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

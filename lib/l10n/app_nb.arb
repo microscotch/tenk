@@ -85,6 +85,5 @@
   "opportunityTooltip": "200 poeng unna å stryke spilleren rett over!",
   "dangerTooltip": "Fare: spilleren rett under er bare 200 poeng unna, risiko for å stryke deg",
   "tiretTooltip": "Strek: en ny bom vil stryke poengsummen",
-  "previousScoreHadTiretTooltip": "Forrige poengsum hadde en strek",
-  "scoreProbabilityTooltip": "Sannsynlighet for å score med {count, plural, one{{count} terning} other{{count} terninger}}"
+  "previousScoreHadTiretTooltip": "Forrige poengsum hadde en strek"
 }

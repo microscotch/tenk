@@ -85,6 +85,5 @@
   "opportunityTooltip": "200 poäng från att stryka spelaren precis ovanför!",
   "dangerTooltip": "Fara: spelaren precis under är bara 200 poäng bort, risk att du blir struken",
   "tiretTooltip": "Streck: ett andra bom kommer att stryka poängen",
-  "previousScoreHadTiretTooltip": "Föregående poäng hade ett streck",
-  "scoreProbabilityTooltip": "Sannolikhet att poängsätta med {count, plural, one{{count} tärning} other{{count} tärningar}}"
+  "previousScoreHadTiretTooltip": "Föregående poäng hade ett streck"
 }

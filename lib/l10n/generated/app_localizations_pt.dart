@@ -341,17 +341,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'A pontuação anterior tinha um traço';
 
   @override
-  String scoreProbabilityTooltip(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dados',
-      one: '$count dado',
-    );
-    return 'Probabilidade de pontuar com $_temp0';
-  }
-
-  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override

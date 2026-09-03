@@ -85,6 +85,5 @@
   "opportunityTooltip": "¡A 200 puntos de tachar al jugador justo por encima!",
   "dangerTooltip": "Peligro: el jugador justo por debajo está a solo 200 puntos, riesgo de que te tache",
   "tiretTooltip": "Guion: un segundo pase tachará la puntuación",
-  "previousScoreHadTiretTooltip": "La puntuación anterior tenía un guion",
-  "scoreProbabilityTooltip": "Probabilidad de puntuar con {count, plural, one{{count} dado} other{{count} dados}}"
+  "previousScoreHadTiretTooltip": "La puntuación anterior tenía un guion"
 }

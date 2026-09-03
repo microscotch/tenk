@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../game/ai/ai_profiles.dart';
 import '../../game/player.dart';
-import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'player_avatar.dart';
 
 class ScoreSheet extends StatelessWidget {
   final List<Player> players;
   final int currentPlayerIndex;
-
-  /// Tour en cours du joueur courant : sert à calculer sa probabilité de
-  /// marquer sur les dés qu'il lui reste en main (null si aucun tour actif,
-  /// par ex. écran de choix de main).
-  final TurnState? activeTurn;
 
   /// Appelé avec le joueur concerné quand on clique sur sa ligne (ouvre sa
   /// grille de score complète). Aucune ligne n'est cliquable si null.
@@ -23,7 +16,6 @@ class ScoreSheet extends StatelessWidget {
     super.key,
     required this.players,
     required this.currentPlayerIndex,
-    this.activeTurn,
     this.onTapPlayer,
   });
 
@@ -37,7 +29,6 @@ class ScoreSheet extends StatelessWidget {
             player: players[i],
             isCurrent: i == currentPlayerIndex,
             gaps: _scoreGaps(players, i),
-            turnForProbability: i == currentPlayerIndex ? activeTurn : null,
             onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
             avatarColor: avatarColors[players[i].name],
           ),
@@ -74,16 +65,10 @@ _ScoreGaps _scoreGaps(List<Player> players, int index) {
 /// Couleur de la fraction de probabilité de marquer, du rouge (risqué) au
 /// vert (favorable) : 1/5 (20%) sert d'ancrage rouge, 1/2 (50%) d'ancrage
 /// vert, la valeur est interpolée (et bornée) entre les deux.
-Color _probabilityColor(double p) {
-  final t = ((p - 0.2) / (0.5 - 0.2)).clamp(0.0, 1.0);
-  return Color.lerp(Colors.redAccent, Colors.lightGreenAccent, t)!;
-}
-
 class _PlayerRow extends StatelessWidget {
   final Player player;
   final bool isCurrent;
   final _ScoreGaps gaps;
-  final TurnState? turnForProbability;
   final VoidCallback? onTap;
   final Color? avatarColor;
 
@@ -91,7 +76,6 @@ class _PlayerRow extends StatelessWidget {
     required this.player,
     required this.isCurrent,
     required this.gaps,
-    required this.turnForProbability,
     required this.onTap,
     required this.avatarColor,
   });
@@ -105,7 +89,6 @@ class _PlayerRow extends StatelessWidget {
     final dangerBelow = gaps.below == 200;
     final opportunityAbove = gaps.above == 200;
     final previousEntry = player.lastUnbarredEntry;
-    final turn = turnForProbability;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -182,24 +165,6 @@ class _PlayerRow extends StatelessWidget {
                           child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
                         ),
                       ),
-                    if (turn != null) ...[
-                      const SizedBox(width: 8),
-                      Builder(builder: (context) {
-                        final (num, den) = scoreProbabilityFraction(turn.diceToRoll, turn.extendedValues);
-                        final p = num / den;
-                        return Tooltip(
-                          message: l10n.scoreProbabilityTooltip(turn.diceToRoll),
-                          child: Text(
-                            '$num/$den (${(p * 100).toStringAsFixed(2)}%)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: _probabilityColor(p),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
                   ],
                 ),
               ],

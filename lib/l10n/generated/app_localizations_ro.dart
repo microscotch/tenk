@@ -343,18 +343,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get previousScoreHadTiretTooltip => 'Scorul anterior avea o liniuță';
 
   @override
-  String scoreProbabilityTooltip(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count de zaruri',
-      few: '$count zaruri',
-      one: '$count zar',
-    );
-    return 'Probabilitate de a marca cu $_temp0';
-  }
-
-  @override
   String get rulesScreenTitle => 'Règles du jeu';
 
   @override
