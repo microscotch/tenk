@@ -153,5 +153,24 @@ void main() {
       expect(again.totalScore, 900);
       expect(again.grid[1].isBarred, isTrue);
     });
+
+    // Régression : si une ligne plus ancienne est déjà barrée (collision sur
+    // un score dépassé) et que la ligne COURANTE se retrouve ensuite barrée
+    // à son tour (nouvelle collision, ou double craque), le repli doit
+    // sauter cette ligne déjà barrée plutôt que de "retomber" dessus.
+    test('un repli saute une ligne intermédiaire déjà barrée pour retomber sur le plus haut score non barré', () {
+      var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
+      p = p.applySuccessfulTurn(200); // 500 -> 700
+      p = p.applyScoreCollisionBarAt(500); // barre la ligne 500 (dépassée), 700 reste courant
+      expect(p.grid[1].isBarred, isTrue);
+      expect(p.totalScore, 700);
+
+      p = p.applyScoreCollisionBarAt(700); // collision sur la ligne COURANTE cette fois
+
+      expect(p.totalScore, 0, reason: 'la ligne 500 est déjà barrée : repli jusqu\'à 0, pas 500');
+      expect(p.hasEntered, isFalse);
+      expect(p.grid[2].isBarred, isTrue, reason: 'la ligne 700 est barrée');
+      expect(p.grid[1].isBarred, isTrue, reason: 'la ligne 500 reste barrée');
+    });
   });
 }

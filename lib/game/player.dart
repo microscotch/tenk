@@ -183,7 +183,18 @@ class Player {
   Player _bar() {
     final newGrid = List<ScoreEntry>.of(grid);
     newGrid[currentIndex] = currentEntry.copyWith(isBarred: true);
-    final fallbackIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+    // Repli sur le plus haut score NON barré de la grille : une ligne plus
+    // ancienne peut déjà avoir été barrée indépendamment (collision de score
+    // sur une ligne dépassée depuis, voir [applyScoreCollisionBarAt]), donc
+    // un simple "un cran en arrière" ne suffit plus — il faut sauter les
+    // lignes déjà barrées. L'entrée d'index 0 (score 0) n'est jamais barrée
+    // (ni par collision, un nouveau score banqué est toujours > 0, ni par
+    // craque, voir la garde `totalScore == 0` d'[applyBust]), donc cette
+    // recherche aboutit toujours.
+    var fallbackIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+    while (fallbackIndex > 0 && newGrid[fallbackIndex].isBarred) {
+      fallbackIndex--;
+    }
     final fallbackValue = newGrid[fallbackIndex].value;
     // Un retour à 0 remet l'entrée en jeu à zéro : il faudra de nouveau
     // marquer au moins 500 points en un tour pour entrer à nouveau.
