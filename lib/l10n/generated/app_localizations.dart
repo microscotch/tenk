@@ -440,6 +440,36 @@ abstract class AppLocalizations {
   /// **'Ce lancer ferait dépasser 10000.'**
   String get bustExceedsTarget;
 
+  /// Bouton de la popup de craque pour l'acquitter et passer la main.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get bustContinueButton;
+
+  /// Titre de la popup proposant de reprendre ou non la main laissée par le joueur précédent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Main héritée'**
+  String get inheritedHandDialogTitle;
+
+  /// Message de la popup de main héritée : score déjà acquis sur cette main, suivi du nombre de dés hérités.
+  ///
+  /// In fr, this message translates to:
+  /// **'{score}, {count, plural, one{{count} dé} other{{count} dés}}'**
+  String inheritedHandDialogMessage(int score, int count);
+
+  /// Bouton de la popup de main héritée pour reprendre la main du joueur précédent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la main'**
+  String get resumeHandButton;
+
+  /// Bouton de la popup de main héritée pour repartir avec 5 dés neufs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle main'**
+  String get newHandButton;
+
   /// Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis.
   ///
   /// In fr, this message translates to:

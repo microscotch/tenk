@@ -208,6 +208,29 @@ class AppLocalizationsFi extends AppLocalizations {
   String get bustExceedsTarget => 'Tämä heitto ylittäisi 10000.';
 
   @override
+  String get bustContinueButton => 'Continuer';
+
+  @override
+  String get inheritedHandDialogTitle => 'Main héritée';
+
+  @override
+  String inheritedHandDialogMessage(int score, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dés',
+      one: '$count dé',
+    );
+    return '$score, $_temp0';
+  }
+
+  @override
+  String get resumeHandButton => 'Reprendre la main';
+
+  @override
+  String get newHandButton => 'Nouvelle main';
+
+  @override
   String get failureBelowMinimum => 'Pisteet liian alhaiset lopettamiseen.';
 
   @override

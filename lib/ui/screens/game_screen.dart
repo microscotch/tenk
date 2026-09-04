@@ -430,6 +430,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
   bool _bustRevealed = false;
   Timer? _bustRevealTimer;
 
+  /// Dernier [GameEngine] pour lequel la popup de main héritée a déjà été
+  /// ouverte (voir [_maybeShowInheritedHandDialog]) : évite de la rouvrir à
+  /// chaque rebuild tant que le joueur n'a pas encore décidé.
+  Object? _inheritedHandDialogShownFor;
+
   @override
   void initState() {
     super.initState();
@@ -609,6 +614,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       SoundEffects.instance.playBust();
       _logBust(engine!, turn);
       setState(() => _bustRevealed = true);
+      _showBustDialog(engine, turn);
       return;
     }
 
@@ -617,7 +623,39 @@ class _GameScreenState extends ConsumerState<GameScreen>
       SoundEffects.instance.playBust();
       _logBust(engine!, turn);
       setState(() => _bustRevealed = true);
+      _showBustDialog(engine, turn);
     });
+  }
+
+  /// Popup dédiée annonçant le craque au joueur humain, avec pour seule
+  /// action de reconnaître et passer la main (voir [GameEngine.endBustedTurn]).
+  /// Sans effet en mode rejeu (spectateur, jamais d'interaction) ni pour un
+  /// tour IA (déjà géré tout seul par [GameNotifier.playAiTurnStep], sans
+  /// attendre de clic) : dans ces deux cas, [_buildBustedView] garde
+  /// l'ancien bouton en ligne, purement informatif.
+  void _showBustDialog(GameEngine engine, TurnState turn) {
+    if (!mounted || widget.replayMode) return;
+    if (ref.read(gameProvider.notifier).isAiPlayer(engine.currentPlayerIndex)) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.bustedTitle),
+        content: turn.bustReason == BustReason.exceedsTarget ? Text(l10n.bustExceedsTarget) : null,
+        actions: [
+          FilledButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              ref.read(gameProvider.notifier).endBustedTurn();
+            },
+            child: Text(l10n.bustContinueButton),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Journalise un craque : le titre "Craqué !" toujours, suivi du détail
@@ -775,7 +813,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     PassDeviceScreen(nextPlayerName: next.currentPlayer.name),
               ),
             )
-            .then((_) => _scheduleAiIfNeeded());
+            .then((_) {
+              _scheduleAiIfNeeded();
+              _maybeShowInheritedHandDialog();
+            });
       }
       for (final entry in _logEntriesForStep(
         previous,
@@ -826,6 +867,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // "Piste"/"Main courante", ScoreSheet) au lieu d'un écran séparé — seul
     // le widget de contrôle en bas change (voir plus bas).
     final isInheritedChoice = engine.activeTurn == null;
+    if (isInheritedChoice && !isAiTurn) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowInheritedHandDialog());
+    }
     final turn =
         engine.activeTurn ??
         TurnState(
@@ -948,11 +992,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     const SizedBox(height: 12),
                     Center(
                       child: turn.busted
-                          ? _buildBustedView(turn)
+                          ? _buildBustedView(turn, isAiTurn: isAiTurn)
                           : (isAiTurn
                                 ? _buildAiTurnView(engine)
                                 : (isInheritedChoice
-                                      ? _buildInheritedChoiceRow(engine)
+                                      // Popup dédiée hors rejeu (voir
+                                      // _maybeShowInheritedHandDialog) : rien
+                                      // à montrer ici en attendant, sauf en
+                                      // rejeu où elle reste l'unique rendu
+                                      // (spectateur, jamais de popup).
+                                      ? (widget.replayMode
+                                            ? _buildInheritedChoiceRow(engine)
+                                            : const SizedBox.shrink())
                                       : _buildHumanControlRow(engine, turn))),
                     ),
                     const SizedBox(height: 12),
@@ -1005,10 +1056,95 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Choix de main héritée (dés d'un tour précédent) pour un joueur humain :
-  /// pas d'écran dédié (voir CLAUDE.md) — la même ligne de contrôle
-  /// compacte que le reste du tour (bouton "Lancer" au pourcentage de
-  /// chance de marquer, qui reprend la main héritée ET lance en un seul
+  /// Déclenche [_showInheritedHandDialog] quand c'est pertinent — tour
+  /// humain hors rejeu en attente d'un choix de main héritée — et au plus
+  /// une fois par occasion de choix : l'[GameEngine] courant reste la MÊME
+  /// instance (égalité de référence) tant que le joueur n'a pas décidé
+  /// (aucune transition d'état tant que [GameEngine.activeTurn] reste null),
+  /// donc comparer à la dernière instance pour laquelle la popup a déjà été
+  /// ouverte suffit à éviter les doublons sur les rebuilds répétés — même
+  /// mécanisme que [_bustKeyBeingRevealed] pour le craque.
+  ///
+  /// Ne fait rien tant que cet écran n'est pas la route active : sinon, un
+  /// appel programmé dans le même passage de `build()` qui vient de pousser
+  /// [PassDeviceScreen] ouvrirait la popup PAR-DESSUS cet écran de
+  /// transition. Appelé à la fois depuis `build()` (cas sans écran de
+  /// transition) et depuis le `.then()` du push de [PassDeviceScreen] (une
+  /// fois cet écran dépilé), donc pas besoin d'attendre un rebuild
+  /// supplémentaire dans ce second cas.
+  void _maybeShowInheritedHandDialog() {
+    if (!mounted || widget.replayMode) return;
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    final engine = ref.read(gameProvider);
+    if (engine == null || engine.activeTurn != null) return;
+    if (ref.read(gameProvider.notifier).isAiPlayer(engine.currentPlayerIndex)) {
+      return;
+    }
+    if (_inheritedHandDialogShownFor == engine) return;
+    _inheritedHandDialogShownFor = engine;
+    _showInheritedHandDialog(engine);
+  }
+
+  /// Popup dédiée proposant de reprendre la main laissée par le joueur
+  /// précédent ou d'en repartir une neuve : annonce le score déjà acquis et
+  /// le nombre de dés hérités, et suffixe chaque bouton du pourcentage de
+  /// chance de marquer sur le tout premier lancer de cette option — même
+  /// calcul que le reste de l'écran (voir [_scorePercentLabel]), pour rester
+  /// cohérent avec le pourcentage déjà affiché sur le bouton "Lancer"
+  /// partout ailleurs.
+  void _showInheritedHandDialog(GameEngine engine) {
+    final l10n = AppLocalizations.of(context);
+    final notifier = ref.read(gameProvider.notifier);
+    final canResume = !engine.inheritedHandExceedsWinningScore;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.inheritedHandDialogTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice)),
+            if (!canResume) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.inheritedHandExceedsWinning,
+                style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          if (canResume)
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                notifier.startTurn(useFullHand: false);
+                notifier.roll();
+              },
+              child: Text(
+                '${l10n.resumeHandButton} '
+                '(${_scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues)})',
+              ),
+            ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              notifier.startTurn(useFullHand: true);
+            },
+            child: Text('${l10n.newHandButton} (${_scorePercentLabel(5, const {})})'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Choix de main héritée (dés d'un tour précédent) pour un joueur humain,
+  /// en mode rejeu seulement (spectateur, jamais de popup — voir
+  /// [_showInheritedHandDialog] pour le cas interactif) : même ligne de
+  /// contrôle compacte que le reste du tour (bouton "Lancer" au pourcentage
+  /// de chance de marquer, qui reprend la main héritée ET lance en un seul
   /// geste), avec "Refuser" à la place de "Stop" pour repartir à 5 dés
   /// neufs à la place.
   Widget _buildInheritedChoiceRow(GameEngine engine) {
@@ -1371,32 +1507,30 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return FilledButton(onPressed: action, child: Text(label));
   }
 
-  Widget _buildBustedView(TurnState turn) {
+  /// [isAiTurn] : un tour IA n'attend jamais de clic sur ce bouton (le
+  /// craque est acquitté tout seul par [GameNotifier.playAiTurnStep]) — il
+  /// reste affiché tel quel, purement informatif. Pour un tour humain hors
+  /// rejeu, c'est désormais [_showBustDialog] (une popup dédiée) qui porte
+  /// l'action réelle : cette zone ne montre alors plus rien une fois le
+  /// craque révélé, pour ne pas dupliquer le bouton.
+  Widget _buildBustedView(TurnState turn, {required bool isAiTurn}) {
     // Le résultat n'est révélé qu'une fois l'animation de lancer des dés
     // terminée (cf. _scheduleBustRevealIfNeeded) : le suspense du lancer ne
     // doit pas être gâché par un message qui s'affiche trop tôt.
-    final l10n = AppLocalizations.of(context);
     final key = turn.pendingRoll ?? turn;
     final revealed = _bustRevealed && _bustKeyBeingRevealed == key;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (!revealed)
-          const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2.5),
-          )
-        else
-          // Le titre "Craqué !" et, le cas échéant, la raison précise
-          // (dépassement de 10000) apparaissent déjà dans le journal de
-          // partie (voir _logBust) : pas de bandeau ici, pour que cette zone
-          // ne change jamais de forme selon la raison du craque.
-          FilledButton(
-            onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
-            child: Text(l10n.bustedTitle),
-          ),
-      ],
+    if (!revealed) {
+      return const SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(strokeWidth: 2.5),
+      );
+    }
+    if (!widget.replayMode && !isAiTurn) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    return FilledButton(
+      onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
+      child: Text(l10n.bustedTitle),
     );
   }
 
@@ -1482,11 +1616,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           ),
         // Le bouton Lancer reste toujours à la même position, aligné à
-        // gauche : Stop (si s'arrêter est légal) puis la combobox de choix
-        // des 5 (si un vrai choix existe) apparaissent à sa droite, à la
-        // demande, sans jamais le déplacer. Lancer et Stop partagent la même
-        // largeur fixe (_controlButtonWidth), pour ne pas non plus changer
-        // de taille selon leur libellé.
+        // gauche, à sa largeur fixe (_controlButtonWidth) pour ne pas
+        // changer de taille selon son libellé. Stop (si s'arrêter est
+        // légal) puis la combobox de choix des 5 (si un vrai choix existe)
+        // apparaissent à sa droite, à la demande, sans jamais le déplacer.
+        // Stop est réduit au minimum (icône seule, pas de largeur imposée) :
+        // contrairement à Lancer, son libellé ne varie jamais, pas besoin
+        // d'une largeur fixe pour éviter un changement de taille.
         SizedBox(
           width: double.infinity,
           child: Row(
@@ -1497,16 +1633,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
               if (bankAttempt.success) ...[
                 const SizedBox(width: 8),
-                SizedBox(
-                  width: _controlButtonWidth,
-                  child: OutlinedButton(
-                    onPressed: onStop,
-                    child: Text(
-                      l10n.stopButton,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: false,
-                    ),
-                  ),
+                IconButton.outlined(
+                  onPressed: onStop,
+                  icon: const Icon(Icons.stop),
+                  tooltip: l10n.stopButton,
                 ),
               ],
               if (canChoose) ...[

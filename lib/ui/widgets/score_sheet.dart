@@ -145,11 +145,6 @@ class _PlayerRow extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    if (isCurrent)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 6),
-                        child: Icon(Icons.play_arrow, size: 18),
-                      ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),

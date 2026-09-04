@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../widgets/player_avatar.dart';
 
 /// Largeur minimale d'une colonne pour que le score (jusqu'à 5 chiffres,
 /// icônes tiret/courant comprises) ne soit jamais contraint à passer à la
 /// ligne.
 const double _minColumnWidth = 108.0;
 
-/// Grille de score complète : une colonne par joueur (initiales désambiguïsées
-/// en cas de collision comme entête ; nom complet s'il n'y a qu'un seul
-/// joueur affiché — voir l'écran de jeu, qui ouvre cette même grille filtrée
-/// sur un joueur en cliquant sur sa ligne), avec tous ses tours validés dans
-/// l'ordre, le tiret ou le barré propre à chaque ligne, et la ligne courante
-/// mise en évidence.
+/// Grille de score complète : une colonne par joueur (son blason en entête,
+/// couleurs désambiguïsées entre joueurs de la même partie — voir
+/// [assignAvatarColors] — au lieu d'un texte d'initiales ; voir l'écran de
+/// jeu, qui ouvre cette même grille filtrée sur un joueur en cliquant sur sa
+/// ligne), avec tous ses tours validés dans l'ordre, le tiret ou le barré
+/// propre à chaque ligne, et la ligne courante mise en évidence.
 ///
 /// Les colonnes s'étalent pour remplir toute la largeur disponible, sans
 /// jamais descendre sous [_minColumnWidth] ; si tous les joueurs ne tiennent
@@ -40,7 +41,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final labels = widget.players.length == 1 ? [widget.players[0].name] : shortLabelsFor(widget.players);
+    final avatarColors = assignAvatarColors(widget.players.map((p) => p.name));
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context).scoreGridLabel)),
       body: SafeArea(
@@ -52,7 +53,12 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
             final pageCount = (widget.players.length / columnsPerPage).ceil();
 
             if (pageCount <= 1) {
-              return _GridPage(players: widget.players, labels: labels, start: 0, end: widget.players.length);
+              return _GridPage(
+                players: widget.players,
+                avatarColors: avatarColors,
+                start: 0,
+                end: widget.players.length,
+              );
             }
 
             return Column(
@@ -65,7 +71,12 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
                     itemBuilder: (context, pageIndex) {
                       final start = pageIndex * columnsPerPage;
                       final end = (start + columnsPerPage).clamp(0, widget.players.length);
-                      return _GridPage(players: widget.players, labels: labels, start: start, end: end);
+                      return _GridPage(
+                        players: widget.players,
+                        avatarColors: avatarColors,
+                        start: start,
+                        end: end,
+                      );
                     },
                   ),
                 ),
@@ -95,55 +106,15 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
   }
 }
 
-/// Calcule un libellé court par joueur (initiales), unique entre tous les
-/// [players] : au départ une seule lettre ; en cas de collision, SEULS les
-/// joueurs en collision voient leur libellé rallongé d'une lettre (la lettre
-/// suivante de leur propre nom), et ainsi de suite jusqu'à distinction (ou à
-/// court de lettres pour tous les joueurs encore en collision, auquel cas
-/// cette collision résiduelle est acceptée telle quelle).
-List<String> shortLabelsFor(List<Player> players) {
-  final names = [for (final p in players) p.name];
-  final labels = List<String>.filled(names.length, '');
-  var length = 1;
-  var pending = List.generate(names.length, (i) => i);
-
-  while (pending.isNotEmpty) {
-    final groups = <String, List<int>>{};
-    for (final i in pending) {
-      final n = names[i];
-      final prefix = (n.length >= length ? n.substring(0, length) : n).toUpperCase();
-      groups.putIfAbsent(prefix, () => []).add(i);
-    }
-    final nextPending = <int>[];
-    for (final entry in groups.entries) {
-      if (entry.value.length == 1) {
-        labels[entry.value.first] = entry.key;
-        continue;
-      }
-      final canGrow = entry.value.any((i) => names[i].length > length);
-      if (!canGrow) {
-        for (final i in entry.value) {
-          labels[i] = entry.key;
-        }
-      } else {
-        nextPending.addAll(entry.value);
-      }
-    }
-    pending = nextPending;
-    length++;
-  }
-  return labels;
-}
-
 /// Une page du carrousel : les colonnes des joueurs [start] (inclus) à [end]
 /// (exclus), étalées pour remplir toute la largeur disponible.
 class _GridPage extends StatelessWidget {
   final List<Player> players;
-  final List<String> labels;
+  final Map<String, Color> avatarColors;
   final int start;
   final int end;
 
-  const _GridPage({required this.players, required this.labels, required this.start, required this.end});
+  const _GridPage({required this.players, required this.avatarColors, required this.start, required this.end});
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +126,7 @@ class _GridPage extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _PlayerColumn(player: players[i], label: labels[i]),
+                child: _PlayerColumn(player: players[i], avatarColor: avatarColors[players[i].name]),
               ),
             ),
         ],
@@ -166,25 +137,28 @@ class _GridPage extends StatelessWidget {
 
 class _PlayerColumn extends StatelessWidget {
   final Player player;
-  final String label;
+  final Color? avatarColor;
 
-  const _PlayerColumn({required this.player, required this.label});
+  const _PlayerColumn({required this.player, required this.avatarColor});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        Center(
+          child: PlayerAvatarWidget(name: player.name, size: 36, color: avatarColor),
         ),
         const SizedBox(height: 8),
         for (var i = player.grid.length - 1; i >= 0; i--)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
-            child: _ScoreRow(entry: player.grid[i], isCurrent: i == player.currentIndex),
+            child: _ScoreRow(
+              entry: player.grid[i],
+              isCurrent: i == player.currentIndex,
+              playerName: player.name,
+              avatarColor: avatarColor,
+            ),
           ),
       ],
     );
@@ -194,8 +168,15 @@ class _PlayerColumn extends StatelessWidget {
 class _ScoreRow extends StatelessWidget {
   final ScoreEntry entry;
   final bool isCurrent;
+  final String playerName;
+  final Color? avatarColor;
 
-  const _ScoreRow({required this.entry, required this.isCurrent});
+  const _ScoreRow({
+    required this.entry,
+    required this.isCurrent,
+    required this.playerName,
+    required this.avatarColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -231,13 +212,16 @@ class _ScoreRow extends StatelessWidget {
               color: textColor,
             ),
           ),
+          // Le blason du joueur rejoint le libellé du score barré, même
+          // convention visuelle que l'entrée "Score barré" du journal de
+          // partie (voir _buildLogWhatCell dans game_screen.dart).
+          if (entry.isBarred) ...[
+            const SizedBox(width: 6),
+            PlayerAvatarWidget(name: playerName, size: 16, color: avatarColor),
+          ],
           if (entry.hasTiret) ...[
             const SizedBox(width: 6),
             Icon(Icons.remove, size: 14, color: entry.isBarred ? colorScheme.onErrorContainer : Colors.orange),
-          ],
-          if (isCurrent) ...[
-            const Spacer(),
-            Icon(Icons.play_arrow, size: 16, color: colorScheme.primary),
           ],
         ],
       ),

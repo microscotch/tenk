@@ -70,7 +70,7 @@ void main() {
     // contextuels).
     expect(find.textContaining('Craqué'), findsWidgets);
 
-    await tester.tap(find.text('Craqué !'));
+    await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -105,7 +105,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Craqué !'));
+    await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -154,7 +154,7 @@ void main() {
     expect(tester.takeException(), isNull, reason: 'ne doit pas planter faute de lancer en attente');
     expect(find.textContaining('Craqué'), findsWidgets);
 
-    await tester.tap(find.text('Craqué !'));
+    await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -191,9 +191,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsNothing,
+    // Popup dédiée (voir _showInheritedHandDialog) : "Reprendre la main"
+    // absent, seul "Nouvelle main" est proposé.
+    expect(find.textContaining('Reprendre la main'), findsNothing,
         reason: 'reprendre cette main garantirait un dépassement de 10000');
-    expect(find.text('Refuser'), findsOneWidget);
+    expect(find.textContaining('Nouvelle main'), findsOneWidget);
     expect(find.textContaining('dépasserait déjà 10000'), findsOneWidget);
   });
 
@@ -234,7 +236,7 @@ void main() {
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
     expect(find.textContaining('Craqué'), findsWidgets);
 
-    await tester.tap(find.text('Craqué !'));
+    await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -277,7 +279,7 @@ void main() {
     expect(find.text('1500'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
 
-    await tester.tap(find.text('S\'arrêter'));
+    await tester.tap(find.byIcon(Icons.stop));
     await tester.pumpAndSettle();
 
     // La main passe à A (pass-and-play) : écran de transition affiché.
@@ -332,7 +334,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('S\'arrêter'));
+    await tester.tap(find.byIcon(Icons.stop));
     await tester.pumpAndSettle();
 
     expect(find.byType(PassDeviceScreen), findsOneWidget);
@@ -376,8 +378,8 @@ void main() {
 
     expect(find.textContaining('Tour final'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('S\'arrêter'));
-    await tester.tap(find.text('S\'arrêter'));
+    await tester.ensureVisible(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icons.stop));
     await tester.pumpAndSettle();
 
     expect(find.byType(GameOverScreen), findsOneWidget);
@@ -388,7 +390,7 @@ void main() {
     expect(after.winnerIndex, 0, reason: 'A doit gagner malgré le tour final joué par B');
   });
 
-  testWidgets('le choix de main hérité relance directement, sans écran séparé', (tester) async {
+  testWidgets('le choix de main héritée ouvre une popup dédiée qui relance directement', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -407,15 +409,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Pas d'écran dédié : la même ligne de contrôle que le reste du tour,
-    // avec le bouton "Lancer" (pourcentage de chance de marquer) qui
-    // reprend la main héritée ET lance en un seul geste, et "Refuser" pour
-    // repartir à 5 dés neufs à la place.
-    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
-    expect(find.text('Refuser'), findsOneWidget);
+    // Popup dédiée (voir _showInheritedHandDialog), pas d'écran séparé : le
+    // bouton "Reprendre la main" reprend la main héritée ET lance en un seul
+    // geste, "Nouvelle main" repart à 5 dés neufs à la place.
+    expect(find.textContaining('Reprendre la main'), findsOneWidget);
+    expect(find.textContaining('Nouvelle main'), findsOneWidget);
     expect(container.read(gameProvider)!.activeTurn, isNull, reason: 'rien n\'est encore décidé');
 
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.tap(find.textContaining('Reprendre la main'));
     await tester.pump();
 
     final after = container.read(gameProvider)!;
@@ -451,7 +452,7 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn, isNull,
         reason: 'sans mode auto, rien ne doit se déclencher sans clic, quel que soit le délai écoulé');
 
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.tap(find.textContaining('Reprendre la main'));
     await tester.pump();
     final after = container.read(gameProvider)!;
     expect(after.activeTurn!.diceToRoll, 3);
@@ -482,9 +483,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('S\'arrêter'), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
+    expect(find.byIcon(Icons.stop), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
 
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.tap(find.textContaining('Reprendre la main'));
     await tester.pump();
 
     final after = container.read(gameProvider)!;
@@ -527,10 +528,10 @@ void main() {
     // directement de continuer ou de s'arrêter.
     expect(find.text('Valider'), findsNothing);
     expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
-    expect(find.text('S\'arrêter'), findsOneWidget);
+    expect(find.byIcon(Icons.stop), findsOneWidget);
 
-    await tester.ensureVisible(find.text('S\'arrêter'));
-    await tester.tap(find.text('S\'arrêter'));
+    await tester.ensureVisible(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icons.stop));
     await tester.pumpAndSettle();
 
     expect(find.byType(PassDeviceScreen), findsOneWidget, reason: 'B a banqué, la main passe à A');
@@ -594,7 +595,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Refuser'));
+    await tester.tap(find.textContaining('Nouvelle main'));
     await tester.pump();
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
@@ -630,7 +631,7 @@ void main() {
     // auto) : le bouton affiché est le sien, pas un choix réservé à
     // l'humain ("S'arrêter" n'a de sens que dans le dialogue de banque
     // humain à deux boutons, "Valider" n'existe plus du tout).
-    expect(find.text('S\'arrêter'), findsNothing);
+    expect(find.byIcon(Icons.stop), findsNothing);
     expect(find.text('Valider'), findsNothing);
 
     // On laisse le temps s'écouler (délai de "réflexion" de l'IA) jusqu'à ce
@@ -645,14 +646,13 @@ void main() {
     final after = container.read(gameProvider)!;
     if (!after.gameOver) {
       expect(after.currentPlayerIndex, 0, reason: 'la main revient bien au joueur humain');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       if (after.activeTurn == null) {
-        // L'IA a laissé des dés hérités : le joueur humain doit d'abord
-        // choisir sa main avant de pouvoir lancer les dés (pas d'écran
-        // séparé : "Refuser" repart à 5 dés neufs dans la même ligne de
-        // contrôle).
-        await tester.tap(find.text('Refuser'));
+        // L'IA a laissé des dés hérités : popup dédiée (voir
+        // _showInheritedHandDialog) avant que le joueur humain puisse
+        // lancer les dés -- "Nouvelle main" repart à 5 dés neufs.
+        await tester.tap(find.textContaining('Nouvelle main'));
         await tester.pump();
       }
 
@@ -730,10 +730,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Craqué'), findsWidgets);
-    expect(find.textContaining('dépasser 10000'), findsOneWidget,
+    // Visible à deux endroits une fois révélé : le journal ET le contenu de
+    // la popup dédiée (voir _showBustDialog).
+    expect(find.textContaining('dépasser 10000'), findsWidgets,
         reason: 'le motif du craque est explicité, malgré un lancer en attente');
 
-    await tester.tap(find.text('Craqué !'));
+    await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;

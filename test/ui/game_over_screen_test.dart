@@ -69,8 +69,8 @@ void main() {
 
     // B banque son tour final : le moteur passe en gameOver et GameScreen
     // pousse GameOverScreen, exactement comme en jeu.
-    await tester.ensureVisible(find.text('S\'arrêter'));
-    await tester.tap(find.text('S\'arrêter'));
+    await tester.ensureVisible(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icons.stop));
     await tester.pumpAndSettle();
 
     expect(find.byType(GameOverScreen), findsOneWidget);
