@@ -288,6 +288,12 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Efecte sonore';
 
   @override
+  String get settingsControlsTitle => 'Contrôles';
+
+  @override
+  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+
+  @override
   String get settingsPausedGamesTitle => 'Jocuri în pauză';
 
   @override

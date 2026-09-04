@@ -286,6 +286,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Звукови ефекти';
 
   @override
+  String get settingsControlsTitle => 'Contrôles';
+
+  @override
+  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+
+  @override
   String get settingsPausedGamesTitle => 'Игри на пауза';
 
   @override

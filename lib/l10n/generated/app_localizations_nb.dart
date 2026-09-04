@@ -285,6 +285,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Lydeffekter';
 
   @override
+  String get settingsControlsTitle => 'Contrôles';
+
+  @override
+  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+
+  @override
   String get settingsPausedGamesTitle => 'Pausede spill';
 
   @override

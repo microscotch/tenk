@@ -269,6 +269,12 @@
   "settingsSoundEffectsLabel": "Effets sonores",
   "@settingsSoundEffectsLabel": {"description": "Interrupteur activant/désactivant les effets sonores."},
 
+  "settingsControlsTitle": "Contrôles",
+  "@settingsControlsTitle": {"description": "Titre de la section réglages consacrée aux contrôles de jeu (au-delà des boutons à l'écran)."},
+
+  "settingsShakeToRollLabel": "Secouer pour lancer les dés",
+  "@settingsShakeToRollLabel": {"description": "Interrupteur activant/désactivant le lancer de dés en secouant le téléphone, en plus du bouton Lancer."},
+
   "settingsPausedGamesTitle": "Parties en pause",
   "@settingsPausedGamesTitle": {"description": "Titre de la section réglages consacrée aux parties en pause."},
 

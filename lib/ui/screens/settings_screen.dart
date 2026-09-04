@@ -150,6 +150,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onChanged: notifier.setSoundEffectsEnabled,
               ),
               const SizedBox(height: 28),
+              Text(l10n.settingsControlsTitle, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settingsShakeToRollLabel),
+                value: settings.shakeToRollEnabled,
+                onChanged: notifier.setShakeToRollEnabled,
+              ),
+              const SizedBox(height: 28),
               Text(l10n.settingsPausedGamesTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
               SwitchListTile(

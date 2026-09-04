@@ -27,6 +27,12 @@ class AppSettings {
   /// global, plus de sélecteur par partie sur l'écran de configuration).
   final AiDifficulty aiDifficulty;
 
+  /// Autorise le lancer de dés en secouant le téléphone (voir
+  /// `ShakeDetector`), en plus du bouton "Lancer". Désactivé par défaut : un
+  /// geste physique déclenché malgré lui (transport, poche...) resterait
+  /// sans conséquence, mais reste une surprise pour qui ne l'a pas demandée.
+  final bool shakeToRollEnabled;
+
   /// Code de langue forcé (ex. "en", "es") ; null = suit la langue de
   /// l'appareil.
   final String? languageOverride;
@@ -40,6 +46,7 @@ class AppSettings {
     this.soundEffectsEnabled = true,
     this.confirmBeforeDeleteGame = true,
     this.aiDifficulty = AiDifficulty.prudent,
+    this.shakeToRollEnabled = false,
     this.languageOverride,
   });
 
@@ -55,6 +62,7 @@ class AppSettings {
     bool? soundEffectsEnabled,
     bool? confirmBeforeDeleteGame,
     AiDifficulty? aiDifficulty,
+    bool? shakeToRollEnabled,
     Object? languageOverride = _unset,
   }) {
     return AppSettings(
@@ -66,6 +74,7 @@ class AppSettings {
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       aiDifficulty: aiDifficulty ?? this.aiDifficulty,
+      shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
     );
   }
@@ -84,6 +93,7 @@ const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 const _keyAiDifficulty = 'settings.aiDifficulty';
+const _keyShakeToRollEnabled = 'settings.shakeToRollEnabled';
 const _keyLanguageOverride = 'settings.languageOverride';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
@@ -112,6 +122,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
           (d) => d.name == prefs.getString(_keyAiDifficulty),
           orElse: () => AiDifficulty.prudent,
         ),
+        shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
         languageOverride: prefs.getString(_keyLanguageOverride),
       );
     } catch (_) {
@@ -176,6 +187,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setAiDifficulty(AiDifficulty difficulty) {
     state = state.copyWith(aiDifficulty: difficulty);
     _save(_keyAiDifficulty, difficulty.name);
+  }
+
+  void setShakeToRollEnabled(bool enabled) {
+    state = state.copyWith(shakeToRollEnabled: enabled);
+    _save(_keyShakeToRollEnabled, enabled);
   }
 
   /// [code] est un code de langue supporté (ex. "en"), ou null pour suivre à

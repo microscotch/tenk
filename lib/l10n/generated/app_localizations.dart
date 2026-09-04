@@ -572,6 +572,18 @@ abstract class AppLocalizations {
   /// **'Effets sonores'**
   String get settingsSoundEffectsLabel;
 
+  /// Titre de la section réglages consacrée aux contrôles de jeu (au-delà des boutons à l'écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrôles'**
+  String get settingsControlsTitle;
+
+  /// Interrupteur activant/désactivant le lancer de dés en secouant le téléphone, en plus du bouton Lancer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Secouer pour lancer les dés'**
+  String get settingsShakeToRollLabel;
+
   /// Titre de la section réglages consacrée aux parties en pause.
   ///
   /// In fr, this message translates to:

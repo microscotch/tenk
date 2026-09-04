@@ -16,6 +16,7 @@ import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
 import '../navigation.dart';
+import '../shake_detector.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
@@ -435,10 +436,21 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// chaque rebuild tant que le joueur n'a pas encore décidé.
   Object? _inheritedHandDialogShownFor;
 
+  /// Déclencheur "secouer pour lancer" (réglage [AppSettings.shakeToRollEnabled]) :
+  /// une seule instance pour toute la durée de l'écran, démarrée/arrêtée
+  /// selon le réglage et le cycle de vie de l'app (voir [initState],
+  /// `ref.listen` dans [build] et [didChangeAppLifecycleState]), jamais en
+  /// mode rejeu (écran spectateur inerte).
+  late final ShakeDetector _shakeDetector;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _shakeDetector = ShakeDetector(onShake: _handleShake);
+    if (!widget.replayMode && ref.read(settingsProvider).shakeToRollEnabled) {
+      _shakeDetector.start();
+    }
     final initialEngine = ref.read(gameProvider);
     final initialTurn = initialEngine?.activeTurn;
     final initialPendingRoll = initialTurn?.pendingRoll;
@@ -481,8 +493,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _scheduleAutoProgressIfNeeded();
+      if (!widget.replayMode && ref.read(settingsProvider).shakeToRollEnabled) {
+        _shakeDetector.start();
+      }
     } else {
       _cancelAutoAction();
+      _shakeDetector.stop();
     }
   }
 
@@ -511,6 +527,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _shakeDetector.stop();
     _pendingTimer?.cancel();
     _bustRevealTimer?.cancel();
     _rollSettleTimer?.cancel();
@@ -786,6 +803,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(settingsProvider.select((s) => s.shakeToRollEnabled), (previous, enabled) {
+      if (widget.replayMode) return;
+      if (enabled) {
+        _shakeDetector.start();
+      } else {
+        _shakeDetector.stop();
+      }
+    });
     ref.listen<GameEngine?>(gameProvider, (previous, next) {
       if (next == null) return;
       if (next.gameOver) {
@@ -1538,6 +1563,45 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Lance les dés du tour humain en cours, en appliquant d'abord la
+  /// sélection de 5 courante ([_selectedKeep]) s'il y a un lancer en attente
+  /// à trancher — logique du bouton "Lancer" de [_buildHumanControlRow],
+  /// extraite pour être partagée avec [_handleShake] (secouer le téléphone
+  /// équivaut à un tap sur ce même bouton).
+  void _rollForHumanTurn(GameEngine engine, TurnState turn) {
+    final pending = turn.pendingRoll;
+    final notifier = ref.read(gameProvider.notifier);
+    if (pending != null) {
+      final currentTotal = engine.currentPlayer.totalScore;
+      final fives = pending.declinableFives;
+      final minKeep = minKeepableFives(pending);
+      final maxKeep = maxKeepableFives(turn, pending, currentTotal: currentTotal);
+      final selectedKeep = _selectedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
+      final declineCount = (fives?.diceCount ?? 0) - selectedKeep;
+      notifier.applyKeep(declineFivesCount: declineCount);
+    }
+    notifier.roll();
+  }
+
+  /// Appelé par [ShakeDetector] : équivaut à un tap sur le bouton "Lancer"
+  /// actuellement affiché, uniquement quand ce geste a un sens sans
+  /// ambiguïté — jamais pendant le tour d'une IA, sur un craque déjà
+  /// affiché, ou tant que cet écran n'est pas la route au premier plan
+  /// (partie en pause, écran de paramètres ouvert...). Ignore volontairement
+  /// le choix de main héritée (`activeTurn == null`) : sa propre popup (voir
+  /// [_showInheritedHandDialog]) propose déjà deux actions bien distinctes
+  /// entre lesquelles secouer ne permettrait pas de choisir sans ambiguïté.
+  void _handleShake() {
+    if (!mounted || widget.replayMode) return;
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    final engine = ref.read(gameProvider);
+    if (engine == null || engine.gameOver || engine.activeTurn == null) return;
+    if (ref.read(gameProvider.notifier).isAiPlayer(engine.currentPlayerIndex)) return;
+    final turn = engine.activeTurn!;
+    if (turn.busted) return;
+    _rollForHumanTurn(engine, turn);
+  }
+
   /// Ligne de contrôle unique pour un tour humain, que le joueur soit en
   /// train de choisir combien de 5 garder sur un lancer en attente ou
   /// simplement idle (rien en attente) — même méthode dans les deux cas,
@@ -1585,11 +1649,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ? l10n.logHotDiceMessage
         : _scorePercentLabel(effective.diceToRoll, effective.extendedValues);
 
-    void onRoll() {
-      final notifier = ref.read(gameProvider.notifier);
-      if (pending != null) notifier.applyKeep(declineFivesCount: declineCount);
-      notifier.roll();
-    }
+    void onRoll() => _rollForHumanTurn(engine, turn);
 
     void onStop() {
       final notifier = ref.read(gameProvider.notifier);

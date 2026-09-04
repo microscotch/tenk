@@ -286,6 +286,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Efeitos sonoros';
 
   @override
+  String get settingsControlsTitle => 'Contrôles';
+
+  @override
+  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+
+  @override
   String get settingsPausedGamesTitle => 'Jogos em pausa';
 
   @override

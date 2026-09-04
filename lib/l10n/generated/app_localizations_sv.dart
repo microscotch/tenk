@@ -286,6 +286,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Ljudeffekter';
 
   @override
+  String get settingsControlsTitle => 'Contrôles';
+
+  @override
+  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+
+  @override
   String get settingsPausedGamesTitle => 'Pausade spel';
 
   @override
