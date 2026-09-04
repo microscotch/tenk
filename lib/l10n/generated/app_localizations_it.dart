@@ -208,9 +208,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bustExceedsTarget => 'Questo lancio supererebbe 10000.';
 
   @override
-  String get fullHandMustReroll => 'Dadi bollenti: devi rilanciare!';
-
-  @override
   String get failureBelowMinimum => 'Punteggio insufficiente per fermarsi.';
 
   @override

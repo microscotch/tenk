@@ -770,9 +770,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // On lit les valeurs proposées sur les radios plutôt que du texte brut :
-    // des chiffres isolés apparaissent ailleurs sur l'écran.
-    final offered = tester.widgetList<Radio<int>>(find.byType(Radio<int>)).map((r) => r.value).toList();
+    // On lit les valeurs proposées dans la combobox plutôt que du texte
+    // brut : des chiffres isolés apparaissent ailleurs sur l'écran.
+    final dropdown = tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>));
+    final offered = dropdown.items!.map((item) => item.value).toList();
     expect(offered, [0, 1],
         reason: 'garder 0 ou 1 cinq reste légal, en garder 2 dépasserait 10000');
   });

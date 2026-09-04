@@ -207,9 +207,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bustExceedsTarget => 'This roll would go over 10000.';
 
   @override
-  String get fullHandMustReroll => 'Hot dice: you must reroll!';
-
-  @override
   String get failureBelowMinimum => 'Score too low to stop.';
 
   @override

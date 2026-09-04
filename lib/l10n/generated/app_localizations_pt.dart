@@ -207,9 +207,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bustExceedsTarget => 'Esta jogada ultrapassaria 10000.';
 
   @override
-  String get fullHandMustReroll => 'Dados quentes: tens de relançar!';
-
-  @override
   String get failureBelowMinimum => 'Pontuação insuficiente para parar.';
 
   @override

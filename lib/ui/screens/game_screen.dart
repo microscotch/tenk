@@ -160,7 +160,17 @@ Widget _rollButton({required VoidCallback onPressed, required String label}) {
     onPressed: onPressed,
     child: Row(
       mainAxisSize: MainAxisSize.min,
-      children: [const Icon(Icons.casino, size: 18), const SizedBox(width: 8), Text(label)],
+      children: [
+        const Icon(Icons.casino, size: 18),
+        const SizedBox(width: 8),
+        // Flexible + ellipsis : ce bouton est parfois contraint à une
+        // largeur fixe (voir _controlButtonWidth dans game_screen.dart), qui
+        // doit rester identique que le libellé soit un court pourcentage ou
+        // "Main pleine !" — un Text nu débordant plutôt que de rétrécir.
+        Flexible(
+          child: Text(label, overflow: TextOverflow.ellipsis, softWrap: false),
+        ),
+      ],
     ),
   );
 }
@@ -354,6 +364,9 @@ List<_LogEntry> _logEntriesForStep(
 
   if (includeBust && nextTurn.busted && !(prevTurn?.busted ?? false)) {
     entries.add(_LogEntry(at, playerName, l10n.bustedTitle));
+    if (nextTurn.bustReason == BustReason.exceedsTarget) {
+      entries.add(_LogEntry(at, playerName, l10n.bustExceedsTarget));
+    }
   }
 
   return entries;
@@ -594,13 +607,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     if (turn.pendingRoll == null) {
       SoundEffects.instance.playBust();
-      _appendLog(
-        _LogEntry(
-          DateTime.now(),
-          engine!.currentPlayer.name,
-          AppLocalizations.of(context).bustedTitle,
-        ),
-      );
+      _logBust(engine!, turn);
       setState(() => _bustRevealed = true);
       return;
     }
@@ -608,15 +615,30 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _bustRevealTimer = Timer(_bustRevealDelay, () {
       if (!mounted) return;
       SoundEffects.instance.playBust();
+      _logBust(engine!, turn);
+      setState(() => _bustRevealed = true);
+    });
+  }
+
+  /// Journalise un craque : le titre "Craqué !" toujours, suivi du détail
+  /// "dépasserait 10000" quand c'est la cause précise (voir [BustReason]) —
+  /// remplace l'ancien bandeau orange au-dessus des boutons (voir
+  /// [_buildBustedView]), dont la présence changeait la forme de l'écran
+  /// selon la raison du craque.
+  void _logBust(GameEngine engine, TurnState turn) {
+    final l10n = AppLocalizations.of(context);
+    _appendLog(
+      _LogEntry(DateTime.now(), engine.currentPlayer.name, l10n.bustedTitle),
+    );
+    if (turn.bustReason == BustReason.exceedsTarget) {
       _appendLog(
         _LogEntry(
           DateTime.now(),
-          engine!.currentPlayer.name,
-          AppLocalizations.of(context).bustedTitle,
+          engine.currentPlayer.name,
+          l10n.bustExceedsTarget,
         ),
       );
-      setState(() => _bustRevealed = true);
-    });
+    }
   }
 
   /// Programme [action] pour s'exécuter seule après [delay] (réglable dans
@@ -1045,6 +1067,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   static const _previewFadeDuration = Duration(milliseconds: 300);
 
+  /// Largeur fixe et identique des boutons "Lancer" et "Stop" (voir
+  /// [_buildHumanControlRow]) : évite que le bouton Lancer change de
+  /// taille/position selon la longueur de son libellé ("100 %" contre "Main
+  /// pleine !") ou selon que Stop soit affiché à côté ou non. Assez large
+  /// pour le plus long des deux libellés (icône dé + "Main pleine !").
+  static const double _controlButtonWidth = 164.0;
+
   /// Zone bordurée "Piste" : uniquement les dés du lancer en attente de
   /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
   /// le libellé lui-même, entre parenthèses, une fois [showScore] (les dés
@@ -1358,23 +1387,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
             height: 24,
             child: CircularProgressIndicator(strokeWidth: 2.5),
           )
-        else ...[
-          // Pas de titre "Craqué !" ici : il apparaît déjà dans le journal de
-          // partie (voir _scheduleBustRevealIfNeeded), pas besoin de le
-          // répéter en double au-dessus du bouton.
-          if (turn.bustReason == BustReason.exceedsTarget)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                l10n.bustExceedsTarget,
-                style: const TextStyle(color: Colors.orange),
-              ),
-            ),
+        else
+          // Le titre "Craqué !" et, le cas échéant, la raison précise
+          // (dépassement de 10000) apparaissent déjà dans le journal de
+          // partie (voir _logBust) : pas de bandeau ici, pour que cette zone
+          // ne change jamais de forme selon la raison du craque.
           FilledButton(
             onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
             child: Text(l10n.bustedTitle),
           ),
-        ],
       ],
     );
   }
@@ -1441,22 +1462,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (effective.mustContinue)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              l10n.fullHandMustReroll,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
-              ),
-            ),
-          )
-        // "Vous devez lancer les dés avant de pouvoir vous arrêter" ne dit
-        // rien que l'absence/désactivation de "Stop" ne dise déjà (voir
-        // BankFailureReason.notRolledYet) ; jamais affiché non plus pendant
-        // un choix de 5 en cours (pas d'équivalent avant cette refonte).
-        else if (pending == null &&
+        // "Main pleine" et "dépasserait 10000" ont désormais leur propre
+        // entrée dans le journal de partie (voir logHotDiceMessage, déjà
+        // repris comme libellé du bouton Lancer ci-dessous, et _logBust)
+        // plutôt qu'un bandeau ici : cette zone ne doit jamais changer de
+        // forme selon la raison pour laquelle on ne peut pas (encore)
+        // s'arrêter. Les autres raisons (score insuffisant, finirait sur
+        // 50...) restent expliquées ici, le bouton Stop étant alors
+        // simplement absent plutôt que désactivé (voir plus bas).
+        if (pending == null &&
+            !effective.mustContinue &&
             !bankAttempt.success &&
             bankAttempt.reason != BankFailureReason.notRolledYet)
           Padding(
@@ -1466,42 +1481,46 @@ class _GameScreenState extends ConsumerState<GameScreen>
               style: TextStyle(color: Colors.grey.shade400),
             ),
           ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
+        // Le bouton Lancer reste toujours à la même position, aligné à
+        // gauche : Stop (si s'arrêter est légal) puis la combobox de choix
+        // des 5 (si un vrai choix existe) apparaissent à sa droite, à la
+        // demande, sans jamais le déplacer. Lancer et Stop partagent la même
+        // largeur fixe (_controlButtonWidth), pour ne pas non plus changer
+        // de taille selon leur libellé.
+        SizedBox(
+          width: double.infinity,
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              _rollButton(onPressed: onRoll, label: rollLabel),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: bankAttempt.success ? onStop : null,
-                child: Text(l10n.stopButton),
+              SizedBox(
+                width: _controlButtonWidth,
+                child: _rollButton(onPressed: onRoll, label: rollLabel),
               ),
+              if (bankAttempt.success) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: _controlButtonWidth,
+                  child: OutlinedButton(
+                    onPressed: onStop,
+                    child: Text(
+                      l10n.stopButton,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+              ],
               if (canChoose) ...[
                 const SizedBox(width: 12),
                 const Icon(Icons.recycling, size: 18),
-                RadioGroup<int>(
-                  groupValue: selectedKeep,
+                const SizedBox(width: 4),
+                DropdownButton<int>(
+                  value: selectedKeep,
+                  underline: const SizedBox.shrink(),
+                  items: [
+                    for (var i = minKeep; i <= maxKeep; i++)
+                      DropdownMenuItem(value: i, child: Text('$i')),
+                  ],
                   onChanged: (v) => setState(() => _selectedKeep = v!),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Toute la ligne (dé + libellé), pas seulement le petit
-                      // rond du Radio, doit réagir au tap — comme les
-                      // ChoiceChip qu'elle remplace.
-                      for (var i = minKeep; i <= maxKeep; i++)
-                        GestureDetector(
-                          onTap: () => setState(() => _selectedKeep = i),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Radio<int>(value: i),
-                              Text('$i'),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
                 ),
               ],
             ],

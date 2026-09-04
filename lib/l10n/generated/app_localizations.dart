@@ -440,12 +440,6 @@ abstract class AppLocalizations {
   /// **'Ce lancer ferait dépasser 10000.'**
   String get bustExceedsTarget;
 
-  /// Avertissement affiché quand tous les dés ont scoré, obligeant à relancer.
-  ///
-  /// In fr, this message translates to:
-  /// **'Main pleine : vous devez relancer !'**
-  String get fullHandMustReroll;
-
   /// Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis.
   ///
   /// In fr, this message translates to:

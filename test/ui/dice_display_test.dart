@@ -89,7 +89,11 @@ void main() {
     expect(tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5).map((d) => d.state),
         everyElement(DieVisualState.kept));
 
-    await tester.tap(find.text('1'));
+    // Interagit directement avec le callback de la combobox (plutôt que
+    // d'ouvrir puis de taper l'entrée du menu) : plus robuste, et teste la
+    // même mise à jour d'état que la vraie sélection à l'écran.
+    final dropdown = tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>));
+    dropdown.onChanged!(1);
     await tester.pump();
 
     // Un seul 5 gardé : 200 + 50 = 250, l'aperçu doit se mettre à jour.

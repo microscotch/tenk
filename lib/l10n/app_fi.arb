@@ -48,7 +48,6 @@
   "continueButton": "Jatka",
   "thisRollScoreLabel": "Tämän heiton pisteet: {score}",
   "howManyFivesToKeep": "Kuinka monta viittä säilytät?",
-  "fullHandMustReroll": "Kuumat nopat: sinun täytyy heittää uudelleen!",
   "failureBelowMinimum": "Pisteet liian alhaiset lopettamiseen.",
   "failureEndsIn50": "Et voi lopettaa pisteisiin, jotka päättyvät lukuun 50.",
   "failureMustContinueHotDice": "Sinun täytyy heittää uudelleen.",

@@ -207,9 +207,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get bustExceedsTarget => 'Dette kastet ville overskride 10000.';
 
   @override
-  String get fullHandMustReroll => 'Varme terninger: du må kaste på nytt!';
-
-  @override
   String get failureBelowMinimum => 'For lav poengsum til å stoppe.';
 
   @override

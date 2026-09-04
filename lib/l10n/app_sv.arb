@@ -48,7 +48,6 @@
   "continueButton": "Fortsätt",
   "thisRollScoreLabel": "Poäng för detta kast: {score}",
   "howManyFivesToKeep": "Hur många femmor vill du behålla?",
-  "fullHandMustReroll": "Heta tärningar: du måste kasta igen!",
   "failureBelowMinimum": "För lågt poäng för att stanna.",
   "failureEndsIn50": "Du kan inte stanna på ett poäng som slutar på 50.",
   "failureMustContinueHotDice": "Du måste kasta igen.",

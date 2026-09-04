@@ -209,9 +209,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bustExceedsTarget => 'Dieser Wurf würde 10000 überschreiten.';
 
   @override
-  String get fullHandMustReroll => 'Heiße Würfel: Du musst erneut würfeln!';
-
-  @override
   String get failureBelowMinimum => 'Punktzahl zu niedrig, um aufzuhören.';
 
   @override

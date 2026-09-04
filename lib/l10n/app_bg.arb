@@ -48,7 +48,6 @@
   "continueButton": "Продължи",
   "thisRollScoreLabel": "Точки от това хвърляне: {score}",
   "howManyFivesToKeep": "Колко петици да запазиш?",
-  "fullHandMustReroll": "Горещи зарове: трябва да хвърлиш отново!",
   "failureBelowMinimum": "Недостатъчен резултат, за да спреш.",
   "failureEndsIn50": "Не можеш да спреш на резултат, завършващ на 50.",
   "failureMustContinueHotDice": "Трябва да хвърлиш отново.",

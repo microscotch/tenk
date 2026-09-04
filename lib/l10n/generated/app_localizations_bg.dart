@@ -207,9 +207,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get bustExceedsTarget => 'Това хвърляне би надвишило 10000.';
 
   @override
-  String get fullHandMustReroll => 'Горещи зарове: трябва да хвърлиш отново!';
-
-  @override
   String get failureBelowMinimum => 'Недостатъчен резултат, за да спреш.';
 
   @override

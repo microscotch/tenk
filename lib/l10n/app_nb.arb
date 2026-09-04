@@ -48,7 +48,6 @@
   "continueButton": "Fortsett",
   "thisRollScoreLabel": "Poeng for dette kastet: {score}",
   "howManyFivesToKeep": "Hvor mange femmere vil du beholde?",
-  "fullHandMustReroll": "Varme terninger: du må kaste på nytt!",
   "failureBelowMinimum": "For lav poengsum til å stoppe.",
   "failureEndsIn50": "Du kan ikke stoppe på en poengsum som ender på 50.",
   "failureMustContinueHotDice": "Du må kaste på nytt.",

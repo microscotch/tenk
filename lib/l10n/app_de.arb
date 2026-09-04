@@ -48,7 +48,6 @@
   "continueButton": "Weiter",
   "thisRollScoreLabel": "Punkte dieses Wurfs: {score}",
   "howManyFivesToKeep": "Wie viele 5en behalten?",
-  "fullHandMustReroll": "Heiße Würfel: Du musst erneut würfeln!",
   "failureBelowMinimum": "Punktzahl zu niedrig, um aufzuhören.",
   "failureEndsIn50": "Du darfst nicht bei einer Punktzahl aufhören, die auf 50 endet.",
   "failureMustContinueHotDice": "Du musst erneut würfeln.",

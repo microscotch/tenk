@@ -48,7 +48,6 @@
   "continueButton": "Continua",
   "thisRollScoreLabel": "Punti di questo lancio: {score}",
   "howManyFivesToKeep": "Quanti 5 vuoi tenere?",
-  "fullHandMustReroll": "Dadi bollenti: devi rilanciare!",
   "failureBelowMinimum": "Punteggio insufficiente per fermarsi.",
   "failureEndsIn50": "Non puoi fermarti con un punteggio che finisce in 50.",
   "failureMustContinueHotDice": "Devi rilanciare.",

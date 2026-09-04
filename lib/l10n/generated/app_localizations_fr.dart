@@ -207,9 +207,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bustExceedsTarget => 'Ce lancer ferait dépasser 10000.';
 
   @override
-  String get fullHandMustReroll => 'Main pleine : vous devez relancer !';
-
-  @override
   String get failureBelowMinimum => 'Score insuffisant pour s\'arrêter.';
 
   @override

@@ -48,7 +48,6 @@
   "continueButton": "Continuă",
   "thisRollScoreLabel": "Scorul acestei aruncări: {score}",
   "howManyFivesToKeep": "Câte cifre de 5 păstrezi?",
-  "fullHandMustReroll": "Zaruri fierbinți: trebuie să arunci din nou!",
   "failureBelowMinimum": "Scor insuficient pentru a te opri.",
   "failureEndsIn50": "Nu te poți opri la un scor care se termină în 50.",
   "failureMustContinueHotDice": "Trebuie să arunci din nou.",

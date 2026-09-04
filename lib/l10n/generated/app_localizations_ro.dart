@@ -208,10 +208,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get bustExceedsTarget => 'Această aruncare ar depăși 10000.';
 
   @override
-  String get fullHandMustReroll =>
-      'Zaruri fierbinți: trebuie să arunci din nou!';
-
-  @override
   String get failureBelowMinimum => 'Scor insuficient pentru a te opri.';
 
   @override

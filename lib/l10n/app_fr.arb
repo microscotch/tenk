@@ -200,9 +200,6 @@
   "bustExceedsTarget": "Ce lancer ferait dépasser 10000.",
   "@bustExceedsTarget": {"description": "Explique un craque déclenché par un dépassement de 10000 points."},
 
-  "fullHandMustReroll": "Main pleine : vous devez relancer !",
-  "@fullHandMustReroll": {"description": "Avertissement affiché quand tous les dés ont scoré, obligeant à relancer."},
-
   "failureBelowMinimum": "Score insuffisant pour s'arrêter.",
   "@failureBelowMinimum": {"description": "Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis."},
 

@@ -48,7 +48,6 @@
   "continueButton": "Continuar",
   "thisRollScoreLabel": "Puntos de esta tirada: {score}",
   "howManyFivesToKeep": "¿Cuántos 5 quieres guardar?",
-  "fullHandMustReroll": "¡Dados calientes: debes volver a tirar!",
   "failureBelowMinimum": "Puntuación insuficiente para plantarse.",
   "failureEndsIn50": "No puedes plantarte con una puntuación que termine en 50.",
   "failureMustContinueHotDice": "Debes volver a tirar.",

@@ -48,7 +48,6 @@
   "continueButton": "Continuar",
   "thisRollScoreLabel": "Pontos desta jogada: {score}",
   "howManyFivesToKeep": "Quantos 5 queres guardar?",
-  "fullHandMustReroll": "Dados quentes: tens de relançar!",
   "failureBelowMinimum": "Pontuação insuficiente para parar.",
   "failureEndsIn50": "Não podes parar com uma pontuação que termine em 50.",
   "failureMustContinueHotDice": "Tens de relançar.",

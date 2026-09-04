@@ -208,10 +208,6 @@ class AppLocalizationsFi extends AppLocalizations {
   String get bustExceedsTarget => 'Tämä heitto ylittäisi 10000.';
 
   @override
-  String get fullHandMustReroll =>
-      'Kuumat nopat: sinun täytyy heittää uudelleen!';
-
-  @override
   String get failureBelowMinimum => 'Pisteet liian alhaiset lopettamiseen.';
 
   @override

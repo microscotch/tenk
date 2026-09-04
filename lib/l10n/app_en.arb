@@ -48,7 +48,6 @@
   "continueButton": "Continue",
   "thisRollScoreLabel": "This roll's score: {score}",
   "howManyFivesToKeep": "How many 5s to keep?",
-  "fullHandMustReroll": "Hot dice: you must reroll!",
   "failureBelowMinimum": "Score too low to stop.",
   "failureEndsIn50": "You can't stop on a score ending in 50.",
   "failureMustContinueHotDice": "You must reroll.",
