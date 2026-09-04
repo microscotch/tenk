@@ -4,6 +4,56 @@ import '../combination.dart';
 import '../turn_state.dart';
 import 'ai_strategy.dart';
 
+/// Vrai si le risque de craquer au prochain lancer reste dans la marge
+/// [baseMaxRisk] du profil, une fois ce risque mis à l'échelle de ce qui est
+/// réellement en jeu. [baseMaxRisk] est calibré pour un craque "ordinaire"
+/// qui ne coûte que le score du tour en cours ; quand la ligne courante de
+/// la grille porte déjà un tiret actif, ce même craque la barrerait EN PLUS,
+/// faisant retomber le score total à sa valeur précédente ([barLossIfBusted]
+/// = ce qui serait perdu en plus du tour) — un enjeu bien plus lourd, que la
+/// marge de risque tolérée doit refléter en se réduisant d'autant.
+/// [barLossIfBusted] à 0 (pas de tiret actif) laisse le calcul inchangé.
+bool _withinRiskBudget(
+  TurnState state, {
+  required double baseMaxRisk,
+  required int barLossIfBusted,
+}) {
+  final p = bustProbability(state.diceToRoll, state.extendedValues);
+  final stakes = state.bankedScore + barLossIfBusted;
+  final adjustedMaxRisk = baseMaxRisk * state.bankedScore / stakes;
+  return p <= adjustedMaxRisk;
+}
+
+/// Ajuste [declineCount] au minimum nécessaire pour que le score de tour qui
+/// en résulterait ne finisse pas par 50 (voir [BankFailureReason.endsIn50])
+/// — un total pareil interdit de s'arrêter dessus, ce qui forcerait un
+/// lancer supplémentaire par ailleurs évitable, et donc un risque de craque
+/// gratuit. Cherche d'abord à garder un 5 de plus (aucune perte de points),
+/// puis à en décliner un de plus si la première option n'est pas légale (le
+/// profil déclinait déjà tout ce qu'il pouvait) ; sans effet si aucun
+/// ajustement légal ne règle le problème (par ex. un seul 5 déclinable sans
+/// dé "junk" pour l'accompagner au relancer, où garder-tout est la seule
+/// option — voir [RollAnalysis.canDeclineFives]).
+int _avoidEndingIn50(
+  TurnState turn,
+  RollAnalysis analysis,
+  ScoringGroup fives,
+  int declineCount,
+) {
+  // applyKeepDecision exige que pendingRoll soit déjà posé sur l'état passé :
+  // toujours vrai côté appelant réel (analysis vient de turn.pendingRoll!,
+  // voir GameNotifier.playAiTurnStep), mais pas garanti par le type de
+  // [turn] lui-même — on le pose explicitement plutôt que de dépendre de ce
+  // couplage implicite.
+  final withRoll = turn.copyWith(pendingRoll: analysis);
+  bool endsIn50(int decline) => applyKeepDecision(withRoll, declineFivesCount: decline).bankedScore % 100 == 50;
+  if (!endsIn50(declineCount)) return declineCount;
+  final maxDecline = _maxDeclinable(analysis, fives);
+  if (declineCount > 0 && !endsIn50(declineCount - 1)) return declineCount - 1;
+  if (declineCount < maxDecline && !endsIn50(declineCount + 1)) return declineCount + 1;
+  return declineCount;
+}
+
 /// Calcule par énumération exhaustive la probabilité de craquer (aucun dé
 /// marquant) sur un lancer de [diceCount] dés, compte tenu des valeurs déjà
 /// étendues ce tour.
@@ -69,21 +119,30 @@ AiStrategy aiStrategyFor(AiDifficulty difficulty) {
   }
 }
 
-/// Prudent : ne rejette jamais un 5 (préfère sécuriser les points), et
-/// s'arrête dès que le risque de craquer au prochain lancer dépasse 25%.
+/// Prudent : ne rejette jamais un 5 de son propre chef (préfère sécuriser
+/// les points) — sauf si les garder tous finirait sur un score en 50, où
+/// décliner le dernier 5 reste le seul moyen de rester sur une position dont
+/// on peut s'arrêter — et s'arrête dès que le risque de craquer au prochain
+/// lancer dépasse 25%, une marge resserrée d'autant si un nouveau craque
+/// barrerait la ligne courante (voir [_withinRiskBudget]).
 class CautiousAi implements AiStrategy {
   const CautiousAi();
 
   @override
-  int decideDeclineFives(RollAnalysis analysis, TurnState state) => 0;
+  int decideDeclineFives(RollAnalysis analysis, TurnState state) {
+    final fives = analysis.declinableFives;
+    if (fives == null || !analysis.canDeclineFives) return 0;
+    return _avoidEndingIn50(state, analysis, fives, 0);
+  }
 
   @override
   bool decideContinue({
     required TurnState state,
     required int minimumRequired,
     required int currentTotalScore,
+    required int barLossIfBusted,
   }) {
-    return bustProbability(state.diceToRoll, state.extendedValues) <= 0.25;
+    return _withinRiskBudget(state, baseMaxRisk: 0.25, barLossIfBusted: barLossIfBusted);
   }
 
   @override
@@ -102,8 +161,10 @@ class CautiousAi implements AiStrategy {
 }
 
 /// Équilibré : rejette un 5 isolé seulement si cela laisse un lot d'au moins
-/// 3 dés à relancer (bonnes chances de combo), et pousse sa chance jusqu'à
-/// un risque de craque de 45%.
+/// 3 dés à relancer (bonnes chances de combo), quitte à en garder un de plus
+/// si ce choix finirait sur un score en 50, et pousse sa chance jusqu'à un
+/// risque de craque de 45%, une marge resserrée d'autant si un nouveau
+/// craque barrerait la ligne courante (voir [_withinRiskBudget]).
 class BalancedAi implements AiStrategy {
   const BalancedAi();
 
@@ -112,7 +173,8 @@ class BalancedAi implements AiStrategy {
     final fives = analysis.declinableFives;
     if (fives == null || !analysis.canDeclineFives) return 0;
     final rerollPoolIfDeclined = analysis.junkDiceCount + fives.diceCount;
-    return rerollPoolIfDeclined >= 3 ? _maxDeclinable(analysis, fives) : 0;
+    final baseline = rerollPoolIfDeclined >= 3 ? _maxDeclinable(analysis, fives) : 0;
+    return _avoidEndingIn50(state, analysis, fives, baseline);
   }
 
   @override
@@ -120,8 +182,9 @@ class BalancedAi implements AiStrategy {
     required TurnState state,
     required int minimumRequired,
     required int currentTotalScore,
+    required int barLossIfBusted,
   }) {
-    return bustProbability(state.diceToRoll, state.extendedValues) <= 0.45;
+    return _withinRiskBudget(state, baseMaxRisk: 0.45, barLossIfBusted: barLossIfBusted);
   }
 
   @override
@@ -137,8 +200,10 @@ class BalancedAi implements AiStrategy {
 }
 
 /// Agressif : rejette systématiquement les 5 isolés dès que possible pour
-/// chercher de plus gros combos, et pousse sa chance jusqu'à un risque de
-/// craque de 65%.
+/// chercher de plus gros combos (quitte à en garder un de plus si tout
+/// décliner finirait quand même sur un score en 50), et pousse sa chance
+/// jusqu'à un risque de craque de 65%, une marge resserrée d'autant si un
+/// nouveau craque barrerait la ligne courante (voir [_withinRiskBudget]).
 class AggressiveAi implements AiStrategy {
   const AggressiveAi();
 
@@ -146,7 +211,7 @@ class AggressiveAi implements AiStrategy {
   int decideDeclineFives(RollAnalysis analysis, TurnState state) {
     final fives = analysis.declinableFives;
     if (fives == null || !analysis.canDeclineFives) return 0;
-    return _maxDeclinable(analysis, fives);
+    return _avoidEndingIn50(state, analysis, fives, _maxDeclinable(analysis, fives));
   }
 
   @override
@@ -154,8 +219,9 @@ class AggressiveAi implements AiStrategy {
     required TurnState state,
     required int minimumRequired,
     required int currentTotalScore,
+    required int barLossIfBusted,
   }) {
-    return bustProbability(state.diceToRoll, state.extendedValues) <= 0.65;
+    return _withinRiskBudget(state, baseMaxRisk: 0.65, barLossIfBusted: barLossIfBusted);
   }
 
   @override

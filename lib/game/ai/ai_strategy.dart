@@ -10,10 +10,21 @@ abstract class AiStrategy {
   /// Décide si l'IA continue volontairement à lancer les dés alors qu'elle
   /// pourrait légalement s'arrêter (l'appelant ne pose la question que
   /// lorsque banquer est effectivement une option légale).
+  ///
+  /// [barLossIfBusted] : points déjà acquis (au-delà du score de ce tour,
+  /// toujours perdu en cas de craque) que ce craque ferait perdre EN PLUS en
+  /// barrant la ligne courante de la grille — c'est-à-dire `totalScore -
+  /// previousScore` si la ligne courante porte déjà un tiret actif
+  /// ([Player.hasTiret]), 0 sinon (un premier craque se contente d'un tiret,
+  /// sans perte de score). Un craque sur une ligne déjà tiretée coûte donc
+  /// bien plus qu'un simple tour perdu ; une stratégie sérieuse doit en tenir
+  /// compte plutôt que d'évaluer chaque tour indépendamment du reste de la
+  /// grille.
   bool decideContinue({
     required TurnState state,
     required int minimumRequired,
     required int currentTotalScore,
+    required int barLossIfBusted,
   });
 
   /// Décide si l'IA accepte de reprendre la main héritée du tour précédent

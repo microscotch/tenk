@@ -271,10 +271,15 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// s'arrêter y est déjà légal). Même rôle que [previewAiAcceptInheritedHand]
   /// pour cette autre décision.
   bool previewAiContinue(TurnState turn) {
+    final player = state!.currentPlayer;
     return _currentStrategy().decideContinue(
       state: turn,
       minimumRequired: state!.minimumForCurrentPlayer,
-      currentTotalScore: state!.currentPlayer.totalScore,
+      currentTotalScore: player.totalScore,
+      // Ligne courante déjà tiretée : un nouveau craque la barrerait,
+      // retombant sur le score précédent plutôt que de juste marquer un
+      // second tiret (voir Player.applyBust).
+      barLossIfBusted: player.hasTiret ? player.totalScore - player.previousScore : 0,
     );
   }
 
