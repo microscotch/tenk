@@ -424,6 +424,33 @@ void main() {
     expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'reprendre la main héritée lance directement, sans étape intermédiaire');
   });
 
+  testWidgets('refuser la main héritée lance directement une main neuve de 5 dés, sans étape intermédiaire', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 3); // A hérite de 3 dés d'un tour précédent
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B'], autoPlayers: {0}),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('Nouvelle main'));
+    await tester.pump();
+
+    final after = container.read(gameProvider)!;
+    expect(after.activeTurn!.diceToRoll, 5);
+    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'refuser la main héritée lance directement, sans repasser par le bouton Lancer');
+  });
+
   testWidgets(
       'sans le mode auto, la main héritée n\'est reprise/lancée que sur clic manuel, même après un long délai',
       (tester) async {

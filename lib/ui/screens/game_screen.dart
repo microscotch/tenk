@@ -1132,6 +1132,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             onPressed: () {
               Navigator.of(dialogContext).pop();
               notifier.startTurn(useFullHand: true);
+              notifier.roll();
             },
             child: Text('${l10n.newHandButton} (${_scorePercentLabel(5, const {})})'),
           ),
@@ -1180,7 +1181,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
               const SizedBox(width: 8),
             ],
             OutlinedButton(
-              onPressed: () => notifier.startTurn(useFullHand: true),
+              onPressed: () {
+                notifier.startTurn(useFullHand: true);
+                notifier.roll();
+              },
               child: Text(l10n.declineInheritedHandButton),
             ),
           ],
