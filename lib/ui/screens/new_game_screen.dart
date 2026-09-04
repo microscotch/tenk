@@ -29,15 +29,28 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
 
   final _random = math.Random();
 
+  /// Vrai tant que le nom du joueur 1 doit encore recevoir son texte par
+  /// défaut localisé ("Joueur 1") — remis à faux dès que [didChangeDependencies]
+  /// le fait, avant le tout premier build. Un `TextEditingController` ne peut
+  /// pas être construit avec ce texte directement dans [initState] :
+  /// `AppLocalizations.of(context)` (comme tout `.of(context)` reposant sur
+  /// un `InheritedWidget`) ne peut pas être appelé avant que `initState` ne
+  /// soit terminé — l'appeler quand même y plantait systématiquement l'écran
+  /// pour tout joueur n'ayant encore jamais renseigné son nom (aucun nom
+  /// enregistré dans les préférences), un cas resté non testé jusqu'ici car
+  /// cette machine de développement en a toujours un de sauvegardé.
+  bool _needsDefaultOwnerName = false;
+
   @override
   void initState() {
     super.initState();
     final ownerName = ref.read(settingsProvider).playerName.trim();
+    _needsDefaultOwnerName = ownerName.isEmpty;
     // Par défaut : le propriétaire de l'appareil (humain, auto désactivé —
     // chaque action attend un clic manuel) et une IA (auto activé, puisque
     // rien ne justifie de cliquer manuellement à travers le tour d'un bot).
     _names = [
-      TextEditingController(text: ownerName.isEmpty ? AppLocalizations.of(context).defaultPlayerName(1) : ownerName),
+      TextEditingController(text: ownerName),
       TextEditingController(text: kAiCharacterNames[_random.nextInt(kAiCharacterNames.length)]),
     ];
     _nameFocusNodes = [for (var i = 0; i < _names.length; i++) _newNameFocusNode()];
@@ -46,6 +59,15 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
 
     if (ownerName.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _promptForOwnerName());
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_needsDefaultOwnerName) {
+      _needsDefaultOwnerName = false;
+      _names[0].text = AppLocalizations.of(context).defaultPlayerName(1);
     }
   }
 
@@ -254,15 +276,23 @@ class _PlayerNameField extends StatelessWidget {
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
       );
     }
-    return InkWell(
-      borderRadius: BorderRadius.circular(4),
-      onTap: focusNode.requestFocus,
-      child: InputDecorator(
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
-        child: Text(
-          controller.text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+    // `focusNode` doit rester attaché à l'arbre de focus même dans ce rendu
+    // en lecture seule (Focus(), pas juste l'InkWell) : un FocusNode jamais
+    // attaché ne réagit pas à requestFocus() — sans ce wrapper, le tap ne
+    // fait donc jamais rien, et le champ ne bascule jamais vers le
+    // TextField éditable (bug vécu : impossible de renommer un joueur).
+    return Focus(
+      focusNode: focusNode,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: focusNode.requestFocus,
+        child: InputDecorator(
+          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+          child: Text(
+            controller.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
     );
