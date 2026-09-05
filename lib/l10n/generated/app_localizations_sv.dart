@@ -163,6 +163,22 @@ class AppLocalizationsSv extends AppLocalizations {
   String get logScoreCollisionMessage => 'Score barré :';
 
   @override
+  String logRollGainMessage(String kept, int gain, int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dés',
+      one: '$count dé',
+    );
+    return '$kept : $gain, $_temp0 => $total pts';
+  }
+
+  @override
+  String logRollGainHotDiceMessage(String kept, int gain, int total) {
+    return '$kept : $gain, main pleine => $total pts';
+  }
+
+  @override
   String logBankedMessage(int score, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -188,17 +204,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get stopButton => 'Stanna';
-
-  @override
-  String diceToRollLabel(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count tärningar',
-      one: '$count tärning',
-    );
-    return '$_temp0 att kasta';
-  }
 
   @override
   String get bustedTitle => 'Bom!';

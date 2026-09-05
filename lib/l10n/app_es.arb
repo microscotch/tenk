@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Relanzar (dados calientes)",
   "stopButton": "Plantarse",
   "rollDiceButton": "Lanzar los dados",
-  "diceToRollLabel": "{count, plural, one{{count} dado} other{{count} dados}} por lanzar",
   "bustedTitle": "¡Te has pasado!",
   "bustExceedsTarget": "Esta tirada superaría 10000.",
   "continueButton": "Continuar",

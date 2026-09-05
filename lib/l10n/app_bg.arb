@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Хвърли отново (горещи зарове)",
   "stopButton": "Спри се",
   "rollDiceButton": "Хвърли заровете",
-  "diceToRollLabel": "{count, plural, one{{count} зар} other{{count} зара}} за хвърляне",
   "bustedTitle": "Изгоря!",
   "bustExceedsTarget": "Това хвърляне би надвишило 10000.",
   "continueButton": "Продължи",

@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Aruncă din nou (zaruri fierbinți)",
   "stopButton": "Oprește-te",
   "rollDiceButton": "Aruncă zarurile",
-  "diceToRollLabel": "{count, plural, one{{count} zar} few{{count} zaruri} other{{count} de zaruri}} de aruncat",
   "bustedTitle": "Ai ars!",
   "bustExceedsTarget": "Această aruncare ar depăși 10000.",
   "continueButton": "Continuă",

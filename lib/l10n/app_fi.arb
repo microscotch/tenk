@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Heitä uudelleen (kuumat nopat)",
   "stopButton": "Lopeta",
   "rollDiceButton": "Heitä noppaa",
-  "diceToRollLabel": "{count, plural, one{{count} noppa} other{{count} noppaa}} heitettäväksi",
   "bustedTitle": "Meni pieleen!",
   "bustExceedsTarget": "Tämä heitto ylittäisi 10000.",
   "continueButton": "Jatka",

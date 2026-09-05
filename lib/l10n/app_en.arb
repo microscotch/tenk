@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Reroll (hot dice)",
   "stopButton": "Stop",
   "rollDiceButton": "Roll the dice",
-  "diceToRollLabel": "{count, plural, one{{count} die} other{{count} dice}} to roll",
   "bustedTitle": "Busted!",
   "bustExceedsTarget": "This roll would go over 10000.",
   "continueButton": "Continue",

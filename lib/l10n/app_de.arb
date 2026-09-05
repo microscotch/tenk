@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Erneut würfeln (heiße Würfel)",
   "stopButton": "Aufhören",
   "rollDiceButton": "Würfeln",
-  "diceToRollLabel": "{count, plural, one{{count} Würfel} other{{count} Würfel}} zu würfeln",
   "bustedTitle": "Verloren!",
   "bustExceedsTarget": "Dieser Wurf würde 10000 überschreiten.",
   "continueButton": "Weiter",

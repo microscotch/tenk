@@ -167,6 +167,27 @@
   "logScoreCollisionMessage": "Score barré :",
   "@logScoreCollisionMessage": {"description": "Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné."},
 
+  "logRollGainMessage": "{kept} : {gain}, {count, plural, one{{count} dé} other{{count} dés}} => {total} pts",
+  "@logRollGainMessage": {
+    "description": "Entrée du journal de partie résumant un lancer résolu : dés gardés, points marqués sur ce lancer, dés restant à relancer, puis total de la main en cours.",
+    "placeholders": {
+      "kept": {"type": "String"},
+      "gain": {"type": "int"},
+      "count": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
+  "logRollGainHotDiceMessage": "{kept} : {gain}, main pleine => {total} pts",
+  "@logRollGainHotDiceMessage": {
+    "description": "Variante de logRollGainMessage quand le lancer complète la main (tous les dés scorent) : la main repart pleine au lieu d'annoncer des dés restants.",
+    "placeholders": {
+      "kept": {"type": "String"},
+      "gain": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
   "logBankedMessage": "{score} {count, plural, one{{count} dé} other{{count} dés}}",
   "@logBankedMessage": {
     "description": "Entrée du journal de partie quand le joueur prend la mise (banque son score) : score pris, suivi du nombre de dés restants hérités par le joueur suivant.",
@@ -187,12 +208,6 @@
 
   "stopButton": "S'arrêter",
   "@stopButton": {"description": "Bouton pour arrêter son tour et banquer le score."},
-
-  "diceToRollLabel": "{count, plural, one{{count} dé} other{{count} dés}} à lancer",
-  "@diceToRollLabel": {
-    "description": "Nombre de dés que le joueur courant s'apprête à lancer.",
-    "placeholders": {"count": {"type": "int"}}
-  },
 
   "bustedTitle": "Craqué !",
   "@bustedTitle": {"description": "Titre affiché quand le joueur craque (bust)."},

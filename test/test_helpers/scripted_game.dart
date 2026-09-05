@@ -10,9 +10,18 @@ import 'package:le10000/state/game_save_store.dart';
 /// Rejoue le départage (à partir de [seed]) jusqu'à sa résolution, puis lance
 /// un premier tour et un premier lancer : un journal d'actions minimal mais
 /// authentique pour une sauvegarde "en cours de tour", reprenable.
+///
+/// [applyKeepAfterRoll] ajoute en plus la décision de garde par défaut (ne
+/// décliner aucun 5) sur ce premier lancer — nécessaire dès qu'un test a
+/// besoin que le journal de partie reconstruit contienne une entrée, le
+/// lancer seul n'en produisant aucune. Le journal est rejoué pour vérifier
+/// que ce lancer a bien de quoi être gardé pour cette [seed] : un craque
+/// rendrait cette action illégale, autant échouer ici, franchement, que plus
+/// loin dans un test au symptôme obscur.
 ({List<GameAction> actions, GameSetup rotatedSetup}) buildResumableActionLog({
   required int seed,
   required List<String> playerNames,
+  bool applyKeepAfterRoll = false,
 }) {
   final random = Random(seed);
   final actions = <GameAction>[];
@@ -34,6 +43,14 @@ import 'package:le10000/state/game_save_store.dart';
   // seule la SÉQUENCE d'actions compte pour un journal à rejouer plus tard.
   actions.add(GameAction.startTurn(useFullHand: false));
   actions.add(GameAction.roll());
+  if (applyKeepAfterRoll) {
+    final replayed = replayGame(setup, seed, actions).engine;
+    assert(
+      replayed?.activeTurn?.pendingRoll != null,
+      'seed $seed : le premier lancer craque, aucune garde à appliquer',
+    );
+    actions.add(GameAction.applyKeep(declineFivesCount: 0));
+  }
   return (actions: actions, rotatedSetup: rotated);
 }
 
@@ -44,8 +61,13 @@ SavedGame buildResumableSavedGame({
   required String alias,
   required List<String> playerNames,
   DateTime? createdAt,
+  bool applyKeepAfterRoll = false,
 }) {
-  final log = buildResumableActionLog(seed: seed, playerNames: playerNames);
+  final log = buildResumableActionLog(
+    seed: seed,
+    playerNames: playerNames,
+    applyKeepAfterRoll: applyKeepAfterRoll,
+  );
   return SavedGame(
     seed: seed,
     setup: GameSetup(playerNames: playerNames),

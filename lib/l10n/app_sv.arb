@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Kasta igen (heta tärningar)",
   "stopButton": "Stanna",
   "rollDiceButton": "Kasta tärningarna",
-  "diceToRollLabel": "{count, plural, one{{count} tärning} other{{count} tärningar}} att kasta",
   "bustedTitle": "Bom!",
   "bustExceedsTarget": "Detta kast skulle överskrida 10000.",
   "continueButton": "Fortsätt",

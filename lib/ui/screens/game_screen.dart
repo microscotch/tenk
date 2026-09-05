@@ -198,13 +198,14 @@ String _describeGroup(ScoringGroup g) {
   return '${g.diceCount} $noun';
 }
 
-/// Reconstruit l'annonce du score d'un lancer résolu (ex. "2 as et brelan de
-/// 3 => 500") à partir de son analyse et des points effectivement marqués —
-/// sans rejouer la décision de garde : le nombre de 5 gardés se déduit par
-/// arithmétique (roundPoints moins les groupes obligatoires, divisé par la
-/// valeur d'un 5), pas besoin de connaître `declineFivesCount`. Fonctionne
-/// donc identiquement pour un humain, une IA, et le mode rejeu.
-String _describeRollResult(RollAnalysis analysis, int roundPoints) {
+/// Reconstruit l'énumération des dés effectivement gardés sur un lancer
+/// résolu (ex. "2 as et brelan de 3") à partir de son analyse et des points
+/// marqués — sans rejouer la décision de garde : le nombre de 5 gardés se
+/// déduit par arithmétique (roundPoints moins les groupes obligatoires,
+/// divisé par la valeur d'un 5), pas besoin de connaître
+/// `declineFivesCount`. Fonctionne donc identiquement pour un humain, une
+/// IA, et le mode rejeu.
+String _describeKeptDice(RollAnalysis analysis, int roundPoints) {
   final parts = [for (final g in analysis.mandatoryGroups) _describeGroup(g)];
   final fives = analysis.declinableFives;
   if (fives != null) {
@@ -226,7 +227,7 @@ String _describeRollResult(RollAnalysis analysis, int roundPoints) {
       );
     }
   }
-  return '${parts.join(' et ')} => $roundPoints';
+  return parts.join(' et ');
 }
 
 /// Une entrée horodatée du journal de partie (voir [_GameScreenState._log]),
@@ -329,38 +330,38 @@ List<_LogEntry> _logEntriesForStep(
   final prevTurn = previous?.activeTurn;
   final playerName = next.currentPlayer.name;
 
-  // Un tour tout juste démarré (encore aucun lancer effectué) : annonce le
-  // nombre de dés à lancer. `!hasRolledThisTurn` est un marqueur exclusif —
-  // il ne redevient jamais vrai une fois passé à faux pour ce tour — donc ce
-  // test seul suffit à détecter l'entrée dans cet état, quelle que soit son
-  // origine (nouvelle partie, après un craque, main héritée acceptée...).
-  if (!nextTurn.busted &&
-      nextTurn.pendingRoll == null &&
-      !nextTurn.hasRolledThisTurn) {
-    entries.add(
-      _LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)),
-    );
-  }
-
   // Une décision de garde vient d'être appliquée sur le lancer précédent
   // (`prevTurn!.busted` exclut un `prevTurn` qui serait un craque déjà
   // révolu dont le `pendingRoll` traînerait encore — jamais un vrai choix).
+  // Une seule entrée résume tout le lancer : dés gardés, points marqués, ce
+  // qu'il reste à relancer (ou "main pleine"), et le total de la main — pas
+  // d'entrée séparée pour le nombre de dés à lancer ni pour la main pleine,
+  // qui feraient double emploi avec celle-ci.
   if (prevTurn?.pendingRoll != null &&
       !prevTurn!.busted &&
       nextTurn.pendingRoll == null &&
       !nextTurn.busted) {
     final analysis = prevTurn.pendingRoll!;
     final roundPoints = nextTurn.bankedScore - prevTurn.bankedScore;
+    final kept = _describeKeptDice(analysis, roundPoints);
     entries.add(
-      _LogEntry(at, playerName, _describeRollResult(analysis, roundPoints)),
+      _LogEntry(
+        at,
+        playerName,
+        nextTurn.mustContinue
+            ? l10n.logRollGainHotDiceMessage(
+                kept,
+                roundPoints,
+                nextTurn.bankedScore,
+              )
+            : l10n.logRollGainMessage(
+                kept,
+                roundPoints,
+                nextTurn.diceToRoll,
+                nextTurn.bankedScore,
+              ),
+      ),
     );
-    if (nextTurn.mustContinue) {
-      entries.add(_LogEntry(at, playerName, l10n.logHotDiceMessage));
-    } else {
-      entries.add(
-        _LogEntry(at, playerName, l10n.diceToRollLabel(nextTurn.diceToRoll)),
-      );
-    }
   }
 
   if (includeBust && nextTurn.busted && !(prevTurn?.busted ?? false)) {
@@ -1695,7 +1696,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 width: _controlButtonWidth,
                 child: _rollButton(onPressed: onRoll, label: rollLabel),
               ),
-              if (bankAttempt.success) ...[
+              // Stop n'apparaît qu'une fois les dés immobilisés
+              // (`_rollSettled`, comme les scores affichés) : le voir surgir
+              // pendant que les dés roulent encore révélerait d'avance que le
+              // lancer marque assez pour pouvoir s'arrêter — le suspense du
+              // lancer serait gâché. Sans lancer en attente, `_rollSettled`
+              // est déjà vrai : rien ne change pour l'état au repos.
+              if (bankAttempt.success && _rollSettled) ...[
                 const SizedBox(width: 8),
                 IconButton.outlined(
                   onPressed: onStop,

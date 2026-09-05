@@ -12,6 +12,7 @@ import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
+import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
 
 import '../test_helpers/scripted_game.dart';
@@ -566,6 +567,125 @@ void main() {
     expect(after.players[1].totalScore, 200);
   });
 
+  testWidgets('le journal résume chaque lancer : dés gardés, gain, dés restants et total de la main', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        bankedScore: 300,
+        pendingRoll: analyzeRoll([1, 3, 6, 3, 3]),
+        hasRolledThisTurn: true,
+      ),
+    );
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // La décision de garde appliquée sur ce lancer est ce qui produit
+    // l'entrée : l'as (100) et le brelan de 3 (300) sont obligatoires, il
+    // reste 1 dé, et la main passe de 300 à 700.
+    notifier.debugLoadState(engine.applyKeep(), const GameSetup(playerNames: ['A', 'B']));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("1 as et brelan de 3 : 400, 1 dé => 700 pts"), findsOneWidget);
+    expect(find.textContaining('à lancer'), findsNothing, reason: 'plus d\'entrée séparée pour les dés à relancer');
+  });
+
+  testWidgets('le journal annonce "main pleine" à la place des dés restants quand tous les dés scorent',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([1, 1, 1]), // brelan d'as : les 3 dés scorent
+        hasRolledThisTurn: true,
+      ),
+    );
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    notifier.debugLoadState(engine.applyKeep(), const GameSetup(playerNames: ['A', 'B']));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("brelan d'as : 1000, main pleine => 1000 pts"), findsOneWidget);
+    // "Main pleine !" reste le libellé du bouton Lancer, mais n'a plus
+    // d'entrée de journal à lui tout seul : le résumé du lancer le dit déjà.
+    expect(find.widgetWithText(FilledButton, 'Main pleine !'), findsOneWidget);
+  });
+
+  testWidgets('le bouton Stop reste caché tant que les dés du lancer n\'ont pas fini de rouler', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // B est entré et a déjà de quoi s'arrêter : Stop est donc légal AVANT et
+    // APRÈS le lancer qui suit — seule l'animation en cours doit le cacher,
+    // et non un changement de légalité.
+    final players = [Player(name: 'A'), Player(name: 'B', hasEntered: true)];
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: players,
+      currentPlayerIndex: 1,
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.stop), findsOneWidget, reason: 'au repos, s\'arrêter est déjà légal');
+
+    // Le lancer arrive alors que l'écran est monté : les dés se mettent à
+    // rouler (contrairement à un lancer déjà présent au montage, cf.
+    // _rollSettled), et leur résultat ne doit pas être trahi par Stop.
+    container.read(gameProvider.notifier).debugLoadState(
+          engine.copyWith(
+            activeTurn: TurnState(
+              diceToRoll: 3,
+              bankedScore: 200,
+              pendingRoll: analyzeRoll([5, 5, 2]),
+              hasRolledThisTurn: true,
+            ),
+          ),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pump();
+    expect(find.byIcon(Icons.stop), findsNothing,
+        reason: 'les dés roulent encore : Stop révélerait que ce lancer marque');
+
+    await tester.pump(DieWidget.rollAnimationDuration);
+    expect(find.byIcon(Icons.stop), findsOneWidget, reason: 'dés immobilisés : Stop peut enfin s\'afficher');
+
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('après un lancer avec un choix de 5 à garder, "Lancer les dés" relance directement', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -677,10 +797,18 @@ void main() {
 
       if (after.activeTurn == null) {
         // L'IA a laissé des dés hérités : popup dédiée (voir
-        // _showInheritedHandDialog) avant que le joueur humain puisse
-        // lancer les dés -- "Nouvelle main" repart à 5 dés neufs.
+        // _showInheritedHandDialog) avant que le joueur humain puisse lancer
+        // les dés -- "Nouvelle main" repart à 5 dés neufs ET lance aussitôt.
+        // Ce lancer-là est fait de vrais dés aléatoires : la suite dépend de
+        // ce qu'ils donnent (garde à appliquer, craque...), donc on s'arrête
+        // ici plutôt que de deviner. Le détail de ce chemin est couvert, avec
+        // des dés déterministes, par "refuser la main héritée lance
+        // directement une main neuve de 5 dés".
         await tester.tap(find.textContaining('Nouvelle main'));
         await tester.pump();
+        expect(container.read(gameProvider)!.activeTurn, isNotNull,
+            reason: 'le joueur humain a bien repris la main, sur une main neuve');
+        return;
       }
 
       // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer"
@@ -700,8 +828,15 @@ void main() {
 
     // Journal minimal mais authentique (départage réellement rejoué, voir
     // buildResumableActionLog) : départage + startTurn + un premier roll,
-    // sans aucune décision de garde encore appliquée dessus.
-    final saved = buildResumableSavedGame(seed: 7, alias: 'Reprise', playerNames: const ['A', 'B']);
+    // puis la garde par défaut sur ce lancer — sans cette décision, un tour
+    // à peine entamé ne produit aucune entrée de journal du tout, et il n'y
+    // aurait rien à vérifier ici.
+    final saved = buildResumableSavedGame(
+      seed: 7,
+      alias: 'Reprise',
+      playerNames: const ['A', 'B'],
+      applyKeepAfterRoll: true,
+    );
     container.read(gameProvider.notifier).resumeFromSave(saved);
 
     await tester.pumpWidget(
@@ -714,8 +849,10 @@ void main() {
 
     // Rien n'a encore été joué depuis que l'écran a été monté : cette entrée
     // ne peut venir que du rejeu de l'historique déjà dans le .run (voir
-    // GameNotifier.actions/_seedLogFromHistory), pas du suivi en direct.
-    expect(find.textContaining('5 dés à lancer'), findsOneWidget);
+    // GameNotifier.actions/_seedLogFromHistory), pas du suivi en direct. Le
+    // lancer rejoué pour cette seed est 3-4-1-3-5 : le 1 (100) et le 5 (50)
+    // sont gardés, 3 dés restent à relancer.
+    expect(find.textContaining('1 as et 1 cinq : 150, 3 dés => 150 pts'), findsOneWidget);
     expect(find.byType(PlayerAvatarWidget), findsWidgets);
   });
 

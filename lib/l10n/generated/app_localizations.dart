@@ -386,6 +386,18 @@ abstract class AppLocalizations {
   /// **'Score barré :'**
   String get logScoreCollisionMessage;
 
+  /// Entrée du journal de partie résumant un lancer résolu : dés gardés, points marqués sur ce lancer, dés restant à relancer, puis total de la main en cours.
+  ///
+  /// In fr, this message translates to:
+  /// **'{kept} : {gain}, {count, plural, one{{count} dé} other{{count} dés}} => {total} pts'**
+  String logRollGainMessage(String kept, int gain, int count, int total);
+
+  /// Variante de logRollGainMessage quand le lancer complète la main (tous les dés scorent) : la main repart pleine au lieu d'annoncer des dés restants.
+  ///
+  /// In fr, this message translates to:
+  /// **'{kept} : {gain}, main pleine => {total} pts'**
+  String logRollGainHotDiceMessage(String kept, int gain, int total);
+
   /// Entrée du journal de partie quand le joueur prend la mise (banque son score) : score pris, suivi du nombre de dés restants hérités par le joueur suivant.
   ///
   /// In fr, this message translates to:
@@ -421,12 +433,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'S\'arrêter'**
   String get stopButton;
-
-  /// Nombre de dés que le joueur courant s'apprête à lancer.
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, one{{count} dé} other{{count} dés}} à lancer'**
-  String diceToRollLabel(int count);
 
   /// Titre affiché quand le joueur craque (bust).
   ///

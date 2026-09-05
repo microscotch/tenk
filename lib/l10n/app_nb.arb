@@ -42,7 +42,6 @@
   "reRollFullHandButton": "Kast på nytt (varme terninger)",
   "stopButton": "Stopp",
   "rollDiceButton": "Kast terningene",
-  "diceToRollLabel": "{count, plural, one{{count} terning} other{{count} terninger}} å kaste",
   "bustedTitle": "Bom!",
   "bustExceedsTarget": "Dette kastet ville overskride 10000.",
   "continueButton": "Fortsett",
