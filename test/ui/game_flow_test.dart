@@ -252,6 +252,63 @@ void main() {
     expect(after.currentPlayerIndex, 1);
   });
 
+  testWidgets('un barrage qui replie sur une ligne déjà tiretée réaffiche le point d\'exclamation',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A : 1600 tiretée, puis 1800 tiretée à son tour. Le craque qui suit
+    // barre 1800 et le replie sur 1600 -- qui porte toujours son tiret dans
+    // la grille : la feuille de score de l'écran de jeu doit le dire aussi
+    // (bug remonté : l'avertissement disparaissait à ce moment-là).
+    var player = Player(name: 'A').applySuccessfulTurn(1600);
+    player = player.applyBust(); // tiret sur 1600
+    player = player.applySuccessfulTurn(200); // 1600 -> 1800
+    player = player.applyBust(); // tiret sur 1800
+    expect(player.hasTiret, isTrue);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [player, Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([2, 3, 4]), // aucun dé marquant
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.priority_high), findsOneWidget, reason: '1800 porte un tiret');
+
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    // La main passe à B : on repasse par l'écran de transition avant de
+    // retrouver la feuille de score.
+    expect(find.byType(PassDeviceScreen), findsOneWidget);
+    await tester.tap(find.text('Prêt'));
+    await tester.pumpAndSettle();
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[0].totalScore, 1600, reason: '1800 est barré, repli sur 1600');
+    expect(after.players[0].currentEntry.hasTiret, isTrue, reason: '1600 avait déjà son tiret');
+    expect(
+      find.byIcon(Icons.priority_high),
+      findsOneWidget,
+      reason: 'la feuille de score doit montrer le tiret que la grille affiche déjà sur 1600',
+    );
+  });
+
   testWidgets('une collision de score barre l\'autre joueur, visible sur la feuille de score', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

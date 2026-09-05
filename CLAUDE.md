@@ -145,7 +145,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   value N later in the *same turn* is worth 100 points (including 5, which is otherwise 50 isolated).
   This resets whenever hot dice occurs (all dice scored → forced reroll of a fresh 5).
 - Tiret/barré: a bust marks the player's current score-grid line with a tiret if it doesn't have one;
-  if it already does, the line is barred and a fresh line is added at the previous value. A score
+  if it already does, the line is barred and the current line moves back onto the nearest non-barred
+  earlier line (never a duplicate of the same score). The tiret belongs to the *line*, not to the
+  player's visit to it (`Player.hasTiret` is exactly `currentEntry.hasTiret`, no separate flag): being
+  barred back down onto a line that was tiretted earlier leaves the player one bust from being barred
+  again, and keeps the game screen's warning icon in step with the grid's mark. A score
   collision bars that line the same way, tiret or not — checked against *every* non-barred line in
   every other player's grid, not just their current total: if another player ever had this exact score
   at any earlier point in the game (since superseded by a later successful turn), that historical line

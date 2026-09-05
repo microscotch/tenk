@@ -32,15 +32,20 @@ class ScoreEntry {
 /// Un joueur et sa grille de score complète.
 ///
 /// Le mécanisme du "tiret" fonctionne ainsi : un craque marque la ligne
-/// courante d'un tiret d'avertissement si elle n'en a pas déjà un actif. Un
-/// tour réussi validé ensuite ajoute une NOUVELLE ligne (sans tiret actif) et
-/// en fait la ligne courante ; l'ancienne ligne garde son tiret affiché dans
-/// la grille (historique), mais celui-ci n'a plus d'effet. Si la ligne
-/// courante a déjà un tiret actif au moment d'un nouveau craque, elle est
-/// barrée et [currentIndex] recule vers la ligne précédente déjà existante
-/// dans la grille (jamais de nouvelle ligne dupliquant le même score) ; cette
-/// ligne redevient courante avec un cycle de tiret entièrement frais, même si
-/// elle affiche encore un tiret historique d'un cycle antérieur.
+/// courante d'un tiret d'avertissement si elle n'en a pas déjà un. Un tour
+/// réussi validé ensuite ajoute une NOUVELLE ligne (sans tiret) et en fait la
+/// ligne courante ; l'ancienne ligne garde son tiret affiché dans la grille,
+/// mais celui-ci ne concerne plus le joueur tant qu'il ne redescend pas
+/// dessus. Si la ligne courante porte déjà un tiret au moment d'un nouveau
+/// craque, elle est barrée et [currentIndex] recule vers la ligne précédente
+/// déjà existante dans la grille (jamais de nouvelle ligne dupliquant le même
+/// score).
+///
+/// Le tiret appartient donc à la LIGNE, pas au passage du joueur dessus :
+/// retomber par barrage sur une ligne déjà tiretée le laisse à un seul craque
+/// du barrage suivant. C'est ce qui garantit que la marque affichée dans la
+/// grille et l'avertissement affiché sur la feuille de score disent la même
+/// chose — les faire diverger a déjà produit un bug d'affichage.
 ///
 /// Un score peut aussi être barré par un autre mécanisme, indépendant du
 /// tiret : si un autre joueur termine son tour exactement sur un score que
@@ -58,12 +63,6 @@ class Player {
   /// toute nouvelle ligne à chaque tour réussi.
   final int currentIndex;
 
-  /// Tiret actif du cycle en cours sur la ligne courante, distinct du
-  /// [ScoreEntry.hasTiret] historique affiché dans la grille : un retour à
-  /// une ligne déjà existante (barrage) démarre toujours un cycle frais, même
-  /// si cette ligne affiche encore un tiret historique d'un cycle antérieur.
-  final bool _currentHasTiret;
-
   final bool hasEntered;
 
   Player({
@@ -75,20 +74,24 @@ class Player {
   })  : grid = previousScore != null
             ? [ScoreEntry(previousScore), ScoreEntry(totalScore, hasTiret: hasTiret)]
             : [ScoreEntry(totalScore, hasTiret: hasTiret)],
-        currentIndex = previousScore != null ? 1 : 0,
-        _currentHasTiret = hasTiret;
+        currentIndex = previousScore != null ? 1 : 0;
 
   Player._raw({
     required this.name,
     required this.grid,
     required this.currentIndex,
-    required this._currentHasTiret,
     required this.hasEntered,
   });
 
   ScoreEntry get currentEntry => grid[currentIndex];
   int get totalScore => currentEntry.value;
-  bool get hasTiret => _currentHasTiret;
+
+  /// Le tiret du joueur EST celui porté par sa ligne courante — un seul fait,
+  /// pas deux à tenir synchronisés. Un barrage qui replie le joueur sur une
+  /// ligne déjà tiretée le remet donc bien à un craque du barrage, et la
+  /// feuille de score (écran de jeu) ne peut plus diverger de la grille, qui
+  /// lit la même marque (voir `score_sheet.dart` / `score_grid_screen.dart`).
+  bool get hasTiret => currentEntry.hasTiret;
 
   /// Score de la ligne précédant la ligne courante dans la grille (0 s'il
   /// n'y en a pas). Pratique pour les tests / la construction directe d'un
@@ -124,7 +127,6 @@ class Player {
       name: name,
       grid: newGrid,
       currentIndex: newGrid.length - 1,
-      currentHasTiret: false,
       hasEntered: true,
     );
   }
@@ -141,7 +143,6 @@ class Player {
         name: name,
         grid: marked,
         currentIndex: currentIndex,
-        currentHasTiret: true,
         hasEntered: hasEntered,
       );
     }
@@ -175,7 +176,6 @@ class Player {
       name: name,
       grid: newGrid,
       currentIndex: currentIndex,
-      currentHasTiret: _currentHasTiret,
       hasEntered: hasEntered,
     );
   }
@@ -202,7 +202,6 @@ class Player {
       name: name,
       grid: newGrid,
       currentIndex: fallbackIndex,
-      currentHasTiret: false,
       hasEntered: fallbackValue == 0 ? false : hasEntered,
     );
   }

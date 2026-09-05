@@ -37,7 +37,23 @@ void main() {
 
     p = p.applyBust(); // 2e craque consécutif sur 1000 : barré, retour à 700
     expect(p.totalScore, 700);
-    expect(p.hasTiret, isFalse);
+    // 700 portait déjà un tiret (posé plus haut) : le tiret appartient à la
+    // ligne, pas au passage du joueur dessus — le voilà donc de nouveau à un
+    // seul craque du barrage, comme l'affiche la grille de score.
+    expect(p.hasTiret, isTrue);
+
+    p = p.applyBust(); // craque sur 700, déjà tiretée : barrée à son tour
+    expect(p.totalScore, 0);
+  });
+
+  test('un barrage vers une ligne sans tiret laisse bien le joueur sans tiret', () {
+    var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500, jamais tiretée
+    p = p.applySuccessfulTurn(300); // 500 -> 800
+    p = p.applyBust(); // tiret sur 800
+    p = p.applyBust(); // barré -> retour à 500
+
+    expect(p.totalScore, 500);
+    expect(p.hasTiret, isFalse, reason: '500 n\'a jamais été tiretée');
   });
 
   test('un craque à 0 ne marque jamais de tiret : rien à sanctionner en dessous du plancher', () {
@@ -102,13 +118,15 @@ void main() {
       expect(p.minimumForNextTurn, normalThreshold);
     });
 
-    test('barre aussi un joueur qui portait déjà un tiret, et l\'efface', () {
+    test('barre aussi un joueur qui portait déjà un tiret, et le replie sur la ligne précédente', () {
       var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
-      p = p.applyBust(); // tiret posé, point de retour = 0
+      p = p.applyBust(); // tiret posé sur 500, point de retour = 0
       p = p.applySuccessfulTurn(300); // 500 -> 800, point de retour = 500
-      p = p.applyScoreCollisionBar(); // barre -> 500, tiret effacé
+      p = p.applyScoreCollisionBar(); // barre 800 -> retour à 500
       expect(p.totalScore, 500);
-      expect(p.hasTiret, isFalse);
+      // Le tiret de 500 est resté attaché à sa ligne : y revenir le remet en
+      // vigueur (voir le test des deux craques consécutifs).
+      expect(p.hasTiret, isTrue);
     });
   });
 
