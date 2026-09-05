@@ -1348,22 +1348,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
               style: TextStyle(color: Colors.grey.shade400),
             ),
           ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (canContinue) ...[
-              _rollButton(
-                onPressed: () {
-                  notifier.startTurn(useFullHand: false);
-                  notifier.roll();
-                },
-                label: _scorePercentLabel(
-                  engine.nextTurnDice,
-                  engine.inheritedExtendedValues,
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
+        _controlRow(
+          // Reprendre la main est un lancer comme un autre : même bouton, au
+          // même emplacement que partout ailleurs. Quand la main héritée
+          // dépasserait 10000, il reste visible mais inerte, plutôt que de
+          // décaler "Refuser" en son absence.
+          primary: _rollButton(
+            onPressed: canContinue
+                ? () {
+                    notifier.startTurn(useFullHand: false);
+                    notifier.roll();
+                  }
+                : null,
+            label: _scorePercentLabel(
+              engine.nextTurnDice,
+              engine.inheritedExtendedValues,
+            ),
+          ),
+          trailing: [
+            const SizedBox(width: 8),
             OutlinedButton(
               onPressed: () {
                 notifier.startTurn(useFullHand: true);
