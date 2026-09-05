@@ -224,6 +224,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get bustExceedsTarget => 'Dette kastet ville overskride 10000.';
 
   @override
+  String get bustFullHandAtTarget =>
+      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+
+  @override
   String get bustContinueButton => 'Continuer';
 
   @override

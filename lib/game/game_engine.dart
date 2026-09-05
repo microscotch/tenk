@@ -159,8 +159,16 @@ class GameEngine {
   /// partie sauvegardée avant ce changement.
   GameEngine applyKeep({int declineFivesCount = 0}) {
     var t = applyKeepDecision(activeTurn!, declineFivesCount: declineFivesCount);
-    if (currentPlayer.totalScore + t.bankedScore > winningScore) {
+    final newTotal = currentPlayer.totalScore + t.bankedScore;
+    if (newTotal > winningScore) {
       t = t.copyWith(busted: true, bustReason: BustReason.exceedsTarget);
+    } else if (t.mustContinue && newTotal == winningScore) {
+      // Main pleine pile sur 10000 : impossible de s'arrêter (une main pleine
+      // oblige à relancer, voir tryBank) et impossible de relancer sans
+      // dépasser (tout lancer conservé rapporte au moins 50). Le tour est
+      // déjà perdu : autant le dire maintenant plutôt que faire relancer le
+      // joueur pour un craque couru d'avance.
+      t = t.copyWith(busted: true, bustReason: BustReason.fullHandAtTarget);
     }
     return copyWith(activeTurn: t);
   }

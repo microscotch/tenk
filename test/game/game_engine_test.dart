@@ -234,6 +234,52 @@ void main() {
     );
   });
 
+  test('une main pleine qui tombe pile sur 10000 craque immédiatement', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        Player(name: 'A', totalScore: 9000, hasEntered: true),
+        Player(name: 'B'),
+      ],
+      activeTurn: const TurnState(diceToRoll: 3),
+    );
+
+    // Brelan d'as : 1000 points, les 3 dés y passent -> main pleine, et
+    // 9000 + 1000 = pile 10000.
+    engine = engine.roll(random: _ScriptedRandom([1, 1, 1]));
+    expect(engine.activeTurn!.busted, isFalse, reason: 'le lancer lui-même est bon');
+
+    engine = engine.applyKeep();
+
+    expect(engine.activeTurn!.mustContinue, isTrue);
+    expect(engine.currentPlayer.totalScore + engine.activeTurn!.bankedScore, 10000);
+    expect(
+      engine.activeTurn!.busted,
+      isTrue,
+      reason: 'impossible de s\'arrêter (main pleine) comme de relancer sans dépasser : impasse',
+    );
+    expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);
+  });
+
+  test('une main pleine en dessous de 10000 reste jouable', () {
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        Player(name: 'A', totalScore: 8000, hasEntered: true),
+        Player(name: 'B'),
+      ],
+      activeTurn: const TurnState(diceToRoll: 3),
+    );
+
+    // Même main pleine, mais à 9000 : relancer peut encore retomber juste.
+    engine = engine.roll(random: _ScriptedRandom([1, 1, 1]));
+    engine = engine.applyKeep();
+
+    expect(engine.activeTurn!.mustContinue, isTrue);
+    expect(engine.activeTurn!.busted, isFalse);
+    expect(engine.activeTurn!.diceToRoll, 5, reason: 'la main pleine repart sur 5 dés neufs');
+  });
+
   test('un lancer qui peut encore tomber juste ne craque pas au lancer', () {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(

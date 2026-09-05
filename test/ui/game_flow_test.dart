@@ -597,6 +597,51 @@ void main() {
     expect(after.players[1].totalScore, 200);
   });
 
+  testWidgets('main pleine pile sur 10000 : pas de Stop trompeur, et lancer mène au craque sans planter',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A est à 9000 et son lancer complète la main avec un brelan d'as
+    // (1000) : pile 10000, mais main pleine -- impossible de s'arrêter, et
+    // tout relancer dépasserait.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([1, 1, 1]),
+        hasRolledThisTurn: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Surtout pas de Stop : ce banquage n'est pas une victoire disponible.
+    expect(find.byIcon(Icons.stop), findsNothing,
+        reason: 'une main pleine ne peut pas être banquée, même pile sur 10000');
+
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull, reason: 'relancer un tour déjà craqué ne doit pas lever');
+    final after = container.read(gameProvider)!;
+    expect(after.activeTurn!.busted, isTrue);
+    expect(after.activeTurn!.bustReason, BustReason.fullHandAtTarget);
+    expect(find.textContaining('Main pleine à 10000'), findsWidgets,
+        reason: 'la raison du craque est expliquée au joueur');
+  });
+
   testWidgets('le journal résume chaque lancer : dés gardés, gain, dés restants et total de la main', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

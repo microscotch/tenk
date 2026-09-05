@@ -470,6 +470,12 @@ abstract class AppLocalizations {
   /// **'Ce lancer ferait dépasser 10000.'**
   String get bustExceedsTarget;
 
+  /// Explique un craque déclenché par une main pleine tombant pile sur 10000 : la main pleine oblige à relancer, et tout relancer marquant dépasserait la cible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.'**
+  String get bustFullHandAtTarget;
+
   /// Bouton de la popup de craque pour l'acquitter et passer la main.
   ///
   /// In fr, this message translates to:

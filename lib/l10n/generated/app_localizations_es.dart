@@ -226,6 +226,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bustExceedsTarget => 'Esta tirada superaría 10000.';
 
   @override
+  String get bustFullHandAtTarget =>
+      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+
+  @override
   String get bustContinueButton => 'Continuer';
 
   @override

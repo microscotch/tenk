@@ -237,16 +237,17 @@ void main() {
       expect(attempt.reason, BankFailureReason.mustContinueHotDice);
     });
 
-    test('réussit malgré un hot dice forcé si le total atteindrait exactement 10000 (quinte d\'as)', () {
+    test('échoue même à exactement 10000 quand la main est pleine (quinte d\'as)', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 1, 1, 1]));
       state = applyKeepDecision(state); // quinte d'as, 10000 points, tout est gardé -> hot dice
       expect(state.mustContinue, isTrue);
       expect(state.bankedScore, 10000);
-      // La victoire exacte prime sur l'obligation de continuer : les dés
-      // chauds existent pour empêcher un arrêt "facile", pas la victoire.
+      // Une main pleine oblige à relancer sans exception : tomber pile sur
+      // 10000 n'est pas une victoire mais une impasse (tout relancer
+      // dépasserait), sanctionnée en craque par GameEngine.applyKeep.
       final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
-      expect(attempt.success, isTrue);
-      expect(attempt.bankedPoints, 10000);
+      expect(attempt.success, isFalse);
+      expect(attempt.reason, BankFailureReason.mustContinueHotDice);
     });
 
     test('succès si minimum atteint et score valide', () {

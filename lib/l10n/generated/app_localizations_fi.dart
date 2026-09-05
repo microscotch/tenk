@@ -225,6 +225,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get bustExceedsTarget => 'Tämä heitto ylittäisi 10000.';
 
   @override
+  String get bustFullHandAtTarget =>
+      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+
+  @override
   String get bustContinueButton => 'Continuer';
 
   @override

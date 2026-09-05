@@ -67,6 +67,13 @@ enum BustReason {
   /// Le lancer marque, mais même en écartant tous les 5 que le joueur a le
   /// droit d'écarter, son total dépasserait 10000 (voir [GameEngine.roll]).
   exceedsTarget,
+
+  /// Le lancer complète la main (tous les dés marquent) en tombant pile sur
+  /// 10000 : la main pleine oblige à relancer, et n'importe quel relancer
+  /// marquant dépasserait la cible — l'impasse est totale, le tour est perdu
+  /// dès cet instant plutôt qu'au relancer suivant (voir
+  /// [GameEngine.applyKeep]).
+  fullHandAtTarget,
 }
 
 /// État immuable d'un tour en cours. Un tour s'étend sur un ou plusieurs
@@ -296,10 +303,15 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
 /// Tente de banquer (valider) le score du tour en cours. [currentTotal] est
 /// le score déjà validé du joueur AVANT ce tour (hors tour en cours), pour
 /// détecter les deux cas limites autour de la victoire exacte à 10000 :
-/// - Si banquer atteindrait exactement [winningScore], c'est toujours
-///   autorisé, y compris pendant des dés chauds ou sur un score de tour
-///   finissant par 50 : ces restrictions existent pour éviter un arrêt
-///   "facile", pas pour empêcher la victoire elle-même.
+/// - Une main pleine oblige à relancer, sans exception : y compris quand elle
+///   tombe pile sur [winningScore]. Loin d'être une victoire, c'est une
+///   impasse — tout relancer marquant dépasserait la cible — et le moteur la
+///   sanctionne d'ailleurs en craque immédiat (voir [GameEngine.applyKeep]),
+///   sans laisser ce banquage être proposé.
+/// - Si banquer atteindrait exactement [winningScore], c'est sinon toujours
+///   autorisé, y compris sur un score de tour finissant par 50 : cette
+///   restriction-là existe pour éviter un arrêt "facile", pas pour empêcher
+///   la victoire elle-même.
 /// - Sinon, si banquer laisserait un total strictement inférieur à
 ///   [winningScore] mais à moins de [minimumRequired] de la cible, aucun
 ///   tour futur ne pourrait plus jamais valider exactement 10000 (le
@@ -314,12 +326,15 @@ BankAttempt tryBank(TurnState state, {required int minimumRequired, required int
     return const BankAttempt.failure(BankFailureReason.notRolledYet);
   }
 
+  // Testé AVANT la victoire exacte : une main pleine ne peut jamais être
+  // banquée, même pile sur 10000 (voir la doc ci-dessus).
+  if (state.mustContinue) {
+    return const BankAttempt.failure(BankFailureReason.mustContinueHotDice);
+  }
+
   final newTotal = currentTotal + state.bankedScore;
   if (newTotal == winningScore) {
     return BankAttempt.success(state.bankedScore);
-  }
-  if (state.mustContinue) {
-    return const BankAttempt.failure(BankFailureReason.mustContinueHotDice);
   }
   if (state.bankedScore < minimumRequired) {
     return const BankAttempt.failure(BankFailureReason.belowMinimum);

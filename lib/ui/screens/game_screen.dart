@@ -321,10 +321,21 @@ List<_LogEntry> _bustLogEntries(
         l10n.logBustBarredReturnMessage(after.totalScore),
       ),
   ];
-  if (turn.bustReason == BustReason.exceedsTarget) {
-    entries.add(_LogEntry(at, before.name, l10n.bustExceedsTarget));
+  final explanation = _bustReasonExplanation(l10n, turn.bustReason);
+  if (explanation != null) {
+    entries.add(_LogEntry(at, before.name, explanation));
   }
   return entries;
+}
+
+/// Phrase expliquant pourquoi le tour a craqué, quand la cause n'est pas le
+/// craque ordinaire (aucun dé marquant) qui se passe de commentaire.
+String? _bustReasonExplanation(AppLocalizations l10n, BustReason? reason) {
+  return switch (reason) {
+    BustReason.exceedsTarget => l10n.bustExceedsTarget,
+    BustReason.fullHandAtTarget => l10n.bustFullHandAtTarget,
+    BustReason.noScore || null => null,
+  };
 }
 
 String _formatLogTime(DateTime t) =>
@@ -799,7 +810,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.bustedTitle),
-        content: turn.bustReason == BustReason.exceedsTarget ? Text(l10n.bustExceedsTarget) : null,
+        content: switch (_bustReasonExplanation(l10n, turn.bustReason)) {
+          final explanation? => Text(explanation),
+          null => null,
+        },
         actions: [
           FilledButton(
             onPressed: () {
@@ -1724,6 +1738,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final selectedKeep = _selectedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
       final declineCount = (fives?.diceCount ?? 0) - selectedKeep;
       notifier.applyKeep(declineFivesCount: declineCount);
+      // La décision de garde peut elle-même craquer le tour (dépassement de
+      // 10000, ou main pleine tombant pile dessus — voir GameEngine.applyKeep) :
+      // relancer là-dessus lèverait "Le tour est terminé". Le craque est déjà
+      // à l'écran, il n'y a plus rien à lancer.
+      if (ref.read(gameProvider)?.activeTurn?.busted ?? false) return;
     }
     notifier.roll();
   }
