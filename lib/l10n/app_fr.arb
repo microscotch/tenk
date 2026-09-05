@@ -85,16 +85,16 @@
   "startGameButton": "Commencer la partie",
   "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},
 
-  "newGameSectionLabel": "Nouveau run...",
+  "newGameSectionLabel": "Nouvelle run...",
   "@newGameSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie."},
 
-  "pausedGamesSectionLabel": "Runs interrompus ({count})",
+  "pausedGamesSectionLabel": "Runs interrompues ({count})",
   "@pausedGamesSectionLabel": {
     "description": "Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables, avec leur nombre.",
     "placeholders": {"count": {"type": "int"}}
   },
 
-  "finishedRunsSectionLabel": "Runs terminés ({count})",
+  "finishedRunsSectionLabel": "Runs terminées ({count})",
   "@finishedRunsSectionLabel": {
     "description": "Libellé de la zone de l'écran d'accueil listant les runs terminés, rejouables en mode spectateur, avec leur nombre.",
     "placeholders": {"count": {"type": "int"}}
@@ -103,7 +103,7 @@
   "noPausedGamesMessage": "Aucune partie en pause pour l'instant.",
   "@noPausedGamesMessage": {"description": "Message affiché quand la liste des parties en pause est vide."},
 
-  "noFinishedRunsMessage": "Aucun run terminé pour l'instant.",
+  "noFinishedRunsMessage": "Aucune run terminée pour l'instant.",
   "@noFinishedRunsMessage": {"description": "Message affiché quand la liste des runs terminés est vide."},
 
   "deleteGameConfirmTitle": "Supprimer cette partie ?",

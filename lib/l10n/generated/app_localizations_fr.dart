@@ -90,23 +90,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startGameButton => 'Commencer la partie';
 
   @override
-  String get newGameSectionLabel => 'Nouveau run...';
+  String get newGameSectionLabel => 'Nouvelle run...';
 
   @override
   String pausedGamesSectionLabel(int count) {
-    return 'Runs interrompus ($count)';
+    return 'Runs interrompues ($count)';
   }
 
   @override
   String finishedRunsSectionLabel(int count) {
-    return 'Runs terminés ($count)';
+    return 'Runs terminées ($count)';
   }
 
   @override
   String get noPausedGamesMessage => 'Aucune partie en pause pour l\'instant.';
 
   @override
-  String get noFinishedRunsMessage => 'Aucun run terminé pour l\'instant.';
+  String get noFinishedRunsMessage => 'Aucune run terminée pour l\'instant.';
 
   @override
   String get deleteGameConfirmTitle => 'Supprimer cette partie ?';
