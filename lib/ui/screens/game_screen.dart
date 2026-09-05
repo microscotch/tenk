@@ -541,6 +541,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// vraiment la décision de garde ne doit alors plus le rajouter.
   RollAnalysis? _gainLoggedForRoll;
 
+  /// Durée pendant laquelle les commandes restent inertes après chaque
+  /// transition de l'écran (voir [_lockControlsBriefly]). Un tap déjà parti,
+  /// ou le second d'un double tap, ne doit pas être encaissé par la commande
+  /// qui vient d'apparaître au même endroit — c'est la cause des clics
+  /// involontaires remontés par les joueurs. Valeur isolée ici exprès : elle
+  /// est susceptible d'être réajustée selon leurs retours.
+  static const Duration _controlLockAfterTransition = Duration(milliseconds: 300);
+
+  bool _controlsLocked = false;
+  Timer? _controlLockTimer;
+
   /// Déclencheur "secouer pour lancer" (réglage [AppSettings.shakeToRollEnabled]) :
   /// une seule instance pour toute la durée de l'écran, démarrée/arrêtée
   /// selon le réglage et le cycle de vie de l'app (voir [initState],
@@ -637,6 +648,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _shakeDetector.stop();
+    _controlLockTimer?.cancel();
     _pendingTimer?.cancel();
     _bustRevealTimer?.cancel();
     _rollSettleTimer?.cancel();
@@ -649,6 +661,27 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// [_buildGameLog] — pas d'auto-scroll nécessaire, une nouvelle entrée
   /// apparaît directement en haut, déjà visible).
   void _appendLog(_LogEntry entry) => setState(() => _log.add(entry));
+
+  /// Rend les commandes inertes pendant [_controlLockAfterTransition], à
+  /// appeler à chaque transition de l'écran de jeu : changement d'état du
+  /// moteur, retour d'un écran de passation, révélation d'un craque. Les
+  /// boutons restent affichés (la ligne de contrôle ne bouge pas), ils ne
+  /// répondent simplement pas — voir [_guarded].
+  void _lockControlsBriefly() {
+    _controlLockTimer?.cancel();
+    if (!_controlsLocked) {
+      setState(() => _controlsLocked = true);
+    }
+    _controlLockTimer = Timer(_controlLockAfterTransition, () {
+      if (!mounted) return;
+      setState(() => _controlsLocked = false);
+    });
+  }
+
+  /// [action], sauf pendant la fenêtre d'inertie qui suit une transition :
+  /// null la désactive, ce qui la rend aussi visiblement inopérante plutôt
+  /// que d'avaler le tap en silence.
+  VoidCallback? _guarded(VoidCallback action) => _controlsLocked ? null : action;
 
   /// Reconstruit tout l'historique du journal en rejouant le journal
   /// d'actions déjà persisté par [GameNotifier] (même source que le `.run` —
@@ -783,6 +816,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       SoundEffects.instance.playBust();
       _logBust(engine!, turn);
       setState(() => _bustRevealed = true);
+      _lockControlsBriefly();
       _showBustDialog(engine, turn);
       return;
     }
@@ -792,6 +826,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       SoundEffects.instance.playBust();
       _logBust(engine!, turn);
       setState(() => _bustRevealed = true);
+      _lockControlsBriefly();
       _showBustDialog(engine, turn);
     });
   }
@@ -820,6 +855,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         actions: [
           FilledButton(
             onPressed: () {
+              if (_controlsLocked) return;
               Navigator.of(dialogContext).pop();
               ref.read(gameProvider.notifier).endBustedTurn();
             },
@@ -963,6 +999,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     });
     ref.listen<GameEngine?>(gameProvider, (previous, next) {
       if (next == null) return;
+      // Toute transition du moteur redessine la ligne de contrôle : on la
+      // rend inerte le temps qu'un tap en cours de route retombe.
+      _lockControlsBriefly();
       if (next.gameOver) {
         SoundEffects.instance.playVictory();
         Navigator.of(context).push(
@@ -989,6 +1028,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
             )
             .then((_) {
+              // L'écran de passation vient de se dépiler : la ligne de
+              // contrôle réapparaît sous le doigt du joueur suivant.
+              _lockControlsBriefly();
               _scheduleAiIfNeeded();
               _maybeShowInheritedHandDialog();
             });
@@ -1303,6 +1345,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
           if (canResume)
             FilledButton(
               onPressed: () {
+              // Ces popups surgissent sous le doigt du joueur : un tap déjà
+              // parti ne doit pas les valider au vol (voir
+              // _lockControlsBriefly). Contrôle à l'exécution ici, la popup
+              // étant une route à part que nos setState ne redessinent pas.
+              if (_controlsLocked) return;
                 Navigator.of(dialogContext).pop();
                 notifier.startTurn(useFullHand: false);
                 notifier.roll();
@@ -1314,6 +1361,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           TextButton(
             onPressed: () {
+              if (_controlsLocked) return;
               Navigator.of(dialogContext).pop();
               notifier.startTurn(useFullHand: true);
               notifier.roll();
@@ -1355,10 +1403,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // décaler "Refuser" en son absence.
           primary: _rollButton(
             onPressed: canContinue
-                ? () {
+                ? _guarded(() {
                     notifier.startTurn(useFullHand: false);
                     notifier.roll();
-                  }
+                  })
                 : null,
             label: _scorePercentLabel(
               engine.nextTurnDice,
@@ -1368,10 +1416,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
           trailing: [
             const SizedBox(width: 8),
             OutlinedButton(
-              onPressed: () {
+              onPressed: _guarded(() {
                 notifier.startTurn(useFullHand: true);
                 notifier.roll();
-              },
+              }),
               child: Text(l10n.declineInheritedHandButton),
             ),
           ],
@@ -1671,13 +1719,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final accepts = notifier.previewAiAcceptInheritedHand();
       return _controlRow(
         primary: _rollButton(
-          onPressed: accepts ? action : null,
+          onPressed: accepts ? _guarded(action) : null,
           label: _scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues),
         ),
         trailing: [
           const SizedBox(width: 8),
           OutlinedButton(
-            onPressed: accepts ? null : action,
+            onPressed: accepts ? null : _guarded(action),
             child: Text(l10n.declineInheritedHandButton),
           ),
         ],
@@ -1698,7 +1746,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final fives = pending.declinableFives?.diceCount ?? 0;
       return _controlRow(
         primary: _rollButton(
-          onPressed: action,
+          onPressed: _guarded(action),
           label: effective.mustContinue
               ? l10n.logHotDiceMessage
               : _scorePercentLabel(effective.diceToRoll, effective.extendedValues),
@@ -1724,7 +1772,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final stops = canBank && !notifier.previewAiContinue(turn);
     return _controlRow(
       primary: _rollButton(
-        onPressed: stops ? null : action,
+        onPressed: stops ? null : _guarded(action),
         label: turn.mustContinue
             ? l10n.logHotDiceMessage
             : _scorePercentLabel(turn.diceToRoll, turn.extendedValues),
@@ -1732,7 +1780,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       trailing: [
         if (canBank && _rollSettled) ...[
           const SizedBox(width: 8),
-          _stopButton(onPressed: stops ? action : null),
+          _stopButton(onPressed: stops ? _guarded(action) : null),
         ],
       ],
     );
@@ -1750,18 +1798,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // doit pas être gâché par un message qui s'affiche trop tôt.
     final key = turn.pendingRoll ?? turn;
     final revealed = _bustRevealed && _bustKeyBeingRevealed == key;
-    if (!revealed) {
-      return const SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(strokeWidth: 2.5),
+
+    // Un craque ne change rien à la ligne de contrôle : le bouton Lancer
+    // reste à sa place, à son libellé d'avant le lancer, simplement
+    // désactivé. Pendant le suspense, un indicateur d'attente à sa place
+    // annoncerait qu'il se passe quelque chose ; une fois le craque révélé,
+    // c'est la popup qui porte l'action (voir [_showBustDialog]), et laisser
+    // la ligne se vider ferait sauter la mise en page.
+    if (!revealed || (!widget.replayMode && !isAiTurn)) {
+      return _controlRow(
+        primary: _rollButton(
+          onPressed: null,
+          label: _scorePercentLabel(turn.diceToRoll, turn.extendedValues),
+        ),
       );
     }
-    if (!widget.replayMode && !isAiTurn) return const SizedBox.shrink();
-    final l10n = AppLocalizations.of(context);
-    return FilledButton(
-      onPressed: () => ref.read(gameProvider.notifier).endBustedTurn(),
-      child: Text(l10n.bustedTitle),
+
+    // Tour IA ou rejeu : pas de popup, l'acquittement se fait ici.
+    return _controlRow(
+      primary: FilledButton(
+        onPressed: _guarded(() => ref.read(gameProvider.notifier).endBustedTurn()),
+        child: Text(AppLocalizations.of(context).bustedTitle),
+      ),
     );
   }
 
@@ -1887,7 +1945,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           ),
         _controlRow(
-          primary: _rollButton(onPressed: onRoll, label: rollLabel),
+          primary: _rollButton(onPressed: _guarded(onRoll), label: rollLabel),
           trailing: [
             // Stop n'apparaît qu'une fois les dés immobilisés
             // (`_rollSettled`, comme les scores affichés) : le voir surgir
@@ -1897,7 +1955,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             // est déjà vrai : rien ne change pour l'état au repos.
             if (bankAttempt.success && _rollSettled) ...[
               const SizedBox(width: 8),
-              _stopButton(onPressed: onStop),
+              _stopButton(onPressed: _guarded(onStop)),
             ],
             if (canChoose) ...[
               ..._keptFivesLead,
@@ -1908,7 +1966,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   for (var i = minKeep; i <= maxKeep; i++)
                     DropdownMenuItem(value: i, child: Text('$i')),
                 ],
-                onChanged: (v) => setState(() => _selectedKeep = v!),
+                onChanged: _controlsLocked ? null : (v) => setState(() => _selectedKeep = v!),
               ),
             ],
           ],

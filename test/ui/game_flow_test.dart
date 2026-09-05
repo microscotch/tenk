@@ -27,6 +27,12 @@ import '../test_helpers/scripted_game.dart';
 /// pour laisser UNE étape automatique se déclencher, mais pas assez pour
 /// qu'une deuxième s'enchaîne dans le même pump (sinon un test qui vérifie
 /// l'état juste après une seule étape deviendrait dépendant du hasard).
+/// Fenêtre pendant laquelle les commandes restent inertes après une
+/// transition d'écran (voir `_controlLockAfterTransition` dans
+/// `game_screen.dart`), plus une marge : un test qui agit tout de suite après
+/// une transition doit la laisser s'écouler, comme un vrai joueur.
+const _controlLockPump = Duration(milliseconds: 400);
+
 final _autoActionPump = const AppSettings().autoActionDelay + const Duration(milliseconds: 100);
 final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
 
@@ -80,6 +86,84 @@ void main() {
     expect(after.currentPlayerIndex, 1, reason: 'la main doit passer au joueur B');
     expect(after.players[0].hasTiret, isTrue, reason: 'le craque doit marquer un tiret sur A');
     expect(after.players[0].totalScore, 700, reason: 'le craque ne doit pas changer le score déjà acquis');
+  });
+
+  testWidgets('pendant le suspense d\'un craque, la ligne montre le bouton Lancer désactivé, sans indicateur d\'attente',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 700, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([2, 3, 4]), // aucun dé marquant
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    // Le craque n'est pas encore révélé : rien ne doit l'annoncer.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
+    expect(rollButton, findsOneWidget);
+    expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
+        reason: 'le bouton reste en place mais inerte pendant le suspense');
+
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('les commandes restent inertes juste après une transition, puis redeviennent actives',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
+    );
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
+    expect(tester.widget<FilledButton>(rollButton).onPressed, isNotNull,
+        reason: 'au repos, la commande répond');
+
+    // Transition : le moteur change d'état sous le doigt du joueur.
+    notifier.debugLoadState(
+      engine.copyWith(activeTurn: const TurnState(diceToRoll: 2, bankedScore: 400, hasRolledThisTurn: true)),
+      const GameSetup(playerNames: ['A', 'B']),
+    );
+    await tester.pump();
+    expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
+        reason: 'un tap déjà parti ne doit pas être encaissé par la commande qui vient d\'apparaître');
+
+    await tester.pump(_controlLockPump);
+    expect(tester.widget<FilledButton>(rollButton).onPressed, isNotNull,
+        reason: 'la fenêtre passée, la commande répond de nouveau');
+
+    await tester.pumpAndSettle();
   });
 
   testWidgets('un craque à 0 n\'affiche jamais de tiret (rien à sanctionner en dessous du plancher)',
@@ -157,6 +241,10 @@ void main() {
     expect(tester.takeException(), isNull, reason: 'ne doit pas planter faute de lancer en attente');
     expect(find.textContaining('Craqué'), findsWidgets);
 
+    // La popup vient de surgir : ses commandes restent inertes le temps de la
+    // fenêtre anti-clic involontaire (voir _controlLockAfterTransition), comme
+    // pour un vrai joueur.
+    await tester.pump(_controlLockPump);
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
