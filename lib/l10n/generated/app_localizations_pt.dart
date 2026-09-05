@@ -209,12 +209,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Recomeçar com 5 dados novos';
-
-  @override
-  String get keepDiceButton => 'Guardar os dados';
-
-  @override
   String get stopButton => 'Parar';
 
   @override

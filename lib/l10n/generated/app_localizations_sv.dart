@@ -209,12 +209,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Börja om med 5 nya tärningar';
-
-  @override
-  String get keepDiceButton => 'Behåll tärningarna';
-
-  @override
   String get stopButton => 'Stanna';
 
   @override

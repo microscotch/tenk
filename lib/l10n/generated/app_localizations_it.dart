@@ -210,12 +210,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Riparti con 5 dadi nuovi';
-
-  @override
-  String get keepDiceButton => 'Tieni i dadi';
-
-  @override
   String get stopButton => 'Fermati';
 
   @override

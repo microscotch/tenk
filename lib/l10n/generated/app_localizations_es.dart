@@ -210,13 +210,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel =>
-      'Empezar de nuevo con 5 dados nuevos';
-
-  @override
-  String get keepDiceButton => 'Guardar los dados';
-
-  @override
   String get stopButton => 'Plantarse';
 
   @override

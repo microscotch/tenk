@@ -210,13 +210,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel =>
-      'Neu starten mit 5 frischen Würfeln';
-
-  @override
-  String get keepDiceButton => 'Würfel behalten';
-
-  @override
   String get stopButton => 'Aufhören';
 
   @override

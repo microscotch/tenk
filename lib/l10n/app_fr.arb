@@ -221,12 +221,6 @@
   "declineInheritedHandButton": "Refuser",
   "@declineInheritedHandButton": {"description": "Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain)."},
 
-  "aiRestartWithFreshDiceLabel": "Repartir avec 5 dés neufs",
-  "@aiRestartWithFreshDiceLabel": {"description": "Libellé du bouton unique de l'IA quand elle décide de repartir avec une main pleine."},
-
-  "keepDiceButton": "Garder les dés",
-  "@keepDiceButton": {"description": "Bouton reflétant l'action de l'IA sur un lancer en attente de décision (tour IA uniquement)."},
-
   "stopButton": "S'arrêter",
   "@stopButton": {"description": "Bouton pour arrêter son tour et banquer le score."},
 

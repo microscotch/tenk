@@ -209,12 +209,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Reîncepe cu 5 zaruri noi';
-
-  @override
-  String get keepDiceButton => 'Păstrează zarurile';
-
-  @override
   String get stopButton => 'Oprește-te';
 
   @override

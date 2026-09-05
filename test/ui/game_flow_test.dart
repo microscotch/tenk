@@ -977,6 +977,56 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
   });
 
+  testWidgets('la ligne de contrôle d\'un tour IA se superpose exactement à celle d\'un tour humain',
+      (tester) async {
+    // Même situation de jeu jouée deux fois, une fois par un humain, une
+    // fois par une IA : le bouton principal doit occuper le même
+    // emplacement, à la même taille, avec le même pictogramme -- rien ne
+    // doit sauter à l'écran quand la main passe de l'un à l'autre.
+    Future<(Offset, Size)> measure({required bool ai}) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      var engine = GameEngine.newGame(['A', 'B']).startTurn();
+      engine = engine.copyWith(
+        players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
+      );
+      container.read(gameProvider.notifier).debugLoadState(
+            engine,
+            GameSetup(
+              playerNames: const ['A', 'B'],
+              aiPlayers: ai ? const {0: AiDifficulty.prudent} : const {},
+            ),
+          );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+        ),
+      );
+      await tester.pump();
+
+      final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
+      expect(rollButton, findsOneWidget,
+          reason: ai ? 'le tour IA doit montrer le même bouton dé' : null);
+      final geometry = (tester.getTopLeft(rollButton), tester.getSize(rollButton));
+
+      // L'IA enchaîne toute seule : on démonte avant que ses temporisations
+      // ne fassent diverger l'état mesuré.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      return geometry;
+    }
+
+    final human = await measure(ai: false);
+    final ai = await measure(ai: true);
+
+    expect(ai.$1, human.$1, reason: 'même position à l\'écran');
+    expect(ai.$2, human.$2, reason: 'même taille');
+  });
+
   testWidgets('le tour d\'un joueur IA se joue automatiquement à l\'écran, sans interaction', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

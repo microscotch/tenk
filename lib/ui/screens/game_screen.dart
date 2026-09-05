@@ -156,7 +156,10 @@ String _scorePercentLabel(int diceCount, Set<int> extendedValues) {
 
 /// Bouton "Lancer" (icône dé + libellé), partagé entre la ligne de contrôle
 /// humaine et le choix de main héritée.
-Widget _rollButton({required VoidCallback onPressed, required String label}) {
+/// [onPressed] null laisse le bouton visible mais inerte : c'est ainsi qu'un
+/// tour IA montre un lancer possible qu'elle ne prend pas (elle s'arrête),
+/// sans que la ligne de contrôle change de forme pour autant.
+Widget _rollButton({required VoidCallback? onPressed, required String label}) {
   return FilledButton(
     onPressed: onPressed,
     child: Row(
@@ -1656,43 +1659,80 @@ class _GameScreenState extends ConsumerState<GameScreen>
   Widget _buildAiTurnView(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
     final notifier = ref.read(gameProvider.notifier);
+    void action() => ref.read(gameProvider.notifier).playAiTurnStep();
 
+    // Choix de main héritée : mêmes deux commandes que la version humaine en
+    // rejeu (voir [_buildInheritedChoiceRow]), seule celle que l'IA va
+    // réellement prendre étant active.
     if (engine.activeTurn == null) {
       final accepts = notifier.previewAiAcceptInheritedHand();
-      final label = accepts
-          ? _scorePercentLabel(
-              engine.nextTurnDice,
-              engine.inheritedExtendedValues,
-            )
-          : l10n.aiRestartWithFreshDiceLabel;
-      return FilledButton(
-        onPressed: notifier.playAiTurnStep,
-        child: Text(label),
+      return _controlRow(
+        primary: _rollButton(
+          onPressed: accepts ? action : null,
+          label: _scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues),
+        ),
+        trailing: [
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: accepts ? null : action,
+            child: Text(l10n.declineInheritedHandButton),
+          ),
+        ],
       );
     }
 
     final turn = engine.activeTurn!;
-    void action() => ref.read(gameProvider.notifier).playAiTurnStep();
+    final currentTotal = engine.currentPlayer.totalScore;
+    final pending = turn.pendingRoll;
 
-    if (turn.pendingRoll != null) {
-      return FilledButton(onPressed: action, child: Text(l10n.keepDiceButton));
+    // Décision de garde en attente : la ligne montre déjà ce que le lancer
+    // vaudra une fois cette garde appliquée, exactement comme le bouton d'un
+    // joueur humain au même instant — et le nombre de 5 que l'IA garde
+    // là où l'humain a son sélecteur.
+    if (pending != null) {
+      final declineCount = notifier.previewAiDeclineFives(turn);
+      final effective = applyKeepDecision(turn, declineFivesCount: declineCount);
+      final fives = pending.declinableFives?.diceCount ?? 0;
+      return _controlRow(
+        primary: _rollButton(
+          onPressed: action,
+          label: effective.mustContinue
+              ? l10n.logHotDiceMessage
+              : _scorePercentLabel(effective.diceToRoll, effective.extendedValues),
+        ),
+        trailing: [
+          if (_hasRealChoice(turn, pending, currentTotal: currentTotal)) ...[
+            ..._keptFivesLead,
+            Text('${fives - declineCount}'),
+          ],
+        ],
+      );
     }
 
-    final String label;
-    if (turn.mustContinue) {
-      label = l10n.logHotDiceMessage;
-    } else if (tryBank(
-          turn,
-          minimumRequired: engine.minimumForCurrentPlayer,
-          currentTotal: engine.currentPlayer.totalScore,
-        ).success &&
-        !notifier.previewAiContinue(turn)) {
-      label = l10n.stopButton;
-    } else {
-      label = _scorePercentLabel(turn.diceToRoll, turn.extendedValues);
-    }
-
-    return FilledButton(onPressed: action, child: Text(label));
+    // Plus de lancer en attente : l'IA va relancer ou s'arrêter. Les deux
+    // commandes occupent les mêmes emplacements que pour un humain — Stop
+    // n'apparaissant que si s'arrêter est légal — et seule celle qu'elle
+    // prend est active.
+    final canBank = tryBank(
+      turn,
+      minimumRequired: engine.minimumForCurrentPlayer,
+      currentTotal: currentTotal,
+    ).success;
+    final stops = canBank && !notifier.previewAiContinue(turn);
+    return _controlRow(
+      primary: _rollButton(
+        onPressed: stops ? null : action,
+        label: turn.mustContinue
+            ? l10n.logHotDiceMessage
+            : _scorePercentLabel(turn.diceToRoll, turn.extendedValues),
+      ),
+      trailing: [
+        if (canBank && _rollSettled) ...[
+          const SizedBox(width: 8),
+          _stopButton(onPressed: stops ? action : null),
+        ],
+      ],
+    );
   }
 
   /// [isAiTurn] : un tour IA n'attend jamais de clic sur ce bouton (le
@@ -1843,56 +1883,77 @@ class _GameScreenState extends ConsumerState<GameScreen>
               style: TextStyle(color: Colors.grey.shade400),
             ),
           ),
-        // Le bouton Lancer reste toujours à la même position, aligné à
-        // gauche, à sa largeur fixe (_controlButtonWidth) pour ne pas
-        // changer de taille selon son libellé. Stop (si s'arrêter est
-        // légal) puis la combobox de choix des 5 (si un vrai choix existe)
-        // apparaissent à sa droite, à la demande, sans jamais le déplacer.
-        // Stop est réduit au minimum (icône seule, pas de largeur imposée) :
-        // contrairement à Lancer, son libellé ne varie jamais, pas besoin
-        // d'une largeur fixe pour éviter un changement de taille.
-        SizedBox(
-          width: double.infinity,
-          child: Row(
-            children: [
-              SizedBox(
-                width: _controlButtonWidth,
-                child: _rollButton(onPressed: onRoll, label: rollLabel),
-              ),
-              // Stop n'apparaît qu'une fois les dés immobilisés
-              // (`_rollSettled`, comme les scores affichés) : le voir surgir
-              // pendant que les dés roulent encore révélerait d'avance que le
-              // lancer marque assez pour pouvoir s'arrêter — le suspense du
-              // lancer serait gâché. Sans lancer en attente, `_rollSettled`
-              // est déjà vrai : rien ne change pour l'état au repos.
-              if (bankAttempt.success && _rollSettled) ...[
-                const SizedBox(width: 8),
-                IconButton.outlined(
-                  onPressed: onStop,
-                  icon: const Icon(Icons.stop),
-                  tooltip: l10n.stopButton,
-                ),
-              ],
-              if (canChoose) ...[
-                const SizedBox(width: 12),
-                const Icon(Icons.recycling, size: 18),
-                const SizedBox(width: 4),
-                DropdownButton<int>(
-                  value: selectedKeep,
-                  underline: const SizedBox.shrink(),
-                  items: [
-                    for (var i = minKeep; i <= maxKeep; i++)
-                      DropdownMenuItem(value: i, child: Text('$i')),
-                  ],
-                  onChanged: (v) => setState(() => _selectedKeep = v!),
-                ),
-              ],
+        _controlRow(
+          primary: _rollButton(onPressed: onRoll, label: rollLabel),
+          trailing: [
+            // Stop n'apparaît qu'une fois les dés immobilisés
+            // (`_rollSettled`, comme les scores affichés) : le voir surgir
+            // pendant que les dés roulent encore révélerait d'avance que le
+            // lancer marque assez pour pouvoir s'arrêter — le suspense du
+            // lancer serait gâché. Sans lancer en attente, `_rollSettled`
+            // est déjà vrai : rien ne change pour l'état au repos.
+            if (bankAttempt.success && _rollSettled) ...[
+              const SizedBox(width: 8),
+              _stopButton(onPressed: onStop),
             ],
-          ),
+            if (canChoose) ...[
+              ..._keptFivesLead,
+              DropdownButton<int>(
+                value: selectedKeep,
+                underline: const SizedBox.shrink(),
+                items: [
+                  for (var i = minKeep; i <= maxKeep; i++)
+                    DropdownMenuItem(value: i, child: Text('$i')),
+                ],
+                onChanged: (v) => setState(() => _selectedKeep = v!),
+              ),
+            ],
+          ],
         ),
       ],
     );
   }
+
+  /// Gabarit unique de la ligne de contrôle, partagé par TOUS les tours —
+  /// humain, IA, main héritée. Le bouton principal reste toujours à la même
+  /// position, aligné à gauche, à sa largeur fixe ([_controlButtonWidth])
+  /// pour ne pas changer de taille selon son libellé ; les commandes annexes
+  /// apparaissent à sa droite, à la demande, sans jamais le déplacer. Passer
+  /// par ce seul gabarit est ce qui garantit qu'un tour IA ne se présente pas
+  /// autrement qu'un tour humain (emplacement, taille, alignement).
+  Widget _controlRow({required Widget primary, List<Widget> trailing = const []}) {
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        children: [
+          SizedBox(width: _controlButtonWidth, child: primary),
+          ...trailing,
+        ],
+      ),
+    );
+  }
+
+  /// Bouton Stop, réduit au minimum (icône seule, pas de largeur imposée) :
+  /// contrairement à Lancer, son libellé ne varie jamais, pas besoin d'une
+  /// largeur fixe pour éviter un changement de taille. [onPressed] null le
+  /// laisse visible mais inerte — c'est ainsi qu'un tour IA montre un arrêt
+  /// possible qu'elle ne prend pas, sans déformer la ligne.
+  Widget _stopButton({required VoidCallback? onPressed}) {
+    return IconButton.outlined(
+      onPressed: onPressed,
+      icon: const Icon(Icons.stop),
+      tooltip: AppLocalizations.of(context).stopButton,
+    );
+  }
+
+  /// Pictogramme annonçant le nombre de 5 gardés, devant le sélecteur
+  /// (humain) ou devant le nombre choisi par l'IA : même écart, même icône,
+  /// pour que les deux lignes se superposent exactement.
+  static const List<Widget> _keptFivesLead = [
+    SizedBox(width: 12),
+    Icon(Icons.recycling, size: 18),
+    SizedBox(width: 4),
+  ];
 
   String _failureMessage(AppLocalizations l10n, BankAttempt attempt) {
     switch (attempt.reason) {

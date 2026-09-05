@@ -210,12 +210,6 @@ class AppLocalizationsFi extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Aloita alusta 5 uudella nopalla';
-
-  @override
-  String get keepDiceButton => 'Säilytä nopat';
-
-  @override
   String get stopButton => 'Lopeta';
 
   @override

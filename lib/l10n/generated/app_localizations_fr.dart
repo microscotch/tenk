@@ -209,12 +209,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Repartir avec 5 dés neufs';
-
-  @override
-  String get keepDiceButton => 'Garder les dés';
-
-  @override
   String get stopButton => 'S\'arrêter';
 
   @override

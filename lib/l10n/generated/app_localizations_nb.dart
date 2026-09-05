@@ -209,12 +209,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Start på nytt med 5 nye terninger';
-
-  @override
-  String get keepDiceButton => 'Behold terningene';
-
-  @override
   String get stopButton => 'Stopp';
 
   @override

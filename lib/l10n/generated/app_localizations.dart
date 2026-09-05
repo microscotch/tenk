@@ -440,18 +440,6 @@ abstract class AppLocalizations {
   /// **'Refuser'**
   String get declineInheritedHandButton;
 
-  /// Libellé du bouton unique de l'IA quand elle décide de repartir avec une main pleine.
-  ///
-  /// In fr, this message translates to:
-  /// **'Repartir avec 5 dés neufs'**
-  String get aiRestartWithFreshDiceLabel;
-
-  /// Bouton reflétant l'action de l'IA sur un lancer en attente de décision (tour IA uniquement).
-  ///
-  /// In fr, this message translates to:
-  /// **'Garder les dés'**
-  String get keepDiceButton;
-
   /// Bouton pour arrêter son tour et banquer le score.
   ///
   /// In fr, this message translates to:

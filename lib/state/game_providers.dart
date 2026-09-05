@@ -216,22 +216,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     }
 
     if (turn.pendingRoll != null) {
-      final analysis = turn.pendingRoll!;
-      final fives = analysis.declinableFives?.diceCount ?? 0;
-      // La stratégie raisonne sur le seul tour en cours : elle ignore le score
-      // déjà acquis par le joueur, et donc le plafond de 10000. On borne donc
-      // sa réponse ici, au seul endroit qui connaît les deux — exactement les
-      // mêmes bornes que celles proposées à un joueur humain (voir
-      // `_buildHumanControlRow`), pour que les deux jouent la même règle.
-      final minKeep = minKeepableFives(analysis);
-      final maxKeep = maxKeepableFives(
-        turn,
-        analysis,
-        currentTotal: engine.currentPlayer.totalScore,
-      );
-      final wantedKeep = fives - _currentStrategy().decideDeclineFives(analysis, turn);
-      final keep = wantedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
-      applyKeep(declineFivesCount: fives - keep);
+      applyKeep(declineFivesCount: previewAiDeclineFives(turn));
       return;
     }
 
@@ -264,6 +249,32 @@ class GameNotifier extends Notifier<GameEngine?> {
       inheritedScore: engine.inheritedScore,
       currentTotalScore: engine.currentPlayer.totalScore,
     );
+  }
+
+  /// Nombre de 5 que l'IA du joueur courant déclinerait sur le lancer en
+  /// attente de [turn]. Même rôle que [previewAiAcceptInheritedHand] pour
+  /// cette décision-ci : l'UI peut afficher à l'avance ce que
+  /// [playAiTurnStep] appliquera — et par le MÊME calcul, appelé par les
+  /// deux, pour que l'affiché et le joué ne puissent pas diverger.
+  ///
+  /// La stratégie raisonne sur le seul tour en cours : elle ignore le score
+  /// déjà acquis par le joueur, et donc le plafond de 10000. On borne donc
+  /// sa réponse ici, au seul endroit qui connaît les deux — exactement les
+  /// mêmes bornes que celles proposées à un joueur humain (voir
+  /// `_buildHumanControlRow`), pour que les deux jouent la même règle.
+  int previewAiDeclineFives(TurnState turn) {
+    final engine = state!;
+    final analysis = turn.pendingRoll!;
+    final fives = analysis.declinableFives?.diceCount ?? 0;
+    final minKeep = minKeepableFives(analysis);
+    final maxKeep = maxKeepableFives(
+      turn,
+      analysis,
+      currentTotal: engine.currentPlayer.totalScore,
+    );
+    final wantedKeep = fives - _currentStrategy().decideDeclineFives(analysis, turn);
+    final keep = wantedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
+    return fives - keep;
   }
 
   /// Prévisualise si l'IA du joueur courant choisirait de continuer à

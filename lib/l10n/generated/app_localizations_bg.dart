@@ -209,12 +209,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
-  String get aiRestartWithFreshDiceLabel => 'Започни отначало с 5 нови зара';
-
-  @override
-  String get keepDiceButton => 'Запази заровете';
-
-  @override
   String get stopButton => 'Спри се';
 
   @override
