@@ -188,10 +188,31 @@
     }
   },
 
-  "logBankedMessage": "{score} {count, plural, one{{count} dé} other{{count} dés}}",
+  "logBankedMessage": "{score} pts sont pris => {total} pts",
   "@logBankedMessage": {
-    "description": "Entrée du journal de partie quand le joueur prend la mise (banque son score) : score pris, suivi du nombre de dés restants hérités par le joueur suivant.",
-    "placeholders": {"score": {"type": "int"}, "count": {"type": "int"}}
+    "description": "Entrée du journal de partie quand le joueur prend la mise (banque sa main) : score encaissé, puis son nouveau score total.",
+    "placeholders": {"score": {"type": "int"}, "total": {"type": "int"}}
+  },
+
+  "logResumedHandMessage": "{score} pts sont repris",
+  "@logResumedHandMessage": {
+    "description": "Entrée du journal de partie quand le joueur reprend la main laissée par le joueur précédent, avec le score déjà acquis dessus qui lui sert de base.",
+    "placeholders": {"score": {"type": "int"}}
+  },
+
+  "logBustTiretMessage": "Craqué ! => {score} petit trait",
+  "@logBustTiretMessage": {
+    "description": "Entrée du journal pour un craque qui marque un petit trait (tiret) sur la ligne courante : le score acquis ne bouge pas.",
+    "placeholders": {"score": {"type": "int"}}
+  },
+
+  "logBustBarredPrefix": "Craqué ! =>",
+  "@logBustBarredPrefix": {"description": "Début de l'entrée du journal pour un craque qui barre la ligne courante ; suivi du score barré, puis de logBustBarredReturnMessage."},
+
+  "logBustBarredReturnMessage": "retour à {score}",
+  "@logBustBarredReturnMessage": {
+    "description": "Fin de l'entrée du journal pour un craque qui barre la ligne courante : score sur lequel le joueur retombe.",
+    "placeholders": {"score": {"type": "int"}}
   },
 
   "inheritedHandExceedsWinning": "Reprendre cette main dépasserait déjà 10000 : impossible de banquer.",

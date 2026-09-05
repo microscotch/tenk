@@ -398,11 +398,35 @@ abstract class AppLocalizations {
   /// **'{kept} : {gain}, main pleine => {total} pts'**
   String logRollGainHotDiceMessage(String kept, int gain, int total);
 
-  /// Entrée du journal de partie quand le joueur prend la mise (banque son score) : score pris, suivi du nombre de dés restants hérités par le joueur suivant.
+  /// Entrée du journal de partie quand le joueur prend la mise (banque sa main) : score encaissé, puis son nouveau score total.
   ///
   /// In fr, this message translates to:
-  /// **'{score} {count, plural, one{{count} dé} other{{count} dés}}'**
-  String logBankedMessage(int score, int count);
+  /// **'{score} pts sont pris => {total} pts'**
+  String logBankedMessage(int score, int total);
+
+  /// Entrée du journal de partie quand le joueur reprend la main laissée par le joueur précédent, avec le score déjà acquis dessus qui lui sert de base.
+  ///
+  /// In fr, this message translates to:
+  /// **'{score} pts sont repris'**
+  String logResumedHandMessage(int score);
+
+  /// Entrée du journal pour un craque qui marque un petit trait (tiret) sur la ligne courante : le score acquis ne bouge pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Craqué ! => {score} petit trait'**
+  String logBustTiretMessage(int score);
+
+  /// Début de l'entrée du journal pour un craque qui barre la ligne courante ; suivi du score barré, puis de logBustBarredReturnMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Craqué ! =>'**
+  String get logBustBarredPrefix;
+
+  /// Fin de l'entrée du journal pour un craque qui barre la ligne courante : score sur lequel le joueur retombe.
+  ///
+  /// In fr, this message translates to:
+  /// **'retour à {score}'**
+  String logBustBarredReturnMessage(int score);
 
   /// Message expliquant pourquoi la main héritée ne peut pas être reprise.
   ///

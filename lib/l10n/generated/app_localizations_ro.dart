@@ -179,14 +179,26 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String logBankedMessage(int score, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
-    );
-    return '$score $_temp0';
+  String logBankedMessage(int score, int total) {
+    return '$score pts sont pris => $total pts';
+  }
+
+  @override
+  String logResumedHandMessage(int score) {
+    return '$score pts sont repris';
+  }
+
+  @override
+  String logBustTiretMessage(int score) {
+    return 'Craqué ! => $score petit trait';
+  }
+
+  @override
+  String get logBustBarredPrefix => 'Craqué ! =>';
+
+  @override
+  String logBustBarredReturnMessage(int score) {
+    return 'retour à $score';
   }
 
   @override

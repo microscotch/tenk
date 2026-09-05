@@ -68,8 +68,10 @@ void main() {
 
     // Le message est désormais visible à deux endroits une fois révélé : le
     // journal de partie ET le bouton lui-même (voir CLAUDE.md, libellés
-    // contextuels).
+    // contextuels). Le journal annonce en plus la sanction encourue — ici un
+    // petit trait, le score acquis restant intact.
     expect(find.textContaining('Craqué'), findsWidgets);
+    expect(find.textContaining('Craqué ! => 700 petit trait'), findsOneWidget);
 
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
@@ -236,6 +238,10 @@ void main() {
     expect(find.text('1000'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
     expect(find.textContaining('Craqué'), findsWidgets);
+    // Le journal annonce la sanction : la ligne 1000 est barrée (affichée
+    // biffée) et le score retombe à 700.
+    expect(find.textContaining('Craqué ! =>'), findsWidgets);
+    expect(find.textContaining('retour à 700'), findsOneWidget);
 
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
@@ -299,9 +305,9 @@ void main() {
     expect(find.byIcon(Icons.priority_high), findsNothing);
 
     // ... précédée par l'annonce de la prise de mise de B elle-même (score
-    // pris + nombre de dés restants hérités par A).
-    expect(find.textContaining('500 3 dés'), findsOneWidget,
-        reason: 'la prise de mise de B doit annoncer le score pris et les dés restants');
+    // encaissé + nouveau total).
+    expect(find.textContaining('500 pts sont pris => 2000 pts'), findsOneWidget,
+        reason: 'la prise de mise de B doit annoncer le score encaissé et son nouveau total');
 
     final after = container.read(gameProvider)!;
     expect(after.players[1].totalScore, 2000);
@@ -309,13 +315,13 @@ void main() {
     expect(after.players[0].hasTiret, isFalse);
   });
 
-  testWidgets('prendre la mise annonce le score pris et les dés restants dans le journal', (tester) async {
+  testWidgets('prendre la mise annonce le score encaissé et le nouveau total dans le journal', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    // Un seul dé restant hérité par le joueur suivant : vérifie l'accord au
-    // singulier ("1 dé"), le pluriel étant déjà couvert par le test de
-    // collision ci-dessus ("3 dés").
+    // A part de 0 : le score encaissé et le nouveau total se confondent ici,
+    // le cas où ils diffèrent étant couvert par le test de collision
+    // ci-dessus (500 encaissés sur 1500 déjà acquis).
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [Player(name: 'A', totalScore: 0), Player(name: 'B', totalScore: 0)],
@@ -342,9 +348,33 @@ void main() {
     await tester.tap(find.text('Prêt'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('500 1 dé'), findsOneWidget,
-        reason: 'accord au singulier pour un seul dé restant');
-    expect(find.textContaining('500 1 dés'), findsNothing);
+    expect(find.textContaining('500 pts sont pris => 500 pts'), findsOneWidget);
+  });
+
+  testWidgets('reprendre la main héritée l\'annonce dans le journal', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A hérite des 2 dés et des 400 points laissés par le tour précédent.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(nextTurnDice: 2, inheritedScore: 400);
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('Reprendre la main'));
+    await tester.pump();
+
+    expect(find.textContaining('400 pts sont repris'), findsOneWidget);
   });
 
   testWidgets('atteindre exactement 10000 lors du tour final affiche l\'écran de victoire', (tester) async {
@@ -599,6 +629,103 @@ void main() {
 
     expect(find.textContaining("1 as et brelan de 3 : 400, 1 dé => 700 pts"), findsOneWidget);
     expect(find.textContaining('à lancer'), findsNothing, reason: 'plus d\'entrée séparée pour les dés à relancer');
+  });
+
+  testWidgets('sans décision à prendre, le résumé du lancer est journalisé dès les dés immobilisés',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A n'est pas entré (minimum 500) : ce lancer ne marque que l'as (100),
+    // aucun 5 à décliner, et s'arrêter reste illégal. Relancer est donc le
+    // seul geste possible -- rien à attendre pour l'annoncer.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Le lancer arrive écran monté : les dés roulent, rien n'est encore dit.
+    engine = engine.copyWith(
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        pendingRoll: analyzeRoll([1, 2, 3, 4, 6]),
+        hasRolledThisTurn: true,
+      ),
+    );
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+    await tester.pump();
+    expect(find.textContaining('1 as : 100'), findsNothing, reason: 'les dés roulent encore');
+
+    // Dés immobilisés : le résumé est là, sans qu'aucune action n'ait été
+    // faite (le tour n'a pas bougé côté moteur).
+    await tester.pump(DieWidget.rollAnimationDuration);
+    expect(find.textContaining('1 as : 100, 4 dés => 100 pts'), findsOneWidget);
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
+        reason: 'le résumé est affiché avant l\'action, pas après');
+
+    // ... et la décision de garde, quand elle finit par être appliquée, ne le
+    // journalise pas une seconde fois.
+    notifier.applyKeep(declineFivesCount: 0);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1 as : 100, 4 dés => 100 pts'), findsOneWidget);
+  });
+
+  testWidgets('avec une décision à prendre, le résumé du lancer attend l\'action du joueur',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // B est entré et a 100 pts en main : les deux 5 de ce lancer sont
+    // déclinables, et s'arrêter deviendrait légal en les gardant -- il y a
+    // donc bien un choix à faire, et rien à annoncer tant qu'il n'est pas
+    // tranché.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A'), Player(name: 'B', hasEntered: true)],
+      currentPlayerIndex: 1,
+      activeTurn: const TurnState(diceToRoll: 5, bankedScore: 100, hasRolledThisTurn: true),
+    );
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    notifier.debugLoadState(
+      engine.copyWith(
+        activeTurn: TurnState(
+          diceToRoll: 5,
+          bankedScore: 100,
+          pendingRoll: analyzeRoll([5, 5, 2, 3, 4]),
+          hasRolledThisTurn: true,
+        ),
+      ),
+      const GameSetup(playerNames: ['A', 'B']),
+    );
+    await tester.pump();
+    await tester.pump(DieWidget.rollAnimationDuration);
+
+    expect(find.textContaining('2 cinq : 100'), findsNothing,
+        reason: 'le joueur peut encore choisir combien de 5 garder, ou s\'arrêter');
+
+    // L'action tranche le choix : le résumé arrive à ce moment-là.
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.pump();
+    expect(find.textContaining('2 cinq : 100, 3 dés => 200 pts'), findsOneWidget);
+
+    await tester.pumpAndSettle();
   });
 
   testWidgets('le journal annonce "main pleine" à la place des dés restants quand tous les dés scorent',

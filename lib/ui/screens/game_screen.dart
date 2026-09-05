@@ -233,27 +233,98 @@ String _describeKeptDice(RollAnalysis analysis, int roundPoints) {
 /// Une entrée horodatée du journal de partie (voir [_GameScreenState._log]),
 /// rattachée au joueur concerné (pour son blason, voir [PlayerAvatarWidget]).
 ///
-/// [barredScore]/[barredPlayerName] ne sont renseignés que pour une entrée
-/// de collision de score (voir [_logEntriesForStep]) : le score barré
-/// s'affiche alors en barré, suivi du blason du joueur concerné, à la place
-/// du texte normal (voir [_GameScreenState._buildGameLog]).
+/// [barredScore] n'est renseigné que pour les entrées qui barrent une ligne
+/// de grille — collision de score, ou craque qui barre la ligne courante :
+/// ce score s'affiche alors biffé au milieu du message (voir
+/// [_GameScreenState._buildLogWhatCell]), encadré par [text] devant et, selon
+/// le cas, le blason du joueur barré ([barredPlayerName]) ou le repli de
+/// score ([textAfterBarredScore]) derrière.
 class _LogEntry {
   final DateTime timestamp;
   final String playerName;
   final String text;
   final int? barredScore;
   final String? barredPlayerName;
+  final String? textAfterBarredScore;
 
   const _LogEntry(this.timestamp, this.playerName, this.text)
     : barredScore = null,
-      barredPlayerName = null;
+      barredPlayerName = null,
+      textAfterBarredScore = null;
 
   const _LogEntry.scoreBarred(
     this.timestamp,
     this.playerName,
+    this.text,
     this.barredPlayerName,
     this.barredScore,
-  ) : text = '';
+  ) : textAfterBarredScore = null;
+
+  const _LogEntry.bustBarred(
+    this.timestamp,
+    this.playerName,
+    this.text,
+    this.barredScore,
+    this.textAfterBarredScore,
+  ) : barredPlayerName = null;
+}
+
+/// Résumé d'un lancer résolu tel qu'affiché dans le journal, à partir de son
+/// analyse et de l'état de tour obtenu APRÈS la décision de garde. Partagé
+/// entre les deux moments où ce résumé peut être produit (voir
+/// [_GameScreenState._maybeLogGainEarly] et [_logEntriesForStep]) : il doit
+/// être écrit exactement pareil dans les deux cas.
+String _describeRollGain(
+  AppLocalizations l10n,
+  RollAnalysis analysis, {
+  required int bankedScoreBefore,
+  required TurnState afterKeep,
+}) {
+  final roundPoints = afterKeep.bankedScore - bankedScoreBefore;
+  final kept = _describeKeptDice(analysis, roundPoints);
+  return afterKeep.mustContinue
+      ? l10n.logRollGainHotDiceMessage(kept, roundPoints, afterKeep.bankedScore)
+      : l10n.logRollGainMessage(
+          kept,
+          roundPoints,
+          afterKeep.diceToRoll,
+          afterKeep.bankedScore,
+        );
+}
+
+/// Entrées de journal annonçant un craque et sa conséquence réelle sur la
+/// grille : un petit trait sur la ligne courante, son barrage avec repli sur
+/// le score précédent, ou rien du tout à 0 (rien à sanctionner sous le
+/// plancher). [Player.applyBust] étant pure, cette conséquence se calcule
+/// d'avance, avant même que le moteur ne l'applique — ce qu'il ne fait qu'une
+/// fois le craque acquitté (voir [GameEngine.endBustedTurn]), bien après que
+/// le message doive s'afficher.
+List<_LogEntry> _bustLogEntries(
+  GameEngine engine,
+  TurnState turn, {
+  required AppLocalizations l10n,
+  required DateTime at,
+}) {
+  final before = engine.currentPlayer;
+  final after = before.applyBust();
+  final entries = <_LogEntry>[
+    if (identical(after, before))
+      _LogEntry(at, before.name, l10n.bustedTitle)
+    else if (after.hasTiret && !before.hasTiret)
+      _LogEntry(at, before.name, l10n.logBustTiretMessage(before.totalScore))
+    else
+      _LogEntry.bustBarred(
+        at,
+        before.name,
+        l10n.logBustBarredPrefix,
+        before.totalScore,
+        l10n.logBustBarredReturnMessage(after.totalScore),
+      ),
+  ];
+  if (turn.bustReason == BustReason.exceedsTarget) {
+    entries.add(_LogEntry(at, before.name, l10n.bustExceedsTarget));
+  }
+  return entries;
 }
 
 String _formatLogTime(DateTime t) =>
@@ -271,12 +342,19 @@ String _formatLogTime(DateTime t) =>
 /// révélation visuelle (voir `_scheduleBustRevealIfNeeded`), pour rester
 /// synchrone avec le suspense déjà à l'écran — mais lors d'une reconstruction
 /// d'historique, il n'y a pas d'animation à attendre, donc `true`.
+///
+/// [includeGain] joue le même rôle pour le résumé du lancer : quand le joueur
+/// n'avait aucune décision à prendre dessus, il a déjà été ajouté au journal
+/// dès l'immobilisation des dés (voir
+/// `_GameScreenState._maybeLogGainEarly`), bien avant la transition qui
+/// applique enfin la garde — il ne faut alors pas l'ajouter une seconde fois.
 List<_LogEntry> _logEntriesForStep(
   GameEngine? previous,
   GameEngine next, {
   required AppLocalizations l10n,
   required DateTime at,
   required bool includeBust,
+  required bool includeGain,
 }) {
   final entries = <_LogEntry>[];
 
@@ -294,7 +372,13 @@ List<_LogEntry> _logEntriesForStep(
       _LogEntry(
         at,
         previous!.currentPlayer.name,
-        l10n.logBankedMessage(prevActiveTurn.bankedScore, prevActiveTurn.diceToRoll),
+        l10n.logBankedMessage(
+          prevActiveTurn.bankedScore,
+          // Grille déjà à jour dans `next` : le joueur qui vient de banquer
+          // reste à son index (une fin de partie ne fait pas tourner la
+          // main, voir GameEngine._advance).
+          next.players[previous.currentPlayerIndex].totalScore,
+        ),
       ),
     );
   }
@@ -316,6 +400,7 @@ List<_LogEntry> _logEntriesForStep(
             _LogEntry.scoreBarred(
               at,
               previous.currentPlayer.name,
+              l10n.logScoreCollisionMessage,
               next.players[i].name,
               nextGrid[idx].value,
             ),
@@ -330,6 +415,17 @@ List<_LogEntry> _logEntriesForStep(
   final prevTurn = previous?.activeTurn;
   final playerName = next.currentPlayer.name;
 
+  // Reprise de la main laissée par le joueur précédent : un tour qui démarre
+  // avec un score déjà acquis ne peut venir que de là (voir
+  // GameEngine.startTurn, où une main neuve part toujours de zéro, et bank(),
+  // seule à transmettre un inheritedScore — toujours non nul, puisqu'il faut
+  // au moins 200 pour banquer).
+  if (previous != null && prevTurn == null && nextTurn.bankedScore > 0) {
+    entries.add(
+      _LogEntry(at, playerName, l10n.logResumedHandMessage(nextTurn.bankedScore)),
+    );
+  }
+
   // Une décision de garde vient d'être appliquée sur le lancer précédent
   // (`prevTurn!.busted` exclut un `prevTurn` qui serait un craque déjà
   // révolu dont le `pendingRoll` traînerait encore — jamais un vrai choix).
@@ -337,38 +433,27 @@ List<_LogEntry> _logEntriesForStep(
   // qu'il reste à relancer (ou "main pleine"), et le total de la main — pas
   // d'entrée séparée pour le nombre de dés à lancer ni pour la main pleine,
   // qui feraient double emploi avec celle-ci.
-  if (prevTurn?.pendingRoll != null &&
+  if (includeGain &&
+      prevTurn?.pendingRoll != null &&
       !prevTurn!.busted &&
       nextTurn.pendingRoll == null &&
       !nextTurn.busted) {
-    final analysis = prevTurn.pendingRoll!;
-    final roundPoints = nextTurn.bankedScore - prevTurn.bankedScore;
-    final kept = _describeKeptDice(analysis, roundPoints);
     entries.add(
       _LogEntry(
         at,
         playerName,
-        nextTurn.mustContinue
-            ? l10n.logRollGainHotDiceMessage(
-                kept,
-                roundPoints,
-                nextTurn.bankedScore,
-              )
-            : l10n.logRollGainMessage(
-                kept,
-                roundPoints,
-                nextTurn.diceToRoll,
-                nextTurn.bankedScore,
-              ),
+        _describeRollGain(
+          l10n,
+          prevTurn.pendingRoll!,
+          bankedScoreBefore: prevTurn.bankedScore,
+          afterKeep: nextTurn,
+        ),
       ),
     );
   }
 
   if (includeBust && nextTurn.busted && !(prevTurn?.busted ?? false)) {
-    entries.add(_LogEntry(at, playerName, l10n.bustedTitle));
-    if (nextTurn.bustReason == BustReason.exceedsTarget) {
-      entries.add(_LogEntry(at, playerName, l10n.bustExceedsTarget));
-    }
+    entries.addAll(_bustLogEntries(next, nextTurn, l10n: l10n, at: at));
   }
 
   return entries;
@@ -437,6 +522,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// chaque rebuild tant que le joueur n'a pas encore décidé.
   Object? _inheritedHandDialogShownFor;
 
+  /// Lancer dont le résumé a déjà été ajouté au journal dès l'immobilisation
+  /// des dés (voir [_maybeLogGainEarly]) : la transition qui appliquera
+  /// vraiment la décision de garde ne doit alors plus le rajouter.
+  RollAnalysis? _gainLoggedForRoll;
+
   /// Déclencheur "secouer pour lancer" (réglage [AppSettings.shakeToRollEnabled]) :
   /// une seule instance pour toute la durée de l'écran, démarrée/arrêtée
   /// selon le réglage et le cycle de vie de l'app (voir [initState],
@@ -464,6 +554,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _seedLogFromHistory();
+      // Partie reprise sur un lancer déjà affiché (donc déjà immobilisé, cf.
+      // _rollSettled) : son résumé doit suivre la même règle que si les dés
+      // venaient de s'arrêter sous les yeux du joueur.
+      if (initialPendingRoll != null) _maybeLogGainEarly(initialPendingRoll);
       _scheduleAutoProgressIfNeeded();
       _scheduleBustRevealIfNeeded(initialEngine);
     });
@@ -570,6 +664,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             l10n: l10n,
             at: action.at,
             includeBust: true,
+            includeGain: true,
           ),
         );
       },
@@ -597,6 +692,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _rollSettleTimer = Timer(DieWidget.rollAnimationDuration, () {
       if (!mounted) return;
       setState(() => _rollSettled = true);
+      _maybeLogGainEarly(pendingRoll);
       _previewMoveTimer = Timer(const Duration(milliseconds: 500), () {
         if (!mounted) return;
         // Le lancer a peut-être déjà été décidé (ou remplacé) entre-temps :
@@ -607,6 +703,47 @@ class _GameScreenState extends ConsumerState<GameScreen>
         setState(() => _previewMoveRevealed = true);
       });
     });
+  }
+
+  /// Ajoute le résumé du lancer au journal dès que les dés sont immobilisés,
+  /// mais seulement quand le joueur n'a AUCUNE décision à prendre dessus :
+  /// aucun choix de 5 à garder, et s'arrêter est de toute façon illégal, donc
+  /// relancer est le seul geste possible. Le résumé est alors entièrement
+  /// déterminé au moment où le résultat s'affiche : attendre le clic (ou le
+  /// délai du mode auto) ne ferait que le retarder sans rien apprendre de
+  /// plus. Dans le cas contraire, il reste ajouté au moment de l'action, une
+  /// fois le choix tranché (voir [_logEntriesForStep]).
+  void _maybeLogGainEarly(RollAnalysis pendingRoll) {
+    final engine = ref.read(gameProvider);
+    final turn = engine?.activeTurn;
+    // Le lancer a pu être décidé (ou remplacé) pendant l'animation : son
+    // résumé passe alors par le chemin normal, avec l'état réellement obtenu.
+    if (engine == null || turn == null || turn.busted) return;
+    if (!identical(turn.pendingRoll, pendingRoll)) return;
+
+    final currentTotal = engine.currentPlayer.totalScore;
+    if (_hasRealChoice(turn, pendingRoll, currentTotal: currentTotal)) return;
+    final afterKeep = applyKeepDecision(turn, declineFivesCount: 0);
+    final attempt = tryBank(
+      afterKeep,
+      minimumRequired: engine.minimumForCurrentPlayer,
+      currentTotal: currentTotal,
+    );
+    if (attempt.success) return; // s'arrêter reste un choix ouvert
+
+    _gainLoggedForRoll = pendingRoll;
+    _appendLog(
+      _LogEntry(
+        DateTime.now(),
+        engine.currentPlayer.name,
+        _describeRollGain(
+          AppLocalizations.of(context),
+          pendingRoll,
+          bankedScoreBefore: turn.bankedScore,
+          afterKeep: afterKeep,
+        ),
+      ),
+    );
   }
 
   /// Programme la révélation du message "Craqué !" une fois l'animation de
@@ -682,18 +819,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// [_buildBustedView]), dont la présence changeait la forme de l'écran
   /// selon la raison du craque.
   void _logBust(GameEngine engine, TurnState turn) {
-    final l10n = AppLocalizations.of(context);
-    _appendLog(
-      _LogEntry(DateTime.now(), engine.currentPlayer.name, l10n.bustedTitle),
-    );
-    if (turn.bustReason == BustReason.exceedsTarget) {
-      _appendLog(
-        _LogEntry(
-          DateTime.now(),
-          engine.currentPlayer.name,
-          l10n.bustExceedsTarget,
-        ),
-      );
+    for (final entry in _bustLogEntries(
+      engine,
+      turn,
+      l10n: AppLocalizations.of(context),
+      at: DateTime.now(),
+    )) {
+      _appendLog(entry);
     }
   }
 
@@ -844,15 +976,24 @@ class _GameScreenState extends ConsumerState<GameScreen>
               _maybeShowInheritedHandDialog();
             });
       }
+      // Le résumé de ce lancer a-t-il déjà été ajouté au journal dès
+      // l'immobilisation des dés (voir _maybeLogGainEarly) ? Comparaison
+      // d'identité : deux lancers successifs peuvent très bien tomber sur les
+      // mêmes faces sans être le même lancer.
+      final gainAlreadyLogged =
+          _gainLoggedForRoll != null &&
+          identical(previous?.activeTurn?.pendingRoll, _gainLoggedForRoll);
       for (final entry in _logEntriesForStep(
         previous,
         next,
         l10n: AppLocalizations.of(context),
         at: DateTime.now(),
         includeBust: false,
+        includeGain: !gainAlreadyLogged,
       )) {
         _appendLog(entry);
       }
+      if (gainAlreadyLogged) _gainLoggedForRoll = null;
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
@@ -1401,25 +1542,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (entry.barredScore == null) {
       return Text(': ${entry.text}', style: const TextStyle(fontSize: 13));
     }
-    final l10n = AppLocalizations.of(context);
     return Text.rich(
       TextSpan(
         style: const TextStyle(fontSize: 13, color: Colors.white),
         children: [
-          TextSpan(text: ': ${l10n.logScoreCollisionMessage} '),
+          TextSpan(text: ': ${entry.text} '),
           TextSpan(
             text: '${entry.barredScore}',
             style: const TextStyle(decoration: TextDecoration.lineThrough),
           ),
-          const WidgetSpan(child: SizedBox(width: 4)),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: PlayerAvatarWidget(
-              name: entry.barredPlayerName!,
-              size: 16,
-              color: avatarColors[entry.barredPlayerName!],
+          if (entry.barredPlayerName != null) ...[
+            const WidgetSpan(child: SizedBox(width: 4)),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: PlayerAvatarWidget(
+                name: entry.barredPlayerName!,
+                size: 16,
+                color: avatarColors[entry.barredPlayerName!],
+              ),
             ),
-          ),
+          ],
+          if (entry.textAfterBarredScore != null)
+            TextSpan(text: ' ${entry.textAfterBarredScore}'),
         ],
       ),
     );

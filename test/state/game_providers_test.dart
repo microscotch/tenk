@@ -65,9 +65,13 @@ void main() {
     );
 
     notifier.startGame(setup, handoff: handoff);
-    await _flushMicrotasks();
-
-    expect(await store.exists(999), isTrue);
+    // Écriture disque en fire-and-forget : sur une machine chargée, un délai
+    // fixe est régulièrement trop court (échecs intermittents observés), d'où
+    // la sonde plutôt qu'une attente à l'aveugle.
+    expect(
+      await _waitUntil(() => store.exists(999), timeout: const Duration(seconds: 5)),
+      isTrue,
+    );
     final saved = await store.read(999);
     expect(saved!.alias, 'Test Alias');
     expect(saved.actions, hasLength(1)); // le startTurn initial
