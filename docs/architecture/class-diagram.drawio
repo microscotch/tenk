@@ -1,0 +1,332 @@
+<mxfile host="app.diagrams.net" modified="2026-09-06T00:00:00.000Z" agent="Claude Code" version="24.0.0" type="device">
+  <diagram id="tenk-classes" name="Le 10000 — classes">
+    <mxGraphModel dx="2400" dy="1700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===================== TITRE ===================== -->
+        <mxCell id="title" value="Le 10000 (TenK) — diagramme de classes" style="text;html=1;fontSize=24;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="700" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Les trois couches sont étanches par construction : lib/game n'importe rien de Flutter, lib/state est le seul pont vers l'UI." style="text;html=1;fontSize=13;fontColor=#555555;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="56" width="1100" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== ZONE MOTEUR ===================== -->
+        <mxCell id="zoneEngine" value="lib/game — moteur de jeu (Dart pur, zéro import Flutter, testé en isolation)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f9ff;strokeColor=#7ea6e0;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#3a6ba5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="1420" height="1180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameEngine" value="&lt;b&gt;GameEngine&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;immuable — orchestre la partie&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;players : List&amp;lt;Player&amp;gt;&lt;br/&gt;currentPlayerIndex : int&lt;br/&gt;nextTurnDice : int&lt;br/&gt;activeTurn : TurnState?&lt;br/&gt;gameOver : bool&lt;br/&gt;winnerIndex : int?&lt;br/&gt;triggeringWinnerIndex : int?&lt;br/&gt;remainingFinalTurns : int?&lt;br/&gt;inheritedKeptDice : List&amp;lt;KeptDie&amp;gt;&lt;br/&gt;inheritedScore : int&lt;br/&gt;inheritedExtendedValues : Set&amp;lt;int&amp;gt;&lt;hr size=&quot;1&quot;/&gt;+ currentPlayer : Player&lt;br/&gt;+ minimumForCurrentPlayer : int&lt;br/&gt;+ isInFinalRound : bool&lt;br/&gt;+ inheritedHandExceedsWinningScore : bool&lt;br/&gt;+ startTurn({useFullHand}) : GameEngine&lt;br/&gt;+ roll({random}) : GameEngine&lt;br/&gt;+ applyKeep({declineFivesCount}) : GameEngine&lt;br/&gt;+ endBustedTurn() : GameEngine&lt;br/&gt;+ bank() : (GameEngine, BankAttempt)&lt;br/&gt;- _advance(...) : GameEngine" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="70" y="150" width="310" height="400" as="geometry" />
+        </mxCell>
+
+        <mxCell id="Player" value="&lt;b&gt;Player&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;grille complète, pas un score scalaire&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;name : String&lt;br/&gt;grid : List&amp;lt;ScoreEntry&amp;gt;&lt;br/&gt;currentIndex : int&lt;br/&gt;hasEntered : bool&lt;hr size=&quot;1&quot;/&gt;+ currentEntry : ScoreEntry&lt;br/&gt;+ totalScore : int&lt;br/&gt;+ hasTiret : bool   &lt;i&gt;(= currentEntry.hasTiret)&lt;/i&gt;&lt;br/&gt;+ previousEntry : ScoreEntry?&lt;br/&gt;+ lastUnbarredEntry : ScoreEntry?&lt;br/&gt;+ minimumForNextTurn : int&lt;br/&gt;+ applySuccessfulTurn(points) : Player&lt;br/&gt;+ applyBust() : Player&lt;br/&gt;+ applyScoreCollisionBar() : Player&lt;br/&gt;+ applyScoreCollisionBarAt(value) : Player&lt;br/&gt;- _bar() : Player" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="150" width="300" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ScoreEntry" value="&lt;b&gt;ScoreEntry&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;une ligne de la grille&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;value : int&lt;br/&gt;hasTiret : bool&lt;br/&gt;isBarred : bool&lt;hr size=&quot;1&quot;/&gt;+ copyWith({hasTiret, isBarred})" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="150" width="240" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="TurnState" value="&lt;b&gt;TurnState&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;immuable — un tour, plusieurs lancers&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;diceToRoll : int&lt;br/&gt;bankedScore : int&lt;br/&gt;extendedValues : Set&amp;lt;int&amp;gt;&lt;br/&gt;pendingRoll : RollAnalysis?&lt;br/&gt;mustContinue : bool   &lt;i&gt;(main pleine)&lt;/i&gt;&lt;br/&gt;busted : bool&lt;br/&gt;bustReason : BustReason?&lt;br/&gt;keptDiceThisTurn : List&amp;lt;KeptDie&amp;gt;&lt;br/&gt;hasRolledThisTurn : bool&lt;hr size=&quot;1&quot;/&gt;+ isOver : bool&lt;br/&gt;+ turnScoreEndsIn50 : int&lt;br/&gt;+ copyWith(...) : TurnState" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="70" y="600" width="310" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="KeptDie" value="&lt;b&gt;KeptDie&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;value : int&lt;br/&gt;points : int&lt;br/&gt;isExtended : bool  &lt;i&gt;(règle d'extension)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="70" y="900" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="RollAnalysis" value="&lt;b&gt;RollAnalysis&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;résultat de analyzeRoll()&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;faces : List&amp;lt;int&amp;gt;&lt;br/&gt;groups : List&amp;lt;ScoringGroup&amp;gt;&lt;br/&gt;junkDiceCount : int&lt;br/&gt;totalDiceRolled : int&lt;hr size=&quot;1&quot;/&gt;+ mandatoryGroups : List&amp;lt;ScoringGroup&amp;gt;&lt;br/&gt;+ declinableFives : ScoringGroup?&lt;br/&gt;+ hasAnyScore : bool&lt;br/&gt;+ canDeclineFives : bool" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="600" width="300" height="190" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ScoringGroup" value="&lt;b&gt;ScoringGroup&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;brelan, carré, quinte, suite, 1/5 isolés&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;value : int&lt;br/&gt;diceCount : int&lt;br/&gt;points : int&lt;br/&gt;isSuite : bool&lt;br/&gt;declinable : bool  &lt;i&gt;(les 5 isolés)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="600" width="240" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="BankAttempt" value="&lt;b&gt;BankAttempt&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;success : bool&lt;br/&gt;reason : BankFailureReason?&lt;br/&gt;bankedPoints : int?" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="800" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="BankFailureReason" value="&lt;b&gt;«enum» BankFailureReason&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;notRolledYet&lt;br/&gt;belowMinimum&lt;br/&gt;endsIn50&lt;br/&gt;mustContinueHotDice&lt;br/&gt;wouldMakeWinningImpossible" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="800" width="240" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="BustReason" value="&lt;b&gt;«enum» BustReason&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;noScore&lt;br/&gt;exceedsTarget&lt;br/&gt;fullHandAtTarget" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="600" width="240" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="EngineFns" value="&lt;b&gt;«fonctions pures» turn_state.dart / combination.dart / dice_roll.dart&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;rollDice(count, [Random]) : List&amp;lt;int&amp;gt;&lt;br/&gt;analyzeRoll(faces, {extendedValues}) : RollAnalysis&lt;br/&gt;rollTurn(state, {random}) : TurnState&lt;br/&gt;applyKeepDecision(state, {declineFivesCount}) : TurnState&lt;br/&gt;tryBank(state, {minimumRequired, currentTotal}) : BankAttempt&lt;br/&gt;minKeepableFives / maxKeepableFives / minimumUnavoidableGain" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1030" width="470" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="AiStrategy" value="&lt;b&gt;«abstract» AiStrategy&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;+ decideDeclineFives(analysis, state) : int&lt;br/&gt;+ decideContinue({...}) : bool&lt;br/&gt;+ decideAcceptInheritedHand({...}) : bool" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="1100" y="150" width="290" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="CautiousAi" value="&lt;b&gt;CautiousAi&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="310" width="90" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="BalancedAi" value="&lt;b&gt;BalancedAi&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="310" width="90" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="AggressiveAi" value="&lt;b&gt;AggressiveAi&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="310" width="90" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="AiDifficulty" value="&lt;b&gt;«enum» AiDifficulty&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;prudent | equilibre | agressif" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="390" width="290" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameSetup" value="&lt;b&gt;GameSetup&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;playerNames : List&amp;lt;String&amp;gt;&lt;br/&gt;aiPlayers : Map&amp;lt;int, AiDifficulty&amp;gt;&lt;br/&gt;autoPlayers : Set&amp;lt;int&amp;gt;&lt;hr size=&quot;1&quot;/&gt;+ isAi(i) / isAuto(i) : bool&lt;br/&gt;+ rotated(winnerIndex) : GameSetup" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="500" width="290" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="DiceOffState" value="&lt;b&gt;DiceOffState&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;tirage au sort du premier joueur&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;activeIndices : List&amp;lt;int&amp;gt;&lt;br/&gt;rollsThisRound : Map&amp;lt;int, int&amp;gt;&lt;br/&gt;roundHistory : List&amp;lt;Map&amp;lt;int, int&amp;gt;&amp;gt;&lt;br/&gt;winnerIndex : int?&lt;hr size=&quot;1&quot;/&gt;+ isResolved / roundComplete : bool&lt;br/&gt;+ nextToRoll : int?&lt;br/&gt;+ rollFor(index, {random}) : DiceOffState&lt;br/&gt;+ resolveRound() : DiceOffState" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="890" width="300" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameAction" value="&lt;b&gt;GameAction&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;journal rejouable&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;type : GameActionType&lt;br/&gt;at : DateTime&lt;br/&gt;params : Map&amp;lt;String, dynamic&amp;gt;&lt;hr size=&quot;1&quot;/&gt;+ toJson() / fromJson()" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="1030" width="230" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameActionType" value="&lt;b&gt;«enum» GameActionType&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;diceOffRoll | diceOffResolveRound&lt;br/&gt;startTurn | roll | applyKeep&lt;br/&gt;bank | endBustedTurn" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1030" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameRecordingHandoff" value="&lt;b&gt;GameRecordingHandoff&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;seed : int&lt;br/&gt;random : Random&lt;br/&gt;originalSetup : GameSetup&lt;br/&gt;alias : String&lt;br/&gt;createdAt : DateTime&lt;br/&gt;actions : List&amp;lt;GameAction&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1110" width="230" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ReplayResult" value="&lt;b&gt;ReplayResult&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;replayGame(setup, seed, actions)&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;diceOff : DiceOffState&lt;br/&gt;engine : GameEngine?&lt;br/&gt;rotatedSetup : GameSetup?&lt;br/&gt;random : Random" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1180" width="240" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== ZONE ÉTAT ===================== -->
+        <mxCell id="zoneState" value="lib/state — couche d'état Riverpod (seul pont autorisé entre moteur et UI)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f6fff5;strokeColor=#82b366;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#4a7a3a;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="100" width="780" height="800" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameNotifier" value="&lt;b&gt;GameNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;GameEngine?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;gameProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ seed : int?    + originalSetup : GameSetup?&lt;br/&gt;+ actions : List&amp;lt;GameAction&amp;gt;&lt;br/&gt;+ isAiPlayer(i) / isAutoPlayer(i) : bool&lt;br/&gt;+ shouldShowPassDevice(i) : bool&lt;hr size=&quot;1&quot;/&gt;+ startGame(setup, {handoff})&lt;br/&gt;+ resumeFromSave(saved)&lt;br/&gt;+ startGameReplay(...) / applyNextReplayAction()&lt;br/&gt;+ roll() / applyKeep({declineFivesCount})&lt;br/&gt;+ bank() / endBustedTurn() / startTurn({useFullHand})&lt;br/&gt;+ playAiTurnStep()&lt;br/&gt;+ previewAiAcceptInheritedHand() : bool&lt;br/&gt;+ previewAiDeclineFives(turn) : int&lt;br/&gt;+ previewAiContinue(turn) : bool&lt;br/&gt;+ debugLoadState(engine, setup)  &lt;i&gt;@visibleForTesting&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="150" width="350" height="290" as="geometry" />
+        </mxCell>
+
+        <mxCell id="DiceOffNotifier" value="&lt;b&gt;DiceOffNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;DiceOffState?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;diceOffProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ start(setup) / rollForCurrent()&lt;br/&gt;+ startReplay(saved) / applyNextDiceOffReplayAction()&lt;br/&gt;+ buildRotatedSetup() : GameSetup&lt;br/&gt;+ allPlayersAreAuto : bool" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="150" width="320" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="SettingsNotifier" value="&lt;b&gt;SettingsNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;AppSettings&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;settingsProvider — persiste via SharedPreferences&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ setPlayerName / setAiDifficulty&lt;br/&gt;+ setDiceColorMode / setLanguageOverride&lt;br/&gt;+ setMusicEnabled / setSoundEffectsEnabled&lt;br/&gt;+ setShakeToRollEnabled / setConfirmBeforeDeleteGame" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="330" width="320" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="AppSettings" value="&lt;b&gt;AppSettings&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;playerName : String&lt;br/&gt;aiMessageDelayMs / autoActionDelayMs : int&lt;br/&gt;diceColorMode : DiceColorMode&lt;br/&gt;musicEnabled / soundEffectsEnabled : bool&lt;br/&gt;confirmBeforeDeleteGame : bool&lt;br/&gt;aiDifficulty : AiDifficulty&lt;br/&gt;shakeToRollEnabled : bool&lt;br/&gt;languageOverride : String?" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="520" width="320" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="DiceColorMode" value="&lt;b&gt;«enum» DiceColorMode&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;uniform | varied" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="730" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="SavedGame" value="&lt;b&gt;SavedGame&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;fichier .run (le journal, pas l'état)&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;seed : int&lt;br/&gt;setup : GameSetup&lt;br/&gt;alias : String&lt;br/&gt;createdAt : DateTime&lt;br/&gt;enteredPlayAt : DateTime?&lt;br/&gt;durationSeconds : int&lt;br/&gt;actions : List&amp;lt;GameAction&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="490" width="350" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="GameSaveStore" value="&lt;b&gt;GameSaveStore&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;gameSaveStoreProvider / archivedGameSaveStoreProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;rootDirectory : Future&amp;lt;Directory&amp;gt; Function()&lt;hr size=&quot;1&quot;/&gt;+ exists(seed) / read(seed) / write(game) / delete(seed)&lt;br/&gt;+ list() : Future&amp;lt;List&amp;lt;SavedGame&amp;gt;&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="700" width="350" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ReplaySpeedNotifier" value="&lt;b&gt;ReplaySpeedNotifier&lt;/b&gt; &lt;i&gt;Notifier&amp;lt;int&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;replaySpeedProvider — x1 / x2 / x4&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="840" width="350" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== ZONE UI ===================== -->
+        <mxCell id="zoneUi" value="lib/ui — Flutter (n'importe jamais d'interne moteur dont il n'a pas besoin pour afficher)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff8f3;strokeColor=#d79b00;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#b06d00;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="930" width="780" height="350" as="geometry" />
+        </mxCell>
+
+        <mxCell id="Screens" value="&lt;b&gt;Écrans&lt;/b&gt; (ConsumerStatefulWidget)&lt;hr size=&quot;1&quot;/&gt;SplashScreen → SetupScreen → NewGameScreen&lt;br/&gt;DiceOffScreen → &lt;b&gt;GameScreen&lt;/b&gt; → GameOverScreen&lt;br/&gt;PassDeviceScreen · ScoreGridScreen&lt;br/&gt;SettingsScreen · RulesScreen" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="975" width="350" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="Widgets" value="&lt;b&gt;Widgets&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;DieWidget · ScoreSheet · PlayerAvatarWidget&lt;br/&gt;BorderedSection · GameRunTile · AppTitle&lt;br/&gt;PausedGamesList · FinishedGamesList&lt;br/&gt;ReplaySpeedControl · CasinoFeltBackground" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="975" width="320" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="UiServices" value="&lt;b&gt;Services UI&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;SoundEffects (singleton, observe le cycle de vie)&lt;br/&gt;ShakeDetector (accéléromètre → lancer)&lt;br/&gt;theme · dice_colors · navigation · route_observer" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="1130" width="720" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== RELATIONS MOTEUR ===================== -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=1;exitY=0.15;entryX=0;entryY=0.3;" edge="1" parent="1" source="GameEngine" target="Player">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1l" value="players 2..6" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e1">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=1;exitY=0.3;entryX=0;entryY=0.4;" edge="1" parent="1" source="Player" target="ScoreEntry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2l" value="grid 1..*" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=0.25;exitY=1;entryX=0.25;entryY=0;" edge="1" parent="1" source="GameEngine" target="TurnState">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3l" value="activeTurn 0..1" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="-0.2" relative="1" as="geometry"><mxPoint x="-4" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=0.15;exitY=1;entryX=0.15;entryY=0;" edge="1" parent="1" source="TurnState" target="KeptDie">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4l" value="keptDiceThisTurn *" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e4">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="4" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0.4;entryX=0;entryY=0.4;" edge="1" parent="1" source="TurnState" target="RollAnalysis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5l" value="pendingRoll" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e5">
+          <mxGeometry x="-0.3" relative="1" as="geometry"><mxPoint y="-12" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=1;exitY=0.4;entryX=0;entryY=0.4;" edge="1" parent="1" source="RollAnalysis" target="ScoringGroup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6l" value="groups *" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e6">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0.8;entryX=0;entryY=0.5;" edge="1" parent="1" source="TurnState" target="BankAttempt">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="410" y="800" /><mxPoint x="410" y="845" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e7l" value="tryBank()" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e7">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="BankAttempt" target="BankFailureReason">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0;entryX=0.5;entryY=0;" edge="1" parent="1" source="TurnState" target="BustReason">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="400" y="575" /><mxPoint x="1220" y="575" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e9l" value="bustReason" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e9">
+          <mxGeometry x="0.4" relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;exitX=0.5;exitY=0;entryX=0.2;entryY=1;" edge="1" parent="1" source="CautiousAi" target="AiStrategy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="BalancedAi" target="AiStrategy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;exitX=0.5;exitY=0;entryX=0.8;entryY=1;" edge="1" parent="1" source="AggressiveAi" target="AiStrategy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="AiDifficulty" target="CautiousAi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13l" value="sélectionne le profil" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e13">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="-40" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="GameSetup" target="AiDifficulty">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14l" value="aiPlayers" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e14">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="-30" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="GameRecordingHandoff" target="GameAction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15l" value="actions *" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e15">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="GameAction" target="GameActionType">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.4;" edge="1" parent="1" source="EngineFns" target="DiceOffState">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=1;exitY=0.6;entryX=0;entryY=0.5;" edge="1" parent="1" source="DiceOffState" target="ReplayResult">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18l" value="replayGame()" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e18">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- ===================== RELATIONS ÉTAT ===================== -->
+        <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0;exitY=0.2;entryX=1;entryY=0.1;strokeColor=#4a7a3a;" edge="1" parent="1" source="GameNotifier" target="AiStrategy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20l" value="pilote l'IA" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e20">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.05;strokeColor=#4a7a3a;" edge="1" parent="1" source="GameNotifier" target="GameEngine">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1480" y="235" /><mxPoint x="1480" y="80" /><mxPoint x="400" y="80" /><mxPoint x="400" y="170" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e21l" value="état = GameEngine?" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e21">
+          <mxGeometry x="0.1" relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#4a7a3a;" edge="1" parent="1" source="GameNotifier" target="SavedGame">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22l" value="persiste / reprend" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e22">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="-40" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#4a7a3a;" edge="1" parent="1" source="SavedGame" target="GameSaveStore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23l" value="lu / écrit par" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e23">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="-34" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;strokeColor=#4a7a3a;" edge="1" parent="1" source="DiceOffNotifier" target="GameNotifier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24l" value="passe la main (setup tourné)" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e24">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=diamondThin;endFill=1;endSize=12;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#4a7a3a;" edge="1" parent="1" source="SettingsNotifier" target="AppSettings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#4a7a3a;" edge="1" parent="1" source="AppSettings" target="DiceColorMode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== RELATIONS UI ===================== -->
+        <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0.5;exitY=0;entryX=0.15;entryY=1;strokeColor=#b06d00;" edge="1" parent="1" source="Screens" target="zoneState">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30l" value="ref.watch / ref.read des providers" style="edgeLabel;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;" vertex="1" connectable="0" parent="e30">
+          <mxGeometry x="0.92" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1;strokeColor=#b06d00;" edge="1" parent="1" source="Widgets" target="DiceColorMode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== LÉGENDE ===================== -->
+        <mxCell id="legend" value="&lt;b&gt;Légende&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;◆── composition / agrégation (le tout possède la partie)&lt;br/&gt;──▷ implémente&lt;br/&gt;--&amp;gt; dépend de / produit&lt;br/&gt;&lt;br/&gt;Bleu : moteur · Vert : état · Orange : UI · Jaune : énumération · Violet : fonctions pures&lt;br/&gt;&lt;br/&gt;Toutes les classes du moteur sont &lt;b&gt;immuables&lt;/b&gt; : chaque transition renvoie une nouvelle instance,&lt;br/&gt;ce qui rend la partie rejouable à partir du seul journal d'actions (SavedGame → replayGame)." style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="1310" width="780" height="170" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
