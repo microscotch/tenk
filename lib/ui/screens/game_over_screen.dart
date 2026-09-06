@@ -23,6 +23,17 @@ class GameOverScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.gameOverTitle),
+        // Cet écran est empilé PAR-DESSUS le GameScreen de la partie qui vient
+        // de se terminer (voir le ref.listen dans game_screen.dart) : la
+        // flèche de retour automatique de Flutter ferait un pop() nu, qui
+        // retomberait sur ce GameScreen — devenu un écran mort, puisqu'une
+        // fois `engine.gameOver` vrai il n'affiche plus jamais qu'un
+        // indicateur de chargement (voir ce commentaire côté GameScreen). Même
+        // action que le bouton "OK" du corps de l'écran.
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => popToHome(context),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.grid_on),

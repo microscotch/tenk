@@ -87,4 +87,23 @@ void main() {
     expect(find.byType(GameScreen), findsNothing, reason: 'l\'écran de jeu ne doit pas rester dans la pile');
     expect(find.byType(SetupScreen), findsOneWidget, reason: 'on doit revenir sur l\'accueil, pas sur un écran vide');
   });
+
+  testWidgets('la flèche de retour de l\'AppBar ramène aussi à l\'écran d\'accueil, pas au GameScreen mort',
+      (tester) async {
+    await pumpEndOfGame(tester);
+
+    // Une flèche de retour "nue" (pop() par défaut) retomberait sur le
+    // GameScreen de la partie terminée -- un écran mort dès que
+    // `engine.gameOver` est vrai (il n'affiche plus jamais qu'un indicateur
+    // de chargement). Bug remonté en jeu réel.
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(GameOverScreen), findsNothing);
+    expect(find.byType(GameScreen), findsNothing,
+        reason: 'l\'écran de jeu terminé ne doit pas rester dans la pile');
+    expect(find.byType(SetupScreen), findsOneWidget,
+        reason: 'la flèche de retour doit ramener sur l\'accueil, pas sur un écran figé avec un spinner');
+  });
 }
