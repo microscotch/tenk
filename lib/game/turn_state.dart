@@ -71,8 +71,9 @@ enum BustReason {
   /// Le lancer complète la main (tous les dés marquent) en tombant pile sur
   /// 10000 : la main pleine oblige à relancer, et n'importe quel relancer
   /// marquant dépasserait la cible — l'impasse est totale, le tour est perdu
-  /// dès cet instant plutôt qu'au relancer suivant (voir
-  /// [GameEngine.applyKeep]).
+  /// dès cet instant plutôt qu'au relancer suivant. Exception traditionnelle,
+  /// gérée à part : la quinte d'as (5 as en un seul lancer) gagne toujours,
+  /// même en main pleine (voir [GameEngine.applyKeep]).
   fullHandAtTarget,
 }
 

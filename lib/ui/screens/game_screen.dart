@@ -372,14 +372,15 @@ List<_LogEntry> _logEntriesForStep(
 }) {
   final entries = <_LogEntry>[];
 
-  // Prise de mise (bank() réussi) : GameEngine.activeTurn ne devient jamais
-  // null en dehors de bank()/endBustedTurn() (les deux seuls appelants de
-  // _advance(..., clearActiveTurn: true)) — et `!prevActiveTurn.busted`
-  // exclut le second (endBustedTurn() exige toujours un tour déjà craqué en
-  // entrée). Un tour sain qui se termine ainsi ne peut donc être qu'une mise
-  // prise avec succès. Détecté avant la collision de score ci-dessous, pour
-  // que le message apparaisse en premier dans le journal (la collision en
-  // est une conséquence directe).
+  // Prise de mise (banquage réussi) : GameEngine.activeTurn ne devient jamais
+  // null en dehors d'un banquage réussi (bank(), ou l'exception de la quinte
+  // d'as dans applyKeep(), qui banque dans la MÊME transition que la
+  // décision de garde) ou d'endBustedTurn() — et `!prevActiveTurn.busted`
+  // exclut ce dernier (il exige toujours un tour déjà craqué en entrée). Un
+  // tour sain qui se termine ainsi ne peut donc être qu'une mise prise avec
+  // succès. Détecté avant la collision de score ci-dessous, pour que le
+  // message apparaisse en premier dans le journal (la collision en est une
+  // conséquence directe).
   final prevActiveTurn = previous?.activeTurn;
   if (prevActiveTurn != null && !prevActiveTurn.busted && next.activeTurn == null) {
     entries.add(
@@ -387,7 +388,14 @@ List<_LogEntry> _logEntriesForStep(
         at,
         previous!.currentPlayer.name,
         l10n.logBankedMessage(
-          prevActiveTurn.bankedScore,
+          // Différence de score plutôt que prevActiveTurn.bankedScore : dans
+          // le cas normal (deux actions séparées, garde puis banque) les deux
+          // valent pareil, mais l'exception de la quinte d'as applique la
+          // garde ET banque dans la MÊME transition — prevActiveTurn est
+          // alors encore la main EN ATTENTE de décision (bankedScore pas
+          // encore mis à jour), et lire ce champ sous-évaluerait le gain.
+          next.players[previous.currentPlayerIndex].totalScore -
+              previous.players[previous.currentPlayerIndex].totalScore,
           // Grille déjà à jour dans `next` : le joueur qui vient de banquer
           // reste à son index (une fin de partie ne fait pas tourner la
           // main, voir GameEngine._advance).
@@ -1839,11 +1847,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final selectedKeep = _selectedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
       final declineCount = (fives?.diceCount ?? 0) - selectedKeep;
       notifier.applyKeep(declineFivesCount: declineCount);
-      // La décision de garde peut elle-même craquer le tour (dépassement de
-      // 10000, ou main pleine tombant pile dessus — voir GameEngine.applyKeep) :
-      // relancer là-dessus lèverait "Le tour est terminé". Le craque est déjà
-      // à l'écran, il n'y a plus rien à lancer.
-      if (ref.read(gameProvider)?.activeTurn?.busted ?? false) return;
+      // La décision de garde peut elle-même conclure le tour : dépassement de
+      // 10000 ou main pleine tombant pile dessus (craque, activeTurn reste
+      // affiché busted), ou l'exception de la quinte d'as (victoire
+      // immédiate, activeTurn redevient null — voir GameEngine.applyKeep).
+      // Dans les deux cas, relancer lèverait "Le tour est terminé" : il n'y a
+      // plus rien à lancer, le résultat est déjà à l'écran.
+      final afterKeep = ref.read(gameProvider)?.activeTurn;
+      if (afterKeep == null || afterKeep.busted) return;
     }
     notifier.roll();
   }

@@ -261,6 +261,48 @@ void main() {
     expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);
   });
 
+  test('exception traditionnelle : la quinte d\'as gagne toujours, même en main pleine', () {
+    var engine = GameEngine.newGame(['Alice', 'Bob']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'Alice'), Player(name: 'Bob', totalScore: 3000, hasEntered: true)],
+      currentPlayerIndex: 0,
+      activeTurn: const TurnState(diceToRoll: 5),
+    );
+
+    // 5 as en un seul lancer : quinte d'as, 10000 pts, main pleine, et
+    // Alice partait de 0 -- exactement la situation où la main pleine
+    // tomberait "pile sur 10000" pour n'importe quelle autre combinaison
+    // (voir le test ci-dessus), mais celle-ci gagne quand même.
+    engine = engine.roll(random: _ScriptedRandom([1, 1, 1, 1, 1]));
+    expect(engine.activeTurn!.busted, isFalse);
+
+    engine = engine.applyKeep();
+
+    expect(engine.activeTurn, isNull, reason: 'la main est banquée, pas craquée : le tour est terminé normalement');
+    expect(engine.players[0].totalScore, 10000);
+    expect(engine.players[0].hasEntered, isTrue);
+    expect(engine.triggeringWinnerIndex, 0);
+    expect(engine.remainingFinalTurns, 1, reason: 'un tour final reste dû à Bob, comme pour toute victoire à 10000');
+    expect(engine.gameOver, isFalse, reason: 'le tour final n\'a pas encore été joué');
+  });
+
+  test('un brelan d\'as (pas une quinte) qui tombe pile sur 10000 craque toujours', () {
+    // Même total final (10000) et même main pleine que le test précédent,
+    // mais via un brelan (3 as, pas 5) : la règle générale s'applique --
+    // seule la quinte d'as est l'exception.
+    var engine = GameEngine.newGame(['Alice', 'Bob']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'Alice', totalScore: 9000, hasEntered: true), Player(name: 'Bob')],
+      currentPlayerIndex: 0,
+      activeTurn: const TurnState(diceToRoll: 3),
+    );
+    engine = engine.roll(random: _ScriptedRandom([1, 1, 1]));
+    engine = engine.applyKeep();
+
+    expect(engine.activeTurn!.busted, isTrue);
+    expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);
+  });
+
   test('une main pleine en dessous de 10000 reste jouable', () {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(

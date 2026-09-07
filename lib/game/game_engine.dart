@@ -157,19 +157,40 @@ class GameEngine {
   /// lancers sans issue et les options de garde trop généreuses n'étant plus
   /// proposées (voir [maxKeepableFives]). Il protège encore le rejeu d'une
   /// partie sauvegardée avant ce changement.
+  ///
+  /// Exception traditionnelle à la règle "main pleine pile sur 10000 craque"
+  /// (voir juste en dessous) : la quinte d'as (5 as en un seul lancer) gagne
+  /// toujours la partie sur-le-champ, même en main pleine. C'est la SEULE
+  /// combinaison capable de totaliser exactement 10000 en un unique lancer de
+  /// 5 dés (une quinte d'une autre valeur plafonne à 6000, et aucune
+  /// combinaison de groupes plus petits n'approche 10000) : la détecter au
+  /// niveau du lancer ou constater juste `newTotal == winningScore` à ce
+  /// point précis reviennent donc exactement au même, mais nommer la
+  /// combinaison dans le code garde la règle lisible pour ce qu'elle est —
+  /// une exception à un cas précis, pas une réouverture générale de la règle.
   GameEngine applyKeep({int declineFivesCount = 0}) {
-    var t = applyKeepDecision(activeTurn!, declineFivesCount: declineFivesCount);
+    final rolledAnalysis = activeTurn!.pendingRoll;
+    final t = applyKeepDecision(activeTurn!, declineFivesCount: declineFivesCount);
     final newTotal = currentPlayer.totalScore + t.bankedScore;
+
     if (newTotal > winningScore) {
-      t = t.copyWith(busted: true, bustReason: BustReason.exceedsTarget);
-    } else if (t.mustContinue && newTotal == winningScore) {
-      // Main pleine pile sur 10000 : impossible de s'arrêter (une main pleine
-      // oblige à relancer, voir tryBank) et impossible de relancer sans
-      // dépasser (tout lancer conservé rapporte au moins 50). Le tour est
-      // déjà perdu : autant le dire maintenant plutôt que faire relancer le
-      // joueur pour un craque couru d'avance.
-      t = t.copyWith(busted: true, bustReason: BustReason.fullHandAtTarget);
+      return copyWith(activeTurn: t.copyWith(busted: true, bustReason: BustReason.exceedsTarget));
     }
+
+    if (t.mustContinue && newTotal == winningScore) {
+      final isAceQuint = rolledAnalysis != null &&
+          rolledAnalysis.mandatoryGroups.any((g) => g.value == 1 && g.diceCount == 5);
+      if (isAceQuint) {
+        return _applySuccessfulBank(t, t.bankedScore);
+      }
+      // Main pleine pile sur 10000, mais pas la quinte d'as : impossible de
+      // s'arrêter (une main pleine oblige à relancer, voir tryBank) et
+      // impossible de relancer sans dépasser (tout lancer conservé rapporte
+      // au moins 50). Le tour est déjà perdu : autant le dire maintenant
+      // plutôt que faire relancer le joueur pour un craque couru d'avance.
+      return copyWith(activeTurn: t.copyWith(busted: true, bustReason: BustReason.fullHandAtTarget));
+    }
+
     return copyWith(activeTurn: t);
   }
 
@@ -200,8 +221,16 @@ class GameEngine {
     final attempt =
         tryBank(activeTurn!, minimumRequired: minimumForCurrentPlayer, currentTotal: currentPlayer.totalScore);
     if (!attempt.success) return (this, attempt);
+    return (_applySuccessfulBank(activeTurn!, attempt.bankedPoints!), attempt);
+  }
 
-    final updatedPlayer = currentPlayer.applySuccessfulTurn(attempt.bankedPoints!);
+  /// Logique commune à un banquage réussi, qu'il vienne d'un [bank] explicite
+  /// ou de l'exception de la quinte d'as dans [applyKeep] : applique le score
+  /// au joueur, barre toute ligne (courante ou historique, chez n'importe
+  /// quel autre joueur) qui égalait déjà ce score, puis passe la main en
+  /// transmettant les dés/score/valeurs étendues du tour comme base héritée.
+  GameEngine _applySuccessfulBank(TurnState turn, int bankedPoints) {
+    final updatedPlayer = currentPlayer.applySuccessfulTurn(bankedPoints);
     final newPlayers = [...players];
     newPlayers[currentPlayerIndex] = updatedPlayer;
 
@@ -210,16 +239,12 @@ class GameEngine {
       newPlayers[i] = newPlayers[i].applyScoreCollisionBarAt(updatedPlayer.totalScore);
     }
 
-    final leftoverDice = activeTurn!.diceToRoll;
-    return (
-      _advance(
-        newPlayers,
-        diceForNext: leftoverDice,
-        inheritedKeptDice: activeTurn!.keptDiceThisTurn,
-        inheritedScore: attempt.bankedPoints!,
-        inheritedExtendedValues: activeTurn!.extendedValues,
-      ),
-      attempt,
+    return _advance(
+      newPlayers,
+      diceForNext: turn.diceToRoll,
+      inheritedKeptDice: turn.keptDiceThisTurn,
+      inheritedScore: bankedPoints,
+      inheritedExtendedValues: turn.extendedValues,
     );
   }
 

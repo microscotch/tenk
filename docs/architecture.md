@@ -33,6 +33,11 @@ une partie rejouable à l'identique.
 - **`GameEngine`** orchestre la partie : rotation des joueurs, héritage des dés
   entre tours, condition de victoire. Ses transitions (`startTurn`, `roll`,
   `applyKeep`, `bank`, `endBustedTurn`) sont les seules portes d'entrée.
+  `bank()` et l'exception de la quinte d'as dans `applyKeep()` (ci-dessous)
+  partagent la même conséquence — appliquer le score, barrer les collisions,
+  passer la main — factorisée dans `_applySuccessfulBank`, pour qu'un
+  banquage réussi se comporte toujours pareil, quel que soit le chemin qui y
+  mène.
 - **`Player` porte une grille complète (`List<ScoreEntry>`), pas un score
   scalaire.** C'est délibéré : un tiret ou un barré s'attache à *la ligne* qui
   l'a reçue et y reste, même après des tours réussis. `Player.hasTiret` est
@@ -40,6 +45,10 @@ une partie rejouable à l'identique.
   (les avoir dédoublés a déjà produit un bug d'affichage).
 - **`TurnState`** modélise un tour sur plusieurs lancers : dés à lancer, score
   en cours, valeurs étendues, dés gardés, main pleine, craque et sa raison.
+  Une main pleine qui tombe pile sur 10000 craque toujours (`BustReason.
+  fullHandAtTarget`) — sauf la quinte d'as (5 as en un seul lancer), seule
+  combinaison capable de totaliser exactement 10000 en un lancer de 5 dés,
+  qui gagne la partie sur-le-champ par exception traditionnelle.
 - **`RollAnalysis` / `ScoringGroup`** décrivent ce qu'un lancer vaut, en
   distinguant les groupes obligatoires des 5 isolés que le joueur peut décliner.
 

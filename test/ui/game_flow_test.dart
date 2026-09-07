@@ -460,6 +460,61 @@ void main() {
     expect(after.players[0].hasTiret, isFalse);
   });
 
+  testWidgets(
+      'la quinte d\'as gagne la partie sur-le-champ et l\'annonce correctement dans le journal',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Alice à 0 : son lancer (5 as) applique la garde ET banque dans la
+    // MÊME transition (exception de la quinte d'as, voir GameEngine.
+    // applyKeep) -- contrairement au cas normal où ce sont deux actions
+    // séparées. Régression ciblée : le journal doit annoncer les 10000 pts
+    // effectivement gagnés, pas 0 (voir le commentaire sur
+    // _logEntriesForStep).
+    var engine = GameEngine.newGame(['Alice', 'Bob']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'Alice'), Player(name: 'Bob', totalScore: 3000, hasEntered: true)],
+      currentPlayerIndex: 0,
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        pendingRoll: analyzeRoll(const [1, 1, 1, 1, 1]),
+        hasRolledThisTurn: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['Alice', 'Bob']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Craqué'), findsNothing, reason: 'la quinte d\'as ne craque jamais');
+
+    // La main est banquée : elle passe directement à Bob (pas de popup de
+    // craque à acquitter), donc l'écran de passation s'intercale avant de
+    // pouvoir relire le journal.
+    expect(find.byType(PassDeviceScreen), findsOneWidget);
+    await tester.tap(find.text('Prêt'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('10000 pts sont pris => 10000 pts'), findsOneWidget);
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[0].totalScore, 10000);
+    expect(after.triggeringWinnerIndex, 0);
+    expect(after.remainingFinalTurns, 1);
+  });
+
   testWidgets('prendre la mise annonce le score encaissé et le nouveau total dans le journal', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
