@@ -44,6 +44,7 @@ void main() {
 
     p = p.applyBust(); // craque sur 700, déjà tiretée : barrée à son tour
     expect(p.totalScore, 0);
+    expect(p.grid[1].barredBy, 'A', reason: 'un craque se barre toujours lui-même');
   });
 
   test('un barrage vers une ligne sans tiret laisse bien le joueur sans tiret', () {
@@ -96,14 +97,14 @@ void main() {
   group('applyScoreCollisionBar', () {
     test('barre même sans tiret actif', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
-      p = p.applyScoreCollisionBar();
+      p = p.applyScoreCollisionBar(barredByName: 'B');
       expect(p.totalScore, 0);
       expect(p.hasTiret, isFalse);
     });
 
     test('une collision qui ramène à 0 remet aussi l\'entrée en jeu à zéro', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
-      p = p.applyScoreCollisionBar(); // collision -> retombe à 0
+      p = p.applyScoreCollisionBar(barredByName: 'B'); // collision -> retombe à 0
       expect(p.totalScore, 0);
       expect(p.hasEntered, isFalse);
       expect(p.minimumForNextTurn, entryThreshold);
@@ -112,7 +113,7 @@ void main() {
     test('une collision qui ne ramène pas à 0 ne touche pas à l\'entrée en jeu', () {
       var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
       p = p.applySuccessfulTurn(300); // 500 -> 800
-      p = p.applyScoreCollisionBar(); // collision -> retombe à 500, toujours entré
+      p = p.applyScoreCollisionBar(barredByName: 'B'); // collision -> retombe à 500, toujours entré
       expect(p.totalScore, 500);
       expect(p.hasEntered, isTrue);
       expect(p.minimumForNextTurn, normalThreshold);
@@ -122,7 +123,7 @@ void main() {
       var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
       p = p.applyBust(); // tiret posé sur 500, point de retour = 0
       p = p.applySuccessfulTurn(300); // 500 -> 800, point de retour = 500
-      p = p.applyScoreCollisionBar(); // barre 800 -> retour à 500
+      p = p.applyScoreCollisionBar(barredByName: 'B'); // barre 800 -> retour à 500
       expect(p.totalScore, 500);
       // Le tiret de 500 est resté attaché à sa ligne : y revenir le remet en
       // vigueur (voir le test des deux craques consécutifs).
@@ -133,9 +134,10 @@ void main() {
   group('applyScoreCollisionBarAt', () {
     test('collision sur la ligne courante : comportement inchangé (repli sur le score précédent)', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
-      p = p.applyScoreCollisionBarAt(700);
+      p = p.applyScoreCollisionBarAt(700, barredByName: 'B');
       expect(p.totalScore, 0);
       expect(p.grid.last.isBarred, isTrue);
+      expect(p.grid.last.barredBy, 'B', reason: 'barré par l\'auteur de la collision, pas par A lui-même');
     });
 
     // Régression : un adversaire qui a DÉJÀ eu 700 (avant de progresser à
@@ -145,7 +147,7 @@ void main() {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
       p = p.applySuccessfulTurn(200); // 700 -> 900
 
-      p = p.applyScoreCollisionBarAt(700);
+      p = p.applyScoreCollisionBarAt(700, barredByName: 'B');
 
       expect(p.totalScore, 900, reason: 'la progression depuis 700 -> 900 n\'est pas remise en cause');
       expect(p.hasEntered, isTrue);
@@ -156,7 +158,7 @@ void main() {
 
     test('aucune ligne ne correspond : sans effet', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
-      final unchanged = p.applyScoreCollisionBarAt(1234);
+      final unchanged = p.applyScoreCollisionBarAt(1234, barredByName: 'B');
       expect(unchanged.totalScore, 700);
       expect(unchanged.grid.every((e) => !e.isBarred), isTrue);
     });
@@ -164,10 +166,10 @@ void main() {
     test('une ligne déjà barrée ne peut pas l\'être une seconde fois par une nouvelle collision', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
       p = p.applySuccessfulTurn(200); // 700 -> 900
-      p = p.applyScoreCollisionBarAt(700); // barre la ligne 700
+      p = p.applyScoreCollisionBarAt(700, barredByName: 'B'); // barre la ligne 700
       expect(p.grid[1].isBarred, isTrue);
 
-      final again = p.applyScoreCollisionBarAt(700); // déjà barrée : sans effet
+      final again = p.applyScoreCollisionBarAt(700, barredByName: 'C'); // déjà barrée : sans effet
       expect(again.totalScore, 900);
       expect(again.grid[1].isBarred, isTrue);
     });
@@ -179,11 +181,11 @@ void main() {
     test('un repli saute une ligne intermédiaire déjà barrée pour retomber sur le plus haut score non barré', () {
       var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
       p = p.applySuccessfulTurn(200); // 500 -> 700
-      p = p.applyScoreCollisionBarAt(500); // barre la ligne 500 (dépassée), 700 reste courant
+      p = p.applyScoreCollisionBarAt(500, barredByName: 'B'); // barre la ligne 500 (dépassée), 700 reste courant
       expect(p.grid[1].isBarred, isTrue);
       expect(p.totalScore, 700);
 
-      p = p.applyScoreCollisionBarAt(700); // collision sur la ligne COURANTE cette fois
+      p = p.applyScoreCollisionBarAt(700, barredByName: 'B'); // collision sur la ligne COURANTE cette fois
 
       expect(p.totalScore, 0, reason: 'la ligne 500 est déjà barrée : repli jusqu\'à 0, pas 500');
       expect(p.hasEntered, isFalse);

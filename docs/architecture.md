@@ -42,7 +42,12 @@ une partie rejouable à l'identique.
   scalaire.** C'est délibéré : un tiret ou un barré s'attache à *la ligne* qui
   l'a reçue et y reste, même après des tours réussis. `Player.hasTiret` est
   exactement `currentEntry.hasTiret` — un seul fait, pas deux à synchroniser
-  (les avoir dédoublés a déjà produit un bug d'affichage).
+  (les avoir dédoublés a déjà produit un bug d'affichage). Chaque `ScoreEntry`
+  barrée retient aussi `barredBy`, le nom de l'auteur du barrage — soi-même
+  pour un second craque consécutif, l'adversaire dont le tour vient de
+  provoquer une collision de score sinon — pour que la grille affiche le bon
+  blason (`applyBust`/`applyScoreCollisionBarAt` le renseignent ; côté moteur,
+  c'est toujours le joueur courant au moment de l'action, self ou non).
 - **`TurnState`** modélise un tour sur plusieurs lancers : dés à lancer, score
   en cours, valeurs étendues, dés gardés, main pleine, craque et sa raison.
   Une main pleine qui tombe pile sur 10000 craque toujours (`BustReason.

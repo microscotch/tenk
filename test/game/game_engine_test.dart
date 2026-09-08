@@ -129,6 +129,8 @@ void main() {
 
     expect(after.players[0].totalScore, 700, reason: 'retombe d\'un cran, au score d\'avant le dernier tour validé');
     expect(after.players[0].hasTiret, isFalse, reason: 'le tiret est consommé par le barrage');
+    expect(after.players[0].grid.firstWhere((e) => e.value == 1000).barredBy, 'A',
+        reason: 'un craque se barre toujours lui-même');
     expect(after.currentPlayerIndex, 1);
     expect(after.nextTurnDice, 5);
   });
@@ -168,6 +170,8 @@ void main() {
       expect(after.players[1].totalScore, 2000, reason: 'B a bien validé son tour à 2000');
       expect(after.players[0].totalScore, 1800, reason: 'A retombe à son score précédent : collision à 2000');
       expect(after.players[0].hasTiret, isFalse);
+      expect(after.players[0].grid.firstWhere((e) => e.value == 2000).barredBy, 'B',
+          reason: 'barré par B, l\'auteur du tour qui vient de provoquer la collision');
     });
 
     test('la collision barre aussi un joueur qui portait déjà un tiret', () {
@@ -208,6 +212,7 @@ void main() {
       expect(after.players[1].totalScore, 700, reason: 'B a bien validé son tour à 700');
       expect(after.players[0].totalScore, 900, reason: 'A garde sa progression : seule son ancienne ligne 700 est barrée');
       expect(after.players[0].grid.firstWhere((e) => e.value == 700).isBarred, isTrue);
+      expect(after.players[0].grid.firstWhere((e) => e.value == 700).barredBy, 'B');
     });
   });
 

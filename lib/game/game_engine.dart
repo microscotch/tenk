@@ -236,7 +236,10 @@ class GameEngine {
 
     for (var i = 0; i < newPlayers.length; i++) {
       if (i == currentPlayerIndex) continue;
-      newPlayers[i] = newPlayers[i].applyScoreCollisionBarAt(updatedPlayer.totalScore);
+      newPlayers[i] = newPlayers[i].applyScoreCollisionBarAt(
+        updatedPlayer.totalScore,
+        barredByName: updatedPlayer.name,
+      );
     }
 
     return _advance(

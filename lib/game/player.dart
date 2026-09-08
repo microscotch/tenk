@@ -18,13 +18,22 @@ class ScoreEntry {
   final bool hasTiret;
   final bool isBarred;
 
-  const ScoreEntry(this.value, {this.hasTiret = false, this.isBarred = false});
+  /// Nom du joueur dont l'action a causé le barrage de cette ligne — soi-même
+  /// en cas de second craque consécutif (voir [Player.applyBust]), ou
+  /// l'auteur du tour qui vient de provoquer la collision de score (voir
+  /// [Player.applyScoreCollisionBarAt]). Toujours renseigné quand [isBarred]
+  /// est vrai (jamais réinitialisé ensuite, une ligne barrée le reste), null
+  /// sinon.
+  final String? barredBy;
 
-  ScoreEntry copyWith({bool? hasTiret, bool? isBarred}) {
+  const ScoreEntry(this.value, {this.hasTiret = false, this.isBarred = false, this.barredBy});
+
+  ScoreEntry copyWith({bool? hasTiret, bool? isBarred, String? barredBy}) {
     return ScoreEntry(
       value,
       hasTiret: hasTiret ?? this.hasTiret,
       isBarred: isBarred ?? this.isBarred,
+      barredBy: barredBy ?? this.barredBy,
     );
   }
 }
@@ -133,7 +142,10 @@ class Player {
 
   /// Applique un craque : marque la ligne courante d'un tiret si elle n'en a
   /// pas déjà un actif, ou la barre sinon. Un craque à 0 ne marque jamais de
-  /// tiret : il n'y a rien à sanctionner en dessous du plancher.
+  /// tiret : il n'y a rien à sanctionner en dessous du plancher. Toujours
+  /// appelé sur le joueur qui vient lui-même de craquer : s'il barre sa
+  /// propre ligne, c'est donc lui-même l'auteur du barrage (voir
+  /// [ScoreEntry.barredBy]).
   Player applyBust() {
     if (totalScore == 0) return this;
     if (!hasTiret) {
@@ -146,18 +158,21 @@ class Player {
         hasEntered: hasEntered,
       );
     }
-    return _bar();
+    return _bar(barredByName: name);
   }
 
   /// Applique un score barré suite à une collision : un autre joueur vient
   /// de terminer son tour avec exactement le même score que celui-ci. Barre
   /// toujours la ligne courante, qu'elle porte ou non un tiret actif.
-  Player applyScoreCollisionBar() => _bar();
+  /// [barredByName] est le nom de cet autre joueur, l'auteur du tour qui
+  /// vient de provoquer la collision (voir [ScoreEntry.barredBy]).
+  Player applyScoreCollisionBar({required String barredByName}) => _bar(barredByName: barredByName);
 
   /// Recherche, dans TOUTE la grille (pas seulement la ligne courante), une
-  /// ligne non barrée valant exactement [value] — un autre joueur vient de
-  /// terminer son tour sur ce score, qui a donc déjà été "pris" par celui-ci
-  /// à un moment quelconque de la partie, même s'il a progressé depuis.
+  /// ligne non barrée valant exactement [value] — un autre joueur ([barredByName],
+  /// l'auteur du tour qui vient de banquer ce score, voir [ScoreEntry.barredBy])
+  /// vient de terminer son tour sur ce score, qui a donc déjà été "pris" par
+  /// celui-ci à un moment quelconque de la partie, même s'il a progressé depuis.
   /// - Si c'est la ligne courante : comportement inchangé, repli sur la
   ///   ligne précédente (voir [_bar]).
   /// - Si c'est une ligne plus ancienne déjà dépassée par un tour réussi
@@ -166,12 +181,12 @@ class Player {
   ///   score courant ne change pas.
   /// - Si [value] n'apparaît nulle part (ou seulement sur une ligne déjà
   ///   barrée) : aucun effet.
-  Player applyScoreCollisionBarAt(int value) {
-    if (currentEntry.value == value) return _bar();
+  Player applyScoreCollisionBarAt(int value, {required String barredByName}) {
+    if (currentEntry.value == value) return _bar(barredByName: barredByName);
     final idx = grid.indexWhere((e) => !e.isBarred && e.value == value);
     if (idx == -1) return this;
     final newGrid = List<ScoreEntry>.of(grid);
-    newGrid[idx] = newGrid[idx].copyWith(isBarred: true);
+    newGrid[idx] = newGrid[idx].copyWith(isBarred: true, barredBy: barredByName);
     return Player._raw(
       name: name,
       grid: newGrid,
@@ -180,9 +195,9 @@ class Player {
     );
   }
 
-  Player _bar() {
+  Player _bar({required String barredByName}) {
     final newGrid = List<ScoreEntry>.of(grid);
-    newGrid[currentIndex] = currentEntry.copyWith(isBarred: true);
+    newGrid[currentIndex] = currentEntry.copyWith(isBarred: true, barredBy: barredByName);
     // Repli sur le plus haut score NON barré de la grille : une ligne plus
     // ancienne peut déjà avoir été barrée indépendamment (collision de score
     // sur une ligne dépassée depuis, voir [applyScoreCollisionBarAt]), donc

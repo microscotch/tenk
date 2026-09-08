@@ -126,7 +126,7 @@ class _GridPage extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _PlayerColumn(player: players[i], avatarColor: avatarColors[players[i].name]),
+                child: _PlayerColumn(player: players[i], avatarColors: avatarColors),
               ),
             ),
         ],
@@ -137,9 +137,9 @@ class _GridPage extends StatelessWidget {
 
 class _PlayerColumn extends StatelessWidget {
   final Player player;
-  final Color? avatarColor;
+  final Map<String, Color> avatarColors;
 
-  const _PlayerColumn({required this.player, required this.avatarColor});
+  const _PlayerColumn({required this.player, required this.avatarColors});
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +147,7 @@ class _PlayerColumn extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
-          child: PlayerAvatarWidget(name: player.name, size: 36, color: avatarColor),
+          child: PlayerAvatarWidget(name: player.name, size: 36, color: avatarColors[player.name]),
         ),
         const SizedBox(height: 8),
         for (var i = player.grid.length - 1; i >= 0; i--)
@@ -156,8 +156,7 @@ class _PlayerColumn extends StatelessWidget {
             child: _ScoreRow(
               entry: player.grid[i],
               isCurrent: i == player.currentIndex,
-              playerName: player.name,
-              avatarColor: avatarColor,
+              avatarColors: avatarColors,
             ),
           ),
       ],
@@ -168,14 +167,12 @@ class _PlayerColumn extends StatelessWidget {
 class _ScoreRow extends StatelessWidget {
   final ScoreEntry entry;
   final bool isCurrent;
-  final String playerName;
-  final Color? avatarColor;
+  final Map<String, Color> avatarColors;
 
   const _ScoreRow({
     required this.entry,
     required this.isCurrent,
-    required this.playerName,
-    required this.avatarColor,
+    required this.avatarColors,
   });
 
   @override
@@ -212,12 +209,15 @@ class _ScoreRow extends StatelessWidget {
               color: textColor,
             ),
           ),
-          // Le blason du joueur rejoint le libellé du score barré, même
-          // convention visuelle que l'entrée "Score barré" du journal de
-          // partie (voir _buildLogWhatCell dans game_screen.dart).
-          if (entry.isBarred) ...[
+          // Le blason de l'AUTEUR du barrage (pas forcément le propriétaire
+          // de cette colonne) rejoint le libellé du score barré : soi-même en
+          // cas de second craque consécutif, ou l'adversaire dont le tour
+          // vient de provoquer la collision (voir [ScoreEntry.barredBy] et
+          // l'entrée "Score barré" du journal de partie, qui suit la même
+          // convention — voir _buildLogWhatCell dans game_screen.dart).
+          if (entry.isBarred && entry.barredBy != null) ...[
             const SizedBox(width: 6),
-            PlayerAvatarWidget(name: playerName, size: 16, color: avatarColor),
+            PlayerAvatarWidget(name: entry.barredBy!, size: 16, color: avatarColors[entry.barredBy]),
           ],
           if (entry.hasTiret) ...[
             const SizedBox(width: 6),

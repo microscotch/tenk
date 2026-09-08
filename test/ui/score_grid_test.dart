@@ -37,6 +37,68 @@ void main() {
     expect(texts.single.style?.decoration, TextDecoration.lineThrough);
   });
 
+  testWidgets(
+      'un score barré par collision affiche le blason de l\'auteur du barrage, pas celui du propriétaire de la colonne',
+      (tester) async {
+    // Alice a 700 ; Bob vient de banquer exactement 700 lui aussi, ce qui
+    // barre la ligne d'Alice. Le blason à côté de ce score barré doit être
+    // celui de BOB (l'auteur de la collision), pas celui d'Alice.
+    final alice = Player(name: 'Alice').applySuccessfulTurn(700).applyScoreCollisionBarAt(
+          700,
+          barredByName: 'Bob',
+        );
+    final bob = Player(name: 'Bob').applySuccessfulTurn(700);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ScoreGridScreen(players: [alice, bob]),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(alice.grid.last.isBarred, isTrue);
+    expect(alice.grid.last.barredBy, 'Bob');
+
+    // Le blason de Bob apparaît deux fois : son entête de colonne, et
+    // l'auteur du barrage dans la colonne d'Alice. Celui d'Alice n'apparaît
+    // qu'une fois : son propre entête -- jamais comme auteur de son propre
+    // barrage, puisque ce n'est pas elle qui l'a causé.
+    expect(_avatarFor('Bob'), findsNWidgets(2), reason: 'entête de colonne + auteur du barrage chez Alice');
+    expect(_avatarFor('Alice'), findsOneWidget, reason: 'seulement son entête : elle n\'a pas causé son propre barrage');
+  });
+
+  testWidgets(
+      'un score barré par un second craque affiche le blason du joueur lui-même',
+      (tester) async {
+    // Cas symétrique : un craque sur une ligne déjà tiretée se barre
+    // lui-même (voir Player.applyBust) -- le blason affiché doit alors être
+    // le sien, pas celui d'un autre joueur.
+    var alice = Player(name: 'Alice').applySuccessfulTurn(700);
+    alice = alice.applyBust(); // tiret sur 700
+    alice = alice.applySuccessfulTurn(300); // 700 -> 1000, nouvelle ligne
+    alice = alice.applyBust(); // tiret sur 1000
+    alice = alice.applyBust(); // 1000 barré -> retombe sur 700
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ScoreGridScreen(players: [alice]),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final barredEntry = alice.grid.firstWhere((e) => e.value == 1000);
+    expect(barredEntry.isBarred, isTrue);
+    expect(barredEntry.barredBy, 'Alice');
+
+    // Un seul joueur dans cette partie : le blason d'Alice apparaît deux
+    // fois -- son entête de colonne, et l'auteur de son propre barrage.
+    expect(_avatarFor('Alice'), findsNWidgets(2));
+  });
+
   testWidgets('le bouton grille de la partie en cours ouvre bien l\'écran', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
