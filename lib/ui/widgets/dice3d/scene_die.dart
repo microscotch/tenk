@@ -165,7 +165,10 @@ class _Scene3DDieState extends State<Scene3DDie> {
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        margin: const EdgeInsets.all(4),
+        // Doit rester identique à la marge du rendu de repli
+        // ([DieWidget.margin]) : la rangée de 5 dés est dimensionnée sur cette
+        // valeur, et les deux rendus sont interchangeables à l'exécution.
+        margin: const EdgeInsets.all(DieWidget.margin),
         width: _size,
         height: _size,
         child: _facesReady

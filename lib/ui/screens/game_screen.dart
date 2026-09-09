@@ -1436,17 +1436,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Hauteur fixe des zones "Piste" et "Main courante" : une seule rangée de
-  /// dés à leur taille par défaut, quel que soit le contenu (dés, vide, ou
-  /// texte de substitution) — évite que les zones changent de hauteur.
-  /// Marge réduite au minimum (le DieWidget a déjà 4px de marge propre de
-  /// chaque côté) pour des zones aussi compactes que possible.
-  static const double _diceZoneHeight = DieWidget.defaultSize + 8;
-
   /// Marge interne réduite des zones "Piste"/"Main courante" (contrairement
   /// au défaut de [BorderedSection], pensé pour les zones plus hautes de
-  /// l'écran d'accueil).
-  static const _diceZonePadding = EdgeInsets.fromLTRB(16, 14, 16, 6);
+  /// l'écran d'accueil). Latéralement au plus juste : chaque pixel repris ici
+  /// est un pixel rendu aux dés, dont la taille est contrainte par la largeur
+  /// restante (voir [_fittedDieSize]). L'étiquette incrustée ne suit pas
+  /// cette marge (elle est positionnée à part), elle ne bouge donc pas.
+  static const _diceZonePadding = EdgeInsets.fromLTRB(8, 14, 8, 6);
 
   static const _previewFadeDuration = Duration(milliseconds: 300);
 
@@ -1484,10 +1480,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
       label: label,
       fillAvailableSpace: false,
       padding: _diceZonePadding,
-      child: SizedBox(
-        height: _diceZoneHeight,
-        child: Center(
-          child: analysis == null
+      child: _DiceZoneBody(
+        child: analysis == null
               ? const SizedBox.shrink()
               // Chaque dé du lancer est TOUJOURS rendu ici (composition
               // fixe) : seule son opacité varie selon previewIndices, pour
@@ -1516,7 +1510,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     child: die,
                   );
                 }),
-        ),
       ),
     );
   }
@@ -1565,10 +1558,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
           style: TextStyle(color: minimumColor),
         ),
       ],
-      child: SizedBox(
-        height: _diceZoneHeight,
-        child: Center(
-          child: totalCount == 0
+      child: _DiceZoneBody(
+        child: totalCount == 0
               ? const SizedBox.shrink()
               : _fittedDiceRow(totalCount, (i, size) {
                   if (i < kept.length) {
@@ -1596,7 +1587,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ),
                   );
                 }),
-        ),
       ),
     );
   }
@@ -2058,23 +2048,54 @@ class _GameScreenState extends ConsumerState<GameScreen>
 /// orientation.
 const int _diceRowReferenceCount = 5;
 
+/// Place occupée horizontalement par un dé en plus de son côté : sa marge
+/// propre, de chaque côté (voir [DieWidget.margin]).
+const double _dieMargin = DieWidget.margin * 2;
+
+const double _minDieSize = 40.0;
+
+/// Côté d'un dé pour une largeur disponible donnée, de sorte que
+/// [_diceRowReferenceCount] dés tiennent toujours sur une seule ligne. Sert
+/// aussi bien à construire la rangée qu'à dimensionner la hauteur des zones
+/// qui l'accueillent (voir `_diceZoneHeight`), pour qu'aucune n'ait de place
+/// perdue au-dessus ou en dessous des dés.
+double _fittedDieSize(double availableWidth) {
+  final available = availableWidth.isFinite
+      ? availableWidth
+      : DieWidget.defaultSize * _diceRowReferenceCount;
+  return ((available / _diceRowReferenceCount) - _dieMargin)
+      .clamp(_minDieSize, DieWidget.defaultSize);
+}
+
+/// Corps des zones "Piste" et "Main courante" : réserve exactement la hauteur
+/// d'une rangée de dés à la taille que ceux-ci auront pour la largeur
+/// disponible, quel que soit le contenu (dés, ou zone vide) — les zones ne
+/// changent donc jamais de hauteur d'un état du tour à l'autre, sans pour
+/// autant réserver la place d'un dé plus gros que celui réellement affiché.
+class _DiceZoneBody extends StatelessWidget {
+  final Widget child;
+
+  const _DiceZoneBody({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        height: _fittedDieSize(constraints.maxWidth) + _dieMargin,
+        child: Center(child: child),
+      ),
+    );
+  }
+}
+
 Widget _fittedDiceRow(
   int count,
   Widget Function(int index, double size) builder,
 ) {
   if (count == 0) return const SizedBox.shrink();
-  const dieMargin =
-      8.0; // EdgeInsets.all(4) appliqué de chaque côté par DieWidget
-  const minSize = 40.0;
   return LayoutBuilder(
     builder: (context, constraints) {
-      final available = constraints.maxWidth.isFinite
-          ? constraints.maxWidth
-          : DieWidget.defaultSize * _diceRowReferenceCount;
-      final size = ((available / _diceRowReferenceCount) - dieMargin).clamp(
-        minSize,
-        DieWidget.defaultSize,
-      );
+      final size = _fittedDieSize(constraints.maxWidth);
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

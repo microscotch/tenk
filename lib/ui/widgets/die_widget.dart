@@ -38,7 +38,16 @@ class DieWidget extends StatelessWidget {
   /// tenir sur une seule ligne (voir `_fittedDiceRow` dans game_screen.dart).
   final double size;
 
-  static const double defaultSize = 76.0;
+  /// Taille maximale d'un dé : atteinte seulement sur écran large, une
+  /// rangée de 5 étant contrainte par la largeur disponible bien avant sur un
+  /// téléphone (voir `_fittedDiceRow` dans game_screen.dart).
+  static const double defaultSize = 96.0;
+
+  /// Marge propre à chaque dé, appliquée sur ses quatre côtés : deux dés
+  /// voisins sont donc séparés du double. Volontairement serrée pour laisser
+  /// le maximum de largeur aux dés eux-mêmes, la rangée devant toujours tenir
+  /// les 5 dés sur une seule ligne.
+  static const double margin = 2.0;
 
   /// Durée de l'animation de lancer (tumble), identique entre le rendu 3D
   /// ([Scene3DDie]) et son repli Matrix4/Transform ([_TransformCubeDie]) —
@@ -198,7 +207,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        margin: const EdgeInsets.all(4),
+        margin: const EdgeInsets.all(DieWidget.margin),
         width: _size,
         height: _size,
         child: Transform(
