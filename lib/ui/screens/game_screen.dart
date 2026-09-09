@@ -1210,6 +1210,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       showScore: pendingAnalysis != null && _rollSettled,
                       previewIndices: previewIndices,
                       previewRevealed: _previewMoveRevealed,
+                      isAiTurn: isAiTurn,
                     ),
                     const SizedBox(height: 12),
                     _buildHandZone(
@@ -1222,6 +1223,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       previewIndices: previewIndices,
                       previewStates: previewStates,
                       previewRevealed: _previewMoveRevealed,
+                      isAiTurn: isAiTurn,
                     ),
                     const SizedBox(height: 12),
                     Center(
@@ -1468,6 +1470,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required bool showScore,
     required Set<int> previewIndices,
     required bool previewRevealed,
+    required bool isAiTurn,
   }) {
     final l10n = AppLocalizations.of(context);
     final analysis = turn.pendingRoll;
@@ -1509,7 +1512,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     duration: _previewFadeDuration,
                     child: die,
                   );
-                }),
+                }, isAiTurn: isAiTurn),
       ),
     );
   }
@@ -1531,6 +1534,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required Set<int> previewIndices,
     required List<DieVisualState>? previewStates,
     required bool previewRevealed,
+    required bool isAiTurn,
   }) {
     final l10n = AppLocalizations.of(context);
     final kept = turn.keptDiceThisTurn;
@@ -1586,7 +1590,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       size: size,
                     ),
                   );
-                }),
+                }, isAiTurn: isAiTurn),
       ),
     );
   }
@@ -2067,6 +2071,28 @@ double _fittedDieSize(double availableWidth) {
       .clamp(_minDieSize, DieWidget.defaultSize);
 }
 
+/// Un tour d'IA garde les dés à leur taille d'avant leur élargissement,
+/// plus petits que ceux d'un tour joué à la main. Les trois écarts d'alors
+/// sont reproduits ici : la rangée disposait de [_previousZoneSideInset] de
+/// moins de chaque côté, chaque dé portait [_previousDieMargin] de marge de
+/// chaque côté, et ne dépassait jamais [_previousDieMaxSize].
+///
+/// Seuls les dés rétrécissent : la hauteur des zones reste calée sur la
+/// taille d'un tour humain (voir [_DiceZoneBody]), sinon les zones
+/// changeraient de hauteur à chaque passage de main.
+const double _previousZoneSideInset = 8.0;
+const double _previousDieMargin = 4.0;
+const double _previousDieMaxSize = 76.0;
+
+double _aiFittedDieSize(double availableWidth) {
+  final available = availableWidth.isFinite
+      ? availableWidth
+      : _previousDieMaxSize * _diceRowReferenceCount;
+  final previousAvailable = available - _previousZoneSideInset * 2;
+  return ((previousAvailable / _diceRowReferenceCount) - _previousDieMargin * 2)
+      .clamp(_minDieSize, _previousDieMaxSize);
+}
+
 /// Corps des zones "Piste" et "Main courante" : réserve exactement la hauteur
 /// d'une rangée de dés à la taille que ceux-ci auront pour la largeur
 /// disponible, quel que soit le contenu (dés, ou zone vide) — les zones ne
@@ -2090,12 +2116,15 @@ class _DiceZoneBody extends StatelessWidget {
 
 Widget _fittedDiceRow(
   int count,
-  Widget Function(int index, double size) builder,
-) {
+  Widget Function(int index, double size) builder, {
+  bool isAiTurn = false,
+}) {
   if (count == 0) return const SizedBox.shrink();
   return LayoutBuilder(
     builder: (context, constraints) {
-      final size = _fittedDieSize(constraints.maxWidth);
+      final size = isAiTurn
+          ? _aiFittedDieSize(constraints.maxWidth)
+          : _fittedDieSize(constraints.maxWidth);
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

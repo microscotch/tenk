@@ -1365,4 +1365,53 @@ void main() {
     expect(offered, [0, 1],
         reason: 'garder 0 ou 1 cinq reste légal, en garder 2 dépasserait 10000');
   });
+
+  testWidgets('les dés d\'un tour d\'IA restent à leur taille d\'avant l\'élargissement', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+
+    Future<double> dieSize({required bool ai}) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      var engine = GameEngine.newGame(['A', 'B']).startTurn();
+      engine = engine.copyWith(
+        activeTurn: TurnState(
+          diceToRoll: 5,
+          bankedScore: 0,
+          hasRolledThisTurn: true,
+          pendingRoll: analyzeRoll(const [1, 5, 2, 3, 6]),
+        ),
+      );
+      container.read(gameProvider.notifier).debugLoadState(
+            engine,
+            GameSetup(
+              playerNames: const ['A', 'B'],
+              aiPlayers: ai ? const {0: AiDifficulty.prudent} : const {},
+            ),
+          );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+        ),
+      );
+      await tester.pump();
+
+      final size = tester.widgetList<DieWidget>(find.byType(DieWidget)).first.size;
+
+      // L'IA enchaîne toute seule : on démonte avant que ses temporisations
+      // ne fassent diverger l'état mesuré.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      return size;
+    }
+
+    final human = await dieSize(ai: false);
+    final ai = await dieSize(ai: true);
+
+    expect(ai, lessThan(human),
+        reason: 'un tour d\'IA garde les dés plus petits qu\'un tour joué à la main');
+  });
 }
