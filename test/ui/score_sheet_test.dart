@@ -68,11 +68,15 @@ void main() {
     await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
 
     expect(find.text('800'), findsOneWidget);
-    expect(find.text('(500)'), findsOneWidget, reason: 'le score précédent apparaît entre parenthèses');
+    expect(find.textContaining('(500'), findsOneWidget, reason: 'le score précédent apparaît entre parenthèses');
+
+    // Le tiret doit être DANS la parenthèse, donc porté par ce même widget de
+    // texte, et non posé à côté : sinon il se lit comme qualifiant le score
+    // courant affiché juste avant.
     expect(
-      find.descendant(of: _rowOf('A'), matching: find.byIcon(Icons.remove)),
+      find.descendant(of: find.textContaining('(500'), matching: find.byIcon(Icons.remove)),
       findsOneWidget,
-      reason: 'la ligne précédente portait un tiret, signalé à côté du score entre parenthèses',
+      reason: 'la ligne précédente portait un tiret, marqué à l\'intérieur des parenthèses',
     );
   });
 

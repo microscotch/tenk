@@ -197,18 +197,30 @@ class _PlayerRow extends StatelessWidget {
                       ),
                     Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                     const SizedBox(width: 4),
-                    Text(
-                      '(${previousEntry?.value ?? 0})',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-                    ),
-                    if (previousEntry?.hasTiret ?? false)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 2),
-                        child: Tooltip(
-                          message: l10n.previousScoreHadTiretTooltip,
-                          child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
-                        ),
+                    // Le tiret est DANS la parenthèse : il qualifie ce score
+                    // précédent, pas le total courant qui le précède à
+                    // l'écran. D'où le WidgetSpan plutôt qu'une icône posée
+                    // après la parenthèse fermante.
+                    Text.rich(
+                      TextSpan(
+                        style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                        children: [
+                          TextSpan(text: '(${previousEntry?.value ?? 0}'),
+                          if (previousEntry?.hasTiret ?? false)
+                            WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: Tooltip(
+                                  message: l10n.previousScoreHadTiretTooltip,
+                                  child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
+                                ),
+                              ),
+                            ),
+                          const TextSpan(text: ')'),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ],
