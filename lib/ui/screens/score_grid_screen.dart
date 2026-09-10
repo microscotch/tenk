@@ -219,9 +219,12 @@ class _ScoreRow extends StatelessWidget {
             const SizedBox(width: 6),
             PlayerAvatarWidget(name: entry.barredBy!, size: 16, color: avatarColors[entry.barredBy]),
           ],
-          if (entry.hasTiret) ...[
+          // Le tiret est un avertissement : "un craque de plus et cette ligne
+          // est barrée". Une fois la ligne barrée il a fait son office et
+          // n'annonce plus rien — le barré dit tout.
+          if (entry.hasTiret && !entry.isBarred) ...[
             const SizedBox(width: 6),
-            Icon(Icons.remove, size: 14, color: entry.isBarred ? colorScheme.onErrorContainer : Colors.orange),
+            const Icon(Icons.remove, size: 14, color: Colors.orange),
           ],
         ],
       ),

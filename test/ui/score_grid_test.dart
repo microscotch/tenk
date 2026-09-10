@@ -31,10 +31,34 @@ void main() {
     expect(find.text('0'), findsOneWidget);
     expect(find.text('500'), findsOneWidget);
     expect(find.text('800'), findsOneWidget);
-    expect(find.byIcon(Icons.remove), findsNWidgets(2)); // les deux lignes ayant porté un tiret
+
+    // Seule la ligne 500 montre son tiret : celui de 800 a disparu avec le
+    // barrage, l'avertissement n'ayant plus lieu d'être une fois la sanction
+    // tombée.
+    expect(find.byIcon(Icons.remove), findsOneWidget);
 
     final texts = tester.widgetList<Text>(find.text('800'));
     expect(texts.single.style?.decoration, TextDecoration.lineThrough);
+  });
+
+  testWidgets('une ligne barrée n\'affiche plus son tiret', (tester) async {
+    // 700 tiretée puis barrée par un second craque : le barré remplace
+    // l'avertissement, il ne s'y ajoute pas.
+    var a = Player(name: 'A').applySuccessfulTurn(700);
+    a = a.applyBust(); // tiret sur 700
+    a = a.applyBust(); // 700 barré
+
+    await tester.pumpWidget(MaterialApp(
+      home: ScoreGridScreen(players: [a]),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
+    await tester.pumpAndSettle();
+
+    final barred = a.grid.firstWhere((e) => e.value == 700);
+    expect(barred.isBarred, isTrue);
+    expect(barred.hasTiret, isTrue, reason: 'le tiret reste dans le modèle, seul l\'affichage le masque');
+    expect(find.byIcon(Icons.remove), findsNothing);
   });
 
   testWidgets(
