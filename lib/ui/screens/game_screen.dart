@@ -1349,56 +1349,66 @@ class _GameScreenState extends ConsumerState<GameScreen>
         canPop: false,
         child: AlertDialog(
           title: Text(l10n.inheritedHandDialogTitle),
+          // Tout est empilé dans le contenu, boutons compris, plutôt que
+          // laissé à `actions` : celui-ci aligne ses boutons à droite et ne
+          // les met l'un sous l'autre que faute de place. Ici l'ordre de haut
+          // en bas est voulu — les dés, ce qu'ils valent, puis les deux
+          // suites possibles — et chaque élément est centré.
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice)),
               if (engine.inheritedKeptDice.isNotEmpty) ...[
-                const SizedBox(height: 12),
                 _InheritedKeptDiceRow(
                   kept: engine.inheritedKeptDice,
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
+                const SizedBox(height: 12),
               ],
+              Text(
+                l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice),
+                textAlign: TextAlign.center,
+              ),
               if (!canResume) ...[
                 const SizedBox(height: 8),
                 Text(
                   l10n.inheritedHandExceedsWinning,
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
                 ),
               ],
-            ],
-          ),
-          actions: [
-            if (canResume)
-              FilledButton(
+              const SizedBox(height: 20),
+              if (canResume) ...[
+                FilledButton(
+                  onPressed: () {
+                    // Ces popups surgissent sous le doigt du joueur : un tap
+                    // déjà parti ne doit pas les valider au vol (voir
+                    // _lockControlsBriefly). Contrôle à l'exécution ici, la
+                    // popup étant une route à part que nos setState ne
+                    // redessinent pas.
+                    if (_controlsLocked) return;
+                    Navigator.of(dialogContext).pop();
+                    notifier.startTurn(useFullHand: false);
+                    notifier.roll();
+                  },
+                  child: Text(
+                    '${l10n.resumeHandButton}'
+                    '${_percentSuffix(engine.nextTurnDice, engine.inheritedExtendedValues)}',
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              TextButton(
                 onPressed: () {
-                  // Ces popups surgissent sous le doigt du joueur : un tap
-                  // déjà parti ne doit pas les valider au vol (voir
-                  // _lockControlsBriefly). Contrôle à l'exécution ici, la
-                  // popup étant une route à part que nos setState ne
-                  // redessinent pas.
                   if (_controlsLocked) return;
                   Navigator.of(dialogContext).pop();
-                  notifier.startTurn(useFullHand: false);
+                  notifier.startTurn(useFullHand: true);
                   notifier.roll();
                 },
-                child: Text(
-                  '${l10n.resumeHandButton}'
-                  '${_percentSuffix(engine.nextTurnDice, engine.inheritedExtendedValues)}',
-                ),
+                child: Text('${l10n.newHandButton}${_percentSuffix(5, const {})}'),
               ),
-            TextButton(
-              onPressed: () {
-                if (_controlsLocked) return;
-                Navigator.of(dialogContext).pop();
-                notifier.startTurn(useFullHand: true);
-                notifier.roll();
-              },
-              child: Text('${l10n.newHandButton}${_percentSuffix(5, const {})}'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

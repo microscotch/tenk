@@ -118,6 +118,26 @@ void main() {
       expect(dialogRect.contains(r.topLeft) && dialogRect.contains(r.bottomRight), isTrue,
           reason: 'chaque dé doit tenir dans la popup');
     }
+
+    // Empilement voulu, de haut en bas : les dés, ce qu'ils valent, puis les
+    // deux suites possibles.
+    final diceBottom = tester.getRect(diceInDialog.at(0)).bottom;
+    final score = tester.getRect(
+      find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('300')),
+    );
+    final resume = tester.getRect(find.widgetWithText(FilledButton, 'Reprendre la main'));
+    final newHand = tester.getRect(find.widgetWithText(TextButton, 'Nouvelle main'));
+
+    expect(diceBottom, lessThanOrEqualTo(score.top), reason: 'les dés au-dessus du score');
+    expect(score.bottom, lessThanOrEqualTo(resume.top), reason: 'le score au-dessus du bouton de reprise');
+    expect(resume.bottom, lessThanOrEqualTo(newHand.top),
+        reason: 'la reprise au-dessus de la nouvelle main');
+
+    // Chacun centré horizontalement dans la popup.
+    for (final r in [score, resume, newHand]) {
+      expect((r.center.dx - dialogRect.center.dx).abs(), lessThan(1.0),
+          reason: 'chaque élément doit être centré dans la popup');
+    }
   });
 
   testWidgets('le bouton retour ne referme pas la popup de main héritée', (tester) async {
