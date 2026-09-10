@@ -42,8 +42,15 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Arthur Dent');
     await tester.pump();
 
-    expect(find.text('Arthur Dent'), findsOneWidget,
-        reason: 'le nouveau nom tapé doit être pris en compte par le champ');
+    // Recherche limitée au champ lui-même : le joueur 2 est une IA dont le
+    // nom est tiré au hasard dans [kAiCharacterNames], qui contient
+    // justement 'Arthur Dent' — une recherche sur tout l'écran trouvait donc
+    // deux widgets une fois sur quinze, et le test échouait par intermittence.
+    expect(
+      find.descendant(of: find.byType(TextField), matching: find.text('Arthur Dent')),
+      findsOneWidget,
+      reason: 'le nouveau nom tapé doit être pris en compte par le champ',
+    );
   });
 
   testWidgets('un joueur sans nom de propriétaire enregistré ne fait pas planter l\'écran', (tester) async {
