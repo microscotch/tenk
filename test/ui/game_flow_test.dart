@@ -37,6 +37,72 @@ final _autoActionPump = const AppSettings().autoActionDelay + const Duration(mil
 final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
 
 void main() {
+  testWidgets('le bouton retour ne referme pas la popup de craque', (tester) async {
+    // Ces popups portent la seule action qui débloque le tour : les fermer
+    // avec le bouton retour laissait la partie dans un état injouable.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 700, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(diceToRoll: 3, pendingRoll: analyzeRoll([2, 3, 4]), busted: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget,
+        reason: 'la popup doit rester : son bouton porte la seule action qui passe la main');
+    expect(find.text('Continuer'), findsOneWidget);
+  });
+
+  testWidgets('le bouton retour ne referme pas la popup de main héritée', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Main héritée reprenable : le joueur doit choisir, et seule la popup
+    // porte ce choix.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 300,
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget,
+        reason: 'sans ce choix, activeTurn reste null et plus rien n\'est jouable');
+  });
+
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

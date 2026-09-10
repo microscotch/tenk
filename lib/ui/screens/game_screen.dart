@@ -854,22 +854,29 @@ class _GameScreenState extends ConsumerState<GameScreen>
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.bustedTitle),
-        content: switch (_bustReasonExplanation(l10n, turn.bustReason)) {
-          final explanation? => Text(explanation),
-          null => null,
-        },
-        actions: [
-          FilledButton(
-            onPressed: () {
-              if (_controlsLocked) return;
-              Navigator.of(dialogContext).pop();
-              ref.read(gameProvider.notifier).endBustedTurn();
-            },
-            child: Text(l10n.bustContinueButton),
-          ),
-        ],
+      // `barrierDismissible: false` n'arrête que le tap à côté, pas le bouton
+      // retour d'Android, qui dépile la route de la popup. Or celle-ci porte
+      // la seule action capable de passer la main : la refermer laissait la
+      // partie injouable (même raison dans [_showInheritedHandDialog]).
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(l10n.bustedTitle),
+          content: switch (_bustReasonExplanation(l10n, turn.bustReason)) {
+            final explanation? => Text(explanation),
+            null => null,
+          },
+          actions: [
+            FilledButton(
+              onPressed: () {
+                if (_controlsLocked) return;
+                Navigator.of(dialogContext).pop();
+                ref.read(gameProvider.notifier).endBustedTurn();
+              },
+              child: Text(l10n.bustContinueButton),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1335,50 +1342,57 @@ class _GameScreenState extends ConsumerState<GameScreen>
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.inheritedHandDialogTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice)),
-            if (!canResume) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.inheritedHandExceedsWinning,
-                style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
-              ),
+      // Voir [_showBustDialog] : sans ce PopScope, le bouton retour dépile la
+      // popup et le tour reste bloqué faute d'activeTurn — le choix qu'elle
+      // porte n'est proposé nulle part ailleurs.
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(l10n.inheritedHandDialogTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice)),
+              if (!canResume) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.inheritedHandExceedsWinning,
+                  style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+                ),
+              ],
             ],
-          ],
-        ),
-        actions: [
-          if (canResume)
-            FilledButton(
+          ),
+          actions: [
+            if (canResume)
+              FilledButton(
+                onPressed: () {
+                  // Ces popups surgissent sous le doigt du joueur : un tap
+                  // déjà parti ne doit pas les valider au vol (voir
+                  // _lockControlsBriefly). Contrôle à l'exécution ici, la
+                  // popup étant une route à part que nos setState ne
+                  // redessinent pas.
+                  if (_controlsLocked) return;
+                  Navigator.of(dialogContext).pop();
+                  notifier.startTurn(useFullHand: false);
+                  notifier.roll();
+                },
+                child: Text(
+                  '${l10n.resumeHandButton} '
+                  '(${_scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues)})',
+                ),
+              ),
+            TextButton(
               onPressed: () {
-              // Ces popups surgissent sous le doigt du joueur : un tap déjà
-              // parti ne doit pas les valider au vol (voir
-              // _lockControlsBriefly). Contrôle à l'exécution ici, la popup
-              // étant une route à part que nos setState ne redessinent pas.
-              if (_controlsLocked) return;
+                if (_controlsLocked) return;
                 Navigator.of(dialogContext).pop();
-                notifier.startTurn(useFullHand: false);
+                notifier.startTurn(useFullHand: true);
                 notifier.roll();
               },
-              child: Text(
-                '${l10n.resumeHandButton} '
-                '(${_scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues)})',
-              ),
+              child: Text('${l10n.newHandButton} (${_scorePercentLabel(5, const {})})'),
             ),
-          TextButton(
-            onPressed: () {
-              if (_controlsLocked) return;
-              Navigator.of(dialogContext).pop();
-              notifier.startTurn(useFullHand: true);
-              notifier.roll();
-            },
-            child: Text('${l10n.newHandButton} (${_scorePercentLabel(5, const {})})'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
