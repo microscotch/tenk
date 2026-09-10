@@ -21,9 +21,23 @@ const double _minColumnWidth = 108.0;
 /// pas sur une page à cette largeur minimale, elles sont réparties sur
 /// plusieurs pages navigables façon carrousel (glissement + points de page).
 class ScoreGridScreen extends StatefulWidget {
+  /// Les joueurs dont la grille est affichée — tous, ou un seul quand on
+  /// ouvre la grille depuis la ligne d'un joueur.
   final List<Player> players;
 
-  const ScoreGridScreen({super.key, required this.players});
+  /// Tous les joueurs de la partie, dans l'ordre de jeu : c'est sur eux que
+  /// les couleurs de blason se décident (voir [assignAvatarColors]), même
+  /// quand [players] n'en montre qu'un.
+  ///
+  /// Deux noms de même couleur naturelle sont départagés dans cet ordre. Les
+  /// recalculer sur une liste réduite rendait au second la couleur que le
+  /// premier lui avait prise : sa grille individuelle portait alors le blason
+  /// d'une autre couleur que partout ailleurs dans le jeu.
+  ///
+  /// Par défaut [players], ce qui convient dès que la grille les montre tous.
+  final List<Player>? roster;
+
+  const ScoreGridScreen({super.key, required this.players, this.roster});
 
   @override
   State<ScoreGridScreen> createState() => _ScoreGridScreenState();
@@ -41,7 +55,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final avatarColors = assignAvatarColors(widget.players.map((p) => p.name));
+    final avatarColors = assignAvatarColors((widget.roster ?? widget.players).map((p) => p.name));
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context).scoreGridLabel)),
       body: SafeArea(

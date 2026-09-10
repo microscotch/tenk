@@ -1302,7 +1302,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// colonne plutôt que des initiales.
   void _openPlayerGrid(Player player) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ScoreGridScreen(players: [player])),
+      MaterialPageRoute(
+        builder: (_) => ScoreGridScreen(
+          players: [player],
+          // La grille ne montre que ce joueur, mais sa couleur de blason se
+          // décide sur la table entière (voir [ScoreGridScreen.roster]).
+          roster: ref.read(gameProvider)?.players,
+        ),
+      ),
     );
   }
 

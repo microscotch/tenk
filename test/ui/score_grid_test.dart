@@ -41,6 +41,29 @@ void main() {
     expect(texts.single.style?.decoration, TextDecoration.lineThrough);
   });
 
+  testWidgets('la grille d\'un seul joueur garde la couleur de blason de la partie', (tester) async {
+    // 'Random Dent' et 'Lolo' réclament la même couleur naturelle : dans une
+    // partie, le premier la garde et le second est décalé. Affichée seule, la
+    // grille du second lui rendait cette couleur — celle du premier joueur.
+    final ia = Player(name: 'Random Dent');
+    final moi = Player(name: 'Lolo');
+    final couleurDeLaPartie = assignAvatarColors([ia.name, moi.name])[moi.name];
+
+    expect(couleurDeLaPartie, isNot(avatarColorFor(moi.name)),
+        reason: 'ces deux noms doivent bien entrer en collision, sinon le test ne prouve rien');
+
+    await tester.pumpWidget(MaterialApp(
+      home: ScoreGridScreen(players: [moi], roster: [ia, moi]),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
+    await tester.pumpAndSettle();
+
+    final blason = tester.widget<PlayerAvatarWidget>(_avatarFor(moi.name));
+    expect(blason.color, couleurDeLaPartie,
+        reason: 'le blason doit être le même ici que partout ailleurs dans le jeu');
+  });
+
   testWidgets('une ligne barrée n\'affiche plus son tiret', (tester) async {
     // 700 tiretée puis barrée par un second craque : le barré remplace
     // l'avertissement, il ne s'y ajoute pas.
