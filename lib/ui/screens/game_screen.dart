@@ -1354,6 +1354,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice)),
+              if (engine.inheritedKeptDice.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _InheritedKeptDiceRow(
+                  kept: engine.inheritedKeptDice,
+                  colorMode: ref.read(settingsProvider).diceColorMode,
+                ),
+              ],
               if (!canResume) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -2141,6 +2148,47 @@ class _DiceZoneBody extends StatelessWidget {
         height: _fittedDieSize(constraints.maxWidth) + _dieMargin,
         child: Center(child: child),
       ),
+    );
+  }
+}
+
+/// Les dés déjà mis de côté par le joueur précédent, montrés dans la popup de
+/// main héritée sous le score annoncé : le joueur voit sur quoi porte le choix
+/// au lieu de devoir se fier au seul total.
+///
+/// Ils tiennent toujours sur une seule ligne, quitte à rétrécir : une popup est
+/// bien plus étroite que les zones de l'écran de jeu, et la rangée s'y ajuste
+/// au lieu de déborder.
+class _InheritedKeptDiceRow extends StatelessWidget {
+  final List<KeptDie> kept;
+  final DiceColorMode colorMode;
+
+  const _InheritedKeptDiceRow({required this.kept, required this.colorMode});
+
+  /// Taille de confort, jamais dépassée même quand la place ne manque pas :
+  /// ces dés informent, ils ne sont pas le sujet principal de la popup.
+  static const double _maxSize = 56.0;
+
+  /// Largeur que la rangée ne dépasse jamais, quel que soit le nombre de dés :
+  /// les dés rétrécissent à la place. Tenir cette largeur d'avance évite un
+  /// `LayoutBuilder`, qui ne sait pas répondre aux mesures intrinsèques dont
+  /// [AlertDialog] a besoin pour dimensionner son contenu.
+  static const double _maxRowWidth = 240.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = ((_maxRowWidth / kept.length) - DieWidget.margin * 2).clamp(14.0, _maxSize);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < kept.length; i++)
+          DieWidget(
+            value: kept[i].value,
+            state: kept[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
+            bodyColor: diceBodyColorFor(colorMode, i),
+            size: size,
+          ),
+      ],
     );
   }
 }

@@ -70,6 +70,56 @@ void main() {
     expect(find.text('Continuer'), findsOneWidget);
   });
 
+  testWidgets('la popup de main héritée montre les dés déjà mis de côté, sur une seule ligne',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Le joueur précédent a mis de côté un as et deux cinq (300 points) et
+    // laissé 2 dés : la popup doit montrer ces 3 dés sous le score annoncé.
+    const kept = [
+      KeptDie(value: 1, points: 100, isExtended: false),
+      KeptDie(value: 5, points: 50, isExtended: false),
+      KeptDie(value: 5, points: 50, isExtended: false),
+    ];
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 2,
+      inheritedScore: 300,
+      inheritedKeptDice: kept,
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final diceInDialog = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(DieWidget),
+    );
+    expect(diceInDialog, findsNWidgets(3));
+
+    // Tous alignés sur une même ligne, et contenus dans la popup.
+    final dialogRect = tester.getRect(find.byType(AlertDialog));
+    final boxes = tester.widgetList<DieWidget>(diceInDialog).toList();
+    final tops = tester.getRect(diceInDialog.at(0)).top;
+    for (var i = 0; i < boxes.length; i++) {
+      final r = tester.getRect(diceInDialog.at(i));
+      expect(r.top, tops, reason: 'les dés doivent être sur la même ligne');
+      expect(dialogRect.contains(r.topLeft) && dialogRect.contains(r.bottomRight), isTrue,
+          reason: 'chaque dé doit tenir dans la popup');
+    }
+  });
+
   testWidgets('le bouton retour ne referme pas la popup de main héritée', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
