@@ -1633,6 +1633,43 @@ void main() {
         reason: 'un tour d\'IA garde les dés plus petits qu\'un tour joué à la main');
   });
 
+  testWidgets('le choix de main héritée n\'est pas affiché pour l\'IA', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Main héritée en attente, et c'est à l'IA de jouer : elle tranche seule,
+    // le joueur n'a aucune réponse à donner.
+    var engine = GameEngine.newGame(['Bot', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'Bot', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 300,
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['Bot', 'B'], aiPlayers: {0: AiDifficulty.prudent}),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Refuser'), findsNothing,
+        reason: 'ce choix ne s\'adresse à personne : l\'IA décide seule');
+    expect(find.textContaining('Main héritée'), findsNothing, reason: 'ni popup pour l\'IA');
+    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget,
+        reason: 'la ligne garde la forme d\'un tour d\'IA ordinaire');
+
+    // L'IA enchaîne toute seule : on démonte avant que ses temporisations ne
+    // fassent diverger l'état.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('ligne de contrôle : Stop à gauche, Lancer centré, échange à droite', (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(400, 900));

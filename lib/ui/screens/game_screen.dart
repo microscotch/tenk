@@ -1749,19 +1749,23 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final notifier = ref.read(gameProvider.notifier);
     void action() => ref.read(gameProvider.notifier).playAiTurnStep();
 
-    // Choix de main héritée : mêmes deux commandes que la version humaine en
-    // rejeu (voir [_buildInheritedChoiceRow]), seule celle que l'IA va
-    // réellement prendre étant active.
+    // Choix de main héritée : l'IA tranche seule, personne n'a de réponse à
+    // donner. Lui afficher les deux options — dont un "Refuser" que le joueur
+    // ne peut pas actionner — ne dit rien d'utile ; la ligne garde donc la
+    // forme de n'importe quel tour d'IA, et c'est le journal qui rapporte
+    // après coup ce qu'elle a repris (voir logResumedHandMessage).
     if (engine.activeTurn == null) {
       final accepts = notifier.previewAiAcceptInheritedHand();
       return _controlRow(
+        leading: _stopButton(onPressed: null),
         primary: _rollButton(
-          onPressed: accepts ? _guarded(action) : null,
-          label: _rollLabel(engine.nextTurnDice, engine.inheritedExtendedValues),
-        ),
-        trailing: OutlinedButton(
-          onPressed: accepts ? null : _guarded(action),
-          child: Text(l10n.declineInheritedHandButton),
+          onPressed: _guarded(action),
+          // La main sur laquelle porte la probabilité est celle que l'IA va
+          // réellement jouer : les dés hérités si elle les reprend, une main
+          // neuve de 5 dés sinon.
+          label: accepts
+              ? _rollLabel(engine.nextTurnDice, engine.inheritedExtendedValues)
+              : _rollLabel(5, const {}),
         ),
       );
     }
