@@ -431,7 +431,7 @@ abstract class AppLocalizations {
   /// Message expliquant pourquoi la main héritée ne peut pas être reprise.
   ///
   /// In fr, this message translates to:
-  /// **'Reprendre cette main dépasserait déjà 10000 : impossible de banquer.'**
+  /// **'Reprendre cette main atteindrait déjà 10000 : impossible de banquer.'**
   String get inheritedHandExceedsWinning;
 
   /// Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain).

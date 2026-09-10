@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
+import 'package:le10000/game/turn_result.dart';
 import 'package:le10000/game/turn_state.dart';
 
 void main() {
@@ -363,17 +364,41 @@ void main() {
     expect(result.activeTurn!.pendingRoll, isNull);
   });
 
-  test('inheritedHandExceedsWinningScore détecte qu\'une reprise dépasserait déjà 10000', () {
+  test('inheritedHandCannotBank détecte qu\'une reprise ne pourrait plus banquer', () {
     var engine = GameEngine.newGame(['A', 'B']);
     engine = engine.copyWith(
       players: [Player(name: 'A', totalScore: 9700, hasEntered: true), Player(name: 'B')],
       nextTurnDice: 3,
       inheritedScore: 700, // 9700 + 700 = 10400 > 10000
     );
-    expect(engine.inheritedHandExceedsWinningScore, isTrue);
+    expect(engine.inheritedHandCannotBank, isTrue);
 
-    final safer = engine.copyWith(inheritedScore: 200); // 9700 + 200 = 9900 <= 10000
-    expect(safer.inheritedHandExceedsWinningScore, isFalse);
+    final safer = engine.copyWith(inheritedScore: 200); // 9700 + 200 = 9900 < 10000
+    expect(safer.inheritedHandCannotBank, isFalse);
+  });
+
+  test('une main héritée qui atteint 10000 pile n\'est pas reprenable non plus', () {
+    // Tomber pile sur la cible ne la dépasse pas, mais reprendre une main
+    // oblige à relancer au moins une fois : depuis 10000, tout lancer craque.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 1000, // 9000 + 1000 = 10000 pile
+    );
+
+    expect(engine.inheritedHandCannotBank, isTrue);
+
+    // Et si on force malgré tout la reprise, la main est bien sans issue :
+    // impossible de banquer sans avoir lancé.
+    final resumed = engine.startTurn();
+    final attempt = tryBank(
+      resumed.activeTurn!,
+      minimumRequired: resumed.minimumForCurrentPlayer,
+      currentTotal: resumed.currentPlayer.totalScore,
+    );
+    expect(attempt.success, isFalse);
+    expect(attempt.reason, BankFailureReason.notRolledYet);
   });
 
   test('atteindre exactement 10000 déclenche un tour final pour les autres joueurs '

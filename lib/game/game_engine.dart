@@ -77,11 +77,16 @@ class GameEngine {
   int get minimumForCurrentPlayer => currentPlayer.minimumForNextTurn;
   bool get isInFinalRound => triggeringWinnerIndex != null;
 
-  /// Vrai si continuer la main héritée (score de base [inheritedScore])
-  /// dépasserait déjà 10000 avant même d'avoir relancé un seul dé : dans ce
-  /// cas, cette main ne peut plus jamais aboutir à un banquage réussi, quel
-  /// que soit le lancer — ce n'est donc pas une option viable à proposer.
-  bool get inheritedHandExceedsWinningScore => currentPlayer.totalScore + inheritedScore > winningScore;
+  /// Vrai si continuer la main héritée (score de base [inheritedScore]) ne
+  /// peut plus aboutir à un banquage réussi, quel que soit le lancer — ce
+  /// n'est donc pas une option viable à proposer.
+  ///
+  /// C'est le cas dès que le score atteint déjà 10000 avant d'avoir relancé,
+  /// et pas seulement s'il le dépasse : reprendre une main oblige toujours à
+  /// lancer au moins une fois (voir [BankFailureReason.notRolledYet]), or
+  /// depuis 10000 pile, tout lancer craque — sans score c'est un craque sec,
+  /// et le moindre gain, même les 50 points d'un 5 isolé, dépasse la cible.
+  bool get inheritedHandCannotBank => currentPlayer.totalScore + inheritedScore >= winningScore;
 
   GameEngine copyWith({
     List<Player>? players,

@@ -203,7 +203,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get inheritedHandExceedsWinning =>
-      'Reprendre cette main dépasserait déjà 10000 : impossible de banquer.';
+      'Reprendre cette main atteindrait déjà 10000 : impossible de banquer.';
 
   @override
   String get declineInheritedHandButton => 'Refuser';

@@ -242,7 +242,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// avant que la décision ne s'exécute.
   bool previewAiAcceptInheritedHand() {
     final engine = state!;
-    if (engine.inheritedHandExceedsWinningScore) return false;
+    if (engine.inheritedHandCannotBank) return false;
     return _currentStrategy().decideAcceptInheritedHand(
       diceCount: engine.nextTurnDice,
       extendedValues: engine.inheritedExtendedValues,

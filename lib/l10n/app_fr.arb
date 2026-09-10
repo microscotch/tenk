@@ -215,7 +215,7 @@
     "placeholders": {"score": {"type": "int"}}
   },
 
-  "inheritedHandExceedsWinning": "Reprendre cette main dépasserait déjà 10000 : impossible de banquer.",
+  "inheritedHandExceedsWinning": "Reprendre cette main atteindrait déjà 10000 : impossible de banquer.",
   "@inheritedHandExceedsWinning": {"description": "Message expliquant pourquoi la main héritée ne peut pas être reprise."},
 
   "declineInheritedHandButton": "Refuser",

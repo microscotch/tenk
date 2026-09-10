@@ -140,7 +140,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
 - Dice inheritance between turns: only happens after a *successful* bank, carrying over both the
   leftover (un-rolled) dice count **and** the banked score/kept-dice/extended-values as a starting
   base for whichever player inherits them (their choice: take it, or start fresh with 5). A bust
-  always resets the next player to 5 fresh dice with nothing inherited.
+  always resets the next player to 5 fresh dice with nothing inherited. Taking it is only offered
+  when the inherited base still leaves room to bank: since resuming a hand always forces at least one
+  roll (`notRolledYet`), a base that already *reaches* 10000 is a guaranteed bust, not a win — so
+  `inheritedHandCannotBank` is `>=`, not `>`, and such a hand is refused exactly like one that
+  overshoots.
 - Extension rule: once a brelan/carré of value N is banked within a turn, any further isolated die of
   value N later in the *same turn* is worth 100 points (including 5, which is otherwise 50 isolated).
   This resets whenever hot dice occurs (all dice scored → forced reroll of a fresh 5).

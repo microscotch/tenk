@@ -287,7 +287,39 @@ void main() {
     expect(find.textContaining('Reprendre la main'), findsNothing,
         reason: 'reprendre cette main garantirait un dépassement de 10000');
     expect(find.textContaining('Nouvelle main'), findsOneWidget);
-    expect(find.textContaining('dépasserait déjà 10000'), findsOneWidget);
+    expect(find.textContaining('impossible de banquer'), findsOneWidget);
+  });
+
+  testWidgets('main héritée qui atteint 10000 pile : "Reprendre la main" n\'est pas proposé non plus',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A a 9000 points et le tour précédent laisse 1000 : 9000 + 1000 = 10000
+    // pile. Tomber juste sur la cible ne la dépasse pas, mais reprendre une
+    // main oblige à relancer, et depuis 10000 tout lancer craque.
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 1000,
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Reprendre la main'), findsNothing,
+        reason: 'depuis 10000 pile, relancer est obligatoire et craque à coup sûr');
+    expect(find.textContaining('Nouvelle main'), findsOneWidget);
   });
 
   testWidgets('un second craque barre le score : le tiret disparaît et le score retombe', (tester) async {

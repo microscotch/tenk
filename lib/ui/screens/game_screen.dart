@@ -1331,7 +1331,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void _showInheritedHandDialog(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
     final notifier = ref.read(gameProvider.notifier);
-    final canResume = !engine.inheritedHandExceedsWinningScore;
+    final canResume = !engine.inheritedHandCannotBank;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -1393,7 +1393,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   Widget _buildInheritedChoiceRow(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
     final notifier = ref.read(gameProvider.notifier);
-    final canContinue = !engine.inheritedHandExceedsWinningScore;
+    final canContinue = !engine.inheritedHandCannotBank;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
