@@ -42,6 +42,13 @@ class AppSettings {
   /// l'appareil.
   final String? languageOverride;
 
+  /// Vrai une fois les préférences persistées relues — ou leur lecture
+  /// abandonnée faute de backend. Tant que c'est faux, les valeurs exposées
+  /// ne sont que les défauts : agir dessus démarrerait la musique juste pour
+  /// la couper une fraction de seconde plus tard, et ça s'entend (voir
+  /// `SoundEffects.applySettings`).
+  final bool loaded;
+
   const AppSettings({
     this.playerName = '',
     this.aiMessageDelayMs = 1000,
@@ -54,6 +61,7 @@ class AppSettings {
     this.shakeToRollEnabled = false,
     this.showProbabilities = false,
     this.languageOverride,
+    this.loaded = false,
   });
 
   Duration get aiMessageDelay => Duration(milliseconds: aiMessageDelayMs);
@@ -71,6 +79,7 @@ class AppSettings {
     bool? shakeToRollEnabled,
     bool? showProbabilities,
     Object? languageOverride = _unset,
+    bool? loaded,
   }) {
     return AppSettings(
       playerName: playerName ?? this.playerName,
@@ -84,6 +93,7 @@ class AppSettings {
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
       showProbabilities: showProbabilities ?? this.showProbabilities,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
+      loaded: loaded ?? this.loaded,
     );
   }
 }
@@ -134,10 +144,13 @@ class SettingsNotifier extends Notifier<AppSettings> {
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
         showProbabilities: prefs.getBool(_keyShowProbabilities) ?? false,
         languageOverride: prefs.getString(_keyLanguageOverride),
+        loaded: true,
       );
     } catch (_) {
       // Pas de backend de persistance disponible (tests, plateforme non
-      // supportée) : on reste sur les valeurs par défaut en mémoire.
+      // supportée) : on reste sur les valeurs par défaut en mémoire, mais
+      // elles sont désormais définitives — il n'y a plus rien à attendre.
+      state = state.copyWith(loaded: true);
     }
   }
 

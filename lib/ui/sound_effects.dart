@@ -39,6 +39,12 @@ class SoundEffects with WidgetsBindingObserver {
   /// Synchronise l'état (effets sonores + musique) avec les préférences
   /// utilisateur ; appelé à chaque changement de réglages.
   void applySettings(AppSettings settings) {
+    // Tant que les préférences enregistrées n'ont pas été relues, ce qui
+    // arrive ici n'est que le jeu de valeurs par défaut, musique comprise.
+    // Agir dessus démarrait la musique au lancement chez quelqu'un qui l'avait
+    // justement coupée — pour la stopper dès la lecture du disque terminée,
+    // soit une bouffée de son bien audible.
+    if (!settings.loaded) return;
     if (!_observing) {
       _observing = true;
       WidgetsBinding.instance.addObserver(this);
@@ -79,7 +85,14 @@ class SoundEffects with WidgetsBindingObserver {
     }
   }
 
+  /// Nombre de démarrages de musique demandés depuis le lancement — compté
+  /// avant même le repli de test, seule façon de vérifier qu'aucune musique
+  /// n'est lancée trop tôt (voir [applySettings]) sans backend audio.
+  @visibleForTesting
+  int musicStartCount = 0;
+
   Future<void> _startMusic() async {
+    musicStartCount++;
     if (_testDisabled) return;
     _musicPlaying = true; // évite les démarrages concurrents si appelé deux fois
     try {
