@@ -210,6 +210,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get declineInheritedHandButton => 'Refuser';
 
   @override
+  String get rollButton => 'Lancer';
+
+  @override
+  String get showProbabilitiesSetting => 'Afficher les probabilités';
+
+  @override
+  String get showProbabilitiesSettingSubtitle =>
+      'Affiche sur le bouton \"Lancer\" la chance de marquer au moins un point';
+
+  @override
   String get stopButton => 'Lopeta';
 
   @override

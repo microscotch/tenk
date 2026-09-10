@@ -1378,8 +1378,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   notifier.roll();
                 },
                 child: Text(
-                  '${l10n.resumeHandButton} '
-                  '(${_scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues)})',
+                  '${l10n.resumeHandButton}'
+                  '${_percentSuffix(engine.nextTurnDice, engine.inheritedExtendedValues)}',
                 ),
               ),
             TextButton(
@@ -1389,7 +1389,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 notifier.startTurn(useFullHand: true);
                 notifier.roll();
               },
-              child: Text('${l10n.newHandButton} (${_scorePercentLabel(5, const {})})'),
+              child: Text('${l10n.newHandButton}${_percentSuffix(5, const {})}'),
             ),
           ],
         ),
@@ -1432,7 +1432,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     notifier.roll();
                   })
                 : null,
-            label: _scorePercentLabel(
+            label: _rollLabel(
               engine.nextTurnDice,
               engine.inheritedExtendedValues,
             ),
@@ -1736,7 +1736,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       return _controlRow(
         primary: _rollButton(
           onPressed: accepts ? _guarded(action) : null,
-          label: _scorePercentLabel(engine.nextTurnDice, engine.inheritedExtendedValues),
+          label: _rollLabel(engine.nextTurnDice, engine.inheritedExtendedValues),
         ),
         trailing: [
           const SizedBox(width: 8),
@@ -1765,7 +1765,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           onPressed: _guarded(action),
           label: effective.mustContinue
               ? l10n.logHotDiceMessage
-              : _scorePercentLabel(effective.diceToRoll, effective.extendedValues),
+              : _rollLabel(effective.diceToRoll, effective.extendedValues),
         ),
         trailing: [
           if (_hasRealChoice(turn, pending, currentTotal: currentTotal)) ...[
@@ -1791,7 +1791,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         onPressed: stops ? null : _guarded(action),
         label: turn.mustContinue
             ? l10n.logHotDiceMessage
-            : _scorePercentLabel(turn.diceToRoll, turn.extendedValues),
+            : _rollLabel(turn.diceToRoll, turn.extendedValues),
       ),
       trailing: [
         if (canBank && _rollSettled) ...[
@@ -1825,7 +1825,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       return _controlRow(
         primary: _rollButton(
           onPressed: null,
-          label: _scorePercentLabel(turn.diceToRoll, turn.extendedValues),
+          label: _rollLabel(turn.diceToRoll, turn.extendedValues),
         ),
       );
     }
@@ -1931,7 +1931,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // (un tour de retard sur les dés chauds qui viennent d'être complétés).
     final rollLabel = effective.mustContinue
         ? l10n.logHotDiceMessage
-        : _scorePercentLabel(effective.diceToRoll, effective.extendedValues);
+        : _rollLabel(effective.diceToRoll, effective.extendedValues);
 
     void onRoll() => _rollForHumanTurn(engine, turn);
 
@@ -2054,6 +2054,23 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   Color? _diceColor(int index) =>
       diceBodyColorFor(ref.watch(settingsProvider).diceColorMode, index);
+
+  /// Libellé d'un bouton qui lance les dés : la probabilité de marquer quand
+  /// l'option est active (voir [AppSettings.showProbabilities], désactivée par
+  /// défaut), sinon un simple "Lancer".
+  String _rollLabel(int diceCount, Set<int> extendedValues) =>
+      ref.watch(settingsProvider).showProbabilities
+          ? _scorePercentLabel(diceCount, extendedValues)
+          : AppLocalizations.of(context).rollButton;
+
+  /// Suffixe " (76 %)" pour un bouton qui porte déjà son propre libellé (les
+  /// deux choix de la popup de main héritée), vide quand l'option est
+  /// désactivée. Lu avec `ref.read` : la popup est une route à part,
+  /// construite hors de notre `build`.
+  String _percentSuffix(int diceCount, Set<int> extendedValues) =>
+      ref.read(settingsProvider).showProbabilities
+          ? ' (${_scorePercentLabel(diceCount, extendedValues)})'
+          : '';
 }
 
 /// Construit une rangée d'exactement [count] dés qui tient toujours sur une

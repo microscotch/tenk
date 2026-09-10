@@ -1531,4 +1531,48 @@ void main() {
     expect(ai, lessThan(human),
         reason: 'un tour d\'IA garde les dés plus petits qu\'un tour joué à la main');
   });
+
+  testWidgets('le pourcentage de chance de marquer n\'est affiché que si l\'option est activée',
+      (tester) async {
+    Future<String> rollButtonLabel({required bool showProbabilities}) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      if (showProbabilities) {
+        container.read(settingsProvider.notifier).setShowProbabilities(true);
+      }
+
+      var engine = GameEngine.newGame(['A', 'B']).startTurn();
+      engine = engine.copyWith(
+        players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
+      );
+      container.read(gameProvider.notifier).debugLoadState(
+            engine,
+            const GameSetup(playerNames: ['A', 'B']),
+          );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+        ),
+      );
+      await tester.pump();
+
+      final button = find.widgetWithIcon(FilledButton, Icons.casino);
+      expect(button, findsOneWidget);
+      final label = tester
+          .widget<Text>(find.descendant(of: button, matching: find.byType(Text)))
+          .data!;
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      return label;
+    }
+
+    expect(await rollButtonLabel(showProbabilities: false), 'Lancer',
+        reason: 'option désactivée par défaut : un libellé simple, aucun pourcentage');
+    expect(await rollButtonLabel(showProbabilities: true), endsWith('%'),
+        reason: 'option activée : le bouton porte la probabilité de marquer');
+  });
 }

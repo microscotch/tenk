@@ -158,6 +158,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 value: settings.shakeToRollEnabled,
                 onChanged: notifier.setShakeToRollEnabled,
               ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.showProbabilitiesSetting),
+                subtitle: Text(l10n.showProbabilitiesSettingSubtitle),
+                value: settings.showProbabilities,
+                onChanged: notifier.setShowProbabilities,
+              ),
               const SizedBox(height: 28),
               Text(l10n.settingsPausedGamesTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),

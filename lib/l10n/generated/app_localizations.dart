@@ -440,6 +440,24 @@ abstract class AppLocalizations {
   /// **'Refuser'**
   String get declineInheritedHandButton;
 
+  /// Bouton pour lancer les dés, quand l'affichage des probabilités est désactivé (sinon le bouton porte le pourcentage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lancer'**
+  String get rollButton;
+
+  /// Réglage activant l'affichage du pourcentage de chance de marquer sur les boutons de lancer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher les probabilités'**
+  String get showProbabilitiesSetting;
+
+  /// Explication du réglage d'affichage des probabilités.
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche sur le bouton \"Lancer\" la chance de marquer au moins un point'**
+  String get showProbabilitiesSettingSubtitle;
+
   /// Bouton pour arrêter son tour et banquer le score.
   ///
   /// In fr, this message translates to:

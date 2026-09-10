@@ -33,6 +33,11 @@ class AppSettings {
   /// sans conséquence, mais reste une surprise pour qui ne l'a pas demandée.
   final bool shakeToRollEnabled;
 
+  /// Affiche sur les boutons "Lancer" la probabilité de marquer au moins un
+  /// point sur le prochain lancer. Désactivé par défaut : c'est une aide au
+  /// calcul, qui retire au jeu une part de son pari.
+  final bool showProbabilities;
+
   /// Code de langue forcé (ex. "en", "es") ; null = suit la langue de
   /// l'appareil.
   final String? languageOverride;
@@ -47,6 +52,7 @@ class AppSettings {
     this.confirmBeforeDeleteGame = true,
     this.aiDifficulty = AiDifficulty.prudent,
     this.shakeToRollEnabled = false,
+    this.showProbabilities = false,
     this.languageOverride,
   });
 
@@ -63,6 +69,7 @@ class AppSettings {
     bool? confirmBeforeDeleteGame,
     AiDifficulty? aiDifficulty,
     bool? shakeToRollEnabled,
+    bool? showProbabilities,
     Object? languageOverride = _unset,
   }) {
     return AppSettings(
@@ -75,6 +82,7 @@ class AppSettings {
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       aiDifficulty: aiDifficulty ?? this.aiDifficulty,
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
+      showProbabilities: showProbabilities ?? this.showProbabilities,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
     );
   }
@@ -94,6 +102,7 @@ const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 const _keyAiDifficulty = 'settings.aiDifficulty';
 const _keyShakeToRollEnabled = 'settings.shakeToRollEnabled';
+const _keyShowProbabilities = 'settings.showProbabilities';
 const _keyLanguageOverride = 'settings.languageOverride';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
@@ -123,6 +132,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
           orElse: () => AiDifficulty.prudent,
         ),
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
+        showProbabilities: prefs.getBool(_keyShowProbabilities) ?? false,
         languageOverride: prefs.getString(_keyLanguageOverride),
       );
     } catch (_) {
@@ -192,6 +202,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setShakeToRollEnabled(bool enabled) {
     state = state.copyWith(shakeToRollEnabled: enabled);
     _save(_keyShakeToRollEnabled, enabled);
+  }
+
+  void setShowProbabilities(bool enabled) {
+    state = state.copyWith(showProbabilities: enabled);
+    _save(_keyShowProbabilities, enabled);
   }
 
   /// [code] est un code de langue supporté (ex. "en"), ou null pour suivre à
