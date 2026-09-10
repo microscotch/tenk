@@ -861,7 +861,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       builder: (dialogContext) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text(l10n.bustedTitle),
+          title: Text(l10n.bustedTitle, textAlign: TextAlign.center),
           content: switch (_bustReasonExplanation(l10n, turn.bustReason)) {
             final explanation? => Text(explanation),
             null => null,

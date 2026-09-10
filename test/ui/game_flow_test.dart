@@ -68,6 +68,13 @@ void main() {
     expect(find.byType(AlertDialog), findsOneWidget,
         reason: 'la popup doit rester : son bouton porte la seule action qui passe la main');
     expect(find.text('Continuer'), findsOneWidget);
+
+    // Le cadre du titre occupe toute la largeur de la popup quel que soit
+    // l'alignement : c'est l'alignement du texte lui-même qui compte.
+    final title = tester.widget<Text>(
+      find.descendant(of: find.byType(AlertDialog), matching: find.text('Craqué !')),
+    );
+    expect(title.textAlign, TextAlign.center, reason: 'le titre doit être centré');
   });
 
   testWidgets('la popup de main héritée montre les dés déjà mis de côté, sur une seule ligne',
