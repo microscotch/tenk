@@ -167,10 +167,10 @@ Widget _rollButton({required VoidCallback? onPressed, required String label}) {
       children: [
         const Icon(Icons.casino, size: 18),
         const SizedBox(width: 8),
-        // Flexible + ellipsis : ce bouton est parfois contraint à une
-        // largeur fixe (voir _controlButtonWidth dans game_screen.dart), qui
-        // doit rester identique que le libellé soit un court pourcentage ou
-        // "Main pleine !" — un Text nu débordant plutôt que de rétrécir.
+        // Le bouton se dimensionne sur son libellé (voir _controlRow, qui le
+        // centre entre deux côtés de largeur égale) : Flexible + ellipsis ne
+        // servent que de garde-fou si la place venait à manquer sur un écran
+        // très étroit, plutôt que de laisser le texte déborder.
         Flexible(
           child: Text(label, overflow: TextOverflow.ellipsis, softWrap: false),
         ),
@@ -1461,16 +1461,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
               engine.inheritedExtendedValues,
             ),
           ),
-          trailing: [
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: _guarded(() {
-                notifier.startTurn(useFullHand: true);
-                notifier.roll();
-              }),
-              child: Text(l10n.declineInheritedHandButton),
-            ),
-          ],
+          trailing: OutlinedButton(
+            onPressed: _guarded(() {
+              notifier.startTurn(useFullHand: true);
+              notifier.roll();
+            }),
+            child: Text(l10n.declineInheritedHandButton),
+          ),
         ),
       ],
     );
@@ -1485,13 +1482,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   static const _diceZonePadding = EdgeInsets.fromLTRB(8, 14, 8, 6);
 
   static const _previewFadeDuration = Duration(milliseconds: 300);
-
-  /// Largeur fixe et identique des boutons "Lancer" et "Stop" (voir
-  /// [_buildHumanControlRow]) : évite que le bouton Lancer change de
-  /// taille/position selon la longueur de son libellé ("100 %" contre "Main
-  /// pleine !") ou selon que Stop soit affiché à côté ou non. Assez large
-  /// pour le plus long des deux libellés (icône dé + "Main pleine !").
-  static const double _controlButtonWidth = 164.0;
 
   /// Zone bordurée "Piste" : uniquement les dés du lancer en attente de
   /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
@@ -1762,13 +1752,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
           onPressed: accepts ? _guarded(action) : null,
           label: _rollLabel(engine.nextTurnDice, engine.inheritedExtendedValues),
         ),
-        trailing: [
-          const SizedBox(width: 8),
-          OutlinedButton(
-            onPressed: accepts ? null : _guarded(action),
-            child: Text(l10n.declineInheritedHandButton),
-          ),
-        ],
+        trailing: OutlinedButton(
+          onPressed: accepts ? null : _guarded(action),
+          child: Text(l10n.declineInheritedHandButton),
+        ),
       );
     }
 
@@ -1791,12 +1778,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ? l10n.logHotDiceMessage
               : _rollLabel(effective.diceToRoll, effective.extendedValues),
         ),
-        trailing: [
-          if (_hasRealChoice(turn, pending, currentTotal: currentTotal)) ...[
-            ..._keptFivesLead,
-            Text('${fives - declineCount}'),
-          ],
-        ],
+        leading: _stopButton(onPressed: null),
+        trailing: _hasRealChoice(turn, pending, currentTotal: currentTotal)
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.recycling, size: 18),
+                  const SizedBox(width: 4),
+                  Text('${fives - declineCount}'),
+                ],
+              )
+            : null,
       );
     }
 
@@ -1817,12 +1809,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ? l10n.logHotDiceMessage
             : _rollLabel(turn.diceToRoll, turn.extendedValues),
       ),
-      trailing: [
-        if (canBank && _rollSettled) ...[
-          const SizedBox(width: 8),
-          _stopButton(onPressed: stops ? _guarded(action) : null),
-        ],
-      ],
+      leading: _stopButton(
+        onPressed: canBank && _rollSettled && stops ? _guarded(action) : null,
+      ),
     );
   }
 
@@ -1988,31 +1977,23 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           ),
         _controlRow(
+          // Stop reste visible en permanence, simplement inerte tant que
+          // s'arrêter n'est pas légal. Il ne s'ACTIVE qu'une fois les dés
+          // immobilisés (`_rollSettled`, comme les scores affichés) : le voir
+          // devenir cliquable pendant que les dés roulent encore révélerait
+          // d'avance que le lancer marque assez pour s'arrêter — le suspense
+          // serait gâché. Sans lancer en attente, `_rollSettled` est déjà
+          // vrai : rien ne change pour l'état au repos.
+          leading: _stopButton(
+            onPressed: bankAttempt.success && _rollSettled ? _guarded(onStop) : null,
+          ),
           primary: _rollButton(onPressed: _guarded(onRoll), label: rollLabel),
-          trailing: [
-            // Stop n'apparaît qu'une fois les dés immobilisés
-            // (`_rollSettled`, comme les scores affichés) : le voir surgir
-            // pendant que les dés roulent encore révélerait d'avance que le
-            // lancer marque assez pour pouvoir s'arrêter — le suspense du
-            // lancer serait gâché. Sans lancer en attente, `_rollSettled`
-            // est déjà vrai : rien ne change pour l'état au repos.
-            if (bankAttempt.success && _rollSettled) ...[
-              const SizedBox(width: 8),
-              _stopButton(onPressed: _guarded(onStop)),
-            ],
-            if (canChoose) ...[
-              ..._keptFivesLead,
-              DropdownButton<int>(
-                value: selectedKeep,
-                underline: const SizedBox.shrink(),
-                items: [
-                  for (var i = minKeep; i <= maxKeep; i++)
-                    DropdownMenuItem(value: i, child: Text('$i')),
-                ],
-                onChanged: _controlsLocked ? null : (v) => setState(() => _selectedKeep = v!),
-              ),
-            ],
-          ],
+          trailing: _exchangeControl(
+            enabled: canChoose,
+            value: selectedKeep,
+            minKeep: minKeep,
+            maxKeep: maxKeep,
+          ),
         ),
       ],
     );
@@ -2025,15 +2006,63 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// apparaissent à sa droite, à la demande, sans jamais le déplacer. Passer
   /// par ce seul gabarit est ce qui garantit qu'un tour IA ne se présente pas
   /// autrement qu'un tour humain (emplacement, taille, alignement).
-  Widget _controlRow({required Widget primary, List<Widget> trailing = const []}) {
+  Widget _controlRow({
+    Widget? leading,
+    required Widget primary,
+    Widget? trailing,
+  }) {
     return SizedBox(
       width: double.infinity,
       child: Row(
         children: [
-          SizedBox(width: _controlButtonWidth, child: primary),
-          ...trailing,
+          // Les deux côtés prennent une part égale de la largeur restante :
+          // c'est ce qui garde le bouton principal exactement au centre, quelle
+          // que soit la taille de ce qui l'encadre — et donc au même endroit
+          // d'un tour à l'autre, humain comme IA.
+          Expanded(
+            child: Align(alignment: Alignment.centerLeft, child: leading ?? const SizedBox.shrink()),
+          ),
+          primary,
+          Expanded(
+            child: Align(alignment: Alignment.centerRight, child: trailing ?? const SizedBox.shrink()),
+          ),
         ],
       ),
+    );
+  }
+
+  /// Sélecteur du nombre de 5 conservés — l'échange de dés — à droite de la
+  /// ligne de contrôle. Toujours présent, pour que la ligne ne change pas de
+  /// forme, mais inerte tant qu'aucun choix réel ne se pose.
+  ///
+  /// Les bornes sont assainies ici : [maxKeep] peut tomber sous [minKeep]
+  /// quand garder le minimum dépasserait déjà 10000, et un `DropdownButton`
+  /// dont la valeur ne figure pas dans ses entrées lève une assertion.
+  Widget _exchangeControl({
+    required bool enabled,
+    required int value,
+    required int minKeep,
+    required int maxKeep,
+  }) {
+    final highest = maxKeep < minKeep ? minKeep : maxKeep;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.recycling,
+          size: 18,
+          color: enabled ? null : Theme.of(context).disabledColor,
+        ),
+        const SizedBox(width: 4),
+        DropdownButton<int>(
+          value: value.clamp(minKeep, highest),
+          underline: const SizedBox.shrink(),
+          items: [
+            for (var i = minKeep; i <= highest; i++) DropdownMenuItem(value: i, child: Text('$i')),
+          ],
+          onChanged: enabled && !_controlsLocked ? (v) => setState(() => _selectedKeep = v!) : null,
+        ),
+      ],
     );
   }
 
@@ -2049,15 +2078,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
       tooltip: AppLocalizations.of(context).stopButton,
     );
   }
-
-  /// Pictogramme annonçant le nombre de 5 gardés, devant le sélecteur
-  /// (humain) ou devant le nombre choisi par l'IA : même écart, même icône,
-  /// pour que les deux lignes se superposent exactement.
-  static const List<Widget> _keptFivesLead = [
-    SizedBox(width: 12),
-    Icon(Icons.recycling, size: 18),
-    SizedBox(width: 4),
-  ];
 
   String _failureMessage(AppLocalizations l10n, BankAttempt attempt) {
     switch (attempt.reason) {

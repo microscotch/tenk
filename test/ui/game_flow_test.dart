@@ -36,6 +36,16 @@ const _controlLockPump = Duration(milliseconds: 400);
 final _autoActionPump = const AppSettings().autoActionDelay + const Duration(milliseconds: 100);
 final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
 
+/// Le bouton Stop est désormais toujours présent dans la ligne de contrôle,
+/// et c'est son activation — pas sa présence — qui dit si s'arrêter est
+/// possible (voir `_controlRow` dans `game_screen.dart`).
+bool _stopEnabled(WidgetTester tester) {
+  final button = tester.widget<IconButton>(
+    find.ancestor(of: find.byIcon(Icons.stop), matching: find.byType(IconButton)).first,
+  );
+  return button.onPressed != null;
+}
+
 void main() {
   testWidgets('le bouton retour ne referme pas la popup de craque', (tester) async {
     // Ces popups portent la seule action qui débloque le tour : les fermer
@@ -1034,8 +1044,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Surtout pas de Stop : ce banquage n'est pas une victoire disponible.
-    expect(find.byIcon(Icons.stop), findsNothing,
+    // Stop est là mais inerte : ce banquage n'est pas une victoire
+    // disponible, une main pleine ne peut pas être banquée.
+    expect(_stopEnabled(tester), isFalse,
         reason: 'une main pleine ne peut pas être banquée, même pile sur 10000');
 
     await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
@@ -1239,7 +1250,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.stop), findsOneWidget, reason: 'au repos, s\'arrêter est déjà légal');
+    expect(_stopEnabled(tester), isTrue, reason: 'au repos, s\'arrêter est déjà légal');
 
     // Le lancer arrive alors que l'écran est monté : les dés se mettent à
     // rouler (contrairement à un lancer déjà présent au montage, cf.
@@ -1256,11 +1267,11 @@ void main() {
           const GameSetup(playerNames: ['A', 'B']),
         );
     await tester.pump();
-    expect(find.byIcon(Icons.stop), findsNothing,
-        reason: 'les dés roulent encore : Stop révélerait que ce lancer marque');
+    expect(_stopEnabled(tester), isFalse,
+        reason: 'les dés roulent encore : un Stop actif révélerait que ce lancer marque');
 
     await tester.pump(DieWidget.rollAnimationDuration);
-    expect(find.byIcon(Icons.stop), findsOneWidget, reason: 'dés immobilisés : Stop peut enfin s\'afficher');
+    expect(_stopEnabled(tester), isTrue, reason: 'dés immobilisés : Stop peut enfin devenir actif');
 
     await tester.pumpAndSettle();
   });
@@ -1407,7 +1418,7 @@ void main() {
     // auto) : le bouton affiché est le sien, pas un choix réservé à
     // l'humain ("S'arrêter" n'a de sens que dans le dialogue de banque
     // humain à deux boutons, "Valider" n'existe plus du tout).
-    expect(find.byIcon(Icons.stop), findsNothing);
+    expect(_stopEnabled(tester), isFalse, reason: 'le tour est à l\'IA : rien à arrêter soi-même');
     expect(find.text('Valider'), findsNothing);
 
     // On laisse le temps s'écouler (délai de "réflexion" de l'IA) jusqu'à ce
@@ -1620,6 +1631,92 @@ void main() {
 
     expect(ai, lessThan(human),
         reason: 'un tour d\'IA garde les dés plus petits qu\'un tour joué à la main');
+  });
+
+  testWidgets('ligne de contrôle : Stop à gauche, Lancer centré, échange à droite', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Lancer en attente avec un vrai choix de 5 (deux 5 déclinables) et un
+    // score déjà banquable : les deux commandes latérales sont actives.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        bankedScore: 300,
+        hasRolledThisTurn: true,
+        pendingRoll: analyzeRoll([5, 5, 2]),
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final stop = tester.getRect(find.byIcon(Icons.stop));
+    final roll = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
+    final exchange = tester.getRect(find.byIcon(Icons.recycling));
+
+    expect(stop.center.dx, lessThan(roll.left), reason: 'Stop est à gauche du bouton Lancer');
+    expect(exchange.center.dx, greaterThan(roll.right), reason: 'l\'échange est à droite');
+
+    // Lancer centré dans la ligne, indépendamment de ce qui l'encadre.
+    final row = tester.getRect(find.byType(GameScreen));
+    expect((roll.center.dx - row.center.dx).abs(), lessThan(1.0),
+        reason: 'le bouton Lancer doit être centré');
+
+    expect(_stopEnabled(tester), isTrue, reason: '300 banqués suffisent pour s\'arrêter');
+    expect(
+      tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged,
+      isNotNull,
+      reason: 'deux 5 déclinables : l\'échange est possible',
+    );
+  });
+
+  testWidgets('ligne de contrôle : les deux commandes latérales restent visibles mais inertes',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Tour tout juste démarré : rien n'a été lancé, donc ni arrêt ni échange.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 5, bankedScore: 0),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byIcon(Icons.stop), findsOneWidget, reason: 'Stop reste visible');
+    expect(find.byIcon(Icons.recycling), findsOneWidget, reason: 'l\'échange reste visible');
+    expect(_stopEnabled(tester), isFalse, reason: 'rien n\'a encore été lancé');
+    expect(
+      tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged,
+      isNull,
+      reason: 'aucun 5 à échanger',
+    );
   });
 
   testWidgets('le pourcentage de chance de marquer n\'est affiché que si l\'option est activée',
