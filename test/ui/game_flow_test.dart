@@ -133,6 +133,14 @@ void main() {
     expect(resume.bottom, lessThanOrEqualTo(newHand.top),
         reason: 'la reprise au-dessus de la nouvelle main');
 
+    // Le titre occupe toute la largeur de la popup : son cadre est centré
+    // quel que soit l'alignement, c'est donc l'alignement du texte lui-même
+    // qu'il faut vérifier.
+    final title = tester.widget<Text>(
+      find.descendant(of: find.byType(AlertDialog), matching: find.text('Main héritée')),
+    );
+    expect(title.textAlign, TextAlign.center, reason: 'le titre doit être centré');
+
     // Chacun centré horizontalement dans la popup.
     for (final r in [score, resume, newHand]) {
       expect((r.center.dx - dialogRect.center.dx).abs(), lessThan(1.0),

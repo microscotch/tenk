@@ -1348,7 +1348,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       builder: (dialogContext) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text(l10n.inheritedHandDialogTitle),
+          title: Text(l10n.inheritedHandDialogTitle, textAlign: TextAlign.center),
           // Tout est empilé dans le contenu, boutons compris, plutôt que
           // laissé à `actions` : celui-ci aligne ses boutons à droite et ne
           // les met l'un sous l'autre que faute de place. Ici l'ordre de haut
