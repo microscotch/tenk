@@ -175,11 +175,15 @@ class GameNotifier extends Notifier<GameEngine?> {
       // sauvegarde du coup qui fait gagner la partie.
       state = engine;
       _record(GameAction.bank());
-      if (!engine.gameOver && engine.nextTurnDice >= 5) {
-        // Aucun dé hérité pour le joueur suivant (cas limite) : pas de choix
-        // de main à proposer, son tour démarre directement.
-        state = engine.startTurn();
-        _record(GameAction.startTurn(useFullHand: false));
+      if (!engine.gameOver && (engine.nextTurnDice >= 5 || engine.inheritedHandCannotBank)) {
+        // Le joueur suivant n'a aucun choix de main à faire : soit il n'hérite
+        // d'aucun dé (cas limite), soit la main héritée ne pourrait plus
+        // banquer (voir [GameEngine.inheritedHandCannotBank]) et repartir à 5
+        // dés neufs est sa seule suite jouable. Son tour démarre donc
+        // directement, sans lui poser une question à une seule réponse.
+        final useFullHand = engine.inheritedHandCannotBank;
+        state = engine.startTurn(useFullHand: useFullHand);
+        _record(GameAction.startTurn(useFullHand: useFullHand));
       }
       // Sinon : gameOver (rien de plus à faire), ou le joueur suivant hérite
       // de dés d'un tour précédent — activeTurn reste à null en attendant

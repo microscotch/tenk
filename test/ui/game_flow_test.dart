@@ -256,10 +256,16 @@ void main() {
     expect(after.inheritedScore, 0);
   });
 
-  testWidgets('main héritée qui dépasserait déjà 10000 : "Continuer" n\'est pas proposé', (tester) async {
+  testWidgets('popup de main héritée sans issue : "Reprendre la main" n\'est pas proposé', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
+    // Une partie en cours ne s'arrête plus jamais sur ce choix (voir le test
+    // "une main héritée sans issue ne pose aucune question") : la popup n'a
+    // plus qu'un chemin, la reprise d'une sauvegarde enregistrée avant ce
+    // comportement, qui rejoue jusqu'à un activeTurn null. Le garde-fou doit
+    // donc y tenir aussi.
+    //
     // A a 9700 points, le tour précédent laisse un score hérité de 700 :
     // 9700 + 700 = 10400 > 10000, reprendre cette main ne pourrait plus
     // jamais aboutir à un banquage réussi.
@@ -290,24 +296,26 @@ void main() {
     expect(find.textContaining('impossible de banquer'), findsOneWidget);
   });
 
-  testWidgets('main héritée qui atteint 10000 pile : "Reprendre la main" n\'est pas proposé non plus',
+  testWidgets('une main héritée sans issue ne pose aucune question : le tour suivant démarre à 5 dés neufs',
       (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    // A a 9000 points et le tour précédent laisse 1000 : 9000 + 1000 = 10000
-    // pile. Tomber juste sur la cible ne la dépasse pas, mais reprendre une
-    // main oblige à relancer, et depuis 10000 tout lancer craque.
-    var engine = GameEngine.newGame(['A', 'B']);
-    engine = engine.copyWith(
-      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+    // A (déjà entré) garde une paire d'as et s'arrête : il banque 200 et
+    // laisse 3 dés. B est à 9800, donc 9800 + 200 = 10000 pile — reprendre
+    // cette main ne pourrait que craquer, et repartir à 5 dés neufs est sa
+    // seule suite jouable. Il n'y a donc rien à lui demander.
+    final engine = GameEngine(
+      players: [
+        Player(name: 'A', totalScore: 1500, hasEntered: true),
+        Player(name: 'B', totalScore: 9800, hasEntered: true),
+      ],
+      currentPlayerIndex: 0,
       nextTurnDice: 3,
-      inheritedScore: 1000,
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true),
     );
-    container.read(gameProvider.notifier).debugLoadState(
-          engine,
-          const GameSetup(playerNames: ['A', 'B']),
-        );
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -317,9 +325,20 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Reprendre la main'), findsNothing,
-        reason: 'depuis 10000 pile, relancer est obligatoire et craque à coup sûr');
-    expect(find.textContaining('Nouvelle main'), findsOneWidget);
+    final attempt = notifier.bank();
+    expect(attempt.success, isTrue);
+    await tester.pumpAndSettle();
+
+    final after = container.read(gameProvider)!;
+    expect(after.currentPlayer.name, 'B');
+    expect(after.activeTurn, isNotNull, reason: 'le tour de B doit avoir démarré tout seul');
+    expect(after.activeTurn!.diceToRoll, 5, reason: 'une main neuve, pas les 3 dés hérités');
+    expect(after.activeTurn!.bankedScore, 0, reason: 'la base héritée de 200 est abandonnée');
+
+    expect(find.textContaining('Main héritée'), findsNothing,
+        reason: 'aucune popup : il n\'y a pas de choix à faire');
+    expect(find.textContaining('Reprendre la main'), findsNothing);
+    expect(find.textContaining('Nouvelle main'), findsNothing);
   });
 
   testWidgets('un second craque barre le score : le tiret disparaît et le score retombe', (tester) async {
