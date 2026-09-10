@@ -862,20 +862,27 @@ class _GameScreenState extends ConsumerState<GameScreen>
         canPop: false,
         child: AlertDialog(
           title: Text(l10n.bustedTitle, textAlign: TextAlign.center),
-          content: switch (_bustReasonExplanation(l10n, turn.bustReason)) {
-            final explanation? => Text(explanation),
-            null => null,
-          },
-          actions: [
-            FilledButton(
-              onPressed: () {
-                if (_controlsLocked) return;
-                Navigator.of(dialogContext).pop();
-                ref.read(gameProvider.notifier).endBustedTurn();
-              },
-              child: Text(l10n.bustContinueButton),
-            ),
-          ],
+          // Le bouton est dans le contenu et non dans `actions`, qui l'aurait
+          // aligné à droite : toute la popup est centrée (même disposition
+          // que [_showInheritedHandDialog]).
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (_bustReasonExplanation(l10n, turn.bustReason) case final explanation?) ...[
+                Text(explanation, textAlign: TextAlign.center),
+                const SizedBox(height: 20),
+              ],
+              FilledButton(
+                onPressed: () {
+                  if (_controlsLocked) return;
+                  Navigator.of(dialogContext).pop();
+                  ref.read(gameProvider.notifier).endBustedTurn();
+                },
+                child: Text(l10n.bustContinueButton),
+              ),
+            ],
+          ),
         ),
       ),
     );

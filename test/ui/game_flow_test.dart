@@ -75,6 +75,11 @@ void main() {
       find.descendant(of: find.byType(AlertDialog), matching: find.text('Craqué !')),
     );
     expect(title.textAlign, TextAlign.center, reason: 'le titre doit être centré');
+
+    final dialogRect = tester.getRect(find.byType(AlertDialog));
+    final continueRect = tester.getRect(find.widgetWithText(FilledButton, 'Continuer'));
+    expect((continueRect.center.dx - dialogRect.center.dx).abs(), lessThan(1.0),
+        reason: 'le bouton Continuer doit être centré dans la popup');
   });
 
   testWidgets('la popup de main héritée montre les dés déjà mis de côté, sur une seule ligne',
