@@ -41,7 +41,7 @@ final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(millisec
 /// possible (voir `_controlRow` dans `game_screen.dart`).
 bool _stopEnabled(WidgetTester tester) {
   final button = tester.widget<IconButton>(
-    find.ancestor(of: find.byIcon(Icons.stop), matching: find.byType(IconButton)).first,
+    find.ancestor(of: find.byIcon(Icons.front_hand), matching: find.byType(IconButton)).first,
   );
   return button.onPressed != null;
 }
@@ -648,7 +648,7 @@ void main() {
     expect(find.text('1500'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icons.front_hand));
     await tester.pumpAndSettle();
 
     // La main passe à A (pass-and-play) : écran de transition affiché.
@@ -758,7 +758,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icons.front_hand));
     await tester.pumpAndSettle();
 
     expect(find.byType(PassDeviceScreen), findsOneWidget);
@@ -826,8 +826,8 @@ void main() {
 
     expect(find.textContaining('Tour final'), findsOneWidget);
 
-    await tester.ensureVisible(find.byIcon(Icons.stop));
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.ensureVisible(find.byIcon(Icons.front_hand));
+    await tester.tap(find.byIcon(Icons.front_hand));
     await tester.pumpAndSettle();
 
     expect(find.byType(GameOverScreen), findsOneWidget);
@@ -958,7 +958,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.stop), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
+    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
 
     await tester.tap(find.textContaining('Reprendre la main'));
     await tester.pump();
@@ -1003,10 +1003,10 @@ void main() {
     // directement de continuer ou de s'arrêter.
     expect(find.text('Valider'), findsNothing);
     expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
-    expect(find.byIcon(Icons.stop), findsOneWidget);
+    expect(find.byIcon(Icons.front_hand), findsOneWidget);
 
-    await tester.ensureVisible(find.byIcon(Icons.stop));
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.ensureVisible(find.byIcon(Icons.front_hand));
+    await tester.tap(find.byIcon(Icons.front_hand));
     await tester.pumpAndSettle();
 
     expect(find.byType(PassDeviceScreen), findsOneWidget, reason: 'B a banqué, la main passe à A');
@@ -1702,9 +1702,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final stop = tester.getRect(find.byIcon(Icons.stop));
+    final stop = tester.getRect(find.byIcon(Icons.front_hand));
     final roll = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
-    final exchange = tester.getRect(find.byIcon(Icons.recycling));
+    final exchange = tester.getRect(find.byIcon(Icons.swap_vert));
 
     expect(stop.center.dx, lessThan(roll.left), reason: 'Stop est à gauche du bouton Lancer');
     expect(exchange.center.dx, greaterThan(roll.right), reason: 'l\'échange est à droite');
@@ -1746,8 +1746,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byIcon(Icons.stop), findsOneWidget, reason: 'Stop reste visible');
-    expect(find.byIcon(Icons.recycling), findsOneWidget, reason: 'l\'échange reste visible');
+    expect(find.byIcon(Icons.front_hand), findsOneWidget, reason: 'Stop reste visible');
+    expect(find.byIcon(Icons.swap_vert), findsOneWidget, reason: 'l\'échange reste visible');
     expect(_stopEnabled(tester), isFalse, reason: 'rien n\'a encore été lancé');
     expect(
       tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged,

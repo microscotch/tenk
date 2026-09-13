@@ -1794,7 +1794,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.recycling, size: 18),
+                  const Icon(Icons.swap_vert, size: 18),
                   const SizedBox(width: 4),
                   Text('${fives - declineCount}'),
                 ],
@@ -2060,7 +2060,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          Icons.recycling,
+          Icons.swap_vert,
           size: 18,
           color: enabled ? null : Theme.of(context).disabledColor,
         ),
@@ -2085,7 +2085,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   Widget _stopButton({required VoidCallback? onPressed}) {
     return IconButton.outlined(
       onPressed: onPressed,
-      icon: const Icon(Icons.stop),
+      icon: const Icon(Icons.front_hand),
       tooltip: AppLocalizations.of(context).stopButton,
     );
   }
