@@ -311,6 +311,15 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Звукови ефекти';
 
   @override
+  String get settingsHandednessLabel => 'Disposition des boutons';
+
+  @override
+  String get settingsHandednessRight => 'Droitier';
+
+  @override
+  String get settingsHandednessLeft => 'Gaucher';
+
+  @override
   String get settingsControlsTitle => 'Contrôles';
 
   @override

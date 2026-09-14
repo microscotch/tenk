@@ -152,6 +152,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 28),
               Text(l10n.settingsControlsTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
+              Text(l10n.settingsHandednessLabel, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 6),
+              SegmentedButton<bool>(
+                segments: [
+                  ButtonSegment(value: true, label: Text(l10n.settingsHandednessRight)),
+                  ButtonSegment(value: false, label: Text(l10n.settingsHandednessLeft)),
+                ],
+                selected: {settings.rightHanded},
+                onSelectionChanged: (s) => notifier.setRightHanded(s.first),
+              ),
+              const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.settingsShakeToRollLabel),

@@ -42,6 +42,12 @@ class AppSettings {
   /// l'appareil.
   final String? languageOverride;
 
+  /// Disposition des deux commandes latérales de la ligne de contrôle :
+  /// vrai (défaut) place l'échange des 5 à gauche et Stop à droite, sous le
+  /// pouce d'un droitier ; faux les échange. "Lancer" reste centré dans les
+  /// deux cas.
+  final bool rightHanded;
+
   /// Vrai une fois les préférences persistées relues — ou leur lecture
   /// abandonnée faute de backend. Tant que c'est faux, les valeurs exposées
   /// ne sont que les défauts : agir dessus démarrerait la musique juste pour
@@ -61,6 +67,7 @@ class AppSettings {
     this.shakeToRollEnabled = false,
     this.showProbabilities = false,
     this.languageOverride,
+    this.rightHanded = true,
     this.loaded = false,
   });
 
@@ -79,6 +86,7 @@ class AppSettings {
     bool? shakeToRollEnabled,
     bool? showProbabilities,
     Object? languageOverride = _unset,
+    bool? rightHanded,
     bool? loaded,
   }) {
     return AppSettings(
@@ -93,6 +101,7 @@ class AppSettings {
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
       showProbabilities: showProbabilities ?? this.showProbabilities,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
+      rightHanded: rightHanded ?? this.rightHanded,
       loaded: loaded ?? this.loaded,
     );
   }
@@ -113,6 +122,7 @@ const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 const _keyAiDifficulty = 'settings.aiDifficulty';
 const _keyShakeToRollEnabled = 'settings.shakeToRollEnabled';
 const _keyShowProbabilities = 'settings.showProbabilities';
+const _keyRightHanded = 'settings.rightHanded';
 const _keyLanguageOverride = 'settings.languageOverride';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
@@ -144,6 +154,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
         showProbabilities: prefs.getBool(_keyShowProbabilities) ?? false,
         languageOverride: prefs.getString(_keyLanguageOverride),
+        rightHanded: prefs.getBool(_keyRightHanded) ?? true,
         loaded: true,
       );
     } catch (_) {
@@ -220,6 +231,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setShowProbabilities(bool enabled) {
     state = state.copyWith(showProbabilities: enabled);
     _save(_keyShowProbabilities, enabled);
+  }
+
+  void setRightHanded(bool rightHanded) {
+    state = state.copyWith(rightHanded: rightHanded);
+    _save(_keyRightHanded, rightHanded);
   }
 
   /// [code] est un code de langue supporté (ex. "en"), ou null pour suivre à

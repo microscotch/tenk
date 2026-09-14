@@ -311,6 +311,15 @@
   "settingsSoundEffectsLabel": "Effets sonores",
   "@settingsSoundEffectsLabel": {"description": "Interrupteur activant/désactivant les effets sonores."},
 
+  "settingsHandednessLabel": "Disposition des boutons",
+  "@settingsHandednessLabel": {"description": "Réglage choisissant de quel côté se placent les commandes Stop et échange des 5, autour du bouton Lancer."},
+
+  "settingsHandednessRight": "Droitier",
+  "@settingsHandednessRight": {"description": "Disposition pour droitier : échange des 5 à gauche, Stop à droite."},
+
+  "settingsHandednessLeft": "Gaucher",
+  "@settingsHandednessLeft": {"description": "Disposition pour gaucher : Stop à gauche, échange des 5 à droite."},
+
   "settingsControlsTitle": "Contrôles",
   "@settingsControlsTitle": {"description": "Titre de la section réglages consacrée aux contrôles de jeu (au-delà des boutons à l'écran)."},
 

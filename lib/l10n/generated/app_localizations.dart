@@ -614,6 +614,24 @@ abstract class AppLocalizations {
   /// **'Effets sonores'**
   String get settingsSoundEffectsLabel;
 
+  /// Réglage choisissant de quel côté se placent les commandes Stop et échange des 5, autour du bouton Lancer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disposition des boutons'**
+  String get settingsHandednessLabel;
+
+  /// Disposition pour droitier : échange des 5 à gauche, Stop à droite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Droitier'**
+  String get settingsHandednessRight;
+
+  /// Disposition pour gaucher : Stop à gauche, échange des 5 à droite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gaucher'**
+  String get settingsHandednessLeft;
+
   /// Titre de la section réglages consacrée aux contrôles de jeu (au-delà des boutons à l'écran).
   ///
   /// In fr, this message translates to:

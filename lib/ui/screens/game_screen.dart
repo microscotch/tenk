@@ -2017,11 +2017,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// apparaissent à sa droite, à la demande, sans jamais le déplacer. Passer
   /// par ce seul gabarit est ce qui garantit qu'un tour IA ne se présente pas
   /// autrement qu'un tour humain (emplacement, taille, alignement).
+  /// [leading] et [trailing] désignent des RÔLES, pas des côtés : le premier
+  /// est la commande d'arrêt, le second l'option du tour (échange des 5,
+  /// "Refuser"). Quel côté chacun occupe dépend du réglage droitier/gaucher
+  /// (voir [AppSettings.rightHanded]), qui les intervertit ici, en un seul
+  /// endroit, pour tous les tours.
   Widget _controlRow({
     Widget? leading,
     required Widget primary,
     Widget? trailing,
   }) {
+    final rightHanded = ref.watch(settingsProvider).rightHanded;
+    final left = rightHanded ? trailing : leading;
+    final right = rightHanded ? leading : trailing;
     return SizedBox(
       width: double.infinity,
       child: Row(
@@ -2031,11 +2039,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // que soit la taille de ce qui l'encadre — et donc au même endroit
           // d'un tour à l'autre, humain comme IA.
           Expanded(
-            child: Align(alignment: Alignment.centerLeft, child: leading ?? const SizedBox.shrink()),
+            child: Align(alignment: Alignment.centerLeft, child: left ?? const SizedBox.shrink()),
           ),
           primary,
           Expanded(
-            child: Align(alignment: Alignment.centerRight, child: trailing ?? const SizedBox.shrink()),
+            child: Align(alignment: Alignment.centerRight, child: right ?? const SizedBox.shrink()),
           ),
         ],
       ),

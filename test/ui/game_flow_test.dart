@@ -1670,7 +1670,8 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('ligne de contrôle : Stop à gauche, Lancer centré, échange à droite', (tester) async {
+  testWidgets('ligne de contrôle : Lancer centré, les deux latéraux de part et d\'autre selon la main',
+      (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(400, 900));
 
@@ -1706,8 +1707,21 @@ void main() {
     final roll = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
     final exchange = tester.getRect(find.byIcon(Icons.swap_vert));
 
-    expect(stop.center.dx, lessThan(roll.left), reason: 'Stop est à gauche du bouton Lancer');
-    expect(exchange.center.dx, greaterThan(roll.right), reason: 'l\'échange est à droite');
+    // Réglage par défaut, droitier : l'échange tombe sous le pouce droit...
+    expect(exchange.center.dx, lessThan(roll.left), reason: 'droitier : l\'échange est à gauche');
+    expect(stop.center.dx, greaterThan(roll.right), reason: 'droitier : Stop est à droite');
+
+    // ...et le mode gaucher les intervertit, sans toucher au bouton central.
+    container.read(settingsProvider.notifier).setRightHanded(false);
+    await tester.pumpAndSettle();
+    final stopG = tester.getRect(find.byIcon(Icons.front_hand));
+    final exchangeG = tester.getRect(find.byIcon(Icons.swap_vert));
+    final rollG = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
+    expect(stopG.center.dx, lessThan(rollG.left), reason: 'gaucher : Stop passe à gauche');
+    expect(exchangeG.center.dx, greaterThan(rollG.right), reason: 'gaucher : l\'échange passe à droite');
+    expect(rollG.center.dx, roll.center.dx, reason: 'le bouton Lancer ne bouge pas');
+    container.read(settingsProvider.notifier).setRightHanded(true);
+    await tester.pumpAndSettle();
 
     // Lancer centré dans la ligne, indépendamment de ce qui l'encadre.
     final row = tester.getRect(find.byType(GameScreen));
