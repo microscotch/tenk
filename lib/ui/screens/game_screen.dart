@@ -2064,26 +2064,51 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required int maxKeep,
   }) {
     final highest = maxKeep < minKeep ? minKeep : maxKeep;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.swap_vert,
-          size: 18,
-          color: enabled ? null : Theme.of(context).disabledColor,
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    // Actif, la commande entière passe à l'ambre — contour, pictogramme et
+    // nombre — pour se distinguer nettement de son état inerte, qui ne se
+    // lisait qu'à une nuance de gris près.
+    final foreground = enabled ? accent : theme.disabledColor;
+
+    return Container(
+      // Hauteur alignée sur le cercle de [_stopButton] : les deux commandes
+      // latérales doivent peser pareil de part et d'autre de "Lancer".
+      height: _sideControlSize,
+      padding: const EdgeInsets.only(left: 8, right: 2),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: enabled ? accent : theme.colorScheme.outlineVariant,
+          width: enabled ? 1.6 : 1,
         ),
-        const SizedBox(width: 4),
-        DropdownButton<int>(
-          value: value.clamp(minKeep, highest),
-          underline: const SizedBox.shrink(),
-          items: [
-            for (var i = minKeep; i <= highest; i++) DropdownMenuItem(value: i, child: Text('$i')),
-          ],
-          onChanged: enabled && !_controlsLocked ? (v) => setState(() => _selectedKeep = v!) : null,
-        ),
-      ],
+        borderRadius: BorderRadius.circular(_sideControlSize / 2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.swap_vert, size: 18, color: foreground),
+          const SizedBox(width: 2),
+          DropdownButton<int>(
+            value: value.clamp(minKeep, highest),
+            underline: const SizedBox.shrink(),
+            isDense: true,
+            style: theme.textTheme.bodyLarge?.copyWith(color: foreground),
+            iconEnabledColor: foreground,
+            iconDisabledColor: foreground,
+            items: [
+              for (var i = minKeep; i <= highest; i++) DropdownMenuItem(value: i, child: Text('$i')),
+            ],
+            onChanged: enabled && !_controlsLocked ? (v) => setState(() => _selectedKeep = v!) : null,
+          ),
+        ],
+      ),
     );
   }
+
+  /// Côté du bouton Stop, et donc hauteur de la pastille d'échange en face :
+  /// c'est la taille par défaut d'un [IconButton], fixée ici pour que les
+  /// deux commandes latérales s'alignent exactement.
+  static const double _sideControlSize = 40.0;
 
   /// Bouton Stop, réduit au minimum (icône seule, pas de largeur imposée) :
   /// contrairement à Lancer, son libellé ne varie jamais, pas besoin d'une
@@ -2091,10 +2116,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// laisse visible mais inerte — c'est ainsi qu'un tour IA montre un arrêt
   /// possible qu'elle ne prend pas, sans déformer la ligne.
   Widget _stopButton({required VoidCallback? onPressed}) {
+    final accent = Theme.of(context).colorScheme.primary;
     return IconButton.outlined(
       onPressed: onPressed,
       icon: const Icon(Icons.front_hand),
       tooltip: AppLocalizations.of(context).stopButton,
+      // Actif, le bouton passe à l'ambre — contour et pictogramme : son seul
+      // changement de gris ne se remarquait pas (même traitement que la
+      // pastille d'échange en face, voir [_exchangeControl]).
+      style: onPressed == null
+          ? null
+          : IconButton.styleFrom(
+              foregroundColor: accent,
+              side: BorderSide(color: accent, width: 1.6),
+            ),
     );
   }
 
