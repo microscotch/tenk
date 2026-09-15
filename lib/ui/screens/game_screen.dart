@@ -2393,16 +2393,20 @@ class _DiceZoneBody extends StatelessWidget {
 /// [DieWidget.margin]).
 ///
 /// Le retrait latéral détache deux liserés voisins : les paquets se touchent,
-/// leurs traits se confondraient sinon en un seul.
+/// leurs traits se confondraient sinon en un seul. Le même retrait en hauteur
+/// dégage l'étiquette incrustée de la zone, dont le liseré frôlait le trait.
+///
+/// Ce retrait vaut exactement la marge d'un dé (voir [DieWidget.margin]) : le
+/// trait vient donc se poser sur la boîte des dés, sans jamais mordre dessus.
 class _RollFrameBorder extends StatelessWidget {
   const _RollFrameBorder({super.key});
 
-  static const double _inset = 2.0;
+  static const double _inset = DieWidget.margin;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _inset),
+      padding: const EdgeInsets.all(_inset),
       child: DecoratedBox(
         decoration: BoxDecoration(
           border: Border.all(
