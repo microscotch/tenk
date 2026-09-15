@@ -140,9 +140,23 @@ void main() {
     expect(dice.take(2).map((d) => d.state), everyElement(DieVisualState.kept));
     expect(dice.skip(2).map((d) => d.state), everyElement(DieVisualState.junk));
 
-    for (final label in ['Main courante', 'Piste']) {
-      expect(find.descendant(of: find.byType(AlertDialog), matching: find.text(label)), findsOneWidget,
-          reason: 'chaque rangée est rattachée à la zone d\'où elle vient');
+    // Tout tient sur une seule ligne : les dés gardés portent le liseré de
+    // leur lancer, ceux de la piste n'en ont pas, le lancer ayant craqué.
+    final framed = find.descendant(
+      of: find.byKey(const ValueKey('popup-roll-frame-0')),
+      matching: find.byType(DieWidget),
+    );
+    expect(tester.widgetList<DieWidget>(framed).map((d) => d.value), [1, 1]);
+    expect(find.byKey(const ValueKey('popup-roll-frame-1')), findsNothing,
+        reason: 'un seul lancer validé, donc un seul liseré');
+
+    final premier = tester.getRect(inDialog.first);
+    for (var i = 1; i < dice.length; i++) {
+      final suivant = tester.getRect(inDialog.at(i));
+      expect(suivant.center.dy, closeTo(premier.center.dy, 1.0),
+          reason: 'tous les dés tiennent sur une seule ligne');
+      expect(suivant.left, greaterThan(premier.left),
+          reason: 'et se suivent de gauche à droite');
     }
   });
 

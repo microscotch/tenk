@@ -851,6 +851,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
       return;
     }
     final l10n = AppLocalizations.of(context);
+    final bustDice = [
+      for (final batch in _keptDiceByRoll(turn.keptDiceThisTurn)) _PopupDiceGroup.kept(batch),
+      if (turn.pendingRoll case final rolled?)
+        _PopupDiceGroup(values: rolled.faces, states: _classifyDiceForDisplay(rolled, 0)),
+    ];
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -869,24 +874,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Ce que le craque emporte : la main patiemment constituée, puis
-              // le lancer qui vient de tout annuler. Les deux zones de l'écran
-              // sont cachées par la popup au moment où le joueur voudrait
+              // Ce que le craque emporte, d'un seul tenant : la main
+              // patiemment constituée, liseré par lancer, prolongée des dés
+              // qui viennent de tout annuler. Les deux zones de l'écran sont
+              // cachées par la popup au moment où le joueur voudrait
               // justement les regarder.
-              if (turn.keptDiceThisTurn.isNotEmpty) ...[
-                _bustDiceCaption(l10n.currentHandZoneLabel),
+              if (bustDice.isNotEmpty) ...[
                 _PopupDiceRow(
-                  values: [for (final d in turn.keptDiceThisTurn) d.value],
-                  states: _keptDiceStates(turn.keptDiceThisTurn),
-                  colorMode: ref.read(settingsProvider).diceColorMode,
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (turn.pendingRoll case final rolled?) ...[
-                _bustDiceCaption(l10n.currentRollZoneLabel),
-                _PopupDiceRow(
-                  values: rolled.faces,
-                  states: _classifyDiceForDisplay(rolled, 0),
+                  groups: bustDice,
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
                 const SizedBox(height: 20),
@@ -906,19 +901,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// Intitulé d'une des deux rangées de dés de la popup de craque : reprend le
-  /// nom de la zone d'où elles viennent, pour que le joueur les y rattache.
-  Widget _bustDiceCaption(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelSmall,
       ),
     );
   }
@@ -1409,8 +1391,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
             children: [
               if (engine.inheritedKeptDice.isNotEmpty) ...[
                 _PopupDiceRow(
-                  values: [for (final d in engine.inheritedKeptDice) d.value],
-                  states: _keptDiceStates(engine.inheritedKeptDice),
+                  groups: [
+                    _PopupDiceGroup(
+                      values: [for (final d in engine.inheritedKeptDice) d.value],
+                      states: _keptDiceStates(engine.inheritedKeptDice),
+                    ),
+                  ],
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
                 const SizedBox(height: 12),
@@ -1679,12 +1665,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         var position = 0;
         final children = <Widget>[];
 
-        for (var i = 0; i < kept.length;) {
-          final rollIndex = kept[i].rollIndex;
-          final batch = <Widget>[];
-          while (i < kept.length && kept[i].rollIndex == rollIndex) {
-            final d = kept[i];
-            batch.add(
+        for (final batch in _keptDiceByRoll(kept)) {
+          final dice = <Widget>[];
+          for (final d in batch) {
+            dice.add(
               DieWidget(
                 value: d.value,
                 state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
@@ -1693,12 +1677,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
             );
             position++;
-            i++;
           }
           children.add(
             _KeptRollFrame(
-              index: children.length,
-              child: Row(mainAxisSize: MainAxisSize.min, children: batch),
+              key: ValueKey('kept-roll-frame-${children.length}'),
+              child: Row(mainAxisSize: MainAxisSize.min, children: dice),
             ),
           );
         }
@@ -2404,18 +2387,30 @@ class _RollFrameBorder extends StatelessWidget {
 /// Liseré autour des dés issus d'un même lancer déjà validé, pour distinguer
 /// les lancers successifs qui composent la main courante.
 class _KeptRollFrame extends StatelessWidget {
-  final int index;
   final Widget child;
 
-  const _KeptRollFrame({required this.index, required this.child});
+  const _KeptRollFrame({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
-      key: ValueKey('kept-roll-frame-$index'),
       children: [child, const Positioned.fill(child: _RollFrameBorder())],
     );
   }
+}
+
+/// Découpe les dés gardés en paquets, un par lancer d'origine (voir
+/// [KeptDie.rollIndex]) : ils s'accumulent lancer après lancer, les dés d'un
+/// même lancer sont donc toujours contigus.
+List<List<KeptDie>> _keptDiceByRoll(List<KeptDie> kept) {
+  final batches = <List<KeptDie>>[];
+  for (final d in kept) {
+    if (batches.isEmpty || batches.last.first.rollIndex != d.rollIndex) {
+      batches.add(<KeptDie>[]);
+    }
+    batches.last.add(d);
+  }
+  return batches;
 }
 
 /// États d'affichage des dés déjà mis de côté : leur mise en évidence
@@ -2424,23 +2419,35 @@ List<DieVisualState> _keptDiceStates(List<KeptDie> kept) => [
       for (final d in kept) d.isExtended ? DieVisualState.extended : DieVisualState.kept,
     ];
 
+/// Un bloc de dés d'une rangée de popup : encadré d'un liseré quand il forme
+/// un lancer à part entière (voir [_KeptRollFrame]), nu sinon.
+class _PopupDiceGroup {
+  final List<int> values;
+  final List<DieVisualState> states;
+  final bool framed;
+
+  const _PopupDiceGroup({required this.values, required this.states}) : framed = false;
+
+  /// Les dés gardés d'un même lancer, que leur liseré rassemble.
+  _PopupDiceGroup.kept(List<KeptDie> kept)
+      : values = [for (final d in kept) d.value],
+        states = _keptDiceStates(kept),
+        framed = true;
+}
+
 /// Une rangée de dés dans une popup : les dés hérités sous le score annoncé
 /// (le joueur voit sur quoi porte le choix au lieu de se fier au seul total),
 /// ou ce que le craque emporte (voir [_showBustDialog]).
 ///
 /// Ils tiennent toujours sur une seule ligne, quitte à rétrécir : une popup est
 /// bien plus étroite que les zones de l'écran de jeu, et la rangée s'y ajuste
-/// au lieu de déborder.
+/// au lieu de déborder. Les liserés n'y changent rien, n'occupant aucune place
+/// (voir [_RollFrameBorder]).
 class _PopupDiceRow extends StatelessWidget {
-  final List<int> values;
-  final List<DieVisualState> states;
+  final List<_PopupDiceGroup> groups;
   final DiceColorMode colorMode;
 
-  const _PopupDiceRow({
-    required this.values,
-    required this.states,
-    required this.colorMode,
-  });
+  const _PopupDiceRow({required this.groups, required this.colorMode});
 
   /// Taille de confort, jamais dépassée même quand la place ne manque pas :
   /// ces dés informent, ils ne sont pas le sujet principal de la popup.
@@ -2454,18 +2461,37 @@ class _PopupDiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = ((_maxRowWidth / values.length) - DieWidget.margin * 2).clamp(14.0, _maxSize);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < values.length; i++)
+    final total = groups.fold<int>(0, (n, g) => n + g.values.length);
+    final size = ((_maxRowWidth / total) - DieWidget.margin * 2).clamp(14.0, _maxSize);
+
+    var position = 0;
+    var framedCount = 0;
+    final children = <Widget>[];
+    for (final group in groups) {
+      final dice = <Widget>[];
+      for (var i = 0; i < group.values.length; i++) {
+        dice.add(
           DieWidget(
-            value: values[i],
-            state: states[i],
-            bodyColor: diceBodyColorFor(colorMode, i),
+            value: group.values[i],
+            state: group.states[i],
+            bodyColor: diceBodyColorFor(colorMode, position),
             size: size,
           ),
-      ],
+        );
+        position++;
+      }
+      final row = Row(mainAxisSize: MainAxisSize.min, children: dice);
+      children.add(
+        group.framed
+            ? _KeptRollFrame(key: ValueKey('popup-roll-frame-${framedCount++}'), child: row)
+            : row,
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: children,
     );
   }
 }
