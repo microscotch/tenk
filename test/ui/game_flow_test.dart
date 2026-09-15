@@ -165,12 +165,13 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    // Le joueur précédent a mis de côté un as et deux cinq (300 points) et
-    // laissé 2 dés : la popup doit montrer ces 3 dés sous le score annoncé.
+    // Le joueur précédent a mis de côté un as, relancé, puis gardé deux cinq
+    // (300 points en tout) et laissé 2 dés : la popup doit montrer ces 3 dés
+    // sous le score annoncé, chaque lancer dans son liseré.
     const kept = [
       KeptDie(value: 1, points: 100, isExtended: false),
-      KeptDie(value: 5, points: 50, isExtended: false),
-      KeptDie(value: 5, points: 50, isExtended: false),
+      KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
+      KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
     ];
     var engine = GameEngine.newGame(['A', 'B']);
     engine = engine.copyWith(
@@ -197,6 +198,20 @@ void main() {
       matching: find.byType(DieWidget),
     );
     expect(diceInDialog, findsNWidgets(3));
+
+    // Un liseré par lancer, comme dans la zone "Main courante".
+    List<int> diceInFrame(int i) => tester
+        .widgetList<DieWidget>(
+          find.descendant(
+            of: find.byKey(ValueKey('popup-roll-frame-$i')),
+            matching: find.byType(DieWidget),
+          ),
+        )
+        .map((d) => d.value)
+        .toList();
+    expect(diceInFrame(0), [1], reason: 'le premier lancer n\'a gardé que l\'as');
+    expect(diceInFrame(1), [5, 5], reason: 'le second a gardé les deux cinq');
+    expect(find.byKey(const ValueKey('popup-roll-frame-2')), findsNothing);
 
     // Tous alignés sur une même ligne, et contenus dans la popup.
     final dialogRect = tester.getRect(find.byType(AlertDialog));

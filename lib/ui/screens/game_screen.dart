@@ -1413,12 +1413,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (engine.inheritedKeptDice.isNotEmpty) ...[
+                // Un liseré par lancer, comme dans la zone "Main courante" et
+                // la popup de craque : la main proposée s'est bâtie en
+                // plusieurs lancers, et c'est sur elle que porte le choix.
                 _PopupDiceRow(
                   groups: [
-                    _PopupDiceGroup(
-                      values: [for (final d in engine.inheritedKeptDice) d.value],
-                      states: _keptDiceStates(engine.inheritedKeptDice),
-                    ),
+                    for (final batch in _keptDiceByRoll(engine.inheritedKeptDice))
+                      _PopupDiceGroup.kept(batch),
                   ],
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
