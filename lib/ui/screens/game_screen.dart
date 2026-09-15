@@ -907,16 +907,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
                 const SizedBox(height: 10),
-                // Ce que la main valait, dés du lancer fatal comptés pour la
-                // forme (voir [bustedHandScore]).
-                Text(
-                  l10n.bustedHandScore(bustedHandScore(turn)),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
+                _bustScoreLine(bustedHandScore(turn), engine.currentPlayer),
                 const SizedBox(height: 20),
               ],
               if (_bustReasonExplanation(l10n, turn.bustReason) case final explanation?) ...[
@@ -935,6 +926,55 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ),
         ),
       ),
+    );
+  }
+
+  /// Ligne de bilan de la popup de craque : ce que la main valait (voir
+  /// [bustedHandScore]), puis ce que le craque fait à la grille du joueur.
+  ///
+  /// Les deux issues possibles s'y lisent telles qu'elles apparaîtront dans la
+  /// grille, plutôt qu'énoncées :
+  /// - ligne encore vierge, le craque n'y pose qu'un tiret : le score suivi de
+  ///   ce même tiret, "1106 : 900 –" ;
+  /// - ligne déjà tiretée, le craque la barre : le score barré suivi de ce
+  ///   qu'il en coûte, "1106 : 1500 (600)".
+  ///
+  /// La chute est projetée avec le [Player.applyBust] que
+  /// [GameEngine.endBustedTurn] appliquera au clic, plutôt qu'avec une règle
+  /// recopiée ici qui pourrait s'en écarter. Une ligne à 0 ne reçoit rien : ni
+  /// tiret ni barre, le score est alors seul.
+  Widget _bustScoreLine(int lost, Player player) {
+    final before = player.totalScore;
+    final after = player.applyBust().totalScore;
+    final barred = before > 0 && player.hasTiret;
+    final marked = before > 0 && !player.hasTiret;
+
+    return Text.rich(
+      TextSpan(
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        children: [
+          TextSpan(text: '$lost : '),
+          TextSpan(
+            text: '$before',
+            style: barred
+                ? const TextStyle(decoration: TextDecoration.lineThrough, decorationThickness: 2)
+                : null,
+          ),
+          if (marked)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Icon(Icons.remove, size: 14, color: Colors.orange.shade300),
+              ),
+            ),
+          if (barred) TextSpan(text: ' (${before - after})'),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 

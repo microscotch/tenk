@@ -140,14 +140,21 @@ void main() {
     expect(dice.take(2).map((d) => d.state), everyElement(DieVisualState.kept));
     expect(dice.skip(2).map((d) => d.state), everyElement(DieVisualState.junk));
 
-    // Ce que la main valait : 200 déjà engrangés + 2+3+4 du lancer fatal.
+    // Ce que la main valait (200 engrangés + 2+3+4 du lancer fatal), puis ce
+    // que le craque fait à la grille : ce premier craque ne pose qu'un tiret
+    // sur les 700, qui gardent leur valeur.
     final score = find.descendant(
       of: find.byType(AlertDialog),
-      matching: find.text('Main perdue : 209'),
+      matching: find.textContaining('209 : 700'),
     );
     expect(score, findsOneWidget);
     expect(tester.getRect(score).top, greaterThan(tester.getRect(inDialog.first).bottom),
         reason: 'le score s\'affiche sous les dés');
+    expect(
+      find.descendant(of: score, matching: find.byIcon(Icons.remove)),
+      findsOneWidget,
+      reason: 'le tiret que le craque vient de poser accompagne le score',
+    );
 
     // Tout tient sur une seule ligne : les dés gardés portent le liseré de
     // leur lancer, ceux de la piste n'en ont pas, le lancer ayant craqué.
@@ -167,6 +174,110 @@ void main() {
       expect(suivant.left, greaterThan(premier.left),
           reason: 'et se suivent de gauche à droite');
     }
+  });
+
+  testWidgets('la popup de craque annonce la chute de score quand la ligne est barrée',
+      (tester) async {
+    // Une ligne déjà tiretée : ce second craque la barre et fait retomber le
+    // joueur sur sa ligne précédente — c'est le seul cas où le score de
+    // grille annoncé diffère de celui qu'il avait en entrant dans le tour.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final marque = Player(name: 'A').applySuccessfulTurn(700).applyBust();
+    expect(marque.hasTiret, isTrue, reason: 'sinon ce craque ne barrerait rien');
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [marque, Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        bankedScore: 200,
+        pendingRoll: analyzeRoll([2, 3, 4]),
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Les 700 sont barrés et le joueur retombe sur sa ligne précédente (0) :
+    // le score barré, suivi entre parenthèses de ce que ça lui coûte.
+    final score = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.textContaining('209 : 700 (700)'),
+    );
+    expect(score, findsOneWidget);
+    expect(
+      find.descendant(of: score, matching: find.byIcon(Icons.remove)),
+      findsNothing,
+      reason: 'une ligne barrée ne porte plus de tiret',
+    );
+
+    final barre = tester.widget<Text>(score);
+    final valeur = barre.textSpan!.toPlainText();
+    expect(valeur, '209 : 700 (700)');
+    expect(
+      (barre.textSpan! as TextSpan).children!.any((s) =>
+          s is TextSpan && s.style?.decoration == TextDecoration.lineThrough && s.text == '700'),
+      isTrue,
+      reason: 'le score perdu doit être barré, comme dans la grille',
+    );
+  });
+
+  testWidgets('la popup de craque n\'invente pas de marque pour un joueur encore à zéro',
+      (tester) async {
+    // Un craque à 0 ne pose rien dans la grille (voir Player.applyBust, qui
+    // s'arrête là) : la ligne de bilan ne doit donc afficher ni tiret ni barre.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([2, 3, 4]),
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final score = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.textContaining('9 : 0'),
+    );
+    expect(score, findsOneWidget);
+    expect(tester.widget<Text>(score).textSpan!.toPlainText(), '9 : 0',
+        reason: 'rien après le score : ce craque ne change rien à la grille');
+    expect(find.descendant(of: score, matching: find.byIcon(Icons.remove)), findsNothing);
   });
 
   testWidgets('la popup de main héritée montre les dés déjà mis de côté, sur une seule ligne',
