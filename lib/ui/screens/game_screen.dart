@@ -1639,6 +1639,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
       padding: _diceZonePadding,
+      // Le contour de la zone reprend la couleur du score qu'elle affiche :
+      // vert dès que le joueur peut s'arrêter, rouge tant qu'il ne le peut
+      // pas (voir `scoreColor` dans [build]).
+      borderColor: scoreColor,
       labelSuffix: [
         const TextSpan(text: ' '),
         TextSpan(

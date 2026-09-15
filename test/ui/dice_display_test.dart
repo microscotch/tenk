@@ -7,6 +7,7 @@ import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
+import 'package:le10000/ui/widgets/bordered_section.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 
 void main() {
@@ -101,6 +102,57 @@ void main() {
     final fiveStates =
         tester.widgetList<DieWidget>(find.byType(DieWidget)).where((d) => d.value == 5).map((d) => d.state).toList();
     expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));
+  });
+
+  testWidgets('la bordure de la zone "Main courante" prend la couleur du score', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    Color? bordure() => tester
+        .widget<BorderedSection>(
+          find.byWidgetPredicate((w) => w is BorderedSection && w.label == 'Main courante'),
+        )
+        .borderColor;
+
+    final base = GameEngine.newGame(['A', 'B']).startTurn();
+    TurnState tour(int score) =>
+        TurnState(diceToRoll: 2, bankedScore: score, hasRolledThisTurn: true);
+
+    // Sous le minimum d'entrée (500) : impossible de s'arrêter.
+    container.read(gameProvider.notifier).debugLoadState(
+          base.copyWith(activeTurn: tour(300)),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(bordure(), Colors.redAccent);
+
+    // Au-dessus du minimum : s'arrêter devient possible.
+    container.read(gameProvider.notifier).debugLoadState(
+          base.copyWith(activeTurn: tour(600)),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pump();
+    expect(bordure(), Colors.lightGreenAccent);
+
+    // La "Piste" n'est pas concernée : elle garde l'accent du thème.
+    expect(
+      tester
+          .widget<BorderedSection>(
+            find.byWidgetPredicate((w) => w is BorderedSection && w.label == 'Piste'),
+          )
+          .borderColor,
+      isNull,
+    );
   });
 
   testWidgets('le liseré n\'arrive qu\'une fois les dés immobilisés ET posés dans la main',

@@ -28,6 +28,15 @@ class BorderedSection extends StatelessWidget {
   /// (voir le décalage `top: -10` plus bas).
   final EdgeInsetsGeometry padding;
 
+  /// Couleur du trait, celui de la zone comme celui de l'étiquette qui s'y
+  /// incruste ; null pour l'accent du thème. La zone "Main courante" y porte
+  /// la couleur du score de la main, pour dire d'un coup d'œil, sans même
+  /// lire le score, si le joueur a de quoi s'arrêter.
+  ///
+  /// Le libellé, lui, garde la couleur d'accent : seul son suffixe (le score)
+  /// est déjà coloré, voir [labelSuffix].
+  final Color? borderColor;
+
   const BorderedSection({
     super.key,
     required this.label,
@@ -35,16 +44,18 @@ class BorderedSection extends StatelessWidget {
     this.fillAvailableSpace = true,
     this.labelSuffix,
     this.padding = const EdgeInsets.fromLTRB(16, 22, 16, 16),
+    this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final stroke = borderColor ?? scheme.primary;
     final bordered = Container(
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        border: Border.all(color: scheme.primary, width: 1),
+        border: Border.all(color: stroke, width: 1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: child,
@@ -62,7 +73,7 @@ class BorderedSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHigh,
-                border: Border.all(color: scheme.primary, width: 1),
+                border: Border.all(color: stroke, width: 1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text.rich(
