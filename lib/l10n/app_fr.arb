@@ -242,6 +242,12 @@
   "bustFullHandAtTarget": "Main pleine à 10000 : impossible de s'arrêter, et tout relancer dépasserait.",
   "@bustFullHandAtTarget": {"description": "Explique un craque déclenché par une main pleine tombant pile sur 10000 : la main pleine oblige à relancer, et tout relancer marquant dépasserait la cible."},
 
+  "bustedHandScore": "Main perdue : {score}",
+  "@bustedHandScore": {
+    "description": "Popup de craque : ce que valait la main perdue (score engrangé + valeur faciale des dés du lancer fatal).",
+    "placeholders": {"score": {"type": "int"}}
+  },
+
   "bustContinueButton": "Continuer",
   "@bustContinueButton": {"description": "Bouton de la popup de craque pour l'acquitter et passer la main."},
 

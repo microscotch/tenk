@@ -140,6 +140,15 @@ void main() {
     expect(dice.take(2).map((d) => d.state), everyElement(DieVisualState.kept));
     expect(dice.skip(2).map((d) => d.state), everyElement(DieVisualState.junk));
 
+    // Ce que la main valait : 200 déjà engrangés + 2+3+4 du lancer fatal.
+    final score = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text('Main perdue : 209'),
+    );
+    expect(score, findsOneWidget);
+    expect(tester.getRect(score).top, greaterThan(tester.getRect(inDialog.first).bottom),
+        reason: 'le score s\'affiche sous les dés');
+
     // Tout tient sur une seule ligne : les dés gardés portent le liseré de
     // leur lancer, ceux de la piste n'en ont pas, le lancer ayant craqué.
     final framed = find.descendant(

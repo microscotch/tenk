@@ -233,6 +233,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
 
   @override
+  String bustedHandScore(int score) {
+    return 'Main perdue : $score';
+  }
+
+  @override
   String get bustContinueButton => 'Continuer';
 
   @override

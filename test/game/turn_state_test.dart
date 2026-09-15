@@ -238,6 +238,38 @@ void main() {
     });
   });
 
+  group('bustedHandScore', () {
+    test('ajoute la valeur faciale du lancer fatal au score de la main', () {
+      // Un as (100), puis un brelan d'as (1000), puis un 6 qui craque.
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 6]));
+      state = applyKeepDecision(state);
+      state = rollTurn(state, random: _QueueRandom([1, 1, 1, 2]));
+      state = applyKeepDecision(state);
+      state = rollTurn(state, random: _QueueRandom([6]));
+
+      expect(state.busted, isTrue);
+      expect(state.bankedScore, 1100);
+      expect(bustedHandScore(state), 1106);
+    });
+
+    test('compte chaque dé du lancer fatal, pas seulement ceux qui marquent', () {
+      // Un as (100), un cinq (50), puis une paire de 2 et un 3 : 2+2+3 = 7.
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 6]));
+      state = applyKeepDecision(state);
+      state = rollTurn(state, random: _QueueRandom([5, 6, 6, 4]));
+      state = applyKeepDecision(state);
+      state = rollTurn(state, random: _QueueRandom([2, 2, 3]));
+
+      expect(state.busted, isTrue);
+      expect(state.bankedScore, 150);
+      expect(bustedHandScore(state), 157);
+    });
+
+    test('sans lancer en attente, vaut le seul score de la main', () {
+      expect(bustedHandScore(const TurnState(diceToRoll: 5, bankedScore: 300)), 300);
+    });
+  });
+
   group('keptDisplayOrder', () {
     test('groupe les figures et renvoie les dés non marquants en dernier', () {
       // [5, 1, 3, 1, 5] : deux as (indices 1 et 3), deux 5 (0 et 4), un 3 qui

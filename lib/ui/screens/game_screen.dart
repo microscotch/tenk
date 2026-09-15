@@ -906,6 +906,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   groups: bustDice,
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
+                const SizedBox(height: 10),
+                // Ce que la main valait, dés du lancer fatal comptés pour la
+                // forme (voir [bustedHandScore]).
+                Text(
+                  l10n.bustedHandScore(bustedHandScore(turn)),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
                 const SizedBox(height: 20),
               ],
               if (_bustReasonExplanation(l10n, turn.bustReason) case final explanation?) ...[

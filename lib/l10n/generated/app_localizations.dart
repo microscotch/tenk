@@ -482,6 +482,12 @@ abstract class AppLocalizations {
   /// **'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.'**
   String get bustFullHandAtTarget;
 
+  /// Popup de craque : ce que valait la main perdue (score engrangé + valeur faciale des dés du lancer fatal).
+  ///
+  /// In fr, this message translates to:
+  /// **'Main perdue : {score}'**
+  String bustedHandScore(int score);
+
   /// Bouton de la popup de craque pour l'acquitter et passer la main.
   ///
   /// In fr, this message translates to:

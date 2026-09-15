@@ -271,6 +271,16 @@ TurnState rollTurn(TurnState state, {Random? random}) {
   return state.copyWith(pendingRoll: analysis, hasRolledThisTurn: true);
 }
 
+/// Ce que valait une main partie en fumée : le score déjà engrangé sur la
+/// main, augmenté de la valeur faciale des dés du lancer qui l'a fait craquer.
+///
+/// Ces derniers ne rapportent rien — c'est bien pour ça que le tour est perdu
+/// — et ne sont comptés que pour la forme, à l'annonce du craque (voir
+/// `_showBustDialog`) : trois lancers donnant un as, un brelan d'as puis un 6
+/// valent 100 + 1000 + 6.
+int bustedHandScore(TurnState state) =>
+    state.bankedScore + (state.pendingRoll?.faces.fold<int>(0, (s, f) => s + f) ?? 0);
+
 /// Nombre de 5 isolés déclinables que le joueur est OBLIGÉ de garder sur ce
 /// lancer. Encode les mêmes contraintes que [applyKeepDecision] :
 /// - sans dé non-marquant pour les accompagner au relancer, aucun 5 ne peut
