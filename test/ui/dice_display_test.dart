@@ -104,6 +104,78 @@ void main() {
     expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));
   });
 
+  testWidgets('un nouveau lancer ne montre pas d\'avance les dés qu\'il fera garder',
+      (tester) async {
+    // Régression : les fondus d'un lancer survivaient au suivant. Repartant
+    // de l'opacité pleine atteinte, ils redescendaient vers zéro en montrant
+    // les dés retenus du NOUVEAU lancer — le joueur connaissait son résultat
+    // avant que les dés aient fini de rouler.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final base = GameEngine.newGame(['A', 'B']).startTurn();
+    container.read(gameProvider.notifier).debugLoadState(
+          base.copyWith(
+            activeTurn: TurnState(
+              diceToRoll: 5,
+              bankedScore: 600,
+              hasRolledThisTurn: true,
+              pendingRoll: analyzeRoll([1, 1, 5, 5, 3]),
+            ),
+          ),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Les dés retenus de ce premier lancer sont bien posés dans la main.
+    Iterable<double> opacitesMainCourante() => tester
+        .widgetList<FadeTransition>(
+          find.descendant(
+            of: find.byWidgetPredicate((w) => w is BorderedSection && w.label == 'Main courante'),
+            matching: find.byType(FadeTransition),
+          ),
+        )
+        .map((f) => f.opacity.value);
+    expect(opacitesMainCourante(), contains(1.0));
+
+    // Un second lancer arrive : ses dés roulent encore.
+    container.read(gameProvider.notifier).debugLoadState(
+          base.copyWith(
+            activeTurn: TurnState(
+              diceToRoll: 5,
+              bankedScore: 600,
+              hasRolledThisTurn: true,
+              pendingRoll: analyzeRoll([1, 1, 1, 5, 3]),
+            ),
+          ),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pump();
+
+    expect(opacitesMainCourante(), everyElement(0.0),
+        reason: 'rien de ce lancer ne doit être visible tant qu\'il roule');
+
+    // Rotation des dés, puis attente avant migration, puis fondu : les
+    // minuteries ne sont pas portées par une animation, `pumpAndSettle`
+    // s'arrêterait avant elles.
+    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(opacitesMainCourante(), contains(1.0),
+        reason: 'une fois immobilisés, les dés retenus rejoignent la main');
+  });
+
   testWidgets('la bordure de la zone "Main courante" prend la couleur du score', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

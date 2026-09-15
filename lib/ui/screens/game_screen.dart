@@ -1571,7 +1571,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
               // un fondu propre dans les deux sens (garder <-> redonner —
               // voir aussi _buildHandZone) plutôt qu'une apparition/
               // disparition instantanée si le widget était conditionnel.
-              : _fittedDiceRow(analysis.faces.length, (i, size) {
+              //
+              // La rangée est réattachée à chaque lancer (clé) : sinon les
+              // dés partis vers la main courante, restés à opacité nulle,
+              // réapparaissaient en fondu au lancer suivant au lieu de se
+              // montrer en train de rouler.
+              : _fittedDiceRow(analysis.faces.length, key: ObjectKey(analysis), (i, size) {
                   final states = _classifyDiceForDisplay(
                     analysis,
                     selectedKeep,
@@ -1744,8 +1749,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // Présent ou absent, jamais en fondu (voir [_previewFrameShown]) :
           // recréé à chaque venue, il n'anime que ce qui se passe pendant
           // qu'il est là, soit le seul échange de 5.
+          //
+          // Tout ce bloc est réattaché à CHAQUE lancer (clé) : ses widgets
+          // étant sinon réutilisés à l'identique, leurs fondus repartaient de
+          // l'opacité atteinte au lancer précédent — pleine — et
+          // redescendaient vers zéro en montrant les dés retenus du nouveau
+          // lancer, dont le joueur découvrait le résultat avant même qu'ils
+          // aient fini de rouler.
           children.add(
             Stack(
+              key: ObjectKey(pendingAnalysis),
               children: [
                 Row(mainAxisSize: MainAxisSize.min, children: slots),
                 if (frameShown)
@@ -2535,9 +2548,11 @@ Widget _fittedDiceRow(
   int count,
   Widget Function(int index, double size) builder, {
   bool isAiTurn = false,
+  Key? key,
 }) {
   if (count == 0) return const SizedBox.shrink();
   return LayoutBuilder(
+    key: key,
     builder: (context, constraints) {
       final size = isAiTurn
           ? _aiFittedDieSize(constraints.maxWidth)
