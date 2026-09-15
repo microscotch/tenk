@@ -521,6 +521,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
   bool _previewMoveRevealed = true;
   Timer? _previewMoveTimer;
 
+  /// Le liseré du lancer en cours n'arrive qu'une fois ses dés immobilisés
+  /// ET posés dans la "Main courante", soit encore le temps de leur fondu
+  /// après [_previewMoveRevealed] : encadrer des dés en train d'apparaître
+  /// n'aurait rien à encadrer.
+  ///
+  /// Contrairement aux dés, il n'est pas rendu du tout tant que c'est faux —
+  /// un fondu de sortie l'aurait laissé traîner, à rétrécir sur place, au
+  /// moment précis où le lancer suivant roule.
+  bool _previewFrameShown = true;
+  Timer? _previewFrameTimer;
+
   /// Journal de partie : horodaté, affiché du plus récent au plus ancien
   /// (voir [_buildGameLog]). Rempli au montage par rejeu de l'historique déjà
   /// persisté (voir [_seedLogFromHistory]), puis tenu à jour en direct par
@@ -661,6 +672,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _bustRevealTimer?.cancel();
     _rollSettleTimer?.cancel();
     _previewMoveTimer?.cancel();
+    _previewFrameTimer?.cancel();
     _logScrollController.dispose();
     super.dispose();
   }
@@ -737,13 +749,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void _scheduleRollSettleAndPreviewMove(RollAnalysis? pendingRoll) {
     _rollSettleTimer?.cancel();
     _previewMoveTimer?.cancel();
+    _previewFrameTimer?.cancel();
     if (pendingRoll == null) {
       _rollSettled = true;
       _previewMoveRevealed = true;
+      _previewFrameShown = true;
       return;
     }
     _rollSettled = false;
     _previewMoveRevealed = false;
+    _previewFrameShown = false;
     _rollSettleTimer = Timer(DieWidget.rollAnimationDuration, () {
       if (!mounted) return;
       setState(() => _rollSettled = true);
@@ -756,6 +771,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
           return;
         }
         setState(() => _previewMoveRevealed = true);
+        _previewFrameTimer = Timer(_previewFadeDuration, () {
+          if (!mounted) return;
+          if (ref.read(gameProvider)?.activeTurn?.pendingRoll != pendingRoll) {
+            return;
+          }
+          setState(() => _previewFrameShown = true);
+        });
       });
     });
   }
@@ -1254,6 +1276,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       previewIndices: previewIndices,
                       previewStates: previewStates,
                       previewRevealed: _previewMoveRevealed,
+                      frameShown: _previewFrameShown,
                       isAiTurn: isAiTurn,
                     ),
                     const SizedBox(height: 12),
@@ -1591,6 +1614,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required Set<int> previewIndices,
     required List<DieVisualState>? previewStates,
     required bool previewRevealed,
+    required bool frameShown,
     required bool isAiTurn,
   }) {
     final l10n = AppLocalizations.of(context);
@@ -1636,6 +1660,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 previewIndices: previewIndices,
                 previewStates: previewStates,
                 previewRevealed: previewRevealed,
+                frameShown: frameShown,
                 isAiTurn: isAiTurn,
               ),
       ),
@@ -1653,6 +1678,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required Set<int> previewIndices,
     required List<DieVisualState>? previewStates,
     required bool previewRevealed,
+    required bool frameShown,
     required bool isAiTurn,
   }) {
     return LayoutBuilder(
@@ -1710,24 +1736,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // sens. Il couvre les dés retenus, qui occupent toujours les
           // premières places (voir [keptDisplayOrder]) — sa largeur suit donc
           // l'échange de 5 sans qu'aucun dé n'ait à changer de parent.
+          //
+          // Présent ou absent, jamais en fondu (voir [_previewFrameShown]) :
+          // recréé à chaque venue, il n'anime que ce qui se passe pendant
+          // qu'il est là, soit le seul échange de 5.
           children.add(
             Stack(
               children: [
                 Row(mainAxisSize: MainAxisSize.min, children: slots),
-                AnimatedPositioned(
-                  duration: _previewFadeDuration,
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: previewIndices.length * (size + _dieMargin),
-                  child: AnimatedOpacity(
-                    opacity: previewRevealed ? 1 : 0,
+                if (frameShown)
+                  AnimatedPositioned(
                     duration: _previewFadeDuration,
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: previewIndices.length * (size + _dieMargin),
                     child: const _RollFrameBorder(
                       key: ValueKey('kept-roll-frame-pending'),
                     ),
                   ),
-                ),
               ],
             ),
           );

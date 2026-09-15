@@ -103,6 +103,63 @@ void main() {
     expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));
   });
 
+  testWidgets('le liseré n\'arrive qu\'une fois les dés immobilisés ET posés dans la main',
+      (tester) async {
+    // Régression : le liseré s'affichait dès le lancer puis s'effaçait en
+    // fondu au suivant, ce qui faisait clignoter la zone pendant que les dés
+    // roulaient.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final repos = GameEngine.newGame(['A', 'B']).startTurn().copyWith(
+          activeTurn: const TurnState(diceToRoll: 5, bankedScore: 600, hasRolledThisTurn: true),
+        );
+    container.read(gameProvider.notifier).debugLoadState(
+          repos,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final frame = find.byKey(const ValueKey('kept-roll-frame-pending'));
+
+    // Un lancer arrive : les dés partent en rotation.
+    container.read(gameProvider.notifier).debugLoadState(
+          repos.copyWith(
+            activeTurn: TurnState(
+              diceToRoll: 5,
+              bankedScore: 600,
+              hasRolledThisTurn: true,
+              pendingRoll: analyzeRoll([1, 1, 5, 5, 3]),
+            ),
+          ),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pump();
+    expect(frame, findsNothing, reason: 'les dés roulent encore');
+
+    await tester.pump(DieWidget.rollAnimationDuration);
+    expect(frame, findsNothing, reason: 'immobilisés, mais toujours sur la piste');
+
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(frame, findsNothing, reason: 'leur fondu vers la main courante commence à peine');
+
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(frame, findsOneWidget, reason: 'les dés sont posés : le liseré peut les encadrer');
+
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('le liseré du lancer en cours se resserre quand on rend un 5', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
