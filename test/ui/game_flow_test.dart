@@ -92,6 +92,60 @@ void main() {
         reason: 'le bouton Continuer doit être centré dans la popup');
   });
 
+  testWidgets('la popup de craque montre la main perdue et le lancer qui l\'emporte', (tester) async {
+    // La popup recouvre les deux zones de l'écran au moment précis où le
+    // joueur veut voir ce que le craque lui coûte : elle les reprend donc.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 700, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        bankedScore: 200,
+        keptDiceThisTurn: const [
+          KeptDie(value: 1, points: 100, isExtended: false),
+          KeptDie(value: 1, points: 100, isExtended: false),
+        ],
+        pendingRoll: analyzeRoll([2, 3, 4]),
+        busted: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final inDialog = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(DieWidget),
+    );
+    final dice = tester.widgetList<DieWidget>(inDialog).toList();
+
+    expect(dice.map((d) => d.value), [1, 1, 2, 3, 4],
+        reason: 'la main courante d\'abord, puis les dés du lancer perdu');
+    expect(dice.take(2).map((d) => d.state), everyElement(DieVisualState.kept));
+    expect(dice.skip(2).map((d) => d.state), everyElement(DieVisualState.junk));
+
+    for (final label in ['Main courante', 'Piste']) {
+      expect(find.descendant(of: find.byType(AlertDialog), matching: find.text(label)), findsOneWidget,
+          reason: 'chaque rangée est rattachée à la zone d\'où elle vient');
+    }
+  });
+
   testWidgets('la popup de main héritée montre les dés déjà mis de côté, sur une seule ligne',
       (tester) async {
     final container = ProviderContainer();

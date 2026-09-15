@@ -869,6 +869,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Ce que le craque emporte : la main patiemment constituée, puis
+              // le lancer qui vient de tout annuler. Les deux zones de l'écran
+              // sont cachées par la popup au moment où le joueur voudrait
+              // justement les regarder.
+              if (turn.keptDiceThisTurn.isNotEmpty) ...[
+                _bustDiceCaption(l10n.currentHandZoneLabel),
+                _PopupDiceRow(
+                  values: [for (final d in turn.keptDiceThisTurn) d.value],
+                  states: _keptDiceStates(turn.keptDiceThisTurn),
+                  colorMode: ref.read(settingsProvider).diceColorMode,
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (turn.pendingRoll case final rolled?) ...[
+                _bustDiceCaption(l10n.currentRollZoneLabel),
+                _PopupDiceRow(
+                  values: rolled.faces,
+                  states: _classifyDiceForDisplay(rolled, 0),
+                  colorMode: ref.read(settingsProvider).diceColorMode,
+                ),
+                const SizedBox(height: 20),
+              ],
               if (_bustReasonExplanation(l10n, turn.bustReason) case final explanation?) ...[
                 Text(explanation, textAlign: TextAlign.center),
                 const SizedBox(height: 20),
@@ -884,6 +906,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Intitulé d'une des deux rangées de dés de la popup de craque : reprend le
+  /// nom de la zone d'où elles viennent, pour que le joueur les y rattache.
+  Widget _bustDiceCaption(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelSmall,
       ),
     );
   }
@@ -1373,8 +1408,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (engine.inheritedKeptDice.isNotEmpty) ...[
-                _InheritedKeptDiceRow(
-                  kept: engine.inheritedKeptDice,
+                _PopupDiceRow(
+                  values: [for (final d in engine.inheritedKeptDice) d.value],
+                  states: _keptDiceStates(engine.inheritedKeptDice),
                   colorMode: ref.read(settingsProvider).diceColorMode,
                 ),
                 const SizedBox(height: 12),
@@ -1667,21 +1703,51 @@ class _GameScreenState extends ConsumerState<GameScreen>
           );
         }
 
-        for (final faceIndex in pendingOrder) {
-          final visible = previewRevealed && previewIndices.contains(faceIndex);
-          children.add(
-            AnimatedOpacity(
-              opacity: visible ? 1 : 0,
-              duration: _previewFadeDuration,
-              child: DieWidget(
-                value: pendingAnalysis!.faces[faceIndex],
-                state: previewStates![faceIndex],
-                bodyColor: _diceColor(position),
-                size: size,
+        if (pendingOrder.isNotEmpty) {
+          final slots = <Widget>[];
+          for (final faceIndex in pendingOrder) {
+            final visible = previewRevealed && previewIndices.contains(faceIndex);
+            slots.add(
+              AnimatedOpacity(
+                opacity: visible ? 1 : 0,
+                duration: _previewFadeDuration,
+                child: DieWidget(
+                  value: pendingAnalysis!.faces[faceIndex],
+                  state: previewStates![faceIndex],
+                  bodyColor: _diceColor(position),
+                  size: size,
+                ),
               ),
+            );
+            position++;
+          }
+          // Le liseré du lancer en cours se pose PAR-DESSUS la rangée, sans
+          // la découper : ses dés gardent chacun leur place quoi qu'il arrive
+          // (composition fixe), ce dont dépendent les fondus dans les deux
+          // sens. Il couvre les dés retenus, qui occupent toujours les
+          // premières places (voir [keptDisplayOrder]) — sa largeur suit donc
+          // l'échange de 5 sans qu'aucun dé n'ait à changer de parent.
+          children.add(
+            Stack(
+              children: [
+                Row(mainAxisSize: MainAxisSize.min, children: slots),
+                AnimatedPositioned(
+                  duration: _previewFadeDuration,
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: previewIndices.length * (size + _dieMargin),
+                  child: AnimatedOpacity(
+                    opacity: previewRevealed ? 1 : 0,
+                    duration: _previewFadeDuration,
+                    child: const _RollFrameBorder(
+                      key: ValueKey('kept-roll-frame-pending'),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
-          position++;
         }
 
         return Row(
@@ -2306,14 +2372,37 @@ class _DiceZoneBody extends StatelessWidget {
   }
 }
 
-/// Liseré autour des dés issus d'un même lancer, pour distinguer les lancers
-/// successifs qui composent la main courante.
+/// Le seul trait du liseré d'un lancer, peint en surimpression : il ne prend
+/// aucune place dans la mise en page — la rangée remplit déjà toute la largeur
+/// disponible (voir [_fittedDieSize]), y ajouter la moindre épaisseur
+/// rétrécirait les dés — et se pose dans la marge propre des dés (voir
+/// [DieWidget.margin]).
 ///
-/// Peint en avant-plan (`foregroundDecoration`) : contrairement à une bordure
-/// de `decoration`, il n'occupe aucune place dans la mise en page — la rangée
-/// remplit déjà toute la largeur disponible (voir [_fittedDieSize]), y ajouter
-/// la moindre épaisseur rétrécirait les dés. Le trait se pose donc dans la
-/// marge propre des dés (voir [DieWidget.margin]).
+/// Le retrait latéral détache deux liserés voisins : les paquets se touchent,
+/// leurs traits se confondraient sinon en un seul.
+class _RollFrameBorder extends StatelessWidget {
+  const _RollFrameBorder({super.key});
+
+  static const double _inset = 2.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _inset),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+}
+
+/// Liseré autour des dés issus d'un même lancer déjà validé, pour distinguer
+/// les lancers successifs qui composent la main courante.
 class _KeptRollFrame extends StatelessWidget {
   final int index;
   final Widget child;
@@ -2322,32 +2411,36 @@ class _KeptRollFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Stack(
       key: ValueKey('kept-roll-frame-$index'),
-      foregroundDecoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: child,
+      children: [child, const Positioned.fill(child: _RollFrameBorder())],
     );
   }
 }
 
-/// Les dés déjà mis de côté par le joueur précédent, montrés dans la popup de
-/// main héritée sous le score annoncé : le joueur voit sur quoi porte le choix
-/// au lieu de devoir se fier au seul total.
+/// États d'affichage des dés déjà mis de côté : leur mise en évidence
+/// habituelle, la même dans les popups que dans la zone "Main courante".
+List<DieVisualState> _keptDiceStates(List<KeptDie> kept) => [
+      for (final d in kept) d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+    ];
+
+/// Une rangée de dés dans une popup : les dés hérités sous le score annoncé
+/// (le joueur voit sur quoi porte le choix au lieu de se fier au seul total),
+/// ou ce que le craque emporte (voir [_showBustDialog]).
 ///
 /// Ils tiennent toujours sur une seule ligne, quitte à rétrécir : une popup est
 /// bien plus étroite que les zones de l'écran de jeu, et la rangée s'y ajuste
 /// au lieu de déborder.
-class _InheritedKeptDiceRow extends StatelessWidget {
-  final List<KeptDie> kept;
+class _PopupDiceRow extends StatelessWidget {
+  final List<int> values;
+  final List<DieVisualState> states;
   final DiceColorMode colorMode;
 
-  const _InheritedKeptDiceRow({required this.kept, required this.colorMode});
+  const _PopupDiceRow({
+    required this.values,
+    required this.states,
+    required this.colorMode,
+  });
 
   /// Taille de confort, jamais dépassée même quand la place ne manque pas :
   /// ces dés informent, ils ne sont pas le sujet principal de la popup.
@@ -2361,14 +2454,14 @@ class _InheritedKeptDiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = ((_maxRowWidth / kept.length) - DieWidget.margin * 2).clamp(14.0, _maxSize);
+    final size = ((_maxRowWidth / values.length) - DieWidget.margin * 2).clamp(14.0, _maxSize);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        for (var i = 0; i < kept.length; i++)
+        for (var i = 0; i < values.length; i++)
           DieWidget(
-            value: kept[i].value,
-            state: kept[i].isExtended ? DieVisualState.extended : DieVisualState.kept,
+            value: values[i],
+            state: states[i],
             bodyColor: diceBodyColorFor(colorMode, i),
             size: size,
           ),

@@ -103,6 +103,47 @@ void main() {
     expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));
   });
 
+  testWidgets('le liseré du lancer en cours se resserre quand on rend un 5', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      activeTurn: TurnState(diceToRoll: 5, pendingRoll: analyzeRoll([1, 1, 5, 5, 3])),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Par défaut les deux 5 sont gardés : le liseré couvre quatre dés (deux
+    // as et deux 5), les dés non retenus restant en dehors.
+    final frame = find.byKey(const ValueKey('kept-roll-frame-pending'));
+    final widthForFour = tester.getSize(frame).width;
+    expect(widthForFour, greaterThan(0));
+
+    final dropdown = tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>));
+    dropdown.onChanged!(1);
+    await tester.pumpAndSettle();
+
+    // Un 5 rendu : le liseré ne couvre plus que trois dés, soit exactement
+    // une place de moins.
+    expect(tester.getSize(frame).width, closeTo(widthForFour * 3 / 4, 0.5),
+        reason: 'le liseré suit l\'échange de 5');
+  });
+
   testWidgets('la main courante encadre chaque lancer et y range les dés par figure', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
