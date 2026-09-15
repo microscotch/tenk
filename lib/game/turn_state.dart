@@ -15,16 +15,97 @@ class KeptDie {
   final int points;
   final bool isExtended;
 
-  const KeptDie({required this.value, required this.points, required this.isExtended});
+  /// Numéro du lancer de la main en cours dont ce dé provient (0 pour le
+  /// premier). Les dés gardés s'accumulent lancer après lancer dans une même
+  /// liste ; cet indice permet à l'UI de retrouver les paquets pour les
+  /// distinguer à l'écran (voir `_KeptRollFrame` dans `game_screen.dart`).
+  final int rollIndex;
+
+  const KeptDie({
+    required this.value,
+    required this.points,
+    required this.isExtended,
+    this.rollIndex = 0,
+  });
 }
+
+/// Rang d'affichage d'un dé gardé, d'après la figure dont il provient : les
+/// combinaisons (suite, quinte, carré, brelan) d'abord, puis les as isolés,
+/// puis les dés isolés que seule la règle d'extension fait marquer, et enfin
+/// les 5. À rang égal, les dés sont triés par valeur.
+const int _rankCombination = 0;
+const int _rankAce = 1;
+const int _rankExtended = 2;
+const int _rankFive = 3;
+const int _rankJunk = 4;
+
+int _figureRank(int value, int diceCount) {
+  if (diceCount >= 3) return _rankCombination;
+  if (value == 1) return _rankAce;
+  if (value == 5) return _rankFive;
+  return _rankExtended;
+}
+
+/// Ordre dans lequel les dés d'un lancer rejoignent la main courante :
+/// une permutation des indices de faces de [analysis], regroupée par figure
+/// (voir [_figureRank]) plutôt que dans l'ordre où les dés sont tombés.
+///
+/// Les dés qui ne marquent pas ferment la liste : ils ne sont jamais gardés,
+/// mais l'UI leur réserve une place dans son aperçu de migration vers la main
+/// courante, et cet ordre doit rester le même quelle que soit la sélection en
+/// cours pour qu'aucun dé ne saute de place quand elle change.
+List<int> keptDisplayOrder(RollAnalysis analysis) {
+  final keys = <(int rank, int value)>[];
+  if (analysis.groups.any((g) => g.isSuite)) {
+    // Une suite prend les 5 dés d'un bloc : tous du même rang, triés par
+    // valeur, soit l'ordre naturel 1-2-3-4-5.
+    keys.addAll([for (final f in analysis.faces) (_rankCombination, f)]);
+  } else {
+    final mandatoryRemaining = <int, int>{};
+    for (final g in analysis.mandatoryGroups) {
+      mandatoryRemaining[g.value] = (mandatoryRemaining[g.value] ?? 0) + g.diceCount;
+    }
+    final fivesGroup = analysis.declinableFives;
+    for (final f in analysis.faces) {
+      final remaining = mandatoryRemaining[f];
+      if (remaining != null && remaining > 0) {
+        final g = analysis.mandatoryGroups.firstWhere((g) => g.value == f);
+        keys.add((_figureRank(f, g.diceCount), f));
+        mandatoryRemaining[f] = remaining - 1;
+      } else if (fivesGroup != null && f == 5) {
+        keys.add((_rankFive, 5));
+      } else {
+        keys.add((_rankJunk, f));
+      }
+    }
+  }
+
+  final order = [for (var i = 0; i < analysis.faces.length; i++) i];
+  order.sort((a, b) {
+    final byRank = keys[a].$1.compareTo(keys[b].$1);
+    if (byRank != 0) return byRank;
+    final byValue = keys[a].$2.compareTo(keys[b].$2);
+    return byValue != 0 ? byValue : a.compareTo(b);
+  });
+  return order;
+}
+
+/// Numéro à donner au prochain paquet de dés gardés : les paquets sont
+/// ajoutés bout à bout, le dernier dé porte donc le numéro le plus élevé.
+int _nextRollIndex(List<KeptDie> kept) => kept.isEmpty ? 0 : kept.last.rollIndex + 1;
 
 /// Décompose les dés effectivement gardés lors de l'application d'une
 /// décision de garde (groupes obligatoires + 5 isolés conservés) en dés
-/// individuels, pour l'affichage permanent des dés gardés ce tour.
-List<KeptDie> _keptDiceFrom(RollAnalysis analysis, int declineFivesCount) {
+/// individuels, pour l'affichage permanent des dés gardés ce tour. Ils
+/// sortent regroupés par figure (voir [keptDisplayOrder]), pas dans l'ordre
+/// où ils sont tombés.
+List<KeptDie> _keptDiceFrom(RollAnalysis analysis, int declineFivesCount, int rollIndex) {
   if (analysis.groups.any((g) => g.isSuite)) {
     const perDie = 500 ~/ 5;
-    return [for (final f in analysis.faces) KeptDie(value: f, points: perDie, isExtended: false)];
+    return [
+      for (final i in keptDisplayOrder(analysis))
+        KeptDie(value: analysis.faces[i], points: perDie, isExtended: false, rollIndex: rollIndex),
+    ];
   }
 
   final mandatoryRemaining = <int, int>{};
@@ -35,7 +116,8 @@ List<KeptDie> _keptDiceFrom(RollAnalysis analysis, int declineFivesCount) {
   var declineRemaining = declineFivesCount;
 
   final result = <KeptDie>[];
-  for (final f in analysis.faces) {
+  for (final i in keptDisplayOrder(analysis)) {
+    final f = analysis.faces[i];
     final remaining = mandatoryRemaining[f];
     if (remaining != null && remaining > 0) {
       final g = analysis.mandatoryGroups.firstWhere((g) => g.value == f);
@@ -43,14 +125,14 @@ List<KeptDie> _keptDiceFrom(RollAnalysis analysis, int declineFivesCount) {
       // Un groupe obligatoire isolé (moins de 3 dés) de valeur non-as ne peut
       // exister que via la règle d'extension : ses points sont "temporaires".
       final isExtended = g.diceCount < 3 && g.value != 1;
-      result.add(KeptDie(value: f, points: perDie, isExtended: isExtended));
+      result.add(KeptDie(value: f, points: perDie, isExtended: isExtended, rollIndex: rollIndex));
       mandatoryRemaining[f] = remaining - 1;
     } else if (fivesGroup != null && f == 5) {
       if (declineRemaining > 0) {
         declineRemaining--;
       } else {
         final perDie = fivesGroup.points ~/ fivesGroup.diceCount;
-        result.add(KeptDie(value: 5, points: perDie, isExtended: perDie == 100));
+        result.add(KeptDie(value: 5, points: perDie, isExtended: perDie == 100, rollIndex: rollIndex));
       }
     }
   }
@@ -295,7 +377,12 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
     diceToRoll: hotDice ? 5 : diceRemaining,
     bankedScore: state.bankedScore + roundPoints,
     extendedValues: hotDice ? const {} : newExtended,
-    keptDiceThisTurn: hotDice ? const [] : [...state.keptDiceThisTurn, ..._keptDiceFrom(analysis, declineFivesCount)],
+    keptDiceThisTurn: hotDice
+        ? const []
+        : [
+            ...state.keptDiceThisTurn,
+            ..._keptDiceFrom(analysis, declineFivesCount, _nextRollIndex(state.keptDiceThisTurn)),
+          ],
     clearPendingRoll: true,
     mustContinue: hotDice,
   );

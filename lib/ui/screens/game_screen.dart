@@ -1580,8 +1580,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // quitte previewIndices disparaîtrait instantanément plutôt qu'en
     // fondu. kept.length + pendingCount ne dépasse jamais 5 (partition des
     // dés du tour entre déjà-gardés et en-attente).
-    final pendingCount = pendingAnalysis?.faces.length ?? 0;
-    final totalCount = kept.length + pendingCount;
+    //
+    // Ces places suivent l'ordre dans lequel les dés rejoindront la main
+    // (voir [keptDisplayOrder]), pas celui du lancer : sans ça, valider la
+    // garde les rebattrait d'un coup au moment où ils deviennent des dés
+    // gardés, déjà triés par le moteur.
+    final pendingOrder = pendingAnalysis == null
+        ? const <int>[]
+        : keptDisplayOrder(pendingAnalysis);
+    final totalCount = kept.length + pendingOrder.length;
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
@@ -1599,34 +1606,90 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ],
       child: _DiceZoneBody(
         child: totalCount == 0
-              ? const SizedBox.shrink()
-              : _fittedDiceRow(totalCount, (i, size) {
-                  if (i < kept.length) {
-                    final d = kept[i];
-                    return DieWidget(
-                      value: d.value,
-                      state: d.isExtended
-                          ? DieVisualState.extended
-                          : DieVisualState.kept,
-                      bodyColor: _diceColor(i),
-                      size: size,
-                    );
-                  }
-                  final faceIndex = i - kept.length;
-                  final visible =
-                      previewRevealed && previewIndices.contains(faceIndex);
-                  return AnimatedOpacity(
-                    opacity: visible ? 1 : 0,
-                    duration: _previewFadeDuration,
-                    child: DieWidget(
-                      value: pendingAnalysis!.faces[faceIndex],
-                      state: previewStates![faceIndex],
-                      bodyColor: _diceColor(i),
-                      size: size,
-                    ),
-                  );
-                }, isAiTurn: isAiTurn),
+            ? const SizedBox.shrink()
+            : _keptDiceRow(
+                kept: kept,
+                pendingAnalysis: pendingAnalysis,
+                pendingOrder: pendingOrder,
+                previewIndices: previewIndices,
+                previewStates: previewStates,
+                previewRevealed: previewRevealed,
+                isAiTurn: isAiTurn,
+              ),
       ),
+    );
+  }
+
+  /// Rangée de la main courante : les dés déjà gardés, un cadre par lancer
+  /// dont ils proviennent (voir [KeptDie.rollIndex] et [_KeptRollFrame]), puis
+  /// les places du lancer en attente — sans cadre tant qu'il n'est pas validé,
+  /// sa composition dépendant encore de la sélection en cours.
+  Widget _keptDiceRow({
+    required List<KeptDie> kept,
+    required RollAnalysis? pendingAnalysis,
+    required List<int> pendingOrder,
+    required Set<int> previewIndices,
+    required List<DieVisualState>? previewStates,
+    required bool previewRevealed,
+    required bool isAiTurn,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = isAiTurn
+            ? _aiFittedDieSize(constraints.maxWidth)
+            : _fittedDieSize(constraints.maxWidth);
+        // Rang du dé dans la rangée entière, pour que le mode panaché garde
+        // une couleur différente par dé d'un bout à l'autre de la main.
+        var position = 0;
+        final children = <Widget>[];
+
+        for (var i = 0; i < kept.length;) {
+          final rollIndex = kept[i].rollIndex;
+          final batch = <Widget>[];
+          while (i < kept.length && kept[i].rollIndex == rollIndex) {
+            final d = kept[i];
+            batch.add(
+              DieWidget(
+                value: d.value,
+                state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+                bodyColor: _diceColor(position),
+                size: size,
+              ),
+            );
+            position++;
+            i++;
+          }
+          children.add(
+            _KeptRollFrame(
+              index: children.length,
+              child: Row(mainAxisSize: MainAxisSize.min, children: batch),
+            ),
+          );
+        }
+
+        for (final faceIndex in pendingOrder) {
+          final visible = previewRevealed && previewIndices.contains(faceIndex);
+          children.add(
+            AnimatedOpacity(
+              opacity: visible ? 1 : 0,
+              duration: _previewFadeDuration,
+              child: DieWidget(
+                value: pendingAnalysis!.faces[faceIndex],
+                state: previewStates![faceIndex],
+                bodyColor: _diceColor(position),
+                size: size,
+              ),
+            ),
+          );
+          position++;
+        }
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: children,
+        );
+      },
     );
   }
 
@@ -2239,6 +2302,36 @@ class _DiceZoneBody extends StatelessWidget {
         height: _fittedDieSize(constraints.maxWidth) + _dieMargin,
         child: Center(child: child),
       ),
+    );
+  }
+}
+
+/// Liseré autour des dés issus d'un même lancer, pour distinguer les lancers
+/// successifs qui composent la main courante.
+///
+/// Peint en avant-plan (`foregroundDecoration`) : contrairement à une bordure
+/// de `decoration`, il n'occupe aucune place dans la mise en page — la rangée
+/// remplit déjà toute la largeur disponible (voir [_fittedDieSize]), y ajouter
+/// la moindre épaisseur rétrécirait les dés. Le trait se pose donc dans la
+/// marge propre des dés (voir [DieWidget.margin]).
+class _KeptRollFrame extends StatelessWidget {
+  final int index;
+  final Widget child;
+
+  const _KeptRollFrame({required this.index, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: ValueKey('kept-roll-frame-$index'),
+      foregroundDecoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: child,
     );
   }
 }

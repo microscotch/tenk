@@ -197,6 +197,34 @@ void main() {
       expect(state.keptDiceThisTurn.single.isExtended, isFalse);
     });
 
+    test('regroupe les dés par figure au lieu de l\'ordre où ils sont tombés', () {
+      // Les 5 encadrent les as dans le lancer : seul un regroupement par
+      // figure peut les rassembler, et il place les as devant.
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([5, 1, 3, 1, 5]));
+      state = applyKeepDecision(state);
+      expect(state.keptDiceThisTurn.map((d) => d.value), [1, 1, 5, 5]);
+    });
+
+    test('place la combinaison devant les as, quel que soit l\'ordre du lancer', () {
+      // Le 2 final ne marque pas : sans lui la main serait pleine et l'ordre
+      // n'aurait plus rien à montrer.
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 6, 6, 6, 2]));
+      state = applyKeepDecision(state);
+      expect(state.keptDiceThisTurn.map((d) => d.value), [6, 6, 6, 1],
+          reason: 'brelan d\'abord, puis l\'as');
+    });
+
+    test('numérote les dés par lancer d\'origine, pour les distinguer à l\'écran', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state);
+      expect(state.keptDiceThisTurn.map((d) => d.rollIndex), [0, 0]);
+
+      state = rollTurn(state, random: _QueueRandom([1, 5, 4]));
+      state = applyKeepDecision(state);
+      expect(state.keptDiceThisTurn.map((d) => d.rollIndex), [0, 0, 1, 1],
+          reason: 'le second lancer forme un paquet distinct du premier');
+    });
+
     test('est effacé par un reset de dés chauds : ne reflète que la main en cours', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 1, 3, 5]));
       state = applyKeepDecision(state, declineFivesCount: 1); // garde le brelan d'as, relance le 5
@@ -207,6 +235,25 @@ void main() {
       expect(state.mustContinue, isTrue);
       expect(state.keptDiceThisTurn, isEmpty,
           reason: 'les dés chauds démarrent une nouvelle main : l\'affichage ne doit plus montrer les anciens dés');
+    });
+  });
+
+  group('keptDisplayOrder', () {
+    test('groupe les figures et renvoie les dés non marquants en dernier', () {
+      // [5, 1, 3, 1, 5] : deux as (indices 1 et 3), deux 5 (0 et 4), un 3 qui
+      // ne marque pas (2). L'UI réserve une place à ce dernier dans son
+      // aperçu, d'où sa présence en fin de permutation.
+      expect(keptDisplayOrder(analyzeRoll([5, 1, 3, 1, 5])), [1, 3, 0, 4, 2]);
+    });
+
+    test('range un dé étendu devant les 5', () {
+      // Un brelan de 2 déjà encaissé rend le 2 isolé marquant (100 points) :
+      // il se range après les as et avant les 5.
+      expect(keptDisplayOrder(analyzeRoll([5, 2], extendedValues: {2})), [1, 0]);
+    });
+
+    test('rend une suite dans l\'ordre de ses valeurs', () {
+      expect(keptDisplayOrder(analyzeRoll([3, 5, 1, 4, 2])), [2, 4, 0, 3, 1]);
     });
   });
 

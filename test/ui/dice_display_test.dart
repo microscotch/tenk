@@ -103,6 +103,61 @@ void main() {
     expect(fiveStates, containsAll([DieVisualState.kept, DieVisualState.declined]));
   });
 
+  testWidgets('la main courante encadre chaque lancer et y range les dés par figure', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      // Rien en attente et un score déjà banquable : l'écran reste au repos,
+      // sans avancement automatique qui remplacerait cet état.
+      activeTurn: const TurnState(
+        diceToRoll: 1,
+        bankedScore: 600,
+        hasRolledThisTurn: true,
+        keptDiceThisTurn: [
+          KeptDie(value: 6, points: 200, isExtended: false),
+          KeptDie(value: 6, points: 200, isExtended: false),
+          KeptDie(value: 6, points: 200, isExtended: false),
+          KeptDie(value: 1, points: 100, isExtended: false),
+          KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
+        ],
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    List<int> diceInFrame(int index) => tester
+        .widgetList<DieWidget>(
+          find.descendant(
+            of: find.byKey(ValueKey('kept-roll-frame-$index')),
+            matching: find.byType(DieWidget),
+          ),
+        )
+        .map((d) => d.value)
+        .toList();
+
+    expect(diceInFrame(0), [6, 6, 6, 1],
+        reason: 'les dés du premier lancer, brelan devant l\'as');
+    expect(diceInFrame(1), [5], reason: 'le second lancer forme son propre cadre');
+    expect(find.byKey(const ValueKey('kept-roll-frame-2')), findsNothing,
+        reason: 'deux lancers, donc deux cadres');
+  });
+
   testWidgets('un dé étendu affiche une bordure rouge, dans le lancer comme dans les dés gardés', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
