@@ -936,8 +936,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// grille, plutôt qu'énoncées :
   /// - ligne encore vierge, le craque n'y pose qu'un tiret : le score suivi de
   ///   ce même tiret, "1106 : 900 –" ;
-  /// - ligne déjà tiretée, le craque la barre : le score barré suivi de ce
-  ///   qu'il en coûte, "1106 : 1500 (600)".
+  /// - ligne déjà tiretée, le craque la barre : le score barré, ce qu'il en
+  ///   coûte, et où le joueur retombe — "1106 : 1500, -600 => 900".
   ///
   /// La chute est projetée avec le [Player.applyBust] que
   /// [GameEngine.endBustedTurn] appliquera au clic, plutôt qu'avec une règle
@@ -971,7 +971,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 child: Icon(Icons.remove, size: 14, color: Colors.orange.shade300),
               ),
             ),
-          if (barred) TextSpan(text: ' (${before - after})'),
+          if (barred) TextSpan(text: ', -${before - after} => $after'),
         ],
       ),
       textAlign: TextAlign.center,

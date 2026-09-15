@@ -215,10 +215,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Les 700 sont barrés et le joueur retombe sur sa ligne précédente (0) :
-    // le score barré, suivi entre parenthèses de ce que ça lui coûte.
+    // le score barré, ce que ça lui coûte, et où il atterrit.
     final score = find.descendant(
       of: find.byType(AlertDialog),
-      matching: find.textContaining('209 : 700 (700)'),
+      matching: find.textContaining('209 : 700, -700 => 0'),
     );
     expect(score, findsOneWidget);
     expect(
@@ -228,8 +228,7 @@ void main() {
     );
 
     final barre = tester.widget<Text>(score);
-    final valeur = barre.textSpan!.toPlainText();
-    expect(valeur, '209 : 700 (700)');
+    expect(barre.textSpan!.toPlainText(), '209 : 700, -700 => 0');
     expect(
       (barre.textSpan! as TextSpan).children!.any((s) =>
           s is TextSpan && s.style?.decoration == TextDecoration.lineThrough && s.text == '700'),
