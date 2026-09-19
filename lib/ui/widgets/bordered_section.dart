@@ -23,6 +23,14 @@ class BorderedSection extends StatelessWidget {
   /// segment (non coloré, style par défaut de la puce).
   final List<InlineSpan>? labelSuffix;
 
+  /// Pastille incrustée à droite dans la bordure, symétrique de l'étiquette
+  /// [label] à gauche. Posée sur le trait, elle ne prend aucune place dans le
+  /// contenu : la rangée de dés d'une zone occupe déjà toute la largeur
+  /// disponible, et lui en retirer rétrécirait les dés (voir `_fittedDieSize`
+  /// dans `game_screen.dart`) — ce qui les désaccorderait au passage de ceux
+  /// de la zone "Piste", dont ils reprennent la taille en y migrant.
+  final Widget? trailingBadge;
+
   /// Marge interne du contenu, entre le trait de bordure et [child]. Le haut
   /// doit rester assez grand pour ne pas passer sous l'étiquette incrustée
   /// (voir le décalage `top: -10` plus bas).
@@ -43,6 +51,7 @@ class BorderedSection extends StatelessWidget {
     required this.child,
     this.fillAvailableSpace = true,
     this.labelSuffix,
+    this.trailingBadge,
     this.padding = const EdgeInsets.fromLTRB(16, 22, 16, 16),
     this.borderColor,
   });
@@ -91,6 +100,8 @@ class BorderedSection extends StatelessWidget {
               ),
             ),
           ),
+          if (trailingBadge != null)
+            Positioned(right: 16, top: -10, child: trailingBadge!),
         ],
       ),
     );

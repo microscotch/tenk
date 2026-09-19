@@ -20,6 +20,7 @@ import '../shake_detector.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
+import '../widgets/dice3d/dice_face_texture.dart' show accentColorFor;
 import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/replay_speed_control.dart';
@@ -1795,10 +1796,23 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ? const <int>[]
         : keptDisplayOrder(pendingAnalysis);
     final totalCount = kept.length + pendingOrder.length;
+    // Valeurs que la règle d'extension fait réellement monter à 100. La
+    // valeur 1 est filtrée : `extendedValues` la contient dès qu'un as isolé
+    // a été gardé (les as isolés sont des groupes obligatoires, voir
+    // `applyKeep`), mais un as vaut déjà 100 — l'annoncer n'apprendrait rien.
+    // Après ce filtre il reste au plus UNE valeur : la seule façon d'en
+    // ajouter une est un brelan/carré, qui laisse au plus 2 dés à relancer —
+    // de quoi ne jamais refaire de brelan avant la main pleine, qui remet
+    // `extendedValues` à zéro (voir `applyKeepDecision`).
+    final extended = turn.extendedValues.where((v) => v != 1).toList()..sort();
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
       padding: _diceZonePadding,
+      // Une main pleine efface la règle d'extension EN MÊME TEMPS que les dés
+      // gardés : la pastille et les dés rouges qu'elle explique disparaissent
+      // donc ensemble, sans traitement particulier ici.
+      trailingBadge: extended.isEmpty ? null : _extensionBadge(extended.first),
       // Le contour de la zone reprend la couleur du score qu'elle affiche :
       // vert dès que le joueur peut s'arrêter, rouge tant qu'il ne le peut
       // pas (voir `scoreColor` dans [build]).
@@ -1827,6 +1841,37 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 frameShown: frameShown,
                 isAiTurn: isAiTurn,
               ),
+      ),
+    );
+  }
+
+  /// Pastille "ce dé vaut 100" incrustée à droite dans la bordure de la zone
+  /// "Main courante" : le dé de la valeur étendue, dans son rouge de dé
+  /// étendu (voir [DieVisualState.extended]), suivi de ce qu'il rapporte
+  /// désormais. Elle reprend le cadre et le fond de l'étiquette incrustée à
+  /// gauche, dont elle est le pendant.
+  Widget _extensionBadge(int value) {
+    final scheme = Theme.of(context).colorScheme;
+    // Exactement le rouge du liseré d'un dé étendu : la pastille et les dés
+    // qu'elle explique ne peuvent pas diverger.
+    final color = accentColorFor(DieVisualState.extended);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        border: Border.all(color: color, width: 1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DieGlyph(value: value, state: DieVisualState.extended, size: 18),
+          const SizedBox(width: 4),
+          Text(
+            '= 100',
+            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+        ],
       ),
     );
   }

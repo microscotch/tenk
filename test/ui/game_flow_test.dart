@@ -471,6 +471,87 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn, isNull);
   });
 
+  /// Main courante : brelan de 4 encaissé au 1er lancer, puis un 4 isolé qui
+  /// vaut 100 au 2e. [extendedValues] reproduit ce qu'`applyKeep` aurait
+  /// accumulé, l'as isolé compris.
+  GameEngine extensionEngine({required Set<int> extendedValues}) {
+    return GameEngine.newGame(['A', 'B']).copyWith(
+      players: [
+        Player(name: 'A', totalScore: 2400, hasEntered: true),
+        Player(name: 'B', totalScore: 3150, hasEntered: true),
+      ],
+      currentPlayerIndex: 0,
+      activeTurn: TurnState(
+        diceToRoll: 1,
+        bankedScore: 500,
+        hasRolledThisTurn: true,
+        extendedValues: extendedValues,
+        keptDiceThisTurn: const [
+          KeptDie(value: 4, points: 400, isExtended: false, rollIndex: 0),
+          KeptDie(value: 4, points: 0, isExtended: false, rollIndex: 0),
+          KeptDie(value: 4, points: 0, isExtended: false, rollIndex: 0),
+          KeptDie(value: 4, points: 100, isExtended: true, rollIndex: 1),
+        ],
+      ),
+    );
+  }
+
+  Future<void> pumpGame(WidgetTester tester, ProviderContainer container) async {
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('la zone "Main courante" annonce le dé que l\'extension fait valoir 100',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(gameProvider.notifier).debugLoadState(
+          extensionEngine(extendedValues: const {4, 1}),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await pumpGame(tester, container);
+
+    expect(find.text('= 100'), findsOneWidget);
+    final glyph = tester.widget<DieGlyph>(find.byType(DieGlyph));
+    expect(glyph.value, 4, reason: 'la valeur étendue, celle du brelan encaissé');
+    expect(glyph.state, DieVisualState.extended,
+        reason: 'même rouge que les dés étendus qu\'elle explique');
+  });
+
+  testWidgets('un as isolé gardé n\'ajoute aucune annonce d\'extension', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    // `applyKeep` ajoute 1 à extendedValues dès qu'un as isolé est gardé (les
+    // as isolés sont des groupes obligatoires), mais un as vaut déjà 100 :
+    // l'annoncer n'apprendrait rien et ferait croire à un effet inexistant.
+    container.read(gameProvider.notifier).debugLoadState(
+          extensionEngine(extendedValues: const {1}),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await pumpGame(tester, container);
+
+    expect(find.byType(DieGlyph), findsNothing);
+    expect(find.text('= 100'), findsNothing);
+  });
+
+  testWidgets('sans extension en cours, la zone "Main courante" n\'annonce rien',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(gameProvider.notifier).debugLoadState(
+          extensionEngine(extendedValues: const {}),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await pumpGame(tester, container);
+
+    expect(find.byType(DieGlyph), findsNothing);
+  });
+
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
