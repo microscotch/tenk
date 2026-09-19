@@ -516,11 +516,10 @@ void main() {
         );
     await pumpGame(tester, container);
 
-    expect(find.text('= 100'), findsOneWidget);
-    final glyph = tester.widget<DieGlyph>(find.byType(DieGlyph));
-    expect(glyph.value, 4, reason: 'la valeur étendue, celle du brelan encaissé');
-    expect(glyph.state, DieVisualState.extended,
-        reason: 'même rouge que les dés étendus qu\'elle explique');
+    // La mention s'ajoute au libellé incrusté de la zone, à la suite du score
+    // et du minimum : "Main courante 500 (>200)  ·  4 = 100".
+    expect(find.textContaining('4 = 100'), findsOneWidget,
+        reason: 'la valeur étendue est celle du brelan encaissé');
   });
 
   testWidgets('un as isolé gardé n\'ajoute aucune annonce d\'extension', (tester) async {
@@ -535,8 +534,7 @@ void main() {
         );
     await pumpGame(tester, container);
 
-    expect(find.byType(DieGlyph), findsNothing);
-    expect(find.text('= 100'), findsNothing);
+    expect(find.textContaining('= 100'), findsNothing);
   });
 
   testWidgets('sans extension en cours, la zone "Main courante" n\'annonce rien',
@@ -549,7 +547,7 @@ void main() {
         );
     await pumpGame(tester, container);
 
-    expect(find.byType(DieGlyph), findsNothing);
+    expect(find.textContaining('= 100'), findsNothing);
   });
 
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {
