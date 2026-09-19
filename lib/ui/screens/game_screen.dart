@@ -1255,10 +1255,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final pendingAnalysis = turn.pendingRoll;
     var previewIndices = const <int>{};
     List<DieVisualState>? previewStates;
+    // Valeurs que la règle d'extension fait monter à 100, telles qu'il faut
+    // les AFFICHER. `turn.extendedValues` n'est mis à jour qu'à `applyKeep` :
+    // s'en contenter annoncerait l'extension un lancer trop tard, alors que
+    // le brelan/carré qui l'ouvre est déjà montré dans la main courante par
+    // l'aperçu de migration. On prend donc l'état hypothétique de la garde en
+    // cours, dès que cet aperçu est révélé — ce qui règle du même coup la
+    // main pleine, qui remet ces valeurs à zéro (une quinte n'annonce donc
+    // rien : elle vide la main au lieu de l'étendre).
+    var extendedValuesShown = turn.extendedValues;
     if (pendingAnalysis != null) {
+      final currentTotal = engine.currentPlayer.totalScore;
       final previewKeep = (!turn.busted && !isAiTurn)
           ? _selectedKeep
-          : _defaultKeepCount(turn, pendingAnalysis, currentTotal: engine.currentPlayer.totalScore);
+          : _defaultKeepCount(turn, pendingAnalysis, currentTotal: currentTotal);
       previewStates = _classifyDiceForDisplay(pendingAnalysis, previewKeep);
       previewIndices = {
         for (var i = 0; i < previewStates.length; i++)
@@ -1266,6 +1276,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
               previewStates[i] == DieVisualState.extended)
             i,
       };
+      if (_previewMoveRevealed && !turn.busted) {
+        // Mêmes bornes que la ligne de contrôle (voir
+        // [_buildHumanControlRow]) : une sélection hors bornes ferait échouer
+        // applyKeepDecision.
+        final minKeep = minKeepableFives(pendingAnalysis);
+        final maxKeep = maxKeepableFives(turn, pendingAnalysis, currentTotal: currentTotal);
+        final keep = previewKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
+        final declineCount = (pendingAnalysis.declinableFives?.diceCount ?? 0) - keep;
+        extendedValuesShown =
+            applyKeepDecision(turn, declineFivesCount: declineCount).extendedValues;
+      }
     }
 
     return Scaffold(
@@ -1330,6 +1351,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       previewRevealed: _previewMoveRevealed,
                       frameShown: _previewFrameShown,
                       isAiTurn: isAiTurn,
+                      extendedValues: extendedValuesShown,
                     ),
                     const SizedBox(height: 12),
                     Center(
@@ -1777,6 +1799,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required bool previewRevealed,
     required bool frameShown,
     required bool isAiTurn,
+    required Set<int> extendedValues,
   }) {
     final l10n = AppLocalizations.of(context);
     final kept = turn.keptDiceThisTurn;
@@ -1796,15 +1819,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ? const <int>[]
         : keptDisplayOrder(pendingAnalysis);
     final totalCount = kept.length + pendingOrder.length;
-    // Valeurs que la règle d'extension fait réellement monter à 100. La
-    // valeur 1 est filtrée : `extendedValues` la contient dès qu'un as isolé
-    // a été gardé (les as isolés sont des groupes obligatoires, voir
-    // `applyKeep`), mais un as vaut déjà 100 — l'annoncer n'apprendrait rien.
-    // Après ce filtre il reste au plus UNE valeur : la seule façon d'en
-    // ajouter une est un brelan/carré, qui laisse au plus 2 dés à relancer —
-    // de quoi ne jamais refaire de brelan avant la main pleine, qui remet
-    // `extendedValues` à zéro (voir `applyKeepDecision`).
-    final extended = turn.extendedValues.where((v) => v != 1).toList()..sort();
+    // [extendedValues] vient de `build` et reflète déjà la garde en cours, pas
+    // seulement ce que le moteur a encaissé. La valeur 1 est filtrée ici :
+    // `applyKeep` l'y met dès qu'un as isolé est gardé (les as isolés sont des
+    // groupes obligatoires), mais un as vaut déjà 100 — l'annoncer
+    // n'apprendrait rien. Après ce filtre il reste au plus UNE valeur : la
+    // seule façon d'en ajouter une est un brelan/carré, qui laisse au plus
+    // 2 dés à relancer — de quoi ne jamais refaire de brelan avant la main
+    // pleine, qui remet ces valeurs à zéro.
+    final extended = extendedValues.where((v) => v != 1).toList()..sort();
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,

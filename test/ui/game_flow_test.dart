@@ -550,6 +550,69 @@ void main() {
     expect(find.textContaining('= 100'), findsNothing);
   });
 
+  testWidgets('le brelan annonce son dé à 100 dès qu\'il rejoint la main, pas au lancer suivant',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Lancer EN ATTENTE de décision : le moteur n'a encore rien encaissé
+    // (extendedValues vide), mais l'aperçu montre déjà le brelan de 4 dans la
+    // main courante — l'annonce doit suivre les dés, pas le moteur.
+    var engine = GameEngine.newGame(['A', 'B']).copyWith(
+      players: [
+        Player(name: 'A', totalScore: 2400, hasEntered: true),
+        Player(name: 'B', totalScore: 3150, hasEntered: true),
+      ],
+      currentPlayerIndex: 0,
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        hasRolledThisTurn: true,
+        // Un 5 déclinable accompagné d'un dé non marquant : le joueur a un
+        // vrai choix, donc l'écran reste sur ce lancer au lieu d'enchaîner.
+        pendingRoll: analyzeRoll([4, 4, 4, 5, 2]),
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await pumpGame(tester, container);
+
+    expect(container.read(gameProvider)!.activeTurn!.extendedValues, isEmpty,
+        reason: 'la garde n\'est pas encore appliquée : le moteur ignore tout de l\'extension');
+    expect(find.textContaining('4 = 100'), findsOneWidget,
+        reason: 'l\'annonce suit les dés affichés dans la main, pas applyKeep');
+  });
+
+  testWidgets('un brelan qui complète la main n\'annonce aucune extension', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Trois dés restants, tous les trois scorants : c'est une main pleine,
+    // qui repart sur 5 dés neufs et efface la règle d'extension. L'annoncer
+    // pendant l'aperçu la ferait apparaître pour disparaître aussitôt.
+    var engine = GameEngine.newGame(['A', 'B']).copyWith(
+      players: [
+        Player(name: 'A', totalScore: 2400, hasEntered: true),
+        Player(name: 'B', totalScore: 3150, hasEntered: true),
+      ],
+      currentPlayerIndex: 0,
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        bankedScore: 300,
+        hasRolledThisTurn: true,
+        pendingRoll: analyzeRoll([4, 4, 4]),
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await pumpGame(tester, container);
+
+    expect(find.textContaining('= 100'), findsNothing);
+  });
+
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
