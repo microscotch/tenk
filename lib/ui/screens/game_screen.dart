@@ -1435,14 +1435,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   /// Popup dédiée proposant de reprendre la main laissée par le joueur
   /// précédent ou d'en repartir une neuve : annonce le score déjà acquis et
-  /// le nombre de dés hérités, et suffixe chaque bouton du pourcentage de
-  /// chance de marquer sur le tout premier lancer de cette option — même
-  /// calcul que le reste de l'écran (voir [_scorePercentLabel]), pour rester
-  /// cohérent avec le pourcentage déjà affiché sur le bouton "Lancer"
-  /// partout ailleurs.
+  /// le nombre de dés hérités, puis pose la question en deux icônes (voir
+  /// [_inheritedHandActions]), chacune sous-titrée du pourcentage de chance
+  /// de marquer sur le tout premier lancer de cette option — même calcul que
+  /// le reste de l'écran (voir [_scorePercentLabel]), pour rester cohérent
+  /// avec le pourcentage déjà affiché sur le bouton "Lancer" partout ailleurs.
   void _showInheritedHandDialog(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
-    final notifier = ref.read(gameProvider.notifier);
     final canResume = !engine.inheritedHandCannotBank;
     showDialog<void>(
       context: context,
@@ -1453,7 +1452,31 @@ class _GameScreenState extends ConsumerState<GameScreen>
       builder: (dialogContext) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text(l10n.inheritedHandDialogTitle, textAlign: TextAlign.center),
+          // La grille de score se consulte depuis la popup : elle est la
+          // seule action d'ici qui ne tranche PAS le choix, d'où sa place en
+          // coin de titre plutôt qu'au milieu des deux autres (voir
+          // [_inheritedHandActions]). Elle s'empile PAR-DESSUS la popup et on
+          // y revient — surtout pas un `pop`, qui laisserait le tour bloqué
+          // sans `activeTurn`, ce choix n'étant proposé nulle part ailleurs.
+          title: Row(
+            children: [
+              // Contrepoids de l'icône, pour que le titre reste centré sur la
+              // popup au lieu d'être décalé vers la gauche par elle.
+              const SizedBox(width: 48),
+              Expanded(
+                child: Text(l10n.inheritedHandDialogTitle, textAlign: TextAlign.center),
+              ),
+              IconButton(
+                icon: const Icon(Icons.grid_on),
+                tooltip: l10n.scoreGridLabel,
+                onPressed: () => Navigator.of(dialogContext).push(
+                  MaterialPageRoute(
+                    builder: (_) => ScoreGridScreen(players: engine.players),
+                  ),
+                ),
+              ),
+            ],
+          ),
           // Tout est empilé dans le contenu, boutons compris, plutôt que
           // laissé à `actions` : celui-ci aligne ses boutons à droite et ne
           // les met l'un sous l'autre que faute de place. Ici l'ordre de haut
@@ -1489,39 +1512,119 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 ),
               ],
               const SizedBox(height: 20),
-              if (canResume) ...[
-                FilledButton(
-                  onPressed: () {
-                    // Ces popups surgissent sous le doigt du joueur : un tap
-                    // déjà parti ne doit pas les valider au vol (voir
-                    // _lockControlsBriefly). Contrôle à l'exécution ici, la
-                    // popup étant une route à part que nos setState ne
-                    // redessinent pas.
-                    if (_controlsLocked) return;
-                    Navigator.of(dialogContext).pop();
-                    notifier.startTurn(useFullHand: false);
-                    notifier.roll();
-                  },
-                  child: Text(
-                    '${l10n.resumeHandButton}'
-                    '${_percentSuffix(engine.nextTurnDice, engine.inheritedExtendedValues)}',
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-              TextButton(
-                onPressed: () {
-                  if (_controlsLocked) return;
-                  Navigator.of(dialogContext).pop();
-                  notifier.startTurn(useFullHand: true);
-                  notifier.roll();
-                },
-                child: Text('${l10n.newHandButton}${_percentSuffix(5, const {})}'),
-              ),
+              _inheritedHandActions(dialogContext, engine, canResume: canResume),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Les deux actions qui tranchent le choix de main héritée, en icônes :
+  /// valider (reprendre la main laissée) et refuser (repartir à 5 dés neufs).
+  /// La consultation de la grille de score, elle, n'est pas ici mais en coin
+  /// de titre — elle ne tranche rien et ne dépile pas la popup (voir
+  /// [_showInheritedHandDialog]).
+  ///
+  /// Chaque icône porte dessous sa probabilité de marquer au tout premier
+  /// lancer de cette option (voir [_percentCaption]) : c'est la même
+  /// information que le pourcentage du bouton "Lancer" du reste de l'écran, et
+  /// la seule aide à la décision de cette popup. Elle ne s'affiche que si
+  /// l'option est activée (désactivée par défaut), les icônes se réduisant
+  /// alors à leur infobulle.
+  Widget _inheritedHandActions(
+    BuildContext dialogContext,
+    GameEngine engine, {
+    required bool canResume,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final notifier = ref.read(gameProvider.notifier);
+    final scheme = Theme.of(dialogContext).colorScheme;
+
+    Widget action({
+      required IconData icon,
+      required VoidCallback? onPressed,
+      required Color background,
+      required Color foreground,
+      required String percent,
+      required String tooltip,
+    }) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: onPressed,
+            tooltip: tooltip,
+            iconSize: 30,
+            // L'état désactivé garde un contour plein : sans lui, l'icône
+            // grisée sur le fond de la popup se lit comme ABSENTE plutôt que
+            // comme indisponible, ce qui rendrait la rangée fixe inutile.
+            style: IconButton.styleFrom(
+              backgroundColor: background,
+              foregroundColor: foreground,
+              disabledBackgroundColor: Colors.transparent,
+              disabledForegroundColor: scheme.outline,
+              side: onPressed == null ? BorderSide(color: scheme.outline) : null,
+              padding: const EdgeInsets.all(12),
+            ),
+            icon: Icon(icon),
+          ),
+          if (percent.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                percent,
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+              ),
+            ),
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        action(
+          icon: Icons.check,
+          // Reprise impossible : l'icône reste visible mais inerte, plutôt
+          // que de disparaître en recentrant l'autre — même arbitrage que
+          // [_buildInheritedChoiceRow] pour exactement la même situation.
+          onPressed: canResume
+              ? () {
+                  // Ces popups surgissent sous le doigt du joueur : un tap
+                  // déjà parti ne doit pas les valider au vol (voir
+                  // _lockControlsBriefly). Contrôle à l'exécution ici, la
+                  // popup étant une route à part que nos setState ne
+                  // redessinent pas.
+                  if (_controlsLocked) return;
+                  Navigator.of(dialogContext).pop();
+                  notifier.startTurn(useFullHand: false);
+                  notifier.roll();
+                }
+              : null,
+          background: scheme.primary,
+          foreground: scheme.onPrimary,
+          percent: canResume
+              ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues)
+              : '',
+          tooltip: l10n.resumeHandButton,
+        ),
+        const SizedBox(width: 32),
+        action(
+          icon: Icons.close,
+          onPressed: () {
+            if (_controlsLocked) return;
+            Navigator.of(dialogContext).pop();
+            notifier.startTurn(useFullHand: true);
+            notifier.roll();
+          },
+          background: scheme.secondary,
+          foreground: scheme.onSecondary,
+          percent: _percentCaption(5, const {}),
+          tooltip: l10n.newHandButton,
+        ),
+      ],
     );
   }
 
@@ -2369,13 +2472,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ? _scorePercentLabel(diceCount, extendedValues)
           : AppLocalizations.of(context).rollButton;
 
-  /// Suffixe " (76 %)" pour un bouton qui porte déjà son propre libellé (les
-  /// deux choix de la popup de main héritée), vide quand l'option est
-  /// désactivée. Lu avec `ref.read` : la popup est une route à part,
-  /// construite hors de notre `build`.
-  String _percentSuffix(int diceCount, Set<int> extendedValues) =>
+  /// Pourcentage nu "76 %" posé sous une icône d'action de la popup de main
+  /// héritée, vide quand l'option est désactivée. Lu avec `ref.read` : la
+  /// popup est une route à part, construite hors de notre `build`.
+  String _percentCaption(int diceCount, Set<int> extendedValues) =>
       ref.read(settingsProvider).showProbabilities
-          ? ' (${_scorePercentLabel(diceCount, extendedValues)})'
+          ? _scorePercentLabel(diceCount, extendedValues)
           : '';
 }
 

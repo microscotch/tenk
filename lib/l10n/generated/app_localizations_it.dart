@@ -236,7 +236,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bustContinueButton => 'Continuer';
 
   @override
-  String get inheritedHandDialogTitle => 'Main héritée';
+  String get inheritedHandDialogTitle => 'Reprendre ?';
 
   @override
   String inheritedHandDialogMessage(int score, int count) {

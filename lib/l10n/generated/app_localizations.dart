@@ -488,10 +488,10 @@ abstract class AppLocalizations {
   /// **'Continuer'**
   String get bustContinueButton;
 
-  /// Titre de la popup proposant de reprendre ou non la main laissée par le joueur précédent.
+  /// Titre de la popup proposant de reprendre ou non la main laissée par le joueur précédent : posé en question, les deux réponses étant les icônes valider/refuser qu'elle affiche.
   ///
   /// In fr, this message translates to:
-  /// **'Main héritée'**
+  /// **'Reprendre ?'**
   String get inheritedHandDialogTitle;
 
   /// Message de la popup de main héritée : score déjà acquis sur cette main, suivi du nombre de dés hérités.
@@ -500,13 +500,13 @@ abstract class AppLocalizations {
   /// **'{score}, {count, plural, one{{count} dé} other{{count} dés}}'**
   String inheritedHandDialogMessage(int score, int count);
 
-  /// Bouton de la popup de main héritée pour reprendre la main du joueur précédent.
+  /// Infobulle de l'icône "valider" de la popup de main héritée, qui reprend la main du joueur précédent.
   ///
   /// In fr, this message translates to:
   /// **'Reprendre la main'**
   String get resumeHandButton;
 
-  /// Bouton de la popup de main héritée pour repartir avec 5 dés neufs.
+  /// Infobulle de l'icône "refuser" de la popup de main héritée, qui repart avec 5 dés neufs.
   ///
   /// In fr, this message translates to:
   /// **'Nouvelle main'**

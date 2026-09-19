@@ -245,8 +245,8 @@
   "bustContinueButton": "Continuer",
   "@bustContinueButton": {"description": "Bouton de la popup de craque pour l'acquitter et passer la main."},
 
-  "inheritedHandDialogTitle": "Main héritée",
-  "@inheritedHandDialogTitle": {"description": "Titre de la popup proposant de reprendre ou non la main laissée par le joueur précédent."},
+  "inheritedHandDialogTitle": "Reprendre ?",
+  "@inheritedHandDialogTitle": {"description": "Titre de la popup proposant de reprendre ou non la main laissée par le joueur précédent : posé en question, les deux réponses étant les icônes valider/refuser qu'elle affiche."},
 
   "inheritedHandDialogMessage": "{score}, {count, plural, one{{count} dé} other{{count} dés}}",
   "@inheritedHandDialogMessage": {
@@ -255,10 +255,10 @@
   },
 
   "resumeHandButton": "Reprendre la main",
-  "@resumeHandButton": {"description": "Bouton de la popup de main héritée pour reprendre la main du joueur précédent."},
+  "@resumeHandButton": {"description": "Infobulle de l'icône \"valider\" de la popup de main héritée, qui reprend la main du joueur précédent."},
 
   "newHandButton": "Nouvelle main",
-  "@newHandButton": {"description": "Bouton de la popup de main héritée pour repartir avec 5 dés neufs."},
+  "@newHandButton": {"description": "Infobulle de l'icône \"refuser\" de la popup de main héritée, qui repart avec 5 dés neufs."},
 
   "failureBelowMinimum": "Score insuffisant pour s'arrêter.",
   "@failureBelowMinimum": {"description": "Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis."},
