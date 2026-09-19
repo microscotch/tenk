@@ -12,6 +12,7 @@ import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
+import 'package:le10000/ui/screens/score_grid_screen.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
 
@@ -421,6 +422,53 @@ void main() {
 
     expect(find.byType(AlertDialog), findsOneWidget,
         reason: 'sans ce choix, activeTurn reste null et plus rien n\'est jouable');
+  });
+
+  testWidgets('la grille de score s\'ouvre PAR-DESSUS la popup de main héritée, sans trancher le choix',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 3,
+      inheritedScore: 300,
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // L'icône de la popup, pas celle de l'AppBar (même infobulle, à dessein :
+    // c'est la même destination).
+    await tester.tap(find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byTooltip('Grille des scores'),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScoreGridScreen), findsOneWidget);
+    expect(container.read(gameProvider)!.activeTurn, isNull,
+        reason: 'consulter la grille ne démarre surtout pas le tour');
+
+    // Le PopScope(canPop: false) de la popup ne doit pas retenir la grille
+    // empilée par-dessus : sinon le joueur y resterait coincé.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScoreGridScreen), findsNothing);
+    expect(find.byType(AlertDialog), findsOneWidget,
+        reason: 'on revient sur la popup, le choix est toujours à faire');
+    expect(container.read(gameProvider)!.activeTurn, isNull);
   });
 
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {
