@@ -82,8 +82,20 @@
   "startGameButton": "Commencer la partie",
   "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},
 
-  "newGameSectionLabel": "Nouvelle run...",
-  "@newGameSectionLabel": {"description": "Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie."},
+  "newGameSectionLabel": "Nouvelle partie",
+  "@newGameSectionLabel": {"description": "Bouton de l'écran d'accueil ouvrant la création d'une partie, et titre de cet écran de création."},
+
+  "resumeGamesButton": "Reprise de parties",
+  "@resumeGamesButton": {"description": "Bouton de l'écran d'accueil ouvrant la liste des parties interrompues ; inerte tant qu'il n'y en a aucune."},
+
+  "managePlayersButton": "Gestion des joueurs",
+  "@managePlayersButton": {"description": "Bouton de l'écran d'accueil ouvrant la base des joueurs humains (création, édition, suppression)."},
+
+  "finishedGamesButton": "Dernières parties terminées",
+  "@finishedGamesButton": {"description": "Bouton de l'écran d'accueil ouvrant la liste des parties terminées, rejouables en mode spectateur."},
+
+  "statisticsButton": "Statistiques",
+  "@statisticsButton": {"description": "Bouton de l'écran d'accueil ouvrant la consultation des statistiques des joueurs."},
 
   "pausedGamesSectionLabel": "Runs interrompues ({count})",
   "@pausedGamesSectionLabel": {

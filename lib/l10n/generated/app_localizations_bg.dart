@@ -90,6 +90,18 @@ class AppLocalizationsBg extends AppLocalizations {
   String get newGameSectionLabel => 'Нов run...';
 
   @override
+  String get resumeGamesButton => 'Reprise de parties';
+
+  @override
+  String get managePlayersButton => 'Gestion des joueurs';
+
+  @override
+  String get finishedGamesButton => 'Dernières parties terminées';
+
+  @override
+  String get statisticsButton => 'Statistiques';
+
+  @override
   String pausedGamesSectionLabel(int count) {
     return 'Прекъснати runs ($count)';
   }

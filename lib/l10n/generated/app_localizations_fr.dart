@@ -87,7 +87,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startGameButton => 'Commencer la partie';
 
   @override
-  String get newGameSectionLabel => 'Nouvelle run...';
+  String get newGameSectionLabel => 'Nouvelle partie';
+
+  @override
+  String get resumeGamesButton => 'Reprise de parties';
+
+  @override
+  String get managePlayersButton => 'Gestion des joueurs';
+
+  @override
+  String get finishedGamesButton => 'Dernières parties terminées';
+
+  @override
+  String get statisticsButton => 'Statistiques';
 
   @override
   String pausedGamesSectionLabel(int count) {

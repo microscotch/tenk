@@ -7,18 +7,20 @@ import '../../state/game_save_store.dart';
 import '../route_observer.dart';
 import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
-import '../widgets/bordered_section.dart';
-import '../widgets/finished_games_list.dart';
-import '../widgets/paused_games_list.dart';
+import 'finished_games_screen.dart';
 import 'game_screen.dart';
 import 'new_game_screen.dart';
+import 'paused_games_screen.dart';
 import 'rules_screen.dart';
 import 'settings_screen.dart';
 
-/// Écran d'accueil : un bouton pour démarrer une nouvelle partie (ouvre
-/// [NewGameScreen]) suivi de 2 zones toujours visibles, réparties également
-/// sur le reste de l'écran — les runs interrompus (reprenables) et les
-/// runs terminés (rejouables en mode spectateur temporisé).
+/// Écran d'accueil : cinq boutons, et rien d'autre.
+///
+/// Les parties interrompues et les parties terminées s'affichaient ici en
+/// permanence, chacune dans sa zone bordurée ; l'écran en était chargé au point
+/// de noyer le seul geste courant, démarrer une partie. Chaque liste vit
+/// désormais derrière son bouton, dans un écran dédié qui la réutilise telle
+/// quelle ([PausedGamesScreen], [FinishedGamesScreen]).
 class SetupScreen extends ConsumerStatefulWidget {
   /// Nom de route de l'écran d'accueil, posé par [SplashScreen] au moment de
   /// le pousser. Revenir ici depuis n'importe quelle profondeur se fait par
@@ -93,15 +95,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     super.dispose();
   }
 
-  void _openNewGame() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NewGameScreen()));
+  void _openNewGame() => _open(const NewGameScreen());
+
+  void _open(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // Seul le compte des parties en pause sert encore ici : il décide si le
+    // bouton de reprise est actif. Les deux écrans dédiés titrent avec le leur.
     final pausedCount = ref.watch(pausedGamesProvider).value?.length ?? 0;
-    final finishedCount = ref.watch(finishedGamesProvider).value?.length ?? 0;
     return Scaffold(
       appBar: AppBar(
         title: const AppTitle(),
@@ -123,32 +128,54 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
           ),
         ],
       ),
+      // Cinq boutons, et rien d'autre : les deux listes qui s'affichaient ici en
+      // permanence vivent désormais derrière le leur (voir [PausedGamesScreen]
+      // et [FinishedGamesScreen]), qui les réutilisent telles quelles.
+      //
+      // Les boutons des fonctions pas encore écrites sont rendus quand même,
+      // inertes : la disposition de l'écran est ainsi figée dès maintenant, et
+      // les activer ne coûtera qu'une ligne.
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FilledButton.icon(
-                onPressed: _openNewGame,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.newGameSectionLabel),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: BorderedSection(
-                  label: l10n.pausedGamesSectionLabel(pausedCount),
-                  child: const PausedGamesList(),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FilledButton.icon(
+                  onPressed: _openNewGame,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.newGameSectionLabel),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: BorderedSection(
-                  label: l10n.finishedRunsSectionLabel(finishedCount),
-                  child: const FinishedGamesList(),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  // Inerte tant qu'il n'y a rien à reprendre : ouvrir un écran
+                  // sur une liste vide n'apprendrait rien au joueur.
+                  onPressed: pausedCount == 0 ? null : () => _open(const PausedGamesScreen()),
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(l10n.resumeGamesButton),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: null,
+                  icon: const Icon(Icons.group),
+                  label: Text(l10n.managePlayersButton),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _open(const FinishedGamesScreen()),
+                  icon: const Icon(Icons.history),
+                  label: Text(l10n.finishedGamesButton),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: null,
+                  icon: const Icon(Icons.bar_chart),
+                  label: Text(l10n.statisticsButton),
+                ),
+              ],
+            ),
           ),
         ),
       ),

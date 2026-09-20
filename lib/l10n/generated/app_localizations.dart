@@ -254,11 +254,35 @@ abstract class AppLocalizations {
   /// **'Commencer la partie'**
   String get startGameButton;
 
-  /// Libellé de la zone de l'écran d'accueil contenant la configuration d'une nouvelle partie.
+  /// Bouton de l'écran d'accueil ouvrant la création d'une partie, et titre de cet écran de création.
   ///
   /// In fr, this message translates to:
-  /// **'Nouvelle run...'**
+  /// **'Nouvelle partie'**
   String get newGameSectionLabel;
+
+  /// Bouton de l'écran d'accueil ouvrant la liste des parties interrompues ; inerte tant qu'il n'y en a aucune.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprise de parties'**
+  String get resumeGamesButton;
+
+  /// Bouton de l'écran d'accueil ouvrant la base des joueurs humains (création, édition, suppression).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gestion des joueurs'**
+  String get managePlayersButton;
+
+  /// Bouton de l'écran d'accueil ouvrant la liste des parties terminées, rejouables en mode spectateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernières parties terminées'**
+  String get finishedGamesButton;
+
+  /// Bouton de l'écran d'accueil ouvrant la consultation des statistiques des joueurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques'**
+  String get statisticsButton;
 
   /// Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables, avec leur nombre.
   ///
