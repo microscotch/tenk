@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
+import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/finished_games_screen.dart';
 import 'package:le10000/ui/screens/new_game_screen.dart';
 import 'package:le10000/ui/screens/paused_games_screen.dart';
+import 'package:le10000/ui/screens/players_screen.dart';
 import 'package:le10000/ui/screens/setup_screen.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
+import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
 
 /// L'écran d'accueil, réduit à cinq boutons : les deux listes qui s'y
@@ -27,6 +30,7 @@ void main() {
       overrides: [
         gameSaveStoreProvider.overrideWithValue(paused),
         archivedGameSaveStoreProvider.overrideWithValue(archived),
+        playerStoreProvider.overrideWithValue(FakePlayerStore()),
       ],
     );
     addTearDown(container.dispose);
@@ -142,10 +146,25 @@ void main() {
     expect(find.byType(NewGameScreen), findsOneWidget);
   });
 
-  testWidgets('les deux fonctions pas encore écrites sont visibles mais inertes', (tester) async {
+  testWidgets('la gestion des joueurs s\'ouvre depuis l\'accueil', (tester) async {
     await pumpHome(tester);
 
-    expect(isEnabled(tester, 'Gestion des joueurs'), isFalse);
-    expect(isEnabled(tester, 'Statistiques'), isFalse);
+    await tester.tap(find.text('Gestion des joueurs'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PlayersScreen), findsOneWidget);
+  });
+
+  testWidgets('les cinq boutons sont tous actifs', (tester) async {
+    await pumpHome(tester);
+
+    for (final label in const [
+      'Nouvelle partie',
+      'Gestion des joueurs',
+      'Dernières parties terminées',
+      'Statistiques',
+    ]) {
+      expect(isEnabled(tester, label), isTrue, reason: '$label doit être actif');
+    }
   });
 }

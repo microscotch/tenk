@@ -102,6 +102,173 @@ class AppLocalizationsBg extends AppLocalizations {
   String get statisticsButton => 'Statistiques';
 
   @override
+  String playersScreenTitle(int count) {
+    return 'Joueurs ($count)';
+  }
+
+  @override
+  String get addPlayerTooltip => 'Ajouter un joueur';
+
+  @override
+  String get noPlayersMessage => 'Aucun joueur enregistré pour l\'instant.';
+
+  @override
+  String get newPlayerTitle => 'Nouveau joueur';
+
+  @override
+  String get editPlayerTitle => 'Modifier le joueur';
+
+  @override
+  String get playerNameLabel => 'Nom';
+
+  @override
+  String get playerNicknameLabel => 'Surnom (facultatif)';
+
+  @override
+  String get playerNameRequiredError => 'Le nom est obligatoire.';
+
+  @override
+  String get playerNameTakenError =>
+      'Ce nom est déjà utilisé par un autre joueur.';
+
+  @override
+  String get deletePlayerConfirmTitle => 'Supprimer ce joueur ?';
+
+  @override
+  String deletePlayerConfirmMessage(String name) {
+    return 'La fiche de « $name » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.';
+  }
+
+  @override
+  String get statsSectionTime => 'Temps de jeu';
+
+  @override
+  String get statsSectionGames => 'Parties';
+
+  @override
+  String get statsSectionFigures => 'Figures';
+
+  @override
+  String get statsSectionMisc => 'Faits d\'armes';
+
+  @override
+  String get statsTotalTime => 'Total';
+
+  @override
+  String get statsAverageTime => 'Moyenne par partie';
+
+  @override
+  String get statsShortestTime => 'La plus courte';
+
+  @override
+  String get statsLongestTime => 'La plus longue';
+
+  @override
+  String get statsGamesPlayed => 'Jouées';
+
+  @override
+  String get statsGamesWon => 'Gagnées';
+
+  @override
+  String get statsGamesLost => 'Perdues';
+
+  @override
+  String get statsLoneAces => 'As isolés gardés';
+
+  @override
+  String get statsLoneFives => '5 isolés gardés';
+
+  @override
+  String get statsBrelans => 'Brelans';
+
+  @override
+  String get statsCarres => 'Carrés';
+
+  @override
+  String get statsQuintes => 'Quintes';
+
+  @override
+  String get statsSuites => 'Suites';
+
+  @override
+  String get statsSmallSuites => 'dont petites';
+
+  @override
+  String get statsBigSuites => 'dont grandes';
+
+  @override
+  String get statsAceQuints => 'Quintes d\'as';
+
+  @override
+  String get statsAceQuintsWon => 'dont gagnantes';
+
+  @override
+  String get statsBestTurn => 'Meilleur tour';
+
+  @override
+  String get statsHotDiceRun => 'Mains pleines d\'affilée';
+
+  @override
+  String get statsBusts => 'Craquages';
+
+  @override
+  String get statsLongestBustStreak => 'dont série la plus longue';
+
+  @override
+  String get statsSelfBars => 'Auto-barrés';
+
+  @override
+  String get statsBarsInflicted => 'Barrés infligés';
+
+  @override
+  String get statsRecordsTitle => 'Records';
+
+  @override
+  String get statsNoRecordYet => 'Aucun record pour l\'instant.';
+
+  @override
+  String statsValueWithHolder(String value, String holders) {
+    return '$value — $holders';
+  }
+
+  @override
+  String get pickPlayersTitle => 'Choisir des joueurs';
+
+  @override
+  String get addHumanTooltip => 'Ajouter un joueur';
+
+  @override
+  String get addBotTooltip => 'Ajouter un bot';
+
+  @override
+  String get createPlayerButton => 'Nouveau joueur';
+
+  @override
+  String get noPlayersToPickMessage =>
+      'Aucun joueur en base. Créez-en un pour commencer.';
+
+  @override
+  String get botLabel => 'Bot';
+
+  @override
+  String get removeSeatTooltip => 'Retirer de la partie';
+
+  @override
+  String get notEnoughPlayersMessage => 'Il faut au moins deux joueurs.';
+
+  @override
+  String playerGamesSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parties jouées',
+      one: '$count partie jouée',
+      zero: 'Aucune partie jouée',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String pausedGamesSectionLabel(int count) {
     return 'Прекъснати runs ($count)';
   }

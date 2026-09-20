@@ -12,6 +12,7 @@ import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
+import '../../state/player_providers.dart';
 import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
@@ -2406,7 +2407,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required Widget primary,
     Widget? trailing,
   }) {
-    final rightHanded = ref.watch(settingsProvider).rightHanded;
+    // La latéralité du joueur du siège courant l'emporte sur le réglage
+    // d'appareil, qui ne sert plus que de repli (bot, partie antérieure à la
+    // base de joueurs). Voir [currentSeatRightHandedProvider].
+    final rightHanded = ref.watch(currentSeatRightHandedProvider);
     final left = rightHanded ? trailing : leading;
     final right = rightHanded ? leading : trailing;
     return SizedBox(

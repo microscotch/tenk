@@ -11,8 +11,10 @@ import 'finished_games_screen.dart';
 import 'game_screen.dart';
 import 'new_game_screen.dart';
 import 'paused_games_screen.dart';
+import 'players_screen.dart';
 import 'rules_screen.dart';
 import 'settings_screen.dart';
+import 'statistics_screen.dart';
 
 /// Écran d'accueil : cinq boutons, et rien d'autre.
 ///
@@ -158,7 +160,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: null,
+                  onPressed: () => _open(const PlayersScreen()),
                   icon: const Icon(Icons.group),
                   label: Text(l10n.managePlayersButton),
                 ),
@@ -170,7 +172,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: null,
+                  onPressed: () => _open(const StatisticsScreen()),
                   icon: const Icon(Icons.bar_chart),
                   label: Text(l10n.statisticsButton),
                 ),

@@ -97,6 +97,168 @@
   "statisticsButton": "Statistiques",
   "@statisticsButton": {"description": "Bouton de l'écran d'accueil ouvrant la consultation des statistiques des joueurs."},
 
+  "playersScreenTitle": "Joueurs ({count})",
+  "@playersScreenTitle": {
+    "description": "Titre de l'écran de gestion des joueurs, avec le nombre de fiches en base.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "addPlayerTooltip": "Ajouter un joueur",
+  "@addPlayerTooltip": {"description": "Infobulle du bouton de création d'une fiche joueur."},
+
+  "noPlayersMessage": "Aucun joueur enregistré pour l'instant.",
+  "@noPlayersMessage": {"description": "Message affiché quand la base de joueurs est vide."},
+
+  "newPlayerTitle": "Nouveau joueur",
+  "@newPlayerTitle": {"description": "Titre de l'écran de création d'une fiche joueur."},
+
+  "editPlayerTitle": "Modifier le joueur",
+  "@editPlayerTitle": {"description": "Titre de l'écran d'édition d'une fiche joueur existante."},
+
+  "playerNameLabel": "Nom",
+  "@playerNameLabel": {"description": "Libellé du champ de nom d'une fiche joueur (obligatoire, unique)."},
+
+  "playerNicknameLabel": "Surnom (facultatif)",
+  "@playerNicknameLabel": {"description": "Libellé du champ de surnom d'une fiche joueur."},
+
+  "playerNameRequiredError": "Le nom est obligatoire.",
+  "@playerNameRequiredError": {"description": "Erreur affichée quand le champ de nom d'une fiche joueur est vide."},
+
+  "playerNameTakenError": "Ce nom est déjà utilisé par un autre joueur.",
+  "@playerNameTakenError": {"description": "Erreur affichée quand le nom saisi correspond à une fiche existante (casse et accents ignorés)."},
+
+  "deletePlayerConfirmTitle": "Supprimer ce joueur ?",
+  "@deletePlayerConfirmTitle": {"description": "Titre de la boîte de dialogue confirmant la suppression d'une fiche joueur."},
+
+  "deletePlayerConfirmMessage": "La fiche de « {name} » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.",
+  "@deletePlayerConfirmMessage": {
+    "description": "Message de la boîte de dialogue confirmant la suppression d'une fiche joueur.",
+    "placeholders": {"name": {"type": "String"}}
+  },
+
+  "statsSectionTime": "Temps de jeu",
+  "@statsSectionTime": {"description": "Titre de la section des statistiques de durée."},
+
+  "statsSectionGames": "Parties",
+  "@statsSectionGames": {"description": "Titre de la section des statistiques de parties jouées, gagnées, perdues."},
+
+  "statsSectionFigures": "Figures",
+  "@statsSectionFigures": {"description": "Titre de la section des statistiques de combinaisons (brelans, carrés, quintes, suites)."},
+
+  "statsSectionMisc": "Faits d'armes",
+  "@statsSectionMisc": {"description": "Titre de la section des statistiques diverses : meilleur tour, mains pleines, craquages, barrés."},
+
+  "statsTotalTime": "Total",
+  "@statsTotalTime": {"description": "Libellé du temps de jeu cumulé."},
+
+  "statsAverageTime": "Moyenne par partie",
+  "@statsAverageTime": {"description": "Libellé de la durée moyenne d'une partie."},
+
+  "statsShortestTime": "La plus courte",
+  "@statsShortestTime": {"description": "Libellé de la partie la plus courte."},
+
+  "statsLongestTime": "La plus longue",
+  "@statsLongestTime": {"description": "Libellé de la partie la plus longue."},
+
+  "statsGamesPlayed": "Jouées",
+  "@statsGamesPlayed": {"description": "Libellé du nombre de parties jouées."},
+
+  "statsGamesWon": "Gagnées",
+  "@statsGamesWon": {"description": "Libellé du nombre de parties gagnées."},
+
+  "statsGamesLost": "Perdues",
+  "@statsGamesLost": {"description": "Libellé du nombre de parties perdues."},
+
+  "statsLoneAces": "As isolés gardés",
+  "@statsLoneAces": {"description": "Libellé du nombre d'as isolés gardés."},
+
+  "statsLoneFives": "5 isolés gardés",
+  "@statsLoneFives": {"description": "Libellé du nombre de 5 isolés gardés."},
+
+  "statsBrelans": "Brelans",
+  "@statsBrelans": {"description": "Libellé du nombre de brelans."},
+
+  "statsCarres": "Carrés",
+  "@statsCarres": {"description": "Libellé du nombre de carrés."},
+
+  "statsQuintes": "Quintes",
+  "@statsQuintes": {"description": "Libellé du nombre de quintes."},
+
+  "statsSuites": "Suites",
+  "@statsSuites": {"description": "Libellé du nombre de suites (petites et grandes)."},
+
+  "statsSmallSuites": "dont petites",
+  "@statsSmallSuites": {"description": "Libellé du nombre de petites suites (1-2-3-4-5)."},
+
+  "statsBigSuites": "dont grandes",
+  "@statsBigSuites": {"description": "Libellé du nombre de grandes suites (2-3-4-5-6)."},
+
+  "statsAceQuints": "Quintes d'as",
+  "@statsAceQuints": {"description": "Libellé du nombre de quintes d'as (10000 d'un coup)."},
+
+  "statsAceQuintsWon": "dont gagnantes",
+  "@statsAceQuintsWon": {"description": "Libellé du nombre de quintes d'as tombées pile sur la cible."},
+
+  "statsBestTurn": "Meilleur tour",
+  "@statsBestTurn": {"description": "Libellé du meilleur score banqué en un tour."},
+
+  "statsHotDiceRun": "Mains pleines d'affilée",
+  "@statsHotDiceRun": {"description": "Libellé de la plus longue série de mains pleines dans un tour."},
+
+  "statsBusts": "Craquages",
+  "@statsBusts": {"description": "Libellé du nombre total de craquages."},
+
+  "statsLongestBustStreak": "dont série la plus longue",
+  "@statsLongestBustStreak": {"description": "Libellé de la plus longue série de craquages consécutifs."},
+
+  "statsSelfBars": "Auto-barrés",
+  "@statsSelfBars": {"description": "Libellé du nombre de lignes barrées par son propre second craque consécutif."},
+
+  "statsBarsInflicted": "Barrés infligés",
+  "@statsBarsInflicted": {"description": "Libellé du nombre de lignes barrées chez un adversaire par collision de score."},
+
+  "statsRecordsTitle": "Records",
+  "@statsRecordsTitle": {"description": "Titre de la section listant les meilleures performances tous joueurs confondus."},
+
+  "statsNoRecordYet": "Aucun record pour l'instant.",
+  "@statsNoRecordYet": {"description": "Message affiché quand aucune partie n'a encore été jouée."},
+
+  "statsValueWithHolder": "{value} — {holders}",
+  "@statsValueWithHolder": {
+    "description": "Une ligne de record : la valeur, puis le ou les joueurs qui la détiennent.",
+    "placeholders": {"value": {"type": "String"}, "holders": {"type": "String"}}
+  },
+
+  "pickPlayersTitle": "Choisir des joueurs",
+  "@pickPlayersTitle": {"description": "Titre de l'écran de sélection multiple de joueurs pour une nouvelle partie."},
+
+  "addHumanTooltip": "Ajouter un joueur",
+  "@addHumanTooltip": {"description": "Infobulle de l'icône ajoutant des joueurs humains à la partie en préparation."},
+
+  "addBotTooltip": "Ajouter un bot",
+  "@addBotTooltip": {"description": "Infobulle de l'icône ajoutant un adversaire IA à la partie en préparation."},
+
+  "createPlayerButton": "Nouveau joueur",
+  "@createPlayerButton": {"description": "Bouton de l'écran de sélection ouvrant la création d'une fiche, pour un joueur absent de la base."},
+
+  "noPlayersToPickMessage": "Aucun joueur en base. Créez-en un pour commencer.",
+  "@noPlayersToPickMessage": {"description": "Message de l'écran de sélection quand la base de joueurs est vide."},
+
+  "botLabel": "Bot",
+  "@botLabel": {"description": "Étiquette d'un adversaire IA dans la liste des joueurs d'une partie en préparation."},
+
+  "removeSeatTooltip": "Retirer de la partie",
+  "@removeSeatTooltip": {"description": "Infobulle du bouton retirant un joueur de la partie en préparation."},
+
+  "notEnoughPlayersMessage": "Il faut au moins deux joueurs.",
+  "@notEnoughPlayersMessage": {"description": "Message affiché quand on tente de démarrer une partie à moins de deux joueurs."},
+
+  "playerGamesSummary": "{count, plural, =0{Aucune partie jouée} one{{count} partie jouée} other{{count} parties jouées}}",
+  "@playerGamesSummary": {
+    "description": "Résumé sous le nom d'un joueur dans la liste : son nombre de parties jouées.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+
   "pausedGamesSectionLabel": "Runs interrompues ({count})",
   "@pausedGamesSectionLabel": {
     "description": "Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables, avec leur nombre.",

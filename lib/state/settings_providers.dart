@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../game/ai/ai_profiles.dart';
 
 /// Rendu des dés : une seule couleur pour tous, ou une couleur différente
 /// par dé (façon set de dés de casino).
@@ -23,9 +22,6 @@ class AppSettings {
   /// l'écran d'accueil). Désactivable pour une suppression immédiate.
   final bool confirmBeforeDeleteGame;
 
-  /// Difficulté par défaut des joueurs IA sur une nouvelle partie (réglage
-  /// global, plus de sélecteur par partie sur l'écran de configuration).
-  final AiDifficulty aiDifficulty;
 
   /// Autorise le lancer de dés en secouant le téléphone (voir
   /// `ShakeDetector`), en plus du bouton "Lancer". Désactivé par défaut : un
@@ -63,7 +59,6 @@ class AppSettings {
     this.musicEnabled = true,
     this.soundEffectsEnabled = true,
     this.confirmBeforeDeleteGame = true,
-    this.aiDifficulty = AiDifficulty.prudent,
     this.shakeToRollEnabled = false,
     this.showProbabilities = false,
     this.languageOverride,
@@ -82,7 +77,6 @@ class AppSettings {
     bool? musicEnabled,
     bool? soundEffectsEnabled,
     bool? confirmBeforeDeleteGame,
-    AiDifficulty? aiDifficulty,
     bool? shakeToRollEnabled,
     bool? showProbabilities,
     Object? languageOverride = _unset,
@@ -97,7 +91,6 @@ class AppSettings {
       musicEnabled: musicEnabled ?? this.musicEnabled,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
-      aiDifficulty: aiDifficulty ?? this.aiDifficulty,
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
       showProbabilities: showProbabilities ?? this.showProbabilities,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
@@ -119,7 +112,9 @@ const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
-const _keyAiDifficulty = 'settings.aiDifficulty';
+// `settings.aiDifficulty` n'est plus lue : tous les bots jouent au niveau
+// prudent. La clé peut rester sur les appareils déjà installés, elle est
+// simplement ignorée.
 const _keyShakeToRollEnabled = 'settings.shakeToRollEnabled';
 const _keyShowProbabilities = 'settings.showProbabilities';
 const _keyRightHanded = 'settings.rightHanded';
@@ -147,10 +142,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
         musicEnabled: prefs.getBool(_keyMusicEnabled) ?? true,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
-        aiDifficulty: AiDifficulty.values.firstWhere(
-          (d) => d.name == prefs.getString(_keyAiDifficulty),
-          orElse: () => AiDifficulty.prudent,
-        ),
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
         showProbabilities: prefs.getBool(_keyShowProbabilities) ?? false,
         languageOverride: prefs.getString(_keyLanguageOverride),
@@ -216,11 +207,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setConfirmBeforeDeleteGame(bool enabled) {
     state = state.copyWith(confirmBeforeDeleteGame: enabled);
     _save(_keyConfirmBeforeDeleteGame, enabled);
-  }
-
-  void setAiDifficulty(AiDifficulty difficulty) {
-    state = state.copyWith(aiDifficulty: difficulty);
-    _save(_keyAiDifficulty, difficulty.name);
   }
 
   void setShakeToRollEnabled(bool enabled) {

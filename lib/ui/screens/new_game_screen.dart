@@ -1,19 +1,51 @@
-import 'dart:math' as math;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/ai/ai_profiles.dart';
+import '../../game/game_setup.dart';
+import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/dice_off_providers.dart';
-import '../../state/game_providers.dart';
-import '../../state/settings_providers.dart';
+import '../../state/game_save_store.dart';
+import '../../state/player_store.dart';
 import '../ai_character_names.dart';
+import '../widgets/player_avatar.dart';
 import 'dice_off_screen.dart';
+import 'player_picker_screen.dart';
 
-/// Écran de configuration d'une nouvelle partie (joueurs, IA/auto), ouvert
-/// depuis le bouton "Nouveau run..." de [SetupScreen]. Anciennement une
-/// zone accordéon de l'écran d'accueil, désormais son propre écran.
+/// Un siège de la partie en préparation : soit un joueur de la base, soit un
+/// bot. Un seul type par siège, là où l'écran gérait auparavant quatre listes
+/// parallèles (noms, focus, bot, auto) qu'il fallait garder synchronisées.
+sealed class _Seat {
+  final bool isAuto;
+  const _Seat({required this.isAuto});
+
+  String get name;
+  _Seat withAuto(bool auto);
+}
+
+class _HumanSeat extends _Seat {
+  final PlayerProfile profile;
+  const _HumanSeat(this.profile, {required super.isAuto});
+
+  @override
+  String get name => profile.name;
+
+  @override
+  _Seat withAuto(bool auto) => _HumanSeat(profile, isAuto: auto);
+}
+
+class _BotSeat extends _Seat {
+  @override
+  final String name;
+  const _BotSeat(this.name, {required super.isAuto});
+
+  @override
+  _Seat withAuto(bool auto) => _BotSeat(name, isAuto: auto);
+}
+
 class NewGameScreen extends ConsumerStatefulWidget {
   const NewGameScreen({super.key});
 
@@ -22,169 +54,107 @@ class NewGameScreen extends ConsumerStatefulWidget {
 }
 
 class _NewGameScreenState extends ConsumerState<NewGameScreen> {
-  late final List<TextEditingController> _names;
-  late final List<FocusNode> _nameFocusNodes;
-  late final List<bool> _isBot;
-  late final List<bool> _isAuto;
+  static const _maxPlayers = 6;
+  static const _minPlayers = 2;
 
-  final _random = math.Random();
-
-  /// Vrai tant que le nom du joueur 1 doit encore recevoir son texte par
-  /// défaut localisé ("Joueur 1") — remis à faux dès que [didChangeDependencies]
-  /// le fait, avant le tout premier build. Un `TextEditingController` ne peut
-  /// pas être construit avec ce texte directement dans [initState] :
-  /// `AppLocalizations.of(context)` (comme tout `.of(context)` reposant sur
-  /// un `InheritedWidget`) ne peut pas être appelé avant que `initState` ne
-  /// soit terminé — l'appeler quand même y plantait systématiquement l'écran
-  /// pour tout joueur n'ayant encore jamais renseigné son nom (aucun nom
-  /// enregistré dans les préférences), un cas resté non testé jusqu'ici car
-  /// cette machine de développement en a toujours un de sauvegardé.
-  bool _needsDefaultOwnerName = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final ownerName = ref.read(settingsProvider).playerName.trim();
-    _needsDefaultOwnerName = ownerName.isEmpty;
-    // Par défaut : le propriétaire de l'appareil (humain, auto désactivé —
-    // chaque action attend un clic manuel) et une IA (auto activé, puisque
-    // rien ne justifie de cliquer manuellement à travers le tour d'un bot).
-    _names = [
-      TextEditingController(text: ownerName),
-      TextEditingController(text: kAiCharacterNames[_random.nextInt(kAiCharacterNames.length)]),
-    ];
-    _nameFocusNodes = [for (var i = 0; i < _names.length; i++) _newNameFocusNode()];
-    _isBot = [false, true];
-    _isAuto = [false, true];
-
-    if (ownerName.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _promptForOwnerName());
-    }
-  }
+  final List<_Seat> _seats = [];
+  bool _prefilled = false;
+  String? _error;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_needsDefaultOwnerName) {
-      _needsDefaultOwnerName = false;
-      _names[0].text = AppLocalizations.of(context).defaultPlayerName(1);
-    }
+    if (_prefilled) return;
+    _prefilled = true;
+    _prefillFromLastGame();
   }
 
-  /// Un `FocusNode` par champ de nom de joueur : le listener déclenche un
-  /// rebuild à la perte de focus, pour basculer le champ vers son rendu
-  /// tronqué en lecture seule (voir `_PlayerNameField`).
-  FocusNode _newNameFocusNode() => FocusNode()..addListener(() => setState(() {}));
+  /// Repropose la composition de la dernière partie lancée. Rien n'est stocké
+  /// pour ça : la partie la plus récente, en pause ou terminée, porte déjà sa
+  /// configuration. Un joueur supprimé de la base depuis est simplement omis.
+  Future<void> _prefillFromLastGame() async {
+    final games = [
+      ...await ref.read(gameSaveStoreProvider).list(),
+      ...await ref.read(archivedGameSaveStoreProvider).list(),
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (games.isEmpty || !mounted) return;
 
-  /// Demande son nom au propriétaire de l'appareil s'il n'est pas déjà
-  /// renseigné dans les préférences ; sautable (le nom par défaut reste).
-  Future<void> _promptForOwnerName() async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.ownerNameDialogTitle),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(labelText: l10n.ownerNameFieldLabel),
-          onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
+    final setup = games.first.setup;
+    final byId = {for (final p in await ref.read(playerStoreProvider).list()) p.id: p};
+    final seats = <_Seat>[];
+    for (var i = 0; i < setup.playerNames.length; i++) {
+      if (setup.isAi(i)) {
+        seats.add(_BotSeat(setup.playerNames[i], isAuto: setup.isAuto(i)));
+        continue;
+      }
+      final profile = byId[setup.playerIdAt(i)];
+      if (profile != null) seats.add(_HumanSeat(profile, isAuto: setup.isAuto(i)));
+    }
+
+    if (!mounted || seats.length < _minPlayers) return;
+    setState(() => _seats..clear()..addAll(seats));
+  }
+
+  Future<void> _addHumans() async {
+    final picked = await Navigator.of(context).push<List<PlayerProfile>>(
+      MaterialPageRoute(
+        builder: (_) => PlayerPickerScreen(
+          alreadySeated: {
+            for (final seat in _seats)
+              if (seat is _HumanSeat) seat.profile.id,
+          },
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: Text(l10n.laterButton)),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: Text(l10n.validateButton),
-          ),
-        ],
       ),
     );
-    controller.dispose();
-    if (name == null || name.isEmpty || !mounted) return;
-    ref.read(settingsProvider.notifier).setPlayerName(name);
-    setState(() => _names[0].text = name);
-  }
-
-  /// Choisit un nom de personnage du Guide du routard galactique non déjà
-  /// utilisé par un autre joueur IA de la partie, si possible.
-  String _randomAiName() {
-    final used = {
-      for (var i = 0; i < _isBot.length; i++)
-        if (_isBot[i]) _names[i].text,
-    };
-    final available = kAiCharacterNames.where((n) => !used.contains(n)).toList();
-    final pool = available.isNotEmpty ? available : kAiCharacterNames;
-    return pool[_random.nextInt(pool.length)];
-  }
-
-  /// Bascule le statut IA du joueur [i] : un nom de personnage lui est
-  /// attribué dynamiquement dès qu'il devient IA, et le nom par défaut est
-  /// restauré s'il redevient humain. Le mode auto suit le même bascule par
-  /// défaut (activé pour une IA, désactivé pour un humain) — l'utilisateur
-  /// garde la main pour l'ajuster ensuite via le chip "AutoRoll".
-  void _toggleBot(int i, bool isBot) {
+    if (!mounted || picked == null) return;
     setState(() {
-      _isBot[i] = isBot;
-      _isAuto[i] = isBot;
-      if (isBot) {
-        _names[i].text = _randomAiName();
-      } else if (kAiCharacterNames.contains(_names[i].text)) {
-        _names[i].text = AppLocalizations.of(context).defaultPlayerName(i + 1);
+      for (final profile in picked) {
+        if (_seats.length >= _maxPlayers) break;
+        // Un humain clique lui-même : pas d'auto-validation par défaut.
+        _seats.add(_HumanSeat(profile, isAuto: false));
       }
+      _error = null;
     });
   }
 
-  @override
-  void dispose() {
-    for (final c in _names) {
-      c.dispose();
-    }
-    for (final f in _nameFocusNodes) {
-      f.dispose();
-    }
-    super.dispose();
-  }
-
-  void _addPlayer() {
-    if (_names.length >= 6) return;
+  void _addBot() {
+    if (_seats.length >= _maxPlayers) return;
+    final taken = _seats.map((s) => s.name).toSet();
+    final free = kAiCharacterNames.where((n) => !taken.contains(n)).toList();
+    final name = free.isEmpty ? kAiCharacterNames.first : free[Random().nextInt(free.length)];
+    // Un bot s'auto-valide : rien ne justifie de cliquer à sa place.
     setState(() {
-      _names.add(TextEditingController(text: AppLocalizations.of(context).defaultPlayerName(_names.length + 1)));
-      _nameFocusNodes.add(_newNameFocusNode());
-      _isBot.add(false);
-      _isAuto.add(false);
-    });
-  }
-
-  void _removePlayer() {
-    if (_names.length <= 2) return;
-    setState(() {
-      _names.removeLast().dispose();
-      _nameFocusNodes.removeLast().dispose();
-      _isBot.removeLast();
-      _isAuto.removeLast();
+      _seats.add(_BotSeat(name, isAuto: true));
+      _error = null;
     });
   }
 
   void _start() {
-    final aiDifficulty = ref.read(settingsProvider).aiDifficulty;
-    final aiPlayers = <int, AiDifficulty>{
-      for (var i = 0; i < _isBot.length; i++)
-        if (_isBot[i]) i: aiDifficulty,
-    };
-    final autoPlayers = {
-      for (var i = 0; i < _isAuto.length; i++)
-        if (_isAuto[i]) i,
-    };
+    final l10n = AppLocalizations.of(context);
+    if (_seats.length < _minPlayers) {
+      setState(() => _error = l10n.notEnoughPlayersMessage);
+      return;
+    }
+
     final setup = GameSetup(
-      playerNames: [
-        for (final c in _names)
-          c.text.trim().isEmpty ? AppLocalizations.of(context).unnamedPlayerFallback : c.text.trim(),
-      ],
-      aiPlayers: aiPlayers,
-      autoPlayers: autoPlayers,
+      playerNames: [for (final seat in _seats) seat.name],
+      // Tous les bots au niveau prudent : le réglage de difficulté a disparu.
+      // L'énumération reste, et sa lecture aussi, pour que les parties déjà
+      // archivées avec un autre niveau continuent de se rejouer.
+      aiPlayers: {
+        for (var i = 0; i < _seats.length; i++)
+          if (_seats[i] is _BotSeat) i: AiDifficulty.prudent,
+      },
+      autoPlayers: {
+        for (var i = 0; i < _seats.length; i++)
+          if (_seats[i].isAuto) i,
+      },
+      playerIds: {
+        for (var i = 0; i < _seats.length; i++)
+          if (_seats[i] case final _HumanSeat seat) i: seat.profile.id,
+      },
     );
+
     ref.read(diceOffProvider.notifier).start(setup);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiceOffScreen()));
   }
@@ -193,59 +163,35 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.newGameSectionLabel)),
+      appBar: AppBar(
+        title: Text(l10n.newGameSectionLabel),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add),
+            tooltip: l10n.addHumanTooltip,
+            onPressed: _seats.length >= _maxPlayers ? null : _addHumans,
+          ),
+          IconButton(
+            icon: const Icon(Icons.smart_toy),
+            tooltip: l10n.addBotTooltip,
+            onPressed: _seats.length >= _maxPlayers ? null : _addBot,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.playersCountTitle(_names.length), style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.playersCountTitle(_seats.length),
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              for (var i = 0; i < _names.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _PlayerNameField(
-                          controller: _names[i],
-                          focusNode: _nameFocusNodes[i],
-                          label: l10n.playerNameFieldLabel(i + 1),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: Text(l10n.autoChipLabel),
-                        avatar: const Icon(Icons.bolt, size: 18),
-                        selected: _isAuto[i],
-                        onSelected: (selected) => setState(() => _isAuto[i] = selected),
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: Text(l10n.aiChipLabel),
-                        avatar: const Icon(Icons.smart_toy, size: 18),
-                        selected: _isBot[i],
-                        onSelected: (selected) => _toggleBot(i, selected),
-                      ),
-                    ],
-                  ),
-                ),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _names.length < 6 ? _addPlayer : null,
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.addPlayerButton),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: _names.length > 2 ? _removePlayer : null,
-                    icon: const Icon(Icons.remove),
-                    label: Text(l10n.removePlayerButton),
-                  ),
-                ],
-              ),
+              for (var i = 0; i < _seats.length; i++) _seatRow(l10n, i),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ],
               const SizedBox(height: 32),
               FilledButton(onPressed: _start, child: Text(l10n.startGameButton)),
             ],
@@ -254,46 +200,37 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
       ),
     );
   }
-}
 
-/// Champ de nom de joueur à 2 rendus : un `TextField` éditable tant qu'il a
-/// le focus, remplacé par un `Text` tronqué (`…`) en lecture seule dès que
-/// le focus est perdu et que le nom dépasse la largeur disponible — le tap
-/// redonne le focus pour reprendre l'édition.
-class _PlayerNameField extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String label;
-
-  const _PlayerNameField({required this.controller, required this.focusNode, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    if (focusNode.hasFocus) {
-      return TextField(
-        controller: controller,
-        focusNode: focusNode,
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
-      );
-    }
-    // `focusNode` doit rester attaché à l'arbre de focus même dans ce rendu
-    // en lecture seule (Focus(), pas juste l'InkWell) : un FocusNode jamais
-    // attaché ne réagit pas à requestFocus() — sans ce wrapper, le tap ne
-    // fait donc jamais rien, et le champ ne bascule jamais vers le
-    // TextField éditable (bug vécu : impossible de renommer un joueur).
-    return Focus(
-      focusNode: focusNode,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(4),
-        onTap: focusNode.requestFocus,
-        child: InputDecorator(
-          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
-          child: Text(
-            controller.text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+  Widget _seatRow(AppLocalizations l10n, int index) {
+    final seat = _seats[index];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          PlayerAvatarWidget(name: seat.name, size: 36),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(seat is _HumanSeat ? seat.profile.displayName : seat.name),
+                if (seat is _BotSeat)
+                  Text(l10n.botLabel, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
           ),
-        ),
+          FilterChip(
+            label: Text(l10n.autoChipLabel),
+            avatar: const Icon(Icons.bolt, size: 18),
+            selected: seat.isAuto,
+            onSelected: (v) => setState(() => _seats[index] = seat.withAuto(v)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: l10n.removeSeatTooltip,
+            onPressed: () => setState(() => _seats.removeAt(index)),
+          ),
+        ],
       ),
     );
   }

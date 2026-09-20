@@ -284,6 +284,306 @@ abstract class AppLocalizations {
   /// **'Statistiques'**
   String get statisticsButton;
 
+  /// Titre de l'écran de gestion des joueurs, avec le nombre de fiches en base.
+  ///
+  /// In fr, this message translates to:
+  /// **'Joueurs ({count})'**
+  String playersScreenTitle(int count);
+
+  /// Infobulle du bouton de création d'une fiche joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un joueur'**
+  String get addPlayerTooltip;
+
+  /// Message affiché quand la base de joueurs est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun joueur enregistré pour l\'instant.'**
+  String get noPlayersMessage;
+
+  /// Titre de l'écran de création d'une fiche joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau joueur'**
+  String get newPlayerTitle;
+
+  /// Titre de l'écran d'édition d'une fiche joueur existante.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le joueur'**
+  String get editPlayerTitle;
+
+  /// Libellé du champ de nom d'une fiche joueur (obligatoire, unique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get playerNameLabel;
+
+  /// Libellé du champ de surnom d'une fiche joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Surnom (facultatif)'**
+  String get playerNicknameLabel;
+
+  /// Erreur affichée quand le champ de nom d'une fiche joueur est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom est obligatoire.'**
+  String get playerNameRequiredError;
+
+  /// Erreur affichée quand le nom saisi correspond à une fiche existante (casse et accents ignorés).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce nom est déjà utilisé par un autre joueur.'**
+  String get playerNameTakenError;
+
+  /// Titre de la boîte de dialogue confirmant la suppression d'une fiche joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer ce joueur ?'**
+  String get deletePlayerConfirmTitle;
+
+  /// Message de la boîte de dialogue confirmant la suppression d'une fiche joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'La fiche de « {name} » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.'**
+  String deletePlayerConfirmMessage(String name);
+
+  /// Titre de la section des statistiques de durée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Temps de jeu'**
+  String get statsSectionTime;
+
+  /// Titre de la section des statistiques de parties jouées, gagnées, perdues.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parties'**
+  String get statsSectionGames;
+
+  /// Titre de la section des statistiques de combinaisons (brelans, carrés, quintes, suites).
+  ///
+  /// In fr, this message translates to:
+  /// **'Figures'**
+  String get statsSectionFigures;
+
+  /// Titre de la section des statistiques diverses : meilleur tour, mains pleines, craquages, barrés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faits d\'armes'**
+  String get statsSectionMisc;
+
+  /// Libellé du temps de jeu cumulé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total'**
+  String get statsTotalTime;
+
+  /// Libellé de la durée moyenne d'une partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyenne par partie'**
+  String get statsAverageTime;
+
+  /// Libellé de la partie la plus courte.
+  ///
+  /// In fr, this message translates to:
+  /// **'La plus courte'**
+  String get statsShortestTime;
+
+  /// Libellé de la partie la plus longue.
+  ///
+  /// In fr, this message translates to:
+  /// **'La plus longue'**
+  String get statsLongestTime;
+
+  /// Libellé du nombre de parties jouées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jouées'**
+  String get statsGamesPlayed;
+
+  /// Libellé du nombre de parties gagnées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagnées'**
+  String get statsGamesWon;
+
+  /// Libellé du nombre de parties perdues.
+  ///
+  /// In fr, this message translates to:
+  /// **'Perdues'**
+  String get statsGamesLost;
+
+  /// Libellé du nombre d'as isolés gardés.
+  ///
+  /// In fr, this message translates to:
+  /// **'As isolés gardés'**
+  String get statsLoneAces;
+
+  /// Libellé du nombre de 5 isolés gardés.
+  ///
+  /// In fr, this message translates to:
+  /// **'5 isolés gardés'**
+  String get statsLoneFives;
+
+  /// Libellé du nombre de brelans.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brelans'**
+  String get statsBrelans;
+
+  /// Libellé du nombre de carrés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carrés'**
+  String get statsCarres;
+
+  /// Libellé du nombre de quintes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quintes'**
+  String get statsQuintes;
+
+  /// Libellé du nombre de suites (petites et grandes).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suites'**
+  String get statsSuites;
+
+  /// Libellé du nombre de petites suites (1-2-3-4-5).
+  ///
+  /// In fr, this message translates to:
+  /// **'dont petites'**
+  String get statsSmallSuites;
+
+  /// Libellé du nombre de grandes suites (2-3-4-5-6).
+  ///
+  /// In fr, this message translates to:
+  /// **'dont grandes'**
+  String get statsBigSuites;
+
+  /// Libellé du nombre de quintes d'as (10000 d'un coup).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quintes d\'as'**
+  String get statsAceQuints;
+
+  /// Libellé du nombre de quintes d'as tombées pile sur la cible.
+  ///
+  /// In fr, this message translates to:
+  /// **'dont gagnantes'**
+  String get statsAceQuintsWon;
+
+  /// Libellé du meilleur score banqué en un tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Meilleur tour'**
+  String get statsBestTurn;
+
+  /// Libellé de la plus longue série de mains pleines dans un tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mains pleines d\'affilée'**
+  String get statsHotDiceRun;
+
+  /// Libellé du nombre total de craquages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Craquages'**
+  String get statsBusts;
+
+  /// Libellé de la plus longue série de craquages consécutifs.
+  ///
+  /// In fr, this message translates to:
+  /// **'dont série la plus longue'**
+  String get statsLongestBustStreak;
+
+  /// Libellé du nombre de lignes barrées par son propre second craque consécutif.
+  ///
+  /// In fr, this message translates to:
+  /// **'Auto-barrés'**
+  String get statsSelfBars;
+
+  /// Libellé du nombre de lignes barrées chez un adversaire par collision de score.
+  ///
+  /// In fr, this message translates to:
+  /// **'Barrés infligés'**
+  String get statsBarsInflicted;
+
+  /// Titre de la section listant les meilleures performances tous joueurs confondus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Records'**
+  String get statsRecordsTitle;
+
+  /// Message affiché quand aucune partie n'a encore été jouée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun record pour l\'instant.'**
+  String get statsNoRecordYet;
+
+  /// Une ligne de record : la valeur, puis le ou les joueurs qui la détiennent.
+  ///
+  /// In fr, this message translates to:
+  /// **'{value} — {holders}'**
+  String statsValueWithHolder(String value, String holders);
+
+  /// Titre de l'écran de sélection multiple de joueurs pour une nouvelle partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir des joueurs'**
+  String get pickPlayersTitle;
+
+  /// Infobulle de l'icône ajoutant des joueurs humains à la partie en préparation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un joueur'**
+  String get addHumanTooltip;
+
+  /// Infobulle de l'icône ajoutant un adversaire IA à la partie en préparation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un bot'**
+  String get addBotTooltip;
+
+  /// Bouton de l'écran de sélection ouvrant la création d'une fiche, pour un joueur absent de la base.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau joueur'**
+  String get createPlayerButton;
+
+  /// Message de l'écran de sélection quand la base de joueurs est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun joueur en base. Créez-en un pour commencer.'**
+  String get noPlayersToPickMessage;
+
+  /// Étiquette d'un adversaire IA dans la liste des joueurs d'une partie en préparation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bot'**
+  String get botLabel;
+
+  /// Infobulle du bouton retirant un joueur de la partie en préparation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer de la partie'**
+  String get removeSeatTooltip;
+
+  /// Message affiché quand on tente de démarrer une partie à moins de deux joueurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il faut au moins deux joueurs.'**
+  String get notEnoughPlayersMessage;
+
+  /// Résumé sous le nom d'un joueur dans la liste : son nombre de parties jouées.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune partie jouée} one{{count} partie jouée} other{{count} parties jouées}}'**
+  String playerGamesSummary(int count);
+
   /// Libellé de la zone de l'écran d'accueil listant les parties en pause reprenables, avec leur nombre.
   ///
   /// In fr, this message translates to:
