@@ -69,11 +69,17 @@ cmd_start() {
     # rendering, total time after the VM service line is wildly
     # inconsistent on this host under load (21s one run, 32s the next,
     # both observed) -- a fixed sleep either wastes time or isn't
-    # enough. Instead, poll a pixel that's only ever this exact amber
-    # once the home screen (SetupScreen) has actually painted: (100,90)
-    # sits inside the "New run..." button, which is amber (R>180) on
-    # the home screen and dark green (R<50) on both the splash and any
-    # other screen -- verified by sampling real screenshots of each.
+    # enough. Instead, poll a pixel that's only ever amber once the home
+    # screen (SetupScreen) has actually painted: (100,301) sits inside
+    # its first button, which spans the full width, where the background
+    # is dark green (R<50) on the splash and on every other screen.
+    #
+    # The threshold is deliberately low (R>90, not R>180): when a paused
+    # game exists the home screen immediately covers itself with the
+    # "reprendre la partie ?" dialog, whose modal barrier dims that amber
+    # from R=239 to R=110 -- measured. A 180 threshold therefore never
+    # fires on a device that has a saved game, and start() waits out its
+    # full timeout for a screen that is in fact ready.
     _wait_for_home_screen
   fi
   echo "Ready. DISPLAY=$DISPLAY" >&2
@@ -84,8 +90,8 @@ _wait_for_home_screen() {
   for _ in $(seq 1 90); do
     import -window root "$probe" 2>/dev/null || true
     if [ -s "$probe" ]; then
-      r=$(convert "$probe" -crop 1x1+100+90 -format "%[fx:int(255*p{0,0}.r)]" info: 2>/dev/null || echo 0)
-      [ "${r:-0}" -gt 180 ] 2>/dev/null && { rm -f "$probe"; return 0; }
+      r=$(convert "$probe" -crop 1x1+100+301 -format "%[fx:int(255*p{0,0}.r)]" info: 2>/dev/null || echo 0)
+      [ "${r:-0}" -gt 90 ] 2>/dev/null && { rm -f "$probe"; return 0; }
     fi
     sleep 1
   done

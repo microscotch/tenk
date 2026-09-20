@@ -78,7 +78,7 @@ display`. `q` in the running terminal quits.
 
 ```bash
 flutter analyze   # must be clean
-flutter test      # full suite; currently 166 tests, all pass
+flutter test      # full suite; currently 263 tests, all pass
 ```
 
 Neither of these launches the actual app — they don't substitute for
@@ -102,11 +102,15 @@ Neither of these launches the actual app — they don't substitute for
   minute, observed directly (21s one run, 32s another, 70s+ a third,
   all on the same command). A fixed sleep either wastes time or isn't
   enough either way, so `driver.sh start` instead polls a screenshot
-  pixel at (100,90) — inside the "New run..." button, which is amber
-  (R>180) only once the home screen has actually painted, dark green
-  everywhere else — until it's ready (90s timeout). If you're driving
-  the app some other way than this script, replicate that check rather
-  than a fixed sleep.
+  pixel at (100,301) — inside the home screen's first button, which
+  spans the full width and is amber only once that screen has actually
+  painted, dark green everywhere else — until it's ready (90s timeout).
+  The threshold is R>90 rather than R>180 on purpose: when a paused game
+  exists, the home screen covers itself at once with the "Reprendre la
+  partie ?" dialog, whose modal barrier dims that amber from R=239 to
+  R=110 (measured), so a stricter threshold would never fire on a device
+  that has a saved game. If you're driving the app some other way than
+  this script, replicate that check rather than a fixed sleep.
 - **A combined `xdotool mousemove X Y click 1` is silently swallowed.**
   There's no window manager in this bare Xvfb session, so nothing
   sends the app an `XEnterNotify` before an immediate click. Use
@@ -156,9 +160,10 @@ Neither of these launches the actual app — they don't substitute for
 - **`start` prints the "home screen not detected after 90s" warning**:
   either the app crashed after the VM service came up (check
   `flutter_run.log`), or the button moved/was restyled and the
-  (100,90) amber-pixel probe no longer matches — re-sample a real
+  (100,301) amber-pixel probe no longer matches — re-sample a real
   screenshot's pixel color at that point and adjust the threshold in
-  `_wait_for_home_screen`.
+  `_wait_for_home_screen`. Sample it both with and without the resume
+  dialog up: the dialog's barrier dims whatever is behind it.
 - **A click does nothing**: almost always the missing `--sync` /
   separate-`click` issue above, if you're not going through
   `driver.sh click`.
