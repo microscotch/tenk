@@ -19,11 +19,25 @@ flutter test --plain-name "un craque affiche"  # run tests matching a name
 flutter run -d linux         # run the app locally (see below — this is the only viable local target)
 ```
 
-CI (`.github/workflows/build_apk.yaml`) has two jobs: `build-android` (`ubuntu-latest`) runs
-`pub get`, `analyze`, `test`, then `build apk --release`; `build-ios` (`macos-latest`) runs `pub get`
-then an unsigned `build ios --release --no-codesign` (no Apple signing is configured, so this only
-proves the Xcode build compiles — it can't produce an installable IPA or run on a device/simulator).
-Both run on every push/PR to `main`.
+CI (`.github/workflows/build_apk.yaml`) has three jobs, on every push to `main` (plus
+`pull_request` and `workflow_dispatch`, where `bump-build-number` is skipped):
+- `bump-build-number` (`ubuntu-latest`) — CI-side safety net for the local `.githooks/pre-push` hook
+  (see Git hooks below). The other two jobs depend on it and check out the commit it resolves, so
+  both build the same, possibly corrected, tree.
+- `build-android` (`ubuntu-latest`) — `pub get`, `analyze`, `test`, then `build apk --release` and
+  `build appbundle --release`, signed with the release keystore restored from a repo secret. Both are
+  uploaded as artifacts, and the AAB is sent to the Google Play `internal` track.
+- `build-ios` (`macos-latest`) — imports the Apple **distribution and development** certificates and
+  their provisioning profiles from repo secrets into a temporary keychain, then builds **two signed
+  IPAs**: `--release` (Distribution, `ios/ExportOptions.plist`, method `app-store-connect`), which is
+  uploaded to **TestFlight** with `fastlane pilot` using an App Store Connect API key; and
+  `--profile` (Development, `ios/ExportOptions-dev.plist`), for direct USB install on a registered
+  device. Both are kept as artifacts.
+
+Both store-upload steps are deliberately `continue-on-error: true`, so **a green run does not mean
+the build reached Google Play or TestFlight** — a failed upload still shows as a green step. The
+TestFlight step writes its real outcome to the run summary (look for the "TestFlight" heading); the
+Play step doesn't yet, so for that one read the step log rather than the job status.
 
 ## Environment constraint: no local Android or iOS build
 
@@ -31,14 +45,17 @@ The dev machine is Raspberry Pi / Linux ARM64. Flutter itself runs fine there, b
 - Google's Android build tooling (`aapt2`) is only published for x86_64, so **Android builds and
   emulators do not work on this machine**.
 - iOS builds require Xcode/macOS, which don't exist on Linux at all — **iOS can't be built, run, or
-  even smoke-tested locally, only via the `build-ios` CI job** (and even there, only as an unsigned
-  compile check, not a real device/simulator run).
+  even smoke-tested locally, only via the `build-ios` CI job**. That job does produce real, signed,
+  installable IPAs (see Commands above), but nothing here can *run* them: there is no simulator on
+  Linux, so the only way to exercise an iOS build is TestFlight or a USB install on a real iPhone
+  (`ideviceinstaller`).
 
 The established workflow is:
 - Local iteration and manual verification: `flutter run -d linux` (Linux desktop target) — the only
   platform this machine can actually run and interact with.
 - Real Android/iOS builds: pushed to GitHub and built by CI, not built locally. Android CI verifies
-  the whole test suite too, since `flutter test` runs fine on any host; iOS CI is build-only.
+  the whole test suite too, since `flutter test` runs fine on any host; the iOS job doesn't re-run
+  the tests, it signs and ships.
 
 Do not attempt `flutter build apk`, `flutter build ios`, `flutter run -d android`, or any iOS-targeted
 command locally — they will fail on this host.
