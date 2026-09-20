@@ -249,11 +249,13 @@ jobs:
       # d'attacher ces notes, pilot le fait en un seul envoi via l'API App
       # Store Connect.
       - name: Envoie vers TestFlight
+        id: testflight
         # Ne bloque pas le reste du job (notamment le build de l'IPA de dev
         # ci-dessous) si l'envoi échoue, par exemple à cause d'un numéro de
         # build déjà utilisé — ce n'est pas la seule chose qui compte dans ce
         # job, et un run n'a pas toujours vocation à produire un nouveau
-        # build TestFlight.
+        # build TestFlight. Le prix à payer est l'étape suivante : sans elle
+        # l'échec serait parfaitement silencieux.
         continue-on-error: true
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -290,6 +292,39 @@ jobs:
             --ipa "$IPA_PATH" \
             --changelog "$CHANGELOG" \
             --skip_waiting_for_build_processing true
+
+      # `continue-on-error` ci-dessus ne fait pas que laisser le job continuer :
+      # il réécrit aussi la CONCLUSION de l'étape en "succès", si bien qu'un
+      # envoi échoué s'affiche en vert partout dans l'interface — on a déjà
+      # conclu d'un run vert qu'un build était arrivé sur TestFlight alors
+      # qu'il n'y était pas. Seul `outcome` porte le vrai résultat, d'où ce
+      # récapitulatif explicite dans le résumé du run (et une annotation
+      # d'avertissement en tête de run quand l'envoi a échoué).
+      - name: Récapitule l'envoi TestFlight
+        if: always()
+        env:
+          OUTCOME: ${{ steps.testflight.outcome }}
+        run: |
+          case "$OUTCOME" in
+            success)
+              echo "### ✅ TestFlight : build envoyé" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            skipped)
+              echo "### ⏭️ TestFlight : envoi non exécuté" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            *)
+              echo "::warning title=TestFlight::Envoi échoué (étape non bloquante) : aucun nouveau build n'est arrivé sur App Store Connect."
+              {
+                echo "### ⚠️ TestFlight : envoi ÉCHOUÉ (résultat \`$OUTCOME\`)"
+                echo
+                echo "L'étape est non bloquante : **le job reste vert alors qu'aucun nouveau build**"
+                echo "**n'est arrivé sur App Store Connect.** Ne pas conclure d'un run vert que"
+                echo "TestFlight a reçu quelque chose."
+                echo
+                echo "Cause à chercher dans le log de l'étape « Envoie vers TestFlight »."
+              } >> "$GITHUB_STEP_SUMMARY"
+              ;;
+          esac
 
       # Build signé avec le profil Development (inclut l'UDID d'un appareil de
       # test précis) : installable directement par USB via ideviceinstaller,
