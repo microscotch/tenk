@@ -88,4 +88,45 @@ void main() {
     final freshStore = GameSaveStore(rootDirectory: () async => freshDir);
     expect(await freshStore.list(), isEmpty);
   });
+
+  group('compatibilité des sauvegardes', () {
+    test('une sauvegarde écrite avant la base de joueurs se relit sans fiche', () async {
+      // JSON écrit à la main, et surtout PAS un aller-retour : c'est tout
+      // l'objet du test. `GameSaveStore.list()` écarte silencieusement les
+      // fichiers qu'il n'arrive pas à parser, donc une régression ici ne
+      // lèverait pas — elle ferait disparaître les parties de l'écran.
+      const legacy = '{'
+          '"seed":42,'
+          '"setup":{"playerNames":["A","B"],"aiPlayers":{},"autoPlayers":[]},'
+          '"alias":"Ancien Tapis",'
+          '"createdAt":"2026-01-01T12:00:00.000",'
+          '"enteredPlayAt":null,'
+          '"durationSeconds":120,'
+          '"actions":[]'
+          '}';
+      await File('${tempDir.path}/game-42.run').writeAsString(legacy);
+
+      final games = await store.list();
+
+      expect(games, hasLength(1), reason: 'la partie doit rester visible');
+      expect(games.single.alias, 'Ancien Tapis');
+      expect(games.single.setup.playerIds, isEmpty);
+      expect(games.single.setup.playerIdAt(0), isNull);
+    });
+
+    test('les identifiants de fiche font l\'aller-retour', () async {
+      final game = sampleGame(7).copyWith();
+      final withIds = SavedGame(
+        seed: game.seed,
+        setup: const GameSetup(playerNames: ['A', 'B'], playerIds: {0: 'id-a', 1: 'id-b'}),
+        alias: game.alias,
+        createdAt: game.createdAt,
+      );
+      await store.write(withIds);
+
+      final read = await store.read(7);
+
+      expect(read!.setup.playerIds, {0: 'id-a', 1: 'id-b'});
+    });
+  });
 }

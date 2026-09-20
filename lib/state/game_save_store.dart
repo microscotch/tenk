@@ -88,6 +88,7 @@ class SavedGame {
           'playerNames': setup.playerNames,
           'aiPlayers': setup.aiPlayers.map((index, difficulty) => MapEntry(index.toString(), difficulty.name)),
           'autoPlayers': setup.autoPlayers.toList(),
+          'playerIds': setup.playerIds.map((index, id) => MapEntry(index.toString(), id)),
         },
         'alias': alias,
         'createdAt': createdAt.toIso8601String(),
@@ -108,6 +109,14 @@ class SavedGame {
               MapEntry(int.parse(index as String), AiDifficulty.values.byName(difficultyName as String)),
         ),
         autoPlayers: Set<int>.from(setupJson['autoPlayers'] as List),
+        // Lecture tolérante : ce champ n'existait pas avant la base de
+        // joueurs. Le lire sans repli rendrait illisible CHAQUE partie déjà
+        // enregistrée — et `GameSaveStore.list()` les écarte en silence, si
+        // bien qu'elles disparaîtraient de l'écran sans le moindre message.
+        playerIds: (setupJson['playerIds'] as Map?)?.map(
+              (index, id) => MapEntry(int.parse(index as String), id as String),
+            ) ??
+            const {},
       ),
       alias: json['alias'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),

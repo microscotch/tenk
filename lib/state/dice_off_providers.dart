@@ -111,6 +111,10 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
     state = switch (action.type) {
       GameActionType.diceOffRoll => state!.rollFor(action.params['index'] as int, random: _replayRandom),
       GameActionType.diceOffResolveRound => state!.resolveRound(),
+      // Une partie mise en pause PENDANT le départage puis reprise journalise
+      // une reprise ici : elle ne touche à rien, mais elle doit être consommée
+      // plutôt que de faire lever ce rejeu spectateur.
+      GameActionType.resume => state!,
       _ => throw StateError('action de rejeu inattendue pendant le départage : ${action.type}'),
     };
     return true;
@@ -138,6 +142,11 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
 
   /// Construit la configuration de partie finale, les joueurs étant
   /// réordonnés pour que le vainqueur du départage commence (index 0).
+  /// La config telle que saisie, avant réordonnancement — pendant du
+  /// `originalSetup` de [GameNotifier]. [buildRotatedSetup] exige un départage
+  /// résolu, celle-ci est lisible dès [start].
+  GameSetup get setup => _setup;
+
   GameSetup buildRotatedSetup() => _setup.rotated(state!.winnerIndex!);
 
   /// Transmet la seed/le générateur/le journal accumulés à la partie

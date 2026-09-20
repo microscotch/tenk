@@ -45,6 +45,10 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// hors partie persistée (ex: `debugLoadState` en test, ou mode rejeu).
   int? get seed => _seed;
   GameSetup? get originalSetup => _originalSetup;
+
+  /// Config réordonnée par le départage — celle qu'indexent
+  /// `currentPlayerIndex` et consorts (voir [currentSeatRightHandedProvider]).
+  GameSetup? get rotatedSetup => _setup;
   List<GameAction> get actions => List.unmodifiable(_actions);
 
   bool isAiPlayer(int index) => _setup?.isAi(index) ?? false;
@@ -105,6 +109,11 @@ class GameNotifier extends Notifier<GameEngine?> {
       ..clear()
       ..addAll(saved.actions);
     state = replay.engine;
+    // Borne l'interruption qui vient de s'achever : sans ce marqueur, le temps
+    // passé hors du jeu compterait dans la durée active de la partie (voir
+    // [activePlayingSecondsFor]). Posé APRÈS `_seed` et `state`, dont `_record`
+    // dépend pour persister.
+    _record(GameAction.resume());
   }
 
   // Rejeu (spectateur) d'un run archivé : lecture seule, aucune écriture —
@@ -133,6 +142,13 @@ class GameNotifier extends Notifier<GameEngine?> {
   void applyNextReplayAction() {
     if (_replayQueue.isEmpty) return;
     final action = _replayQueue.removeAt(0);
+    // Une reprise ne change rien à l'écran : la consommer sans y passer un
+    // tic de temporisation, sinon le rejeu spectateur marquerait une pause
+    // inexpliquée là où le joueur avait simplement fermé l'app.
+    if (action.type == GameActionType.resume) {
+      applyNextReplayAction();
+      return;
+    }
     state = applyGameAction(state!, action, _replayRandom!);
   }
 

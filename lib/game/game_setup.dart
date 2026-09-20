@@ -10,10 +10,28 @@ class GameSetup {
   final Map<int, AiDifficulty> aiPlayers;
   final Set<int> autoPlayers;
 
-  const GameSetup({required this.playerNames, this.aiPlayers = const {}, this.autoPlayers = const {}});
+  /// Fiche de la base à laquelle chaque siège humain est rattaché, par index
+  /// de siège — même forme que [aiPlayers] : un siège absent n'est rattaché à
+  /// personne, ce qui est le cas de tout bot et de toute partie enregistrée
+  /// avant l'existence de la base.
+  ///
+  /// C'est ce lien, et non le nom, qui rattache une partie à un joueur : un
+  /// renommage ne doit rien casser.
+  final Map<int, String> playerIds;
+
+  const GameSetup({
+    required this.playerNames,
+    this.aiPlayers = const {},
+    this.autoPlayers = const {},
+    this.playerIds = const {},
+  });
 
   bool isAi(int index) => aiPlayers.containsKey(index);
   bool isAuto(int index) => autoPlayers.contains(index);
+
+  /// Identifiant de fiche du siège [index], ou `null` s'il n'est rattaché à
+  /// aucune (bot, ou partie antérieure à la base de joueurs).
+  String? playerIdAt(int index) => playerIds[index];
 
   /// Réordonne les joueurs pour que [winnerIndex] (vainqueur du tirage au
   /// sort) devienne l'index 0, en conservant la correspondance IA/auto de
@@ -26,6 +44,13 @@ class GameSetup {
       rotatedAi[(origIndex - winnerIndex + n) % n] = difficulty;
     });
     final rotatedAuto = {for (final origIndex in autoPlayers) (origIndex - winnerIndex + n) % n};
-    return GameSetup(playerNames: rotatedNames, aiPlayers: rotatedAi, autoPlayers: rotatedAuto);
+    final rotatedIds = <int, String>{};
+    playerIds.forEach((origIndex, id) => rotatedIds[(origIndex - winnerIndex + n) % n] = id);
+    return GameSetup(
+      playerNames: rotatedNames,
+      aiPlayers: rotatedAi,
+      autoPlayers: rotatedAuto,
+      playerIds: rotatedIds,
+    );
   }
 }

@@ -154,6 +154,20 @@ void main() {
     expect(savedInArchive!.actions.length, greaterThanOrEqualTo(guard));
   }, timeout: const Timeout(Duration(minutes: 3)));
 
+  test('reprendre une partie journalise un marqueur de reprise', () async {
+    final saved = buildResumableSavedGame(seed: 43, alias: 'Test', playerNames: const ['A', 'B']);
+    final before = saved.actions.length;
+
+    container.read(gameProvider.notifier).resumeFromSave(saved);
+    await _flushMicrotasks();
+
+    final persisted = await store.read(43);
+    expect(persisted, isNotNull, reason: 'la reprise doit se persister comme toute transition');
+    expect(persisted!.actions, hasLength(before + 1));
+    expect(persisted.actions.last.type, GameActionType.resume,
+        reason: 'sans ce marqueur, le temps passé hors du jeu compterait dans la durée active');
+  });
+
   test('resumeFromSave reconstruit l\'état exact et permet de continuer sans planter', () async {
     final saved = buildResumableSavedGame(seed: 42, alias: 'Test', playerNames: const ['A', 'B']);
     final notifier = container.read(gameProvider.notifier);

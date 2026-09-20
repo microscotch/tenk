@@ -76,4 +76,91 @@ void main() {
     final freshSequence = List.generate(8, (_) => fresh.nextInt(6));
     expect(continued, isNot(equals(freshSequence)));
   });
+
+  group('durée active', () {
+    GameAction at(int minutesFromStart) =>
+        GameAction.roll(at: DateTime(2026, 1, 1, 12, minutesFromStart));
+
+    test('plafonne chaque écart à deux minutes', () {
+      // Trois écarts : 1 min, 30 min (une pause), 2 min.
+      final actions = [at(0), at(1), at(31), at(33)];
+
+      expect(durationSecondsFor(actions), 33 * 60, reason: 'le calcul historique compte tout');
+      expect(activePlayingSecondsFor(actions), 60 + 120 + 120,
+          reason: 'la pause de 30 min est ramenée au plafond');
+    });
+
+    test('un écart plus court que le plafond est compté tel quel', () {
+      final actions = [at(0), at(1), at(2)];
+
+      expect(activePlayingSecondsFor(actions), 120);
+      expect(activePlayingSecondsFor(actions), durationSecondsFor(actions),
+          reason: 'sans pause, les deux calculs coïncident');
+    });
+
+    test('le plafond est réglable', () {
+      final actions = [at(0), at(10)];
+
+      expect(activePlayingSecondsFor(actions, maxGap: const Duration(minutes: 5)), 5 * 60);
+    });
+
+    test('un journal vide ou à une seule action dure zéro', () {
+      expect(activePlayingSecondsFor(const []), 0);
+      expect(activePlayingSecondsFor([at(0)]), 0);
+    });
+
+    test('l\'écart qui précède une reprise ne compte pas du tout', () {
+      // 30 min hors du jeu, puis la reprise, puis 1 min de jeu.
+      final actions = [
+        at(0),
+        GameAction.resume(at: DateTime(2026, 1, 1, 12, 30)),
+        at(31),
+      ];
+
+      expect(activePlayingSecondsFor(actions), 60,
+          reason: 'le marqueur dit précisément que la partie était fermée');
+      expect(durationSecondsFor(actions), 31 * 60);
+    });
+
+    test('durationSecondsFor garde son comportement d\'origine', () {
+      final actions = [at(0), at(1), at(31)];
+
+      expect(durationSecondsFor(actions), 31 * 60,
+          reason: 'la durée persistée dans les sauvegardes ne change pas de sens');
+    });
+  });
+
+  group('marqueur de reprise', () {
+    const setup = GameSetup(playerNames: ['A', 'B']);
+
+    test('ne modifie pas l\'état rejoué', () {
+      final played = playScriptedGame(setup, 42);
+      final withResume = [...played.actions]..insert(
+          played.actions.length ~/ 2,
+          GameAction.resume(),
+        );
+
+      final plain = replayGame(setup, 42, played.actions);
+      final resumed = replayGame(setup, 42, withResume);
+
+      expect(resumed.engine!.gameOver, plain.engine!.gameOver);
+      expect(resumed.engine!.winnerIndex, plain.engine!.winnerIndex);
+      expect(
+        resumed.engine!.players.map((p) => p.totalScore),
+        plain.engine!.players.map((p) => p.totalScore),
+        reason: 'une reprise ne consomme aucun tirage : le flux de dés est intact',
+      );
+    });
+
+    test('n\'est pas transmise à onGameAction', () {
+      final played = playScriptedGame(setup, 42);
+      final withResume = [...played.actions]..insert(2, GameAction.resume());
+
+      final seen = <GameActionType>[];
+      replayGame(setup, 42, withResume, onGameAction: (_, _, action) => seen.add(action.type));
+
+      expect(seen, isNot(contains(GameActionType.resume)),
+          reason: 'une reprise n\'est pas un coup : aucun consommateur ne doit la voir');
+    });
+  });
 }

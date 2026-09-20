@@ -34,7 +34,18 @@ class GameRecordingHandoff {
 /// Chaque transition possible du départage puis de la partie, dans l'ordre
 /// où elle peut survenir. Un journal de [GameAction] + la seed RNG qui les a
 /// produites suffit à reconstruire un état identique : voir [replayGame].
-enum GameActionType { diceOffRoll, diceOffResolveRound, startTurn, roll, applyKeep, endBustedTurn, bank }
+/// Types d'actions journalisées.
+///
+/// [resume] n'est pas un coup : c'est une borne posée quand une partie
+/// interrompue est reprise, pour que le temps passé hors du jeu ne compte pas
+/// dans sa durée active (voir [activePlayingSecondsFor]). Elle ne touche donc
+/// jamais au moteur ni au flux de tirages.
+///
+/// Ajouter une valeur ici casse volontairement tous les `switch` exhaustifs
+/// qui l'énumèrent — c'est le bon échec : l'un d'eux
+/// (`applyNextDiceOffReplayAction`) lèverait sinon à l'exécution sur une
+/// action qu'il ne connaît pas.
+enum GameActionType { diceOffRoll, diceOffResolveRound, startTurn, roll, applyKeep, endBustedTurn, bank, resume }
 
 /// Une transition journalisée : son type, l'instant où elle a eu lieu (pour
 /// la durée de partie), et ses éventuels paramètres.
@@ -69,6 +80,9 @@ class GameAction {
       GameAction(type: GameActionType.endBustedTurn, at: at ?? DateTime.now());
 
   factory GameAction.bank({DateTime? at}) => GameAction(type: GameActionType.bank, at: at ?? DateTime.now());
+
+  factory GameAction.resume({DateTime? at}) =>
+      GameAction(type: GameActionType.resume, at: at ?? DateTime.now());
 
   Map<String, dynamic> toJson() => {'type': type.name, 'at': at.toIso8601String(), 'params': params};
 
@@ -135,6 +149,10 @@ ReplayResult replayGame(
           rotatedSetup = setup.rotated(diceOff.winnerIndex!);
           engine = GameEngine.newGame(rotatedSetup.playerNames);
         }
+      case GameActionType.resume:
+        // Une reprise n'est pas un coup : ni le moteur ni [onGameAction] ne
+        // doivent la voir. Seules les durées s'y intéressent.
+        break;
       default:
         final previous = engine;
         engine = applyGameAction(engine!, action, random);
@@ -163,6 +181,8 @@ GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) 
     case GameActionType.bank:
       final (next, _) = engine.bank();
       return next;
+    case GameActionType.resume:
+      return engine;
     case GameActionType.diceOffRoll:
     case GameActionType.diceOffResolveRound:
       throw ArgumentError('${action.type} concerne le départage, pas la partie principale');
@@ -176,6 +196,33 @@ int durationSecondsFor(List<GameAction> actions) {
   var total = 0;
   for (var i = 1; i < actions.length; i++) {
     total += actions[i].at.difference(actions[i - 1].at).inSeconds;
+  }
+  return total;
+}
+
+/// Durée de jeu ACTIVE : la même somme, mais chaque écart plafonné à [maxGap].
+///
+/// Sert aux statistiques, là où [durationSecondsFor] sert à la sauvegarde :
+/// une partie posée le soir et reprise le lendemain compterait quinze heures,
+/// ce qui ruinerait « la partie la plus longue ». Le plafond les ramène à une
+/// attente plausible sans avoir à deviner où le joueur s'est arrêté.
+///
+/// L'écart qui s'achève sur une reprise ([GameActionType.resume]) ne compte
+/// pas du tout : on sait alors précisément que la partie était fermée.
+///
+/// Le plafond reste utile à côté de ce marqueur, et non à sa place : les
+/// parties déjà archivées n'en portent aucun, et une partie simplement
+/// laissée ouverte sans avoir été quittée n'en produit pas davantage.
+int activePlayingSecondsFor(
+  List<GameAction> actions, {
+  Duration maxGap = const Duration(minutes: 2),
+}) {
+  final cap = maxGap.inSeconds;
+  var total = 0;
+  for (var i = 1; i < actions.length; i++) {
+    if (actions[i].type == GameActionType.resume) continue;
+    final gap = actions[i].at.difference(actions[i - 1].at).inSeconds;
+    total += gap > cap ? cap : gap;
   }
   return total;
 }
