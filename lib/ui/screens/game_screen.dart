@@ -1289,9 +1289,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
       }
     }
 
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppBar(
         title: const AppTitle(),
+        // Aucune sortie dans la barre pendant une partie : ni flèche de
+        // retour, ni "quitter" — c'est le retour système qui ramène à
+        // l'accueil (voir le PopScope en fin de méthode). En rejeu, la flèche
+        // standard reste au contraire la seule sortie du mode spectateur.
+        //
+        // iOS fait exception : pas de bouton retour système, et le glissement
+        // depuis le bord de l'écran est justement neutralisé par ce PopScope
+        // (`ModalRoute.popGestureEnabled` est faux dès que la route refuse de
+        // se dépiler). Sans cette flèche, une partie en cours n'aurait donc
+        // plus AUCUNE sortie. Elle fait la même chose que le retour système
+        // ailleurs : ramener à l'accueil, pas dépiler.
+        automaticallyImplyLeading: widget.replayMode,
+        leading: (!widget.replayMode &&
+                Theme.of(context).platform == TargetPlatform.iOS)
+            ? BackButton(onPressed: () => popToHome(context))
+            : null,
         actions: _scoreGridAction(engine.players),
       ),
       body: AbsorbPointer(
@@ -1383,12 +1399,27 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ),
       ),
     );
+
+    // Le retour système ne dépile pas une partie en cours : il ramène droit à
+    // l'accueil. Rien à confirmer ni à sauvegarder au passage — la partie est
+    // déjà persistée après chaque transition (voir [GameNotifier]).
+    //
+    // En rejeu, le retour garde son comportement standard : ce mode
+    // spectateur est empilé sur l'écran d'où on l'a lancé, et c'est là qu'il
+    // doit ramener, pas à l'accueil.
+    return PopScope(
+      canPop: widget.replayMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        popToHome(context);
+      },
+      child: scaffold,
+    );
   }
 
   List<Widget> _scoreGridAction(List<Player> players) {
     // En mode rejeu, seul le retour compte (flèche standard de l'AppBar) :
-    // pas d'icône grille de score ni "quitter", juste le sélecteur de
-    // vitesse x1/x2/x4.
+    // pas d'icône grille de score, juste le sélecteur de vitesse x1/x2/x4.
     if (widget.replayMode) return const [ReplaySpeedControl()];
 
     final l10n = AppLocalizations.of(context);
@@ -1399,14 +1430,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
         ),
-      ),
-      IconButton(
-        icon: const Icon(Icons.exit_to_app),
-        tooltip: l10n.leaveGameTooltip,
-        // La partie est déjà sauvegardée en continu après chaque transition
-        // (voir GameNotifier) : quitter ne nécessite aucune action explicite
-        // de sauvegarde, juste revenir à l'écran d'accueil.
-        onPressed: () => popToHome(context),
       ),
     ];
   }

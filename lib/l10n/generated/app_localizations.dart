@@ -176,12 +176,6 @@ abstract class AppLocalizations {
   /// **'Fermer'**
   String get closeButton;
 
-  /// Bouton d'acquittement de l'écran de fin de partie, qui ramène à l'écran d'accueil.
-  ///
-  /// In fr, this message translates to:
-  /// **'OK'**
-  String get okButton;
-
   /// Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.
   ///
   /// In fr, this message translates to:
@@ -331,12 +325,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Reprendre'**
   String get resumeGameButton;
-
-  /// Infobulle de l'icône permettant de quitter une partie en cours pour revenir à l'écran d'accueil (la partie reste sauvegardée).
-  ///
-  /// In fr, this message translates to:
-  /// **'Quitter la partie'**
-  String get leaveGameTooltip;
 
   /// Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs.
   ///

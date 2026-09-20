@@ -34,9 +34,6 @@
   "closeButton": "Fermer",
   "@closeButton": {"description": "Bouton générique pour fermer un dialogue."},
 
-  "okButton": "OK",
-  "@okButton": {"description": "Bouton d'acquittement de l'écran de fin de partie, qui ramène à l'écran d'accueil."},
-
   "playersCountTitle": "Joueurs ({count})",
   "@playersCountTitle": {
     "description": "Titre de la liste des joueurs sur l'écran de configuration, avec leur nombre.",
@@ -136,9 +133,6 @@
 
   "resumeGameButton": "Reprendre",
   "@resumeGameButton": {"description": "Bouton pour confirmer la reprise de la dernière partie interrompue."},
-
-  "leaveGameTooltip": "Quitter la partie",
-  "@leaveGameTooltip": {"description": "Infobulle de l'icône permettant de quitter une partie en cours pour revenir à l'écran d'accueil (la partie reste sauvegardée)."},
 
   "scoreGridLabel": "Grille des scores",
   "@scoreGridLabel": {"description": "Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs."},

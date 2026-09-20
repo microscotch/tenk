@@ -42,9 +42,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get closeButton => 'Fermer';
 
   @override
-  String get okButton => 'OK';
-
-  @override
   String playersCountTitle(int count) {
     return 'Jucători ($count)';
   }
@@ -132,9 +129,6 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get resumeGameButton => 'Reprendre';
-
-  @override
-  String get leaveGameTooltip => 'Părăsește jocul';
 
   @override
   String get scoreGridLabel => 'Grilă de scoruri';

@@ -42,9 +42,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get closeButton => 'Fermer';
 
   @override
-  String get okButton => 'OK';
-
-  @override
   String playersCountTitle(int count) {
     return 'Spelare ($count)';
   }
@@ -132,9 +129,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get resumeGameButton => 'Reprendre';
-
-  @override
-  String get leaveGameTooltip => 'Lämna spelet';
 
   @override
   String get scoreGridLabel => 'Poängtabell';
