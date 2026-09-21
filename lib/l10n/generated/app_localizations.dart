@@ -572,6 +572,12 @@ abstract class AppLocalizations {
   /// **'{turns, plural, one{{turns} tour} other{{turns} tours}} · meilleur {best} · {busts, plural, one{{busts} craque} other{{busts} craques}}'**
   String gameStatsPlayerSummary(int turns, int best, int busts);
 
+  /// Résumé sous le nom d'un joueur dans les statistiques générales, lisible sans déplier son détail : ses parties jouées et gagnées, son meilleur tour banqué, tous cumulés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{games, plural, one{{games} partie} other{{games} parties}} · {won, plural, one{{won} gagnée} other{{won} gagnées}} · meilleur {best}'**
+  String statsPlayerSummary(int games, int won, int best);
+
   /// Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé.
   ///
   /// In fr, this message translates to:

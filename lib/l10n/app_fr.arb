@@ -250,6 +250,12 @@
     "placeholders": {"turns": {"type": "int"}, "best": {"type": "int"}, "busts": {"type": "int"}}
   },
 
+  "statsPlayerSummary": "{games, plural, one{{games} partie} other{{games} parties}} · {won, plural, one{{won} gagnée} other{{won} gagnées}} · meilleur {best}",
+  "@statsPlayerSummary": {
+    "description": "Résumé sous le nom d'un joueur dans les statistiques générales, lisible sans déplier son détail : ses parties jouées et gagnées, son meilleur tour banqué, tous cumulés.",
+    "placeholders": {"games": {"type": "int"}, "won": {"type": "int"}, "best": {"type": "int"}}
+  },
+
   "scoreChartEmpty": "Aucun tour terminé pour l'instant : il n'y a encore rien à tracer.",
   "@scoreChartEmpty": {"description": "Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé."},
 

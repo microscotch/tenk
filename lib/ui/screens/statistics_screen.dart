@@ -8,11 +8,11 @@ import '../../state/player_statistics.dart';
 import '../../state/player_store.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/player_avatar.dart';
+import '../widgets/player_stats_groups.dart';
 import '../widgets/stat_row.dart';
-import 'player_stats_screen.dart';
 
 /// Consultation des statistiques : les records tous joueurs confondus, puis
-/// le détail de chaque fiche.
+/// chaque fiche, dont le détail se déplie sur place.
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
 
@@ -42,16 +42,27 @@ class StatisticsScreen extends ConsumerWidget {
             // Seuls les joueurs ayant joué : une fiche vierge n'a rien à
             // montrer ici, et la gestion des joueurs reste l'endroit où voir
             // toute la base.
+            //
+            // Un panneau par joueur, replié, dont le détail se déplie sur
+            // place plutôt que dans un écran à part. Replié, il ne prend que
+            // sa ligne : le détail complet fait une trentaine de lignes, et
+            // les dérouler toutes à la suite noyait les records en tête.
+            // Le résumé en sous-titre suffit à comparer sans rien déplier.
             for (final player in played) ...[
               const SizedBox(height: 8),
-              ListTile(
+              ExpansionTile(
+                key: PageStorageKey('stats-${player.id}'),
                 leading: PlayerAvatarWidget(name: player.name, size: 40),
                 title: Text(player.displayName),
-                subtitle: Text(l10n.playerGamesSummary(player.stats.gamesPlayed)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => PlayerStatsScreen(player: player)),
-                ),
+                subtitle: Text(l10n.statsPlayerSummary(
+                  player.stats.gamesPlayed,
+                  player.stats.gamesWon,
+                  player.stats.bestBankedTurn,
+                )),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                // Tous les groupes : ces chiffres sont cumulés sur toutes les
+                // parties du joueur, parties et temps y disent quelque chose.
+                children: [PlayerStatsGroups(stats: player.stats)],
               ),
             ],
           ],

@@ -115,8 +115,8 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
             const SizedBox(height: 8),
             // Un panneau par joueur, replié : le détail complet fait une
             // trentaine de lignes, et les empiler à la suite donnait un écran
-            // interminable dès quelques joueurs (voir `PlayerStatsScreen`). Le
-            // résumé en sous-titre suffit à comparer sans rien déplier.
+            // interminable dès quelques joueurs. Le résumé en sous-titre suffit
+            // à comparer sans rien déplier.
             for (final player in ranking)
               Builder(builder: (context) {
                 final stats = _statsByName[player.name] ?? PlayerStats.empty;

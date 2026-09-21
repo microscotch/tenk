@@ -265,6 +265,23 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
+  String statsPlayerSummary(int games, int won, int best) {
+    String _temp0 = intl.Intl.pluralLogic(
+      games,
+      locale: localeName,
+      other: '$games parties',
+      one: '$games partie',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      won,
+      locale: localeName,
+      other: '$won gagnées',
+      one: '$won gagnée',
+    );
+    return '$_temp0 · $_temp1 · meilleur $best';
+  }
+
+  @override
   String get scoreChartEmpty =>
       'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
 

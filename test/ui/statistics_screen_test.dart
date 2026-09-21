@@ -7,8 +7,9 @@ import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_statistics.dart';
 import 'package:le10000/state/player_store.dart';
-import 'package:le10000/ui/screens/player_stats_screen.dart';
 import 'package:le10000/ui/screens/statistics_screen.dart';
+import 'package:le10000/ui/widgets/die_widget.dart';
+import 'package:le10000/ui/widgets/stat_row.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
@@ -19,6 +20,12 @@ void main() {
   setUp(() => players = FakePlayerStore());
 
   Future<void> pump(WidgetTester tester) async {
+    // Haute : un `ListView` ne construit pas ce qui est sous le pli, et un
+    // panneau déplié fait une quarantaine de lignes.
+    tester.view.physicalSize = const Size(430, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     final container = ProviderContainer(
       overrides: [
         playerStoreProvider.overrideWithValue(players),
@@ -36,6 +43,9 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: const MaterialApp(
+          // Fixé plutôt que laissé au défaut de l'environnement de test : le
+          // séparateur décimal d'une moyenne en dépend (« 3,3 » ou « 3.3 »).
+          locale: Locale('fr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: StatisticsScreen(),
@@ -44,6 +54,19 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  /// Écrit un joueur ayant joué, puis affiche l'écran avec son panneau déplié.
+  Future<void> pumpExpanded(WidgetTester tester, PlayerProfile player) async {
+    await players.write(player);
+    await pump(tester);
+    await tester.tap(find.text(player.displayName));
+    await tester.pumpAndSettle();
+  }
+
+  Finder valueOf(String label, String text) => find.descendant(
+        of: find.widgetWithText(StatRow, label),
+        matching: find.text(text),
+      );
 
   testWidgets('sans partie jouée, les records le disent au lieu de mentir', (tester) async {
     await players.write(PlayerProfile.create(name: 'Marie'));
@@ -61,19 +84,132 @@ void main() {
         reason: 'une fiche vierge n\'a rien à montrer ici ; elle reste dans la gestion des joueurs');
   });
 
-  testWidgets('un joueur ayant joué est listé, avec un chevron vers son détail', (tester) async {
-    await players.write(PlayerProfile.create(name: 'Marie')
-        .copyWith(stats: const PlayerStats(gamesPlayed: 4, gamesWon: 3, brelans: {4: 3})));
+  testWidgets('un joueur ayant joué est listé avec son résumé, panneau replié', (tester) async {
+    await players.write(PlayerProfile.create(name: 'Marie').copyWith(
+        stats: const PlayerStats(gamesPlayed: 4, gamesWon: 3, bestBankedTurn: 2500, brelans: {4: 3})));
     await pump(tester);
 
     expect(find.text('Marie'), findsOneWidget);
-    expect(find.text('4 parties jouées'), findsOneWidget);
-    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    final panneau = find.ancestor(of: find.text('Marie'), matching: find.byType(ExpansionTile));
+    expect(
+      find.descendant(of: panneau, matching: find.text('4 parties · 3 gagnées · meilleur 2500')),
+      findsOneWidget,
+      reason: 'le résumé se lit sans rien déplier',
+    );
+    expect(find.text('Figures'), findsNothing, reason: 'le détail est replié par défaut');
+  });
+
+  testWidgets('chaque joueur a son propre résumé', (tester) async {
+    await players.write(PlayerProfile.create(name: 'Marie')
+        .copyWith(stats: const PlayerStats(gamesPlayed: 4, gamesWon: 3, bestBankedTurn: 2500)));
+    await players.write(PlayerProfile.create(name: 'Bob')
+        .copyWith(stats: const PlayerStats(gamesPlayed: 1, gamesWon: 0, bestBankedTurn: 900)));
+    await pump(tester);
+
+    String summaryOf(String name) {
+      final panneau = find.ancestor(of: find.text(name), matching: find.byType(ExpansionTile));
+      final tile = tester.widget<ExpansionTile>(panneau);
+      return (tile.subtitle! as Text).data!;
+    }
+
+    expect(summaryOf('Marie'), '4 parties · 3 gagnées · meilleur 2500');
+    expect(summaryOf('Bob'), '1 partie · 0 gagnée · meilleur 900');
+  });
+
+  testWidgets('toucher un joueur déplie son détail sur place, sans changer d\'écran',
+      (tester) async {
+    await players.write(PlayerProfile.create(name: 'Marie')
+        .copyWith(stats: const PlayerStats(gamesPlayed: 4, gamesWon: 3, brelans: {4: 3})));
+    await pump(tester);
+    expect(find.text('Figures'), findsNothing);
 
     await tester.tap(find.text('Marie'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(PlayerStatsScreen), findsOneWidget);
+    expect(find.text('Figures'), findsOneWidget, reason: 'le détail est apparu');
+    expect(find.byType(StatisticsScreen), findsOneWidget, reason: 'toujours sur l\'écran général');
+    expect(find.byType(BackButton), findsNothing, reason: 'aucun écran n\'a été empilé');
+    expect(find.text('Records'), findsOneWidget, reason: 'les records restent visibles en tête');
+
+    await tester.tap(find.text('Marie'));
+    await tester.pumpAndSettle();
+    expect(find.text('Figures'), findsNothing, reason: 'un second toucher le replie');
+  });
+
+  testWidgets('les compteurs du joueur sont rendus', (tester) async {
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(
+        stats: const PlayerStats(
+          gamesPlayed: 4,
+          gamesWon: 3,
+          totalActiveSeconds: 3600,
+          shortestActiveSeconds: 300,
+          longestActiveSeconds: 1800,
+          bestBankedTurn: 2500,
+        ),
+      ),
+    );
+
+    expect(find.text('1 h 00'), findsOneWidget, reason: 'le temps total, lisible');
+    expect(find.text('5 min'), findsOneWidget, reason: 'la partie la plus courte');
+    expect(valueOf('Meilleur tour', '2500'), findsWidgets);
+  });
+
+  testWidgets('chaque figure liste ses six valeurs, zéros compris', (tester) async {
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(
+        stats: const PlayerStats(gamesPlayed: 2, brelans: {4: 3, 1: 1}),
+      ),
+    );
+
+    // Brelans, carrés et quintes : trois figures ventilées sur six valeurs.
+    expect(find.byType(BreakdownRow), findsNWidgets(18));
+    expect(find.byType(DieGlyph), findsNWidgets(18),
+        reason: 'la valeur est dessinée, pas écrite en chiffres');
+
+    final brelans = tester.widgetList<BreakdownRow>(find.byType(BreakdownRow)).take(6).toList();
+    expect(brelans.map((r) => r.value), [1, 2, 3, 4, 5, 6], reason: 'toujours dans l\'ordre');
+    expect(brelans.map((r) => r.count), [1, 0, 0, 3, 0, 0],
+        reason: 'une valeur jamais sortie s\'affiche à zéro plutôt que de disparaître');
+  });
+
+  testWidgets('les tours, les lancers et leur moyenne sont rendus, cumulés sur les parties',
+      (tester) async {
+    // Deux parties cumulées : 10 lancers en 2 tours puis 30 en 10. La moyenne
+    // du cumul est 40 / 12 = 3,3 ; la moyenne des deux moyennes (5 et 3), 4,0,
+    // serait fausse — c'est ce que ce test empêche d'écrire.
+    final cumul = const PlayerStats(gamesPlayed: 1, rollsTotal: 10, turnsTotal: 2) +
+        const PlayerStats(gamesPlayed: 1, rollsTotal: 30, turnsTotal: 10);
+    await pumpExpanded(tester, PlayerProfile.create(name: 'Marie').copyWith(stats: cumul));
+
+    expect(valueOf('Tours joués', '12'), findsOneWidget);
+    expect(valueOf('Lancers', '40'), findsOneWidget);
+    expect(valueOf('Lancers par tour', '3,3'), findsOneWidget, reason: '40 lancers en 12 tours');
+    expect(find.text('4,0'), findsNothing, reason: 'pas une moyenne de moyennes');
+  });
+
+  testWidgets('sans aucun tour, la moyenne de lancers s\'affiche en tiret', (tester) async {
+    // Une partie jouée mais aucun tour comptabilisé : une fiche à zéro partie
+    // n'est pas listée, il faut donc au moins une partie pour la voir.
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(stats: const PlayerStats(gamesPlayed: 1)),
+    );
+
+    expect(valueOf('Lancers par tour', '—'), findsOneWidget,
+        reason: 'zéro tour : une moyenne n\'existe pas, ce n\'est pas 0');
+  });
+
+  testWidgets('le surnom titre le panneau à la place du nom', (tester) async {
+    await players.write(PlayerProfile.create(name: 'Marie Curie', nickname: 'Mimi')
+        .copyWith(stats: const PlayerStats(gamesPlayed: 1)));
+    await pump(tester);
+
+    final panneau = find.byType(ExpansionTile);
+    expect(find.descendant(of: panneau, matching: find.text('Mimi')), findsOneWidget);
+    expect(find.text('Marie Curie'), findsNothing);
   });
 
   testWidgets('un record à égalité nomme tous ses détenteurs', (tester) async {
