@@ -7,6 +7,8 @@ import '../../game/dice_off.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/dice_off_providers.dart';
 import '../../state/game_providers.dart';
+import '../../state/player_providers.dart';
+import '../../state/player_store.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
 import '../sound_effects.dart';
@@ -101,6 +103,15 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     _scheduleAutoAction(_startGame, autoEnabled: notifier.allPlayersAreAuto);
   }
 
+  /// Le nom sous lequel le joueur du siège [seat] est appelé : son surnom quand
+  /// sa fiche en porte un (voir `displayNamesFor`). Le tirage au sort se joue
+  /// sur la config d'origine, avant que l'ordre de jeu soit fixé.
+  String _shownName(int seat) {
+    final notifier = ref.read(diceOffProvider.notifier);
+    final names = displayNamesFor(notifier.setup, ref.read(playersProvider).value);
+    return displayNameOf(names, notifier.nameOf(seat));
+  }
+
   void _startGame() {
     if (!mounted) return;
     final diceOffNotifier = ref.read(diceOffProvider.notifier);
@@ -121,7 +132,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           Navigator.of(context)
               .push(MaterialPageRoute(
                 builder: (_) => PassDeviceScreen(
-                  nextPlayerName: ref.read(diceOffProvider.notifier).nameOf(next.nextToRoll!),
+                  nextPlayerName: _shownName(next.nextToRoll!),
                 ),
               ))
               .then((_) => _scheduleAiIfNeeded());
@@ -169,7 +180,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
-              l10n.diceOffTieBreak(state.activeIndices.map(notifier.nameOf).join(', ')),
+              l10n.diceOffTieBreak(state.activeIndices.map(_shownName).join(', ')),
               style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
@@ -178,7 +189,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           _diceOffRow(state.rollsThisRound, notifier, roundIndex: state.roundHistory.length),
           const SizedBox(height: 16),
         ],
-        Text(l10n.diceOffPlayerTurn(notifier.nameOf(next)), style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.diceOffPlayerTurn(_shownName(next)), style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 24),
         FilledButton(
           onPressed: _rollDie,
@@ -195,7 +206,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          l10n.diceOffWinnerAnnouncement(notifier.nameOf(state.winnerIndex!)),
+          l10n.diceOffWinnerAnnouncement(_shownName(state.winnerIndex!)),
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
@@ -218,7 +229,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(notifier.nameOf(i), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+              Text(_shownName(i), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
               const SizedBox(height: 4),
               DieWidget(
                 value: rolls[i]!,

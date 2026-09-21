@@ -40,7 +40,7 @@ class GameOverScreen extends ConsumerWidget {
     // Le surnom prime sur le nom, ici comme partout où le joueur est nommé.
     // Un siège non rattaché à une fiche — un bot, une partie antérieure à la
     // base — garde le nom sous lequel la partie l'a enregistré.
-    final displayNames = ref.watch(displayNamesProvider);
+    final displayNames = watchDisplayNames(ref, record);
     final sorted = [...players]
       ..sort((a, b) => b.totalScore.compareTo(a.totalScore));
     final journal = record;

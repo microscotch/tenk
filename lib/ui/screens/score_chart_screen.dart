@@ -29,7 +29,7 @@ class ScoreChartScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final displayNames = ref.watch(displayNamesProvider);
+    final displayNames = watchDisplayNames(ref, record);
 
     final SavedGame? journal;
     final List<Player>? seats;

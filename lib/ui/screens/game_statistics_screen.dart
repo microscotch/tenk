@@ -70,7 +70,7 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final displayNames = ref.watch(displayNamesProvider);
+    final displayNames = watchDisplayNames(ref, widget.record);
     final colors = assignAvatarColors(widget.players.map((p) => p.name));
     final winnerName = widget.players[widget.winnerIndex].name;
     final ranking = [...widget.players]..sort((a, b) => b.totalScore.compareTo(a.totalScore));

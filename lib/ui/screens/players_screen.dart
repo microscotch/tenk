@@ -37,7 +37,7 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.deletePlayerConfirmTitle),
-        content: Text(l10n.deletePlayerConfirmMessage(player.name)),
+        content: Text(l10n.deletePlayerConfirmMessage(player.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
