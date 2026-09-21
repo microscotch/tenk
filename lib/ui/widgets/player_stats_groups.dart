@@ -46,6 +46,7 @@ class PlayerStatsGroups extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final s = stats;
+    final locale = Localizations.localeOf(context).toString();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -75,16 +76,41 @@ class PlayerStatsGroups extends StatelessWidget {
             ),
           ]),
         _group(context, l10n.statsSectionFigures, [
-          ..._figureRows(l10n.statsBrelans, s.brelansTotal, s.brelans),
-          ..._figureRows(l10n.statsCarres, s.carresTotal, s.carres),
-          ..._figureRows(l10n.statsQuintes, s.quintesTotal, s.quintes),
-          StatRow(label: l10n.statsSuites, value: '${s.suitesTotal}'),
-          StatRow(label: l10n.statsSmallSuites, value: '${s.petitesSuites}', detail: true),
-          StatRow(label: l10n.statsBigSuites, value: '${s.grandesSuites}', detail: true),
+          _figureRow(context, l10n.statsBrelans, s.brelansTotal, s.brelans),
+          _figureRow(context, l10n.statsCarres, s.carresTotal, s.carres),
+          _figureRow(context, l10n.statsQuintes, s.quintesTotal, s.quintes),
+          // Le détail de chaque figure se déplie : replié, les figures tiennent
+          // sur une ligne chacune. Chaque part est suivie de son pourcentage du
+          // total de la figure.
+          ExpandableStatRow(
+            label: l10n.statsSuites,
+            value: '${s.suitesTotal}',
+            children: [
+              StatRow(
+                label: l10n.statsSmallSuites,
+                value: withShare(s.petitesSuites, s.suitesTotal, locale),
+                detail: true,
+              ),
+              StatRow(
+                label: l10n.statsBigSuites,
+                value: withShare(s.grandesSuites, s.suitesTotal, locale),
+                detail: true,
+              ),
+            ],
+          ),
           StatRow(label: l10n.statsLoneAces, value: '${s.keptLoneAces}'),
           StatRow(label: l10n.statsLoneFives, value: '${s.keptLoneFives}'),
-          StatRow(label: l10n.statsAceQuints, value: '${s.quintesDAsTotal}'),
-          StatRow(label: l10n.statsAceQuintsWon, value: '${s.quintesDAsReussies}', detail: true),
+          ExpandableStatRow(
+            label: l10n.statsAceQuints,
+            value: '${s.quintesDAsTotal}',
+            children: [
+              StatRow(
+                label: l10n.statsAceQuintsWon,
+                value: withShare(s.quintesDAsReussies, s.quintesDAsTotal, locale),
+                detail: true,
+              ),
+            ],
+          ),
         ]),
         if (includeMisc)
           _group(context, l10n.statsSectionMisc, [
@@ -112,14 +138,18 @@ class PlayerStatsGroups extends StatelessWidget {
     );
   }
 
-  /// Le total, puis une ligne par valeur de dé — les SIX, y compris celles
-  /// jamais sorties : un tableau à trous se lit plus mal qu'un tableau complet,
-  /// où l'œil retrouve toujours la même ligne au même endroit.
-  List<Widget> _figureRows(String label, int total, Map<int, int> byValue) {
-    return [
-      StatRow(label: label, value: '$total'),
-      for (var value = 1; value <= 6; value++)
-        BreakdownRow(value: value, count: byValue[value] ?? 0),
-    ];
+  /// Le total, qui se déplie sur une ligne par valeur de dé — les SIX, y compris
+  /// celles jamais sorties : un tableau à trous se lit plus mal qu'un tableau
+  /// complet, où l'œil retrouve toujours la même ligne au même endroit. Chaque
+  /// compte est suivi de sa part du total de la figure.
+  Widget _figureRow(BuildContext context, String label, int total, Map<int, int> byValue) {
+    return ExpandableStatRow(
+      label: label,
+      value: '$total',
+      children: [
+        for (var value = 1; value <= 6; value++)
+          BreakdownRow(value: value, count: byValue[value] ?? 0, total: total),
+      ],
+    );
   }
 }

@@ -239,7 +239,7 @@ void main() {
     expect(find.byIcon(Icons.emoji_events), findsOneWidget, reason: 'un seul vainqueur est couronné');
   });
 
-  testWidgets('les figures de la partie sont totalisées sur toute la table, sans rien déplier',
+  testWidgets('les figures de la partie sont totalisées sur toute la table, détail replié par défaut',
       (tester) async {
     // Il faut des figures chez PLUSIEURS joueurs : si un seul en avait, le
     // total de la table et le compte de ce joueur seraient indiscernables, et
@@ -273,25 +273,33 @@ void main() {
         reason: 'prémisse : le total est strictement plus grand que celui de chaque joueur');
     expect(
       find.descendant(
-        of: find.descendant(of: section, matching: find.widgetWithText(StatRow, 'Brelans')),
+        of: find.descendant(of: section, matching: find.widgetWithText(ExpandableStatRow, 'Brelans')),
         matching: find.text('$brelans'),
       ),
       findsOneWidget,
     );
     expect(
       find.descendant(
-        of: find.descendant(of: section, matching: find.widgetWithText(StatRow, 'Suites')),
+        of: find.descendant(of: section, matching: find.widgetWithText(ExpandableStatRow, 'Suites')),
         matching: find.text('${stats.bySeat.fold<int>(0, (sum, p) => sum + p.suitesTotal)}'),
       ),
       findsOneWidget,
     );
-    // La même ventilation que la fiche d'un joueur, sommée sur la table : six
-    // valeurs sous les brelans, puis sous les carrés, puis sous les quintes.
+    // La même ventilation que la fiche d'un joueur, sommée sur la table, repliée
+    // par défaut : six valeurs sous les brelans, puis sous les carrés, puis sous
+    // les quintes, une fois dépliés.
+    expect(find.descendant(of: section, matching: find.byType(BreakdownRow)), findsNothing);
+    for (final figure in ['Brelans', 'Carrés', 'Quintes']) {
+      await tester.tap(find.descendant(of: section, matching: find.text(figure)));
+      await tester.pumpAndSettle();
+    }
     final rows = tester
         .widgetList<BreakdownRow>(find.descendant(of: section, matching: find.byType(BreakdownRow)))
         .toList();
     expect(rows, hasLength(18));
     // Les détails « dont » portent le tiret, ici comme sur la fiche d'un joueur.
+    await tester.tap(find.descendant(of: section, matching: find.text('Suites')));
+    await tester.pumpAndSettle();
     expect(find.descendant(of: section, matching: find.text('– dont petites')), findsOneWidget);
     expect(find.descendant(of: section, matching: find.text('– dont grandes')), findsOneWidget);
     int onTable(Map<int, int> Function(PlayerStats) byValue, int face) =>

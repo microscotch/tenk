@@ -110,15 +110,20 @@ class StatisticsScreen extends ConsumerWidget {
       return BreakdownRow(value: face, count: r.best, display: r.text);
     }
 
-    List<Widget> figure(
+    /// Une ligne de record dont le détail se déplie (voir [ExpandableStatRow]) :
+    /// six lignes par figure, trois figures à la suite, encombraient l'écran.
+    Widget expandable(String label, int Function(PlayerStats) value, List<Widget> details) {
+      return ExpandableStatRow(label: label, value: record(value).text, children: details);
+    }
+
+    Widget figure(
       String label,
       int Function(PlayerStats) total,
       Map<int, int> Function(PlayerStats) byValue,
     ) {
-      return [
-        row(label, total),
+      return expandable(label, total, [
         for (var face = 1; face <= 6; face++) faceRow(face, byValue),
-      ];
+      ]);
     }
 
     return [
@@ -133,16 +138,18 @@ class StatisticsScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(top: 12, bottom: 2),
         child: Text(l10n.statsSectionFigures, style: Theme.of(context).textTheme.titleSmall),
       ),
-      ...figure(l10n.statsBrelans, (s) => s.brelansTotal, (s) => s.brelans),
-      ...figure(l10n.statsCarres, (s) => s.carresTotal, (s) => s.carres),
-      ...figure(l10n.statsQuintes, (s) => s.quintesTotal, (s) => s.quintes),
-      row(l10n.statsSuites, (s) => s.suitesTotal),
-      row(l10n.statsSmallSuites, (s) => s.petitesSuites, detail: true),
-      row(l10n.statsBigSuites, (s) => s.grandesSuites, detail: true),
+      figure(l10n.statsBrelans, (s) => s.brelansTotal, (s) => s.brelans),
+      figure(l10n.statsCarres, (s) => s.carresTotal, (s) => s.carres),
+      figure(l10n.statsQuintes, (s) => s.quintesTotal, (s) => s.quintes),
+      expandable(l10n.statsSuites, (s) => s.suitesTotal, [
+        row(l10n.statsSmallSuites, (s) => s.petitesSuites, detail: true),
+        row(l10n.statsBigSuites, (s) => s.grandesSuites, detail: true),
+      ]),
       row(l10n.statsLoneAces, (s) => s.keptLoneAces),
       row(l10n.statsLoneFives, (s) => s.keptLoneFives),
-      row(l10n.statsAceQuints, (s) => s.quintesDAsTotal),
-      row(l10n.statsAceQuintsWon, (s) => s.quintesDAsReussies, detail: true),
+      expandable(l10n.statsAceQuints, (s) => s.quintesDAsTotal, [
+        row(l10n.statsAceQuintsWon, (s) => s.quintesDAsReussies, detail: true),
+      ]),
     ];
   }
 }

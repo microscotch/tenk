@@ -64,6 +64,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Déplie la ligne [label] (une figure) : son détail est replié par défaut.
+  Future<void> unfold(WidgetTester tester, String label, {Finder? within}) async {
+    final target = within == null ? find.text(label) : find.descendant(of: within, matching: find.text(label));
+    await tester.tap(target);
+    await tester.pumpAndSettle();
+  }
+
   Finder valueOf(String label, String text) => find.descendant(
         of: find.widgetWithText(StatRow, label),
         matching: find.text(text),
@@ -165,9 +172,14 @@ void main() {
       ),
     );
 
-    // Brelans, carrés et quintes : trois figures ventilées sur six valeurs.
+    // Brelans, carrés et quintes : trois figures ventilées sur six valeurs, dont
+    // le détail est replié tant qu'on ne l'a pas demandé.
     final panneau = find.byType(ExpansionTile);
     Finder inPanel(Finder f) => find.descendant(of: panneau, matching: f);
+    expect(inPanel(find.byType(BreakdownRow)), findsNothing, reason: 'replié par défaut');
+    for (final figure in ['Brelans', 'Carrés', 'Quintes']) {
+      await unfold(tester, figure, within: panneau);
+    }
     expect(inPanel(find.byType(BreakdownRow)), findsNWidgets(18));
     expect(inPanel(find.byType(DieGlyph)), findsNWidgets(18),
         reason: 'la valeur est dessinée, pas écrite en chiffres');
@@ -176,6 +188,57 @@ void main() {
     expect(brelans.map((r) => r.value), [1, 2, 3, 4, 5, 6], reason: 'toujours dans l\'ordre');
     expect(brelans.map((r) => r.count), [1, 0, 0, 3, 0, 0],
         reason: 'une valeur jamais sortie s\'affiche à zéro plutôt que de disparaître');
+  });
+
+  testWidgets('déplier une figure montre son détail, la replier le cache', (tester) async {
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(stats: const PlayerStats(gamesPlayed: 1, brelans: {4: 3})),
+    );
+    final panneau = find.byType(ExpansionTile);
+    Finder inPanel(Finder f) => find.descendant(of: panneau, matching: f);
+
+    await unfold(tester, 'Brelans', within: panneau);
+    expect(inPanel(find.byType(BreakdownRow)), findsNWidgets(6), reason: 'les six valeurs, pas les autres figures');
+
+    await unfold(tester, 'Brelans', within: panneau);
+    expect(inPanel(find.byType(BreakdownRow)), findsNothing);
+  });
+
+  testWidgets('chaque valeur du détail est suivie de sa part du total, à deux décimales', (tester) async {
+    // 8 brelans : 5 de 4, 2 de 1 et 1 de 6 — 62,50 %, 25,00 % et 12,50 %.
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(
+        stats: const PlayerStats(gamesPlayed: 3, brelans: {4: 5, 1: 2, 6: 1}, petitesSuites: 1, grandesSuites: 2),
+      ),
+    );
+    final panneau = find.byType(ExpansionTile);
+    await unfold(tester, 'Brelans', within: panneau);
+
+    final rows = tester.widgetList<BreakdownRow>(find.descendant(of: panneau, matching: find.byType(BreakdownRow))).toList();
+    expect(rows.map((r) => r.total), everyElement(8), reason: 'la part est celle du total de la figure');
+    for (final texte in ['2 (25,00 %)', '0 (0,00 %)', '5 (62,50 %)', '1 (12,50 %)']) {
+      expect(find.descendant(of: panneau, matching: find.text(texte)), findsWidgets, reason: texte);
+    }
+
+    // Les suites et les quintes d'as ont leur part aussi : 1 petite sur 3 suites.
+    await unfold(tester, 'Suites', within: panneau);
+    expect(find.descendant(of: panneau, matching: find.text('1 (33,33 %)')), findsOneWidget);
+    expect(find.descendant(of: panneau, matching: find.text('2 (66,67 %)')), findsOneWidget);
+  });
+
+  testWidgets('sans rien à répartir, la valeur du détail n\'a pas de pourcentage', (tester) async {
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(stats: const PlayerStats(gamesPlayed: 1)),
+    );
+    final panneau = find.byType(ExpansionTile);
+    await unfold(tester, 'Brelans', within: panneau);
+
+    expect(find.descendant(of: panneau, matching: find.textContaining('%')), findsNothing,
+        reason: 'une part de rien n\'existe : ce n\'est pas 0 %');
+    expect(find.descendant(of: panneau, matching: find.text('0')), findsWidgets);
   });
 
   testWidgets('les tours, les lancers et leur moyenne sont rendus, cumulés sur les parties',
@@ -222,10 +285,18 @@ void main() {
         .widgetList<BreakdownRow>(find.descendant(of: records, matching: find.byType(BreakdownRow)))
         .toList();
 
-    Finder recordOf(String label, String value) => find.descendant(
-          of: find.descendant(of: records, matching: find.widgetWithText(StatRow, label)),
-          matching: find.text(value),
-        );
+    /// La valeur de record [value] sur la ligne [label], qu'elle soit simple ou
+    /// dépliable (le libellé d'un détail s'écrit avec son tiret). Pour une ligne
+    /// dépliable, c'est la valeur de son en-tête, pas celles de son détail.
+    Finder recordOf(String label, String value) {
+      final simple = find.byWidgetPredicate(
+          (w) => w is StatRow && (w.label == label || (w.detail && '– ${w.label}' == label)));
+      final expandable = find.byWidgetPredicate((w) => w is ExpandableStatRow && w.label == label);
+      final header = find.descendant(of: find.descendant(of: records, matching: expandable), matching: find.byType(InkWell));
+      final onSimple = find.descendant(of: find.descendant(of: records, matching: simple), matching: find.text(value));
+      final onHeader = find.descendant(of: header, matching: find.text(value));
+      return onHeader.evaluate().isNotEmpty ? onHeader : onSimple;
+    }
 
     Future<void> twoPlayers() async {
       await players.write(PlayerProfile.create(name: 'Marie').copyWith(
@@ -241,8 +312,14 @@ void main() {
       await twoPlayers();
       await pump(tester);
 
+      expect(facesOf(tester), isEmpty, reason: 'le détail est replié par défaut');
+      for (final figure in ['Brelans', 'Carrés', 'Quintes']) {
+        await unfold(tester, figure, within: records);
+      }
       final rows = facesOf(tester);
       expect(rows, hasLength(18), reason: 'brelans, carrés et quintes, six valeurs chacun');
+      expect(rows.map((r) => r.total), everyElement(isNull),
+          reason: 'un record par valeur n\'est pas une part : pas de pourcentage');
       expect(rows.take(6).map((r) => r.value), [1, 2, 3, 4, 5, 6]);
 
       // Brelans : Bob a le plus de brelans de 1, Marie le plus de brelans de 4.
@@ -281,6 +358,7 @@ void main() {
     testWidgets('les suites sont détaillées en petites et grandes', (tester) async {
       await twoPlayers();
       await pump(tester);
+      await unfold(tester, 'Suites', within: records);
 
       expect(recordOf('Suites', '2 — Bob'), findsOneWidget);
       expect(recordOf('– dont petites', '2 — Bob'), findsOneWidget);
@@ -327,6 +405,8 @@ void main() {
     );
 
     final panneau = find.byType(ExpansionTile);
+    await unfold(tester, 'Suites', within: panneau);
+    await unfold(tester, 'Quintes d\'as', within: panneau);
     for (final label in [
       '– dont petites',
       '– dont grandes',
