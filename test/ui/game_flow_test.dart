@@ -1627,6 +1627,46 @@ void main() {
         reason: 'la raison du craque est expliquée au joueur');
   });
 
+  testWidgets('une main pleine qui tombe pile sur 10000 affiche directement la popup de craque', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Ce que GameEngine.roll produit désormais : A est à 9000 et son lancer
+    // complète la main avec un brelan d'as (1000), pile 10000 — le craque est
+    // déjà prononcé, sans attendre que le joueur touche « Main pleine ! ».
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        pendingRoll: analyzeRoll([1, 1, 1]),
+        hasRolledThisTurn: true,
+        busted: true,
+        bustReason: BustReason.fullHandAtTarget,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(of: find.byType(AlertDialog), matching: find.text('Craqué !')),
+      findsOneWidget,
+      reason: 'la popup de craque, pas une main pleine à relancer',
+    );
+    expect(find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('Main pleine à 10000')),
+        findsOneWidget, reason: 'la raison est expliquée');
+  });
+
   testWidgets('le journal résume chaque lancer : dés gardés, gain, dés restants et total de la main', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

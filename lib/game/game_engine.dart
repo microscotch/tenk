@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'combination.dart' show RollAnalysis;
 import 'player.dart';
 import 'turn_result.dart';
 import 'turn_state.dart';
@@ -138,22 +139,54 @@ class GameEngine {
 
   /// Lance les dés disponibles du tour en cours.
   ///
-  /// Un lancer qui marque mais dont le gain minimum incompressible ferait
-  /// déjà dépasser 10000 est un craque prononcé ICI, dès le lancer : aucune
-  /// décision de garde ne pourrait le sauver, autant l'annoncer pendant que
-  /// les dés sont affichés plutôt qu'après un choix qui ne change rien. Le
-  /// [TurnState.pendingRoll] est conservé, comme pour un craque classique,
+  /// Un lancer qui marque mais qui ne laisse aucune issue est un craque prononcé
+  /// ICI, dès le lancer : aucune décision de garde ne pourrait le sauver, autant
+  /// l'annoncer pendant que les dés sont affichés plutôt qu'après un choix qui
+  /// ne change rien. Deux impasses :
+  /// - son gain minimum incompressible ferait déjà dépasser 10000
+  ///   ([BustReason.exceedsTarget]) ;
+  /// - il complète la main et tombe pile sur 10000, sans être la quinte d'as
+  ///   ([BustReason.fullHandAtTarget]) : la main pleine oblige à relancer, et
+  ///   tout relancer marquant dépasserait — le score de la grille plus celui du
+  ///   tour atteint déjà 10000, on ne peut plus continuer.
+  ///
+  /// Le [TurnState.pendingRoll] est conservé, comme pour un craque classique,
   /// pour que l'UI puisse révéler les dés avant d'annoncer le craque.
   GameEngine roll({Random? random}) {
     var t = rollTurn(activeTurn!, random: random);
     final analysis = t.pendingRoll;
-    if (!t.busted &&
-        analysis != null &&
-        currentPlayer.totalScore + t.bankedScore + minimumUnavoidableGain(analysis) > winningScore) {
-      t = t.copyWith(busted: true, bustReason: BustReason.exceedsTarget);
+    if (!t.busted && analysis != null) {
+      if (currentPlayer.totalScore + t.bankedScore + minimumUnavoidableGain(analysis) > winningScore) {
+        t = t.copyWith(busted: true, bustReason: BustReason.exceedsTarget);
+      } else if (_isFullHandDeadEnd(t, analysis)) {
+        t = t.copyWith(busted: true, bustReason: BustReason.fullHandAtTarget);
+      }
     }
     return copyWith(activeTurn: t);
   }
+
+  /// Vrai quand toutes les décisions de garde proposables sur [analysis] mènent
+  /// à une main pleine pile sur 10000 (hors quinte d'as, qui gagne) : plus rien
+  /// à jouer. Se trouve avant tout choix, exactement comme [applyKeep] le
+  /// constaterait après.
+  bool _isFullHandDeadEnd(TurnState t, RollAnalysis analysis) {
+    if (_isAceQuint(analysis)) return false;
+    final total = currentPlayer.totalScore;
+    final fives = analysis.declinableFives?.diceCount ?? 0;
+    final maxKeep = maxKeepableFives(t, analysis, currentTotal: total);
+    var proposed = 0;
+    for (var keep = minKeepableFives(analysis); keep <= maxKeep; keep++) {
+      proposed++;
+      final after = applyKeepDecision(t, declineFivesCount: fives - keep);
+      if (!(after.mustContinue && total + after.bankedScore == winningScore)) return false;
+    }
+    return proposed > 0;
+  }
+
+  /// Cinq as en un seul lancer : la seule combinaison capable de totaliser
+  /// exactement 10000 d'un coup (voir [applyKeep]).
+  static bool _isAceQuint(RollAnalysis analysis) =>
+      analysis.mandatoryGroups.any((g) => g.value == 1 && g.diceCount == 5);
 
   /// Applique la décision de garde du joueur sur le lancer en attente.
   ///
@@ -183,8 +216,7 @@ class GameEngine {
     }
 
     if (t.mustContinue && newTotal == winningScore) {
-      final isAceQuint = rolledAnalysis != null &&
-          rolledAnalysis.mandatoryGroups.any((g) => g.value == 1 && g.diceCount == 5);
+      final isAceQuint = rolledAnalysis != null && _isAceQuint(rolledAnalysis);
       if (isAceQuint) {
         return _applySuccessfulBank(t, t.bankedScore);
       }

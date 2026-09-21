@@ -240,7 +240,7 @@ void main() {
     );
   });
 
-  test('une main pleine qui tombe pile sur 10000 craque immédiatement', () {
+  test('une main pleine qui tombe pile sur 10000 craque dès le lancer', () {
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
@@ -251,20 +251,65 @@ void main() {
     );
 
     // Brelan d'as : 1000 points, les 3 dés y passent -> main pleine, et
-    // 9000 + 1000 = pile 10000.
+    // 9000 + 1000 = pile 10000. Impossible de s'arrêter (main pleine) comme de
+    // relancer sans dépasser : aucune décision de garde n'y change rien, le
+    // craque est prononcé tout de suite, comme un dépassement.
     engine = engine.roll(random: _ScriptedRandom([1, 1, 1]));
-    expect(engine.activeTurn!.busted, isFalse, reason: 'le lancer lui-même est bon');
+
+    expect(engine.activeTurn!.busted, isTrue, reason: 'impasse totale : le tour est perdu dès le lancer');
+    expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);
+    expect(engine.activeTurn!.pendingRoll, isNotNull,
+        reason: 'les dés restent affichables : le craque est annoncé après leur révélation');
+  });
+
+  test('une suite qui complète la main et tombe pile sur 10000 craque dès le lancer', () {
+    // Une suite est toujours une main pleine (500) : à 9500, pile 10000. Aucun 5
+    // à écarter ici, donc aucune issue.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9500, hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 5),
+    );
+
+    engine = engine.roll(random: _ScriptedRandom([1, 2, 3, 4, 5]));
+
+    expect(engine.activeTurn!.busted, isTrue);
+    expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);
+  });
+
+  test('pile sur 10000 SANS main pleine n\'est pas une impasse : c\'est une victoire possible', () {
+    // 9000 + brelan d'as (1000) = pile 10000, mais deux dés ne marquent pas :
+    // la main n'est pas pleine, le joueur peut s'arrêter et gagner.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 5),
+    );
+
+    engine = engine.roll(random: _ScriptedRandom([1, 1, 1, 2, 3]));
+
+    expect(engine.activeTurn!.busted, isFalse);
+    engine = engine.applyKeep();
+    expect(engine.activeTurn!.mustContinue, isFalse);
+    expect(engine.bank().$2.success, isTrue, reason: 'et il peut banquer la victoire');
+  });
+
+  test('un journal enregistré avant ce changement se rejoue : applyKeep sur un tour déjà craqué', () {
+    // Avant, le craque n'était prononcé qu'à la décision de garde : les journaux
+    // archivés contiennent donc « roll » puis « applyKeep » pour ce cas.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9000, hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 3),
+    );
+    engine = engine.roll(random: _ScriptedRandom([1, 1, 1]));
+    expect(engine.activeTurn!.busted, isTrue);
 
     engine = engine.applyKeep();
 
-    expect(engine.activeTurn!.mustContinue, isTrue);
-    expect(engine.currentPlayer.totalScore + engine.activeTurn!.bankedScore, 10000);
-    expect(
-      engine.activeTurn!.busted,
-      isTrue,
-      reason: 'impossible de s\'arrêter (main pleine) comme de relancer sans dépasser : impasse',
-    );
+    expect(engine.activeTurn!.busted, isTrue);
     expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);
+    expect(engine.endBustedTurn().currentPlayerIndex, 1, reason: 'la suite du journal s\'applique');
   });
 
   test('exception traditionnelle : la quinte d\'as gagne toujours, même en main pleine', () {
@@ -303,7 +348,6 @@ void main() {
       activeTurn: const TurnState(diceToRoll: 3),
     );
     engine = engine.roll(random: _ScriptedRandom([1, 1, 1]));
-    engine = engine.applyKeep();
 
     expect(engine.activeTurn!.busted, isTrue);
     expect(engine.activeTurn!.bustReason, BustReason.fullHandAtTarget);

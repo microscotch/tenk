@@ -184,9 +184,10 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   (`maxKeepableFives`). `TurnState.bustReason` says which bust cause applied.
 - A full hand (hot dice) forces a reroll with almost no exception, not even to claim victory: landing
   a full hand exactly on 10000 is a dead end — stopping is forbidden, and any scoring reroll overshoots
-  — so `GameEngine.applyKeep` busts the turn right then (`BustReason.fullHandAtTarget`) rather than
-  making the player roll into a foregone bust. `tryBank` therefore checks `mustContinue` *before* the
-  exact-10000 shortcut; that shortcut still overrides the minimum-per-turn and ends-in-50 rules. The one
+  — so `GameEngine.roll` busts the turn at the roll itself (`BustReason.fullHandAtTarget`, the roll still on
+  screen, exactly like an overshoot) rather than making the player tap through "Main pleine !" into a
+  foregone bust. `applyKeep` keeps the same check as a safety net, for journals recorded before this.
+  `tryBank` therefore checks `mustContinue` *before* the exact-10000 shortcut; that shortcut still overrides the minimum-per-turn and ends-in-50 rules. The one
   traditional exception is the ace quint (`quinte d'as`, five 1s in a single roll, worth 10000 outright):
   it always wins on the spot, full hand or not — the only combination able to total exactly 10000 in one
   roll of 5 dice (any other quint tops out at 6000), so `applyKeep` detects it by inspecting that roll's
