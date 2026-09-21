@@ -50,6 +50,11 @@ class _ScoreChartPainter extends CustomPainter {
   static const _leftGutter = 44.0;
   static const _bottomGutter = 20.0;
 
+  /// Une ligne de repère tous les 200 points, sans libellé : les graduations
+  /// écrites restent celles de [_labelStep].
+  static const _minorStep = 200;
+  static const _labelStep = 2000;
+
   @override
   void paint(Canvas canvas, Size size) {
     final plot = Rect.fromLTRB(_leftGutter, 8, size.width - 8, size.height - _bottomGutter);
@@ -85,13 +90,22 @@ class _ScoreChartPainter extends CustomPainter {
     }
   }
 
-  /// Axes, et une graduation tous les 2000 points.
+  /// Axes, une graduation écrite tous les 2000 points et, entre elles, un trait
+  /// discret tous les 200.
   void _paintGrid(Canvas canvas, Rect plot, int maxTurns) {
+    final minor = Paint()
+      ..color = axisColor.withValues(alpha: 0.55)
+      ..strokeWidth = 0.7;
     final line = Paint()
       ..color = axisColor
       ..strokeWidth = 1;
 
-    for (var score = 0; score <= winningScore; score += 2000) {
+    for (var score = 0; score <= winningScore; score += _minorStep) {
+      if (score % _labelStep == 0) continue;
+      final y = plot.bottom - plot.height * (score / winningScore);
+      canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), minor);
+    }
+    for (var score = 0; score <= winningScore; score += _labelStep) {
       final y = plot.bottom - plot.height * (score / winningScore);
       canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), line);
       _label(canvas, '$score', Offset(plot.left - 6, y), alignRight: true);

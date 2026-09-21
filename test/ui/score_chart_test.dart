@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_engine.dart';
@@ -88,5 +89,35 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('une ligne de repère tous les 200 points, sans libellé de plus', (tester) async {
+    const chart = ScoreChart(series: [ScoreSeries(name: 'A', color: Colors.red, scores: [0, 500, 1200, 3000])]);
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: SizedBox(width: 400, height: 300, child: chart))),
+    );
+
+    final render = tester.renderObject<RenderCustomPaint>(
+      find.descendant(of: find.byType(ScoreChart), matching: find.byType(CustomPaint)).first,
+    );
+    final canvas = TestRecordingCanvas();
+    render.paint(TestRecordingPaintingContext(canvas), Offset.zero);
+
+    // Ordonnées des traits horizontaux (mêmes y au départ et à l'arrivée).
+    final ys = <double>{};
+    for (final call in canvas.invocations.where((c) => c.invocation.memberName == #drawLine)) {
+      final from = call.invocation.positionalArguments[0] as Offset;
+      final to = call.invocation.positionalArguments[1] as Offset;
+      if (from.dy == to.dy) ys.add(from.dy);
+    }
+    // Zone tracée : de y = 8 à y = 300 - 20, pour 0 à 10000.
+    const top = 8.0, bottom = 280.0;
+    for (var score = 0; score <= 10000; score += 200) {
+      final y = bottom - (bottom - top) * score / 10000;
+      expect(ys.any((v) => (v - y).abs() < 0.01), isTrue, reason: 'un trait à $score');
+    }
+
+    final labels = canvas.invocations.where((c) => c.invocation.memberName == #drawParagraph).length;
+    expect(labels, 8, reason: '6 graduations (0 à 10000, par 2000) et 2 bornes de tours : rien de plus');
   });
 }
