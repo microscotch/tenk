@@ -18,16 +18,14 @@ class ScoreChartScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final engine = ref.watch(gameProvider);
     final displayNames = ref.watch(displayNamesProvider);
-    final notifier = ref.read(gameProvider.notifier);
-    final seed = notifier.seed;
-    final setup = notifier.originalSetup;
+    final record = ref.read(gameProvider.notifier).gameRecord;
 
     // Sans journal, rien à tracer : c'est le cas d'un état chargé directement
     // (`debugLoadState`), qui ne renseigne ni seed ni actions. Même garde que
     // le journal de partie (`_seedLogFromHistory`), et pour la même raison.
     final series = <ScoreSeries>[];
-    if (engine != null && seed != null && setup != null && notifier.actions.isNotEmpty) {
-      final scores = scoreSeriesByPlayer(setup, seed, notifier.actions);
+    if (engine != null && record != null && record.actions.isNotEmpty) {
+      final scores = scoreSeriesByPlayer(record.setup, record.seed, record.actions);
       // `scoreSeriesByPlayer` rend les sièges du MOTEUR, exactement l'ordre de
       // `engine.players` : noms et couleurs s'alignent sans traduction.
       final colors = assignAvatarColors(engine.players.map((p) => p.name));

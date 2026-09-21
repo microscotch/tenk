@@ -224,6 +224,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get scoreChartTitle => 'Évolution des scores';
 
   @override
+  String get gameStatsTitle => 'Statistiques de la partie';
+
+  @override
+  String get gameStatsGameSection => 'Partie';
+
+  @override
+  String get gameStatsFiguresSection => 'Figures de la partie';
+
+  @override
+  String get gameStatsDuration => 'Durée de jeu';
+
+  @override
+  String get gameStatsTurns => 'Tours joués';
+
+  @override
+  String gameStatsPlayerSummary(int turns, int best, int busts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      turns,
+      locale: localeName,
+      other: '$turns tours',
+      one: '$turns tour',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      busts,
+      locale: localeName,
+      other: '$busts craques',
+      one: '$busts craque',
+    );
+    return '$_temp0 · meilleur $best · $_temp1';
+  }
+
+  @override
   String get scoreChartEmpty =>
       'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
 

@@ -518,6 +518,42 @@ abstract class AppLocalizations {
   /// **'Évolution des scores'**
   String get scoreChartTitle;
 
+  /// Titre de l'écran des statistiques d'UNE partie terminée, et libellé du bouton qui l'ouvre depuis l'écran de fin de partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques de la partie'**
+  String get gameStatsTitle;
+
+  /// Titre de la section, en tête des statistiques d'une partie, qui donne ce qui vaut pour toute la table : durée, nombre de tours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partie'**
+  String get gameStatsGameSection;
+
+  /// Titre de la section, en tête des statistiques d'une partie, qui totalise les figures sorties chez tous les joueurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Figures de la partie'**
+  String get gameStatsFiguresSection;
+
+  /// Durée active de la partie terminée, hors temps passé en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'Durée de jeu'**
+  String get gameStatsDuration;
+
+  /// Nombre de tours joués — banqués comme craqués — au total pour la partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tours joués'**
+  String get gameStatsTurns;
+
+  /// Résumé sous le nom d'un joueur dans les statistiques d'une partie, lisible sans déplier son détail : ses tours joués, son meilleur tour banqué, ses craques.
+  ///
+  /// In fr, this message translates to:
+  /// **'{turns, plural, one{{turns} tour} other{{turns} tours}} · meilleur {best} · {busts, plural, one{{busts} craque} other{{busts} craques}}'**
+  String gameStatsPlayerSummary(int turns, int best, int busts);
+
   /// Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé.
   ///
   /// In fr, this message translates to:

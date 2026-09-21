@@ -4,7 +4,7 @@ import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/player_avatar.dart';
-import '../widgets/stat_row.dart';
+import '../widgets/player_stats_groups.dart';
 
 /// Le détail des statistiques d'un joueur.
 ///
@@ -56,65 +56,8 @@ class _PlayerStatsBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _group(context, l10n.statsSectionGames, [
-          StatRow(label: l10n.statsGamesPlayed, value: '${s.gamesPlayed}'),
-          StatRow(label: l10n.statsGamesWon, value: '${s.gamesWon}'),
-          StatRow(label: l10n.statsGamesLost, value: '${s.gamesLost}'),
-        ]),
-        _group(context, l10n.statsSectionTime, [
-          StatRow(label: l10n.statsTotalTime, value: formatDuration(s.totalActiveSeconds)),
-          StatRow(
-            label: l10n.statsAverageTime,
-            value: formatDuration(s.averageActiveSeconds?.round()),
-          ),
-          StatRow(label: l10n.statsShortestTime, value: formatDuration(s.shortestActiveSeconds)),
-          StatRow(label: l10n.statsLongestTime, value: formatDuration(s.longestActiveSeconds)),
-        ]),
-        _group(context, l10n.statsSectionFigures, [
-          ..._figureRows(l10n, l10n.statsBrelans, s.brelansTotal, s.brelans),
-          ..._figureRows(l10n, l10n.statsCarres, s.carresTotal, s.carres),
-          ..._figureRows(l10n, l10n.statsQuintes, s.quintesTotal, s.quintes),
-          StatRow(label: l10n.statsSuites, value: '${s.suitesTotal}'),
-          StatRow(label: l10n.statsSmallSuites, value: '${s.petitesSuites}'),
-          StatRow(label: l10n.statsBigSuites, value: '${s.grandesSuites}'),
-          StatRow(label: l10n.statsLoneAces, value: '${s.keptLoneAces}'),
-          StatRow(label: l10n.statsLoneFives, value: '${s.keptLoneFives}'),
-          StatRow(label: l10n.statsAceQuints, value: '${s.quintesDAsTotal}'),
-          StatRow(label: l10n.statsAceQuintsWon, value: '${s.quintesDAsReussies}'),
-        ]),
-        _group(context, l10n.statsSectionMisc, [
-          StatRow(label: l10n.statsBestTurn, value: '${s.bestBankedTurn}'),
-          StatRow(label: l10n.statsHotDiceRun, value: '${s.longestHotDiceRun}'),
-          StatRow(label: l10n.statsBusts, value: '${s.bustsTotal}'),
-          StatRow(label: l10n.statsLongestBustStreak, value: '${s.longestBustStreak}'),
-          StatRow(label: l10n.statsSelfBars, value: '${s.selfBarsTotal}'),
-          StatRow(label: l10n.statsBarsInflicted, value: '${s.barsInflictedTotal}'),
-        ]),
+        PlayerStatsGroups(stats: s),
       ],
     );
-  }
-
-  Widget _group(BuildContext context, String title, List<Widget> rows) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleSmall),
-          ...rows,
-        ],
-      ),
-    );
-  }
-
-  /// Le total, puis une ligne par valeur de dé — les SIX, y compris celles
-  /// jamais sorties : un tableau à trous se lit plus mal qu'un tableau complet,
-  /// où l'œil retrouve toujours la même ligne au même endroit.
-  List<Widget> _figureRows(AppLocalizations l10n, String label, int total, Map<int, int> byValue) {
-    return [
-      StatRow(label: label, value: '$total'),
-      for (var value = 1; value <= 6; value++)
-        BreakdownRow(value: value, count: byValue[value] ?? 0),
-    ];
   }
 }

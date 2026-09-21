@@ -46,6 +46,27 @@ class GameNotifier extends Notifier<GameEngine?> {
   int? get seed => _seed;
   GameSetup? get originalSetup => _originalSetup;
 
+  /// Journal complet (seed, config d'origine, toutes les actions) de la partie
+  /// actuellement à l'écran, qu'elle soit jouée ou rejouée — de quoi en
+  /// reconstruire la courbe des scores et les statistiques (voir
+  /// `score_series.dart`, `game_statistics.dart`). Nul quand aucun journal
+  /// n'existe (état chargé par `debugLoadState`).
+  ///
+  /// Un point d'entrée unique, pour ne jamais lire `seed`/`actions` à la
+  /// main : en rejeu ils ne décrivent PAS la partie affichée (voir
+  /// [startGameReplay], qui les vide), et les recoller à la main ferait
+  /// tracer la courbe d'une autre partie.
+  SavedGame? get gameRecord {
+    if (_replaySource != null) return _replaySource;
+    if (_seed == null || _originalSetup == null) return null;
+    return _currentSavedGame();
+  }
+
+  /// Le run archivé dont le rejeu est en cours, tel que lu sur disque : seul
+  /// endroit où son journal est entier, [GameRecordingHandoff] n'en
+  /// transmettant que la fin, après le départage.
+  SavedGame? _replaySource;
+
   /// Config réordonnée par le départage — celle qu'indexent
   /// `currentPlayerIndex` et consorts (voir [currentSeatRightHandedProvider]).
   GameSetup? get rotatedSetup => _setup;
@@ -74,6 +95,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// consommée.
   void startGame(GameSetup setup, {GameRecordingHandoff? handoff}) {
     _setup = setup;
+    _replaySource = null;
     if (handoff != null) {
       _originalSetup = handoff.originalSetup;
       _seed = handoff.seed;
@@ -99,6 +121,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     assert(replay.engine != null, 'une sauvegarde ne devrait jamais être persistée avant la fin du départage');
 
     _setup = replay.rotatedSetup;
+    _replaySource = null;
     _originalSetup = saved.setup;
     _seed = saved.seed;
     _random = replay.random;
@@ -129,9 +152,18 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// Démarre le rejeu de la partie principale une fois le départage rejoué
   /// (voir `DiceOffNotifier.startReplay`/`replayHandoff`) : même principe que
   /// [startGame], mais sans seed donc sans aucune persistance.
-  void startGameReplay(GameSetup rotatedSetup, GameRecordingHandoff handoff) {
+  ///
+  /// [source] est le run archivé rejoué, pour [gameRecord]. Les champs de la
+  /// partie « vivante » sont vidés au passage : ils gardaient sinon la
+  /// dernière partie jouée dans la session, que [gameRecord] aurait prise
+  /// pour celle qu'on regarde.
+  void startGameReplay(GameSetup rotatedSetup, GameRecordingHandoff handoff, {SavedGame? source}) {
     _setup = rotatedSetup;
     _isReplay = true;
+    _replaySource = source;
+    _seed = null;
+    _originalSetup = null;
+    _actions.clear();
     _replayRandom = handoff.random;
     _replayQueue = List.of(handoff.actions);
     state = GameEngine.newGame(rotatedSetup.playerNames);

@@ -76,7 +76,9 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     if (!mounted) return;
     final diceOffNotifier = ref.read(diceOffProvider.notifier);
     final rotated = diceOffNotifier.buildRotatedSetup();
-    ref.read(gameProvider.notifier).startGameReplay(rotated, diceOffNotifier.replayHandoff());
+    ref
+        .read(gameProvider.notifier)
+        .startGameReplay(rotated, diceOffNotifier.replayHandoff(), source: diceOffNotifier.replaySource);
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const GameScreen(replayMode: true)));
   }
 

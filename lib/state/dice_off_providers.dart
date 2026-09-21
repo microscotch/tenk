@@ -61,6 +61,7 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   /// sauvegarde, rejouabilité des tirages), et persiste un premier snapshot.
   void start(GameSetup setup) {
     _setup = setup;
+    _replaySource = null;
     _seed = Random.secure().nextInt(1 << 32);
     _random = Random(_seed);
     _alias = randomGameAlias();
@@ -92,8 +93,15 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   /// via [applyNextDiceOffReplayAction].
   Random? _replayRandom;
 
+  /// Le run archivé en cours de rejeu, entier : [replayHandoff] ne rend que la
+  /// fin de son journal et une seed factice, insuffisantes pour en tirer la
+  /// courbe ou les statistiques (voir `GameNotifier.gameRecord`).
+  SavedGame? _replaySource;
+  SavedGame? get replaySource => _replaySource;
+
   void startReplay(SavedGame saved) {
     _isReplay = true;
+    _replaySource = saved;
     _setup = saved.setup;
     _replayActions = saved.actions;
     _replayIndex = 0;

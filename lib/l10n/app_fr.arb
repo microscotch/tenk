@@ -220,6 +220,27 @@
   "scoreChartTitle": "Évolution des scores",
   "@scoreChartTitle": {"description": "Titre de l'écran montrant la courbe des scores de chaque joueur, et infobulle de l'icône qui l'ouvre depuis l'écran de jeu."},
 
+  "gameStatsTitle": "Statistiques de la partie",
+  "@gameStatsTitle": {"description": "Titre de l'écran des statistiques d'UNE partie terminée, et libellé du bouton qui l'ouvre depuis l'écran de fin de partie."},
+
+  "gameStatsGameSection": "Partie",
+  "@gameStatsGameSection": {"description": "Titre de la section, en tête des statistiques d'une partie, qui donne ce qui vaut pour toute la table : durée, nombre de tours."},
+
+  "gameStatsFiguresSection": "Figures de la partie",
+  "@gameStatsFiguresSection": {"description": "Titre de la section, en tête des statistiques d'une partie, qui totalise les figures sorties chez tous les joueurs."},
+
+  "gameStatsDuration": "Durée de jeu",
+  "@gameStatsDuration": {"description": "Durée active de la partie terminée, hors temps passé en pause."},
+
+  "gameStatsTurns": "Tours joués",
+  "@gameStatsTurns": {"description": "Nombre de tours joués — banqués comme craqués — au total pour la partie."},
+
+  "gameStatsPlayerSummary": "{turns, plural, one{{turns} tour} other{{turns} tours}} · meilleur {best} · {busts, plural, one{{busts} craque} other{{busts} craques}}",
+  "@gameStatsPlayerSummary": {
+    "description": "Résumé sous le nom d'un joueur dans les statistiques d'une partie, lisible sans déplier son détail : ses tours joués, son meilleur tour banqué, ses craques.",
+    "placeholders": {"turns": {"type": "int"}, "best": {"type": "int"}, "busts": {"type": "int"}}
+  },
+
   "scoreChartEmpty": "Aucun tour terminé pour l'instant : il n'y a encore rien à tracer.",
   "@scoreChartEmpty": {"description": "Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé."},
 

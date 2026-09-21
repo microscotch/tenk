@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/game_providers.dart';
 import '../../state/player_providers.dart';
 import '../navigation.dart';
+import 'game_statistics_screen.dart';
+import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
 
 class GameOverScreen extends ConsumerWidget {
@@ -26,6 +29,10 @@ class GameOverScreen extends ConsumerWidget {
     final displayNames = ref.watch(displayNamesProvider);
     final sorted = [...players]
       ..sort((a, b) => b.totalScore.compareTo(a.totalScore));
+    // La courbe et les statistiques se dérivent du journal de la partie : sans
+    // lui (état chargé par `debugLoadState`), il n'y aurait rien à montrer, et
+    // les deux boutons ne s'affichent donc pas.
+    final hasRecord = ref.read(gameProvider.notifier).gameRecord != null;
     return PopScope(
       // Cet écran est empilé PAR-DESSUS le GameScreen de la partie qui vient
       // de se terminer (voir le ref.listen dans game_screen.dart) : un pop()
@@ -68,7 +75,9 @@ class GameOverScreen extends ConsumerWidget {
         ),
         body: SafeArea(
           child: Center(
-            child: Padding(
+            // Défilant : avec les boutons de courbe et de statistiques, la
+            // colonne dépasse la hauteur d'un petit écran dès quelques joueurs.
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -100,6 +109,26 @@ class GameOverScreen extends ConsumerWidget {
                     icon: const Icon(Icons.grid_on),
                     label: Text(l10n.scoreGridLabel),
                   ),
+                  if (hasRecord) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ScoreChartScreen()),
+                      ),
+                      icon: const Icon(Icons.show_chart),
+                      label: Text(l10n.scoreChartTitle),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => GameStatisticsScreen(players: players, winnerIndex: winnerIndex),
+                        ),
+                      ),
+                      icon: const Icon(Icons.bar_chart),
+                      label: Text(l10n.gameStatsTitle),
+                    ),
+                  ],
                 ],
               ),
             ),
