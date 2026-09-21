@@ -512,6 +512,30 @@ abstract class AppLocalizations {
   /// **'Barrés infligés'**
   String get statsBarsInflicted;
 
+  /// Titre de l'écran montrant la courbe des scores de chaque joueur, et infobulle de l'icône qui l'ouvre depuis l'écran de jeu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Évolution des scores'**
+  String get scoreChartTitle;
+
+  /// Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.'**
+  String get scoreChartEmpty;
+
+  /// Légende de l'axe horizontal de la courbe des scores : le numéro de tour de chaque joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tours joués'**
+  String get scoreChartXAxis;
+
+  /// Préfixe d'une ligne de ventilation d'une figure par valeur de dé, suivi du dé concerné (ex. « dont ⚃ »).
+  ///
+  /// In fr, this message translates to:
+  /// **'dont'**
+  String get statsBreakdownRow;
+
   /// Titre de la section listant les meilleures performances tous joueurs confondus.
   ///
   /// In fr, this message translates to:

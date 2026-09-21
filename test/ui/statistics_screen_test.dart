@@ -7,6 +7,7 @@ import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_statistics.dart';
 import 'package:le10000/state/player_store.dart';
+import 'package:le10000/ui/screens/player_stats_screen.dart';
 import 'package:le10000/ui/screens/statistics_screen.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
@@ -51,36 +52,28 @@ void main() {
     expect(find.text('Aucun record pour l\'instant.'), findsOneWidget);
   });
 
-  testWidgets('une fiche vierge affiche des zéros, sans planter', (tester) async {
+  testWidgets('un joueur sans partie n\'apparaît pas dans la liste', (tester) async {
     await players.write(PlayerProfile.create(name: 'Marie'));
     await pump(tester);
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Marie'), findsOneWidget);
-    expect(find.text('—'), findsWidgets,
-        reason: 'une durée inexistante s\'affiche en tiret, pas en zéro');
+    expect(find.text('Marie'), findsNothing,
+        reason: 'une fiche vierge n\'a rien à montrer ici ; elle reste dans la gestion des joueurs');
   });
 
-  testWidgets('les compteurs d\'un joueur sont rendus, ventilation comprise', (tester) async {
-    await players.write(PlayerProfile.create(name: 'Marie').copyWith(
-      stats: const PlayerStats(
-        gamesPlayed: 4,
-        gamesWon: 3,
-        totalActiveSeconds: 3600,
-        shortestActiveSeconds: 300,
-        longestActiveSeconds: 1800,
-        brelans: {4: 3, 1: 1},
-        bestBankedTurn: 2500,
-      ),
-    ));
+  testWidgets('un joueur ayant joué est listé, avec un chevron vers son détail', (tester) async {
+    await players.write(PlayerProfile.create(name: 'Marie')
+        .copyWith(stats: const PlayerStats(gamesPlayed: 4, gamesWon: 3, brelans: {4: 3})));
     await pump(tester);
 
-    expect(find.text('4'), findsWidgets);
-    expect(find.text('3'), findsWidgets);
-    expect(find.text('1'), findsWidgets, reason: 'parties perdues = jouées - gagnées');
-    expect(find.text('4 (1×1, 4×3)'), findsOneWidget, reason: 'total puis détail par valeur');
-    expect(find.text('1 h 00'), findsOneWidget, reason: 'le temps total, lisible');
-    expect(find.text('5 min'), findsOneWidget, reason: 'la partie la plus courte');
+    expect(find.text('Marie'), findsOneWidget);
+    expect(find.text('4 parties jouées'), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+    await tester.tap(find.text('Marie'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PlayerStatsScreen), findsOneWidget);
   });
 
   testWidgets('un record à égalité nomme tous ses détenteurs', (tester) async {

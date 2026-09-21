@@ -217,6 +217,18 @@
   "statsBarsInflicted": "Barrés infligés",
   "@statsBarsInflicted": {"description": "Libellé du nombre de lignes barrées chez un adversaire par collision de score."},
 
+  "scoreChartTitle": "Évolution des scores",
+  "@scoreChartTitle": {"description": "Titre de l'écran montrant la courbe des scores de chaque joueur, et infobulle de l'icône qui l'ouvre depuis l'écran de jeu."},
+
+  "scoreChartEmpty": "Aucun tour terminé pour l'instant : il n'y a encore rien à tracer.",
+  "@scoreChartEmpty": {"description": "Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé."},
+
+  "scoreChartXAxis": "Tours joués",
+  "@scoreChartXAxis": {"description": "Légende de l'axe horizontal de la courbe des scores : le numéro de tour de chaque joueur."},
+
+  "statsBreakdownRow": "dont",
+  "@statsBreakdownRow": {"description": "Préfixe d'une ligne de ventilation d'une figure par valeur de dé, suivi du dé concerné (ex. « dont ⚃ »)."},
+
   "statsRecordsTitle": "Records",
   "@statsRecordsTitle": {"description": "Titre de la section listant les meilleures performances tous joueurs confondus."},
 

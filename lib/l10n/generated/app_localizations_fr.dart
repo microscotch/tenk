@@ -221,6 +221,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsBarsInflicted => 'Barrés infligés';
 
   @override
+  String get scoreChartTitle => 'Évolution des scores';
+
+  @override
+  String get scoreChartEmpty =>
+      'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
+
+  @override
+  String get scoreChartXAxis => 'Tours joués';
+
+  @override
+  String get statsBreakdownRow => 'dont';
+
+  @override
   String get statsRecordsTitle => 'Records';
 
   @override

@@ -282,3 +282,64 @@ class _PipsPainter extends CustomPainter {
   bool shouldRepaint(covariant _PipsPainter oldDelegate) =>
       oldDelegate.value != value || oldDelegate.color != color;
 }
+
+/// Face de dé plate, vue de face, pour les usages à taille d'icône.
+///
+/// Le cube 3D de [DieWidget] est dessiné en perspective : en dessous d'une
+/// trentaine de pixels, sa face utile et ses pips passent sous le pixel et la
+/// valeur devient illisible — mesuré à l'écran, lisible à 34, pas à 22. Cette
+/// face-ci reste nette à 14. Mêmes positions de pips et mêmes couleurs d'état
+/// que le vrai dé, pour qu'elle se lise comme le même objet.
+class DieGlyph extends StatelessWidget {
+  final int value;
+  final DieVisualState state;
+  final double size;
+
+  const DieGlyph({
+    super.key,
+    required this.value,
+    this.state = DieVisualState.kept,
+    this.size = 20,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(painter: _DieGlyphPainter(value: value, state: state)),
+    );
+  }
+}
+
+class _DieGlyphPainter extends CustomPainter {
+  final int value;
+  final DieVisualState state;
+
+  const _DieGlyphPainter({required this.value, required this.state});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final side = size.width;
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, side, side).deflate(side * 0.05),
+      Radius.circular(side * 0.2),
+    );
+    canvas.drawRRect(rrect, Paint()..color = bodyColorFor(state));
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = side * 0.07
+        ..color = accentColorFor(state),
+    );
+    // Pips un peu plus gros que sur le vrai dé (0,078 du côté) : à taille
+    // d'icône, ce rayon-là tomberait sous le pixel.
+    final pip = Paint()..color = pipColorFor(state);
+    for (final p in pipPositions[value] ?? const <Offset>[]) {
+      canvas.drawCircle(Offset(p.dx * side, p.dy * side), side * 0.1, pip);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DieGlyphPainter old) => old.value != value || old.state != state;
+}
