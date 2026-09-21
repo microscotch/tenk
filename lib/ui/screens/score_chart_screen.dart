@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/score_series.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
+import '../../state/player_providers.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/score_chart.dart';
 
@@ -16,6 +17,7 @@ class ScoreChartScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final engine = ref.watch(gameProvider);
+    final displayNames = ref.watch(displayNamesProvider);
     final notifier = ref.read(gameProvider.notifier);
     final seed = notifier.seed;
     final setup = notifier.originalSetup;
@@ -64,9 +66,12 @@ class ScoreChartScreen extends ConsumerWidget {
                             children: [
                               Container(width: 16, height: 3, color: one.color),
                               const SizedBox(width: 6),
+                              // Le blason garde le nom, le libellé suit le
+                              // surnom : l'un est un repère d'identité, l'autre
+                              // la façon dont on appelle le joueur.
                               PlayerAvatarWidget(name: one.name, size: 24, color: one.color),
                               const SizedBox(width: 6),
-                              Text(one.name),
+                              Text(displayNameOf(displayNames, one.name)),
                             ],
                           ),
                       ],

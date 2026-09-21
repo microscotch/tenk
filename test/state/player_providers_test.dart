@@ -96,4 +96,56 @@ void main() {
 
     expect(container.read(currentSeatRightHandedProvider), isTrue);
   });
+
+  group('noms affichés', () {
+    test('un siège rattaché à une fiche à surnom affiche le surnom', () async {
+      final marie = PlayerProfile.create(name: 'Marie Curie', nickname: 'Mimi');
+      await players.write(marie);
+      final container = await containerWith(
+        setup: GameSetup(playerNames: const ['Marie Curie', 'Bot'], playerIds: {0: marie.id}),
+        currentSeat: 0,
+      );
+
+      final names = container.read(displayNamesProvider);
+
+      expect(displayNameOf(names, 'Marie Curie'), 'Mimi');
+      expect(displayNameOf(names, 'Bot'), 'Bot', reason: 'un bot n\'a pas de fiche');
+    });
+
+    test('une fiche sans surnom n\'entre même pas dans la table', () async {
+      final bob = PlayerProfile.create(name: 'Bob');
+      await players.write(bob);
+      final container = await containerWith(
+        setup: GameSetup(playerNames: const ['Bob', 'Bot'], playerIds: {0: bob.id}),
+        currentSeat: 0,
+      );
+
+      final names = container.read(displayNamesProvider);
+
+      expect(names, isEmpty, reason: 'rien à substituer : l\'appelant garde le nom');
+      expect(displayNameOf(names, 'Bob'), 'Bob');
+    });
+
+    test('une partie sans lien vers les fiches garde les noms enregistrés', () async {
+      await players.write(PlayerProfile.create(name: 'Marie Curie', nickname: 'Mimi'));
+      final container = await containerWith(
+        setup: const GameSetup(playerNames: ['Marie Curie', 'B']),
+        currentSeat: 0,
+      );
+
+      final names = container.read(displayNamesProvider);
+
+      expect(displayNameOf(names, 'Marie Curie'), 'Marie Curie',
+          reason: 'une partie antérieure à la base s\'affiche telle qu\'elle a été jouée');
+    });
+
+    test('sans partie en cours, la table est vide', () {
+      final container = ProviderContainer(
+        overrides: [playerStoreProvider.overrideWithValue(players)],
+      );
+      addTearDown(container.dispose);
+
+      expect(container.read(displayNamesProvider), isEmpty);
+    });
+  });
 }

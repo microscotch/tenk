@@ -1139,7 +1139,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
             .push(
               MaterialPageRoute(
                 builder: (_) =>
-                    PassDeviceScreen(nextPlayerName: next.currentPlayer.name),
+                    PassDeviceScreen(
+                      nextPlayerName: displayNameOf(
+                        ref.read(displayNamesProvider),
+                        next.currentPlayer.name,
+                      ),
+                    ),
               ),
             )
             .then((_) {
@@ -1334,6 +1339,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       players: engine.players,
                       currentPlayerIndex: engine.currentPlayerIndex,
                       onTapPlayer: _openPlayerGrid,
+                      displayNames: ref.watch(displayNamesProvider),
                     ),
                     const SizedBox(height: 12),
                     if (engine.isInFinalRound)
@@ -1885,8 +1891,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // deux ne puissent pas diverger.
         if (extended.isNotEmpty) ...[
           const TextSpan(text: '  ·  '),
+          // Le dé est dessiné et non écrit en chiffre : c'est l'objet dont on
+          // parle. Pas de caractère Unicode non plus (⚁⚂⚃⚄⚅) — aucune police
+          // embarquée ne les couvre et le thème n'en impose aucune, leur rendu
+          // dépendrait donc d'un repli de plateforme.
+          //
+          // Un WidgetSpan ne se dimensionne pas sur la police ambiante : la
+          // taille est fixée à la main, sous la hauteur de ligne du libellé
+          // (12 px) pour ne pas faire grossir la pastille incrustée.
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: DieGlyph(value: extended.first, state: DieVisualState.extended, size: 13),
+          ),
           TextSpan(
-            text: '${extended.first} = 100',
+            text: ' = 100',
             style: TextStyle(color: accentColorFor(DieVisualState.extended)),
           ),
         ],

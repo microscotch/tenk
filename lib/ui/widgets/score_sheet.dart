@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/player_providers.dart';
 import 'player_avatar.dart';
 
 class ScoreSheet extends StatelessWidget {
@@ -12,11 +13,17 @@ class ScoreSheet extends StatelessWidget {
   /// grille de score complète). Aucune ligne n'est cliquable si null.
   final ValueChanged<Player>? onTapPlayer;
 
+  /// Noms à afficher, par nom en jeu (voir `displayNamesProvider`). Un joueur
+  /// absent de la table garde son nom. Le blason, lui, reste dessiné à partir
+  /// du nom quoi qu'il arrive.
+  final Map<String, String> displayNames;
+
   const ScoreSheet({
     super.key,
     required this.players,
     required this.currentPlayerIndex,
     this.onTapPlayer,
+    this.displayNames = const {},
   });
 
   @override
@@ -27,6 +34,7 @@ class ScoreSheet extends StatelessWidget {
       children: [
         for (var i = 0; i < players.length; i++)
           _PlayerRow(
+            displayName: displayNameOf(displayNames, players[i].name),
             player: players[i],
             isCurrent: i == currentPlayerIndex,
             gaps: _scoreGaps(players, i),
@@ -108,8 +116,13 @@ class _PlayerRow extends StatelessWidget {
   /// (voir [podiumRanks]).
   final int? podiumRank;
 
+  /// Nom déjà résolu par [ScoreSheet] : la ligne n'a pas à connaître la table
+  /// de correspondance, juste ce qu'elle doit écrire.
+  final String displayName;
+
   const _PlayerRow({
     required this.player,
+    required this.displayName,
     required this.isCurrent,
     required this.gaps,
     required this.onTap,
@@ -149,7 +162,8 @@ class _PlayerRow extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 8),
                       child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
                     ),
-                    Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(displayName,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     if (podiumRank != null)
                       Padding(
                         padding: const EdgeInsets.only(left: 6),

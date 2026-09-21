@@ -517,9 +517,12 @@ void main() {
     await pumpGame(tester, container);
 
     // La mention s'ajoute au libellé incrusté de la zone, à la suite du score
-    // et du minimum : "Main courante 500 (>200)  ·  4 = 100".
-    expect(find.textContaining('4 = 100'), findsOneWidget,
-        reason: 'la valeur étendue est celle du brelan encaissé');
+    // et du minimum : « Main courante 500 (>200)  ·  ⚃ = 100 ».
+    expect(find.textContaining('= 100'), findsOneWidget);
+    final glyph = tester.widget<DieGlyph>(find.byType(DieGlyph));
+    expect(glyph.value, 4, reason: 'la valeur étendue est celle du brelan encaissé');
+    expect(glyph.state, DieVisualState.extended,
+        reason: 'le dé est dessiné, pas écrit en chiffre, et dans son rouge d\'étendu');
   });
 
   testWidgets('un as isolé gardé n\'ajoute aucune annonce d\'extension', (tester) async {
@@ -535,6 +538,7 @@ void main() {
     await pumpGame(tester, container);
 
     expect(find.textContaining('= 100'), findsNothing);
+    expect(find.byType(DieGlyph), findsNothing);
   });
 
   testWidgets('sans extension en cours, la zone "Main courante" n\'annonce rien',
@@ -548,6 +552,7 @@ void main() {
     await pumpGame(tester, container);
 
     expect(find.textContaining('= 100'), findsNothing);
+    expect(find.byType(DieGlyph), findsNothing);
   });
 
   testWidgets('le brelan annonce son dé à 100 dès qu\'il rejoint la main, pas au lancer suivant',
@@ -580,7 +585,9 @@ void main() {
 
     expect(container.read(gameProvider)!.activeTurn!.extendedValues, isEmpty,
         reason: 'la garde n\'est pas encore appliquée : le moteur ignore tout de l\'extension');
-    expect(find.textContaining('4 = 100'), findsOneWidget,
+    expect(tester.widget<DieGlyph>(find.byType(DieGlyph)).value, 4,
+        reason: 'le dé annoncé est celui du brelan qui vient de rejoindre la main');
+    expect(find.textContaining('= 100'), findsOneWidget,
         reason: 'l\'annonce suit les dés affichés dans la main, pas applyKeep');
   });
 
@@ -611,6 +618,7 @@ void main() {
     await pumpGame(tester, container);
 
     expect(find.textContaining('= 100'), findsNothing);
+    expect(find.byType(DieGlyph), findsNothing);
   });
 
   testWidgets('un craque affiche l\'écran "Craqué !" puis passe la main avec un tiret', (tester) async {

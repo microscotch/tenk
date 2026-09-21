@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/player_providers.dart';
 import '../navigation.dart';
 import 'score_grid_screen.dart';
 
-class GameOverScreen extends StatelessWidget {
+class GameOverScreen extends ConsumerWidget {
   final List<Player> players;
   final int winnerIndex;
 
@@ -16,8 +18,12 @@ class GameOverScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    // Le surnom prime sur le nom, ici comme partout où le joueur est nommé.
+    // Un siège non rattaché à une fiche — un bot, une partie antérieure à la
+    // base — garde le nom sous lequel la partie l'a enregistré.
+    final displayNames = ref.watch(displayNamesProvider);
     final sorted = [...players]
       ..sort((a, b) => b.totalScore.compareTo(a.totalScore));
     return PopScope(
@@ -70,7 +76,7 @@ class GameOverScreen extends StatelessWidget {
                   const Icon(Icons.emoji_events, size: 72, color: Colors.amber),
                   const SizedBox(height: 16),
                   Text(
-                    l10n.winnerAnnouncement(players[winnerIndex].name),
+                    l10n.winnerAnnouncement(displayNameOf(displayNames, players[winnerIndex].name)),
                     style: Theme.of(context).textTheme.headlineMedium
                         ?.copyWith(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
@@ -80,7 +86,7 @@ class GameOverScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
-                        l10n.playerScoreLine(p.name, p.totalScore),
+                        l10n.playerScoreLine(displayNameOf(displayNames, p.name), p.totalScore),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
