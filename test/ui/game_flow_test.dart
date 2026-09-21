@@ -8,10 +8,12 @@ import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/state/player_providers.dart';
 import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
+import 'package:le10000/ui/screens/score_chart_screen.dart';
 import 'package:le10000/ui/screens/score_grid_screen.dart';
 import 'package:le10000/ui/widgets/dice3d/dice_face_texture.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
@@ -370,16 +372,19 @@ void main() {
     );
     expect(title.textAlign, TextAlign.center, reason: 'le titre doit être centré');
 
-    // La grille de score se consulte depuis la popup, en coin de titre : elle
-    // ne tranche pas le choix, donc elle n'est pas dans la rangée décisive.
-    // Celle de la popup, pas celle de l'AppBar (même infobulle, à dessein :
-    // c'est la même destination).
+    // La grille de score et la courbe se consultent depuis la popup, sous la
+    // ligne du score et à part des deux icônes de décision (voir
+    // « la popup de reprise offre la grille et la courbe » pour leur
+    // disposition). Ce ne sont pas celles de l'AppBar, qui ont la même
+    // infobulle à dessein : c'est la même destination.
     final grid = tester.getRect(find.descendant(
       of: find.byType(AlertDialog),
       matching: find.byTooltip('Grille des scores'),
     ));
-    expect(grid.bottom, lessThanOrEqualTo(tester.getRect(diceInDialog.at(0)).top),
-        reason: 'la grille est en haut, au-dessus des dés, pas avec les deux décisions');
+    expect(score.bottom, lessThanOrEqualTo(grid.top), reason: 'la grille est sous la ligne du score');
+    expect(grid.bottom, lessThanOrEqualTo(resume.top),
+        reason: 'et au-dessus des deux icônes de décision');
+    expect(find.descendant(of: find.byType(AlertDialog), matching: find.byIcon(Icons.grid_on)), findsOneWidget);
 
     // Le score est centré, et la paire d'icônes l'est en bloc (l'espace à
     // gauche de la première vaut celui à droite de la seconde).
@@ -390,6 +395,113 @@ void main() {
       lessThan(1.0),
       reason: 'la rangée des deux icônes doit être centrée dans la popup',
     );
+  });
+
+  /// Une main héritée de 2 dés et 300 points, à reprendre ou à refuser.
+  GameEngine inheritedHandEngine() => GameEngine.newGame(['A', 'B']).copyWith(
+        players: [
+          Player(name: 'A', totalScore: 2400, hasEntered: true),
+          Player(name: 'B', totalScore: 3150, hasEntered: true),
+        ],
+        nextTurnDice: 2,
+        inheritedScore: 300,
+        inheritedKeptDice: const [
+          KeptDie(value: 1, points: 100, isExtended: false, rollIndex: 0),
+          KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
+          KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
+        ],
+      );
+
+  Future<void> pumpInheritedHandPopup(WidgetTester tester, {required bool rightHanded}) async {
+    final container = ProviderContainer(
+      overrides: [currentSeatRightHandedProvider.overrideWithValue(rightHanded)],
+    );
+    addTearDown(container.dispose);
+    container.read(gameProvider.notifier).debugLoadState(
+          inheritedHandEngine(),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Finder inDialog(Finder f) => find.descendant(of: find.byType(AlertDialog), matching: f);
+
+  testWidgets('la popup de reprise offre la grille et la courbe, sous le score, pour un droitier',
+      (tester) async {
+    await pumpInheritedHandPopup(tester, rightHanded: true);
+
+    expect(find.descendant(of: find.byType(AlertDialog), matching: find.byType(AppBar)), findsNothing);
+    final dialog = tester.getRect(find.byType(AlertDialog));
+    final grid = tester.getRect(inDialog(find.byTooltip('Grille des scores')));
+    final chart = tester.getRect(inDialog(find.byTooltip('Évolution des scores')));
+    final score = tester.getRect(inDialog(find.textContaining('300')));
+
+    expect(grid.top, chart.top, reason: 'côte à côte, sur une même ligne');
+    expect(score.bottom, lessThanOrEqualTo(grid.top), reason: 'sous la ligne annonçant le score');
+    expect(grid.right, lessThanOrEqualTo(chart.left), reason: 'droitier : la courbe à droite de la grille');
+
+    // Deux colonnes égales, moitiés de la popup : chaque icône y est centrée,
+    // donc symétriques par rapport à l'axe de la popup.
+    expect(dialog.center.dx - grid.center.dx, closeTo(chart.center.dx - dialog.center.dx, 1.0));
+    final row = tester.getRect(find
+        .ancestor(of: inDialog(find.byTooltip('Grille des scores')), matching: find.byType(Row))
+        .first);
+    expect(row.center.dx, closeTo(dialog.center.dx, 1.0), reason: 'la rangée est centrée dans la popup');
+    expect(chart.center.dx - grid.center.dx, closeTo(row.width / 2, 1.0),
+        reason: 'deux colonnes égales, chacune la moitié de la rangée : leurs centres en sont distants d\'une demi-largeur');
+
+    // Le titre ne porte plus d'icône.
+    final title = tester.getRect(inDialog(find.text('Reprendre ?')));
+    expect(grid.top, greaterThan(title.bottom));
+
+    // Les deux décisions sont dans les mêmes colonnes : valider (à gauche) sous
+    // la première icône de consultation, refuser sous la seconde.
+    final resume = tester.getRect(inDialog(find.byTooltip('Reprendre la main')));
+    final newHand = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
+    expect(resume.center.dx, closeTo(grid.center.dx, 1.0), reason: 'valider sous la grille');
+    expect(newHand.center.dx, closeTo(chart.center.dx, 1.0), reason: 'refuser sous la courbe');
+    expect(resume.top, newHand.top);
+    expect(chart.bottom, lessThanOrEqualTo(resume.top), reason: 'les décisions sous les icônes de consultation');
+  });
+
+  testWidgets('pour un gaucher, la courbe passe à gauche de la grille', (tester) async {
+    await pumpInheritedHandPopup(tester, rightHanded: false);
+
+    final grid = tester.getRect(inDialog(find.byTooltip('Grille des scores')));
+    final chart = tester.getRect(inDialog(find.byTooltip('Évolution des scores')));
+
+    expect(chart.right, lessThanOrEqualTo(grid.left), reason: 'gaucher : la courbe à gauche de la grille');
+    expect(grid.top, chart.top);
+
+    // Les décisions gardent leur ordre (valider à gauche), donc ici sous la courbe.
+    final resume = tester.getRect(inDialog(find.byTooltip('Reprendre la main')));
+    final newHand = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
+    expect(resume.center.dx, closeTo(chart.center.dx, 1.0));
+    expect(newHand.center.dx, closeTo(grid.center.dx, 1.0));
+  });
+
+  testWidgets('la courbe de la popup s\'ouvre par-dessus, et on revient sur la popup', (tester) async {
+    await pumpInheritedHandPopup(tester, rightHanded: true);
+
+    await tester.tap(inDialog(find.byTooltip('Évolution des scores')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ScoreChartScreen), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScoreChartScreen), findsNothing);
+    expect(find.byType(AlertDialog), findsOneWidget, reason: 'le choix est toujours à faire');
   });
 
   testWidgets('le bouton retour ne referme pas la popup de main héritée', (tester) async {

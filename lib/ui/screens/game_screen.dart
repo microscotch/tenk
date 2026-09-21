@@ -1684,6 +1684,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final canResume = !engine.inheritedHandCannotBank;
     // Le choix que le journal va appliquer juste après : `useFullHand` faux,
     // c'est la reprise de la main héritée.
+    // La disposition suit la main du joueur qui a la main : voir
+    // [currentSeatRightHandedProvider].
+    final rightHanded = ref.read(currentSeatRightHandedProvider);
     final replayResumes = widget.replayMode
         ? switch (ref.read(gameProvider.notifier).nextReplayAction) {
             final action? when action.type == GameActionType.startTurn =>
@@ -1703,36 +1706,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         PopScope(
           canPop: widget.replayMode,
           child: AlertDialog(
-            // La grille de score se consulte depuis la popup : elle est la
-            // seule action d'ici qui ne tranche PAS le choix, d'où sa place en
-            // coin de titre plutôt qu'au milieu des deux autres (voir
-            // [_inheritedHandActions]). Elle s'empile PAR-DESSUS la popup et on
-            // y revient — surtout pas un `pop`, qui laisserait le tour bloqué
-            // sans `activeTurn`, ce choix n'étant proposé nulle part ailleurs.
-            title: Row(
-              children: [
-                // Contrepoids de l'icône, pour que le titre reste centré sur la
-                // popup au lieu d'être décalé vers la gauche par elle.
-                const SizedBox(width: 48),
-                Expanded(
-                  child: Text(l10n.inheritedHandDialogTitle, textAlign: TextAlign.center),
-                ),
-                // En rejeu la grille n'est pas proposée : la popup se referme
-                // d'elle-même, et fermerait la grille à sa place.
-                if (widget.replayMode)
-                  const SizedBox(width: 48)
-                else
-                  IconButton(
-                    icon: const Icon(Icons.grid_on),
-                    tooltip: l10n.scoreGridLabel,
-                    onPressed: () => Navigator.of(dialogContext).push(
-                      MaterialPageRoute(
-                        builder: (_) => ScoreGridScreen(players: engine.players),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            title: Text(l10n.inheritedHandDialogTitle, textAlign: TextAlign.center),
             // Tout est empilé dans le contenu, boutons compris, plutôt que
             // laissé à `actions` : celui-ci aligne ses boutons à droite et ne
             // les met l'un sous l'autre que faute de place. Ici l'ordre de haut
@@ -1759,6 +1733,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice),
                   textAlign: TextAlign.center,
                 ),
+                // En rejeu, rien à consulter : la popup se referme d'elle-même,
+                // et fermerait l'écran consulté à sa place.
+                if (!widget.replayMode) ...[
+                  const SizedBox(height: 4),
+                  _inheritedHandConsultRow(dialogContext, engine, rightHanded: rightHanded),
+                ],
                 if (!canResume) ...[
                   const SizedBox(height: 8),
                   Text(
@@ -1778,6 +1758,47 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Les deux icônes de consultation de la popup de reprise de main, sous la
+  /// ligne du score : la grille des scores et l'évolution des scores. Aucune ne
+  /// tranche le choix, d'où leur place à part des deux icônes de décision.
+  ///
+  /// Chacune est centrée dans une colonne large de la moitié de la popup ; la
+  /// courbe se place à droite de la grille pour un droitier, à gauche pour un
+  /// gaucher — du côté de la main libre, comme le reste des commandes. Les deux
+  /// s'empilent PAR-DESSUS la popup et on y revient — surtout pas un `pop`, qui
+  /// laisserait le tour bloqué sans `activeTurn`, ce choix n'étant proposé
+  /// nulle part ailleurs.
+  Widget _inheritedHandConsultRow(
+    BuildContext dialogContext,
+    GameEngine engine, {
+    required bool rightHanded,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final grid = IconButton(
+      icon: const Icon(Icons.grid_on),
+      tooltip: l10n.scoreGridLabel,
+      onPressed: () => Navigator.of(dialogContext).push(
+        MaterialPageRoute(builder: (_) => ScoreGridScreen(players: engine.players)),
+      ),
+    );
+    final chart = IconButton(
+      icon: const Icon(Icons.show_chart),
+      tooltip: l10n.scoreChartTitle,
+      onPressed: () => Navigator.of(dialogContext).push(
+        MaterialPageRoute(builder: (_) => const ScoreChartScreen()),
+      ),
+    );
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        children: [
+          for (final icon in rightHanded ? [grid, chart] : [chart, grid])
+            Expanded(child: Center(child: icon)),
+        ],
       ),
     );
   }
@@ -1851,53 +1872,61 @@ class _GameScreenState extends ConsumerState<GameScreen>
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        action(
-          icon: Icons.check,
-          // Reprise impossible : l'icône reste visible mais inerte, plutôt
-          // que de disparaître en recentrant l'autre.
-          onPressed: canResume && !inert
-              ? () {
-                  // Ces popups surgissent sous le doigt du joueur : un tap
-                  // déjà parti ne doit pas les valider au vol (voir
-                  // _lockControlsBriefly). Contrôle à l'exécution ici, la
-                  // popup étant une route à part que nos setState ne
-                  // redessinent pas.
-                  if (_controlsLocked) return;
-                  Navigator.of(dialogContext).pop();
-                  notifier.startTurn(useFullHand: false);
-                  notifier.roll();
-                }
-              : null,
-          background: scheme.primary,
-          foreground: scheme.onPrimary,
-          chosen: replayResumes == true,
-          percent: canResume
-              ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues)
-              : '',
-          tooltip: l10n.resumeHandButton,
-        ),
-        const SizedBox(width: 32),
-        action(
-          icon: Icons.close,
-          onPressed: inert
-              ? null
-              : () {
-                  if (_controlsLocked) return;
-                  Navigator.of(dialogContext).pop();
-                  notifier.startTurn(useFullHand: true);
-                  notifier.roll();
-                },
-          background: scheme.secondary,
-          foreground: scheme.onSecondary,
-          chosen: replayResumes == false,
-          percent: _percentCaption(5, const {}),
-          tooltip: l10n.newHandButton,
-        ),
-      ],
+    // Deux colonnes égales, moitiés de la popup, chacune centrant son icône :
+    // la même disposition que les icônes de consultation au-dessus (voir
+    // [_inheritedHandConsultRow]), dont elles sont ainsi exactement sous les
+    // centres. Valider à gauche, refuser à droite.
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final decision in [
+            action(
+              icon: Icons.check,
+              // Reprise impossible : l'icône reste visible mais inerte, plutôt
+              // que de disparaître en recentrant l'autre.
+              onPressed: canResume && !inert
+                  ? () {
+                      // Ces popups surgissent sous le doigt du joueur : un tap
+                      // déjà parti ne doit pas les valider au vol (voir
+                      // _lockControlsBriefly). Contrôle à l'exécution ici, la
+                      // popup étant une route à part que nos setState ne
+                      // redessinent pas.
+                      if (_controlsLocked) return;
+                      Navigator.of(dialogContext).pop();
+                      notifier.startTurn(useFullHand: false);
+                      notifier.roll();
+                    }
+                  : null,
+              background: scheme.primary,
+              foreground: scheme.onPrimary,
+              chosen: replayResumes == true,
+              percent: canResume
+                  ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues)
+                  : '',
+              tooltip: l10n.resumeHandButton,
+            ),
+            action(
+              icon: Icons.close,
+              onPressed: inert
+                  ? null
+                  : () {
+                      if (_controlsLocked) return;
+                      Navigator.of(dialogContext).pop();
+                      notifier.startTurn(useFullHand: true);
+                      notifier.roll();
+                    },
+              background: scheme.secondary,
+              foreground: scheme.onSecondary,
+              chosen: replayResumes == false,
+              percent: _percentCaption(5, const {}),
+              tooltip: l10n.newHandButton,
+            ),
+          ])
+            Expanded(child: Center(child: decision)),
+        ],
+      ),
     );
   }
 

@@ -78,17 +78,6 @@ class GameOverScreen extends ConsumerWidget {
           leading: !archived && Theme.of(context).platform == TargetPlatform.iOS
               ? BackButton(onPressed: () => popToHome(context))
               : null,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.grid_on),
-              tooltip: l10n.scoreGridLabel,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ScoreGridScreen(players: players),
-                ),
-              ),
-            ),
-          ],
         ),
         body: SafeArea(
           child: Center(
