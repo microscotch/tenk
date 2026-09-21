@@ -21,7 +21,7 @@ import '../shake_detector.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
 import '../widgets/bordered_section.dart';
-import '../widgets/dice3d/dice_face_texture.dart' show accentColorFor;
+import '../widgets/dice3d/dice_face_texture.dart' show kExtensionLabelColor, pipColorFor;
 import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/replay_speed_control.dart';
@@ -1949,9 +1949,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ),
         // Une main pleine efface la règle d'extension EN MÊME TEMPS que les
         // dés gardés : cette mention et les dés rouges qu'elle explique
-        // disparaissent donc ensemble, sans traitement particulier ici. Le
-        // rouge est exactement celui du liseré d'un dé étendu, pour que les
-        // deux ne puissent pas diverger.
+        // disparaissent donc ensemble, sans traitement particulier ici. Elle
+        // n'est volontairement PAS rouge comme ces dés : sur le feutre vert,
+        // un rouge se lit mal et n'attire pas l'œil (voir
+        // [kExtensionLabelColor]).
         if (extended.isNotEmpty) ...[
           const TextSpan(text: '  ·  '),
           // Le dé est dessiné et non écrit en chiffre : c'est l'objet dont on
@@ -1964,11 +1965,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // (12 px) pour ne pas faire grossir la pastille incrustée.
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: DieGlyph(value: extended.first, state: DieVisualState.extended, size: 13),
+            child: DieGlyph(
+              value: extended.first,
+              state: DieVisualState.extended,
+              size: 13,
+              accent: kExtensionLabelColor,
+              // Des pips sombres : rouges sur le corps ivoire du glyphe, ils se
+              // lisaient mal à cette taille, le 6 surtout.
+              pipColor: pipColorFor(DieVisualState.kept),
+            ),
           ),
           TextSpan(
             text: ' = 100',
-            style: TextStyle(color: accentColorFor(DieVisualState.extended)),
+            style: const TextStyle(color: kExtensionLabelColor),
           ),
         ],
       ],

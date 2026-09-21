@@ -295,18 +295,28 @@ class DieGlyph extends StatelessWidget {
   final DieVisualState state;
   final double size;
 
+  /// Couleur du liseré et des pips à la place de celles de [state] : pour un
+  /// glyphe qui accompagne un texte d'une autre couleur que le dé qu'il
+  /// représente (voir la mention « = 100 » de la zone « Main courante »).
+  final Color? accent;
+  final Color? pipColor;
+
   const DieGlyph({
     super.key,
     required this.value,
     this.state = DieVisualState.kept,
     this.size = 20,
+    this.accent,
+    this.pipColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox.square(
       dimension: size,
-      child: CustomPaint(painter: _DieGlyphPainter(value: value, state: state)),
+      child: CustomPaint(
+        painter: _DieGlyphPainter(value: value, state: state, accent: accent, pipColor: pipColor),
+      ),
     );
   }
 }
@@ -314,8 +324,10 @@ class DieGlyph extends StatelessWidget {
 class _DieGlyphPainter extends CustomPainter {
   final int value;
   final DieVisualState state;
+  final Color? accent;
+  final Color? pipColor;
 
-  const _DieGlyphPainter({required this.value, required this.state});
+  const _DieGlyphPainter({required this.value, required this.state, this.accent, this.pipColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -330,16 +342,20 @@ class _DieGlyphPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = side * 0.07
-        ..color = accentColorFor(state),
+        ..color = accent ?? accentColorFor(state),
     );
     // Pips un peu plus gros que sur le vrai dé (0,078 du côté) : à taille
     // d'icône, ce rayon-là tomberait sous le pixel.
-    final pip = Paint()..color = pipColorFor(state);
+    final pip = Paint()..color = pipColor ?? pipColorFor(state);
     for (final p in pipPositions[value] ?? const <Offset>[]) {
       canvas.drawCircle(Offset(p.dx * side, p.dy * side), side * 0.1, pip);
     }
   }
 
   @override
-  bool shouldRepaint(_DieGlyphPainter old) => old.value != value || old.state != state;
+  bool shouldRepaint(_DieGlyphPainter old) =>
+      old.value != value ||
+      old.state != state ||
+      old.accent != accent ||
+      old.pipColor != pipColor;
 }

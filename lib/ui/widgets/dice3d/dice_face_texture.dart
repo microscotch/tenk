@@ -50,6 +50,13 @@ Color accentColorFor(DieVisualState state) => switch (state) {
       DieVisualState.extended => Colors.red.shade600,
     };
 
+/// Couleur de la mention « = 100 » de la zone « Main courante » (le dé et son
+/// texte), distincte du rouge du dé étendu lui-même : posé sur le feutre vert
+/// de la table, un rouge se lit mal, et il se confond avec celui du score
+/// insuffisant. Les dés, eux, gardent leur propre signal (voir
+/// [accentColorFor]).
+const Color kExtensionLabelColor = Color(0xFFFFC400);
+
 /// Couleur des pips : noir classique, sauf pour un dé étendu où ils reprennent
 /// la couleur d'accent pour rester bien visibles.
 Color pipColorFor(DieVisualState state) =>

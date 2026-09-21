@@ -13,6 +13,7 @@ import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
 import 'package:le10000/ui/screens/score_grid_screen.dart';
+import 'package:le10000/ui/widgets/dice3d/dice_face_texture.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
 
@@ -521,8 +522,31 @@ void main() {
     expect(find.textContaining('= 100'), findsOneWidget);
     final glyph = tester.widget<DieGlyph>(find.byType(DieGlyph));
     expect(glyph.value, 4, reason: 'la valeur étendue est celle du brelan encaissé');
-    expect(glyph.state, DieVisualState.extended,
-        reason: 'le dé est dessiné, pas écrit en chiffre, et dans son rouge d\'étendu');
+    expect(glyph.state, DieVisualState.extended, reason: 'le dé est dessiné, pas écrit en chiffre');
+
+    // La mention est en or vif, pips noirs : le rouge se lisait mal sur le
+    // feutre vert (le 6 surtout) et n'attirait pas l'œil.
+    expect(glyph.accent, kExtensionLabelColor);
+    expect(glyph.pipColor, pipColorFor(DieVisualState.kept), reason: 'pips sombres, lisibles à 13 px');
+    Color? colorOf(InlineSpan root, String needle) {
+      Color? found;
+      root.visitChildren((span) {
+        if (span is TextSpan && (span.text ?? '').contains(needle)) {
+          found = span.style?.color;
+          return false;
+        }
+        return true;
+      });
+      return found;
+    }
+
+    final label = tester.widget<Text>(find.textContaining('= 100'));
+    expect(colorOf(label.textSpan!, '= 100'), kExtensionLabelColor);
+
+    // Seule la mention change de couleur : les dés étendus de la main gardent
+    // leur liseré et leurs pips rouges.
+    expect(accentColorFor(DieVisualState.extended), Colors.red.shade600);
+    expect(pipColorFor(DieVisualState.extended), Colors.red.shade700);
   });
 
   testWidgets('un as isolé gardé n\'ajoute aucune annonce d\'extension', (tester) async {
