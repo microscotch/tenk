@@ -286,6 +286,21 @@ class AppLocalizationsPt extends AppLocalizations {
       'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
 
   @override
+  String get replayUnavailable =>
+      'Cette partie ne peut pas être rejouée : son journal est incomplet.';
+
+  @override
+  String get replayPlay => 'Lecture';
+
+  @override
+  String get replayPause => 'Pause';
+
+  @override
+  String replayTurnOf(int turn, int count) {
+    return '$turn / $count';
+  }
+
+  @override
   String scoreChartTurn(int turn) {
     return 'Tour $turn';
   }

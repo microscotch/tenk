@@ -584,6 +584,30 @@ abstract class AppLocalizations {
   /// **'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.'**
   String get scoreChartEmpty;
 
+  /// Message affiché quand on demande le rejeu d'une partie archivée dont le journal ne permet pas de la reconstruire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette partie ne peut pas être rejouée : son journal est incomplet.'**
+  String get replayUnavailable;
+
+  /// Infobulle du bouton qui relance le rejeu quand il est en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture'**
+  String get replayPlay;
+
+  /// Infobulle du bouton qui met le rejeu en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pause'**
+  String get replayPause;
+
+  /// Position du curseur du rejeu : le nombre de tours de joueur déjà joués, sur le total de la partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'{turn} / {count}'**
+  String replayTurnOf(int turn, int count);
+
   /// Titre de l'infobulle de la courbe des scores : le tour que le curseur désigne.
   ///
   /// In fr, this message translates to:

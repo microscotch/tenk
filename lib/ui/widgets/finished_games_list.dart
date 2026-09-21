@@ -62,7 +62,11 @@ class _FinishedGameRow extends ConsumerWidget {
       engine = null;
     }
     if (engine == null || !engine.gameOver || engine.winnerIndex == null) {
-      openReplay(context, ref, game);
+      if (!openReplay(context, ref, game)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).replayUnavailable)),
+        );
+      }
       return;
     }
     Navigator.of(context).push(

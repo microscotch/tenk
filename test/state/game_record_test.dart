@@ -175,4 +175,124 @@ void main() {
 
     expect(notifier.gameRecord!.seed, 15, reason: 'la partie jouée, pas le rejeu qui la précédait');
   });
+
+  group('rejeu : navigation par tour', () {
+    List<int> scoresOf(GameNotifier n) => n.state!.players.map((p) => p.totalScore).toList();
+
+    /// Ce que la partie jouée a donné, telle que le journal la rejoue d'un coup.
+    List<int> playedScores(SavedGame saved) =>
+        replayGame(saved.setup, saved.seed, saved.actions).engine!.players.map((p) => p.totalScore).toList();
+
+    void playToEnd(GameNotifier n) {
+      while (n.hasNextReplayAction) {
+        n.applyNextReplayAction();
+      }
+    }
+
+    test('le rejeu d\'un run démarre sur la partie, sans passer par le départage', () {
+      final saved = finishedGame(21);
+      final notifier = container.read(gameProvider.notifier);
+
+      notifier.startReplay(saved);
+
+      expect(notifier.isReplay, isTrue);
+      expect(notifier.gameRecord?.seed, 21, reason: 'c\'est ce run-là qui est à l\'écran');
+      expect(notifier.state!.gameOver, isFalse);
+      expect(notifier.state!.activeTurn, isNull, reason: 'le premier tour n\'est pas encore lancé');
+      expect(notifier.rotatedSetup!.playerNames, replayGame(saved.setup, saved.seed, saved.actions).rotatedSetup!.playerNames,
+          reason: 'le vainqueur du départage joue en premier, comme dans la partie');
+      expect(notifier.nextReplayAction?.type, GameActionType.startTurn);
+    });
+
+    test('la progression compte les tours de la partie et suit le rejeu', () {
+      final saved = finishedGame(21);
+      final notifier = container.read(gameProvider.notifier);
+      notifier.startReplay(saved);
+
+      final count = replayTurnStarts(saved.setup, saved.seed, saved.actions).length;
+      expect(notifier.replayProgress.count, count);
+      expect(notifier.replayProgress.turn, 1);
+
+      var turns = <int>[1];
+      while (notifier.hasNextReplayAction) {
+        notifier.applyNextReplayAction();
+        final turn = notifier.replayProgress.turn;
+        if (turn != turns.last) turns.add(turn);
+      }
+      expect(turns, List.generate(count, (i) => i + 1), reason: 'un tour après l\'autre, sans en sauter');
+      expect(notifier.replayProgress.turn, count);
+    });
+
+    test('aller à un tour donne l\'état de la partie à ce moment-là', () {
+      final saved = finishedGame(21);
+      final starts = replayTurnStarts(saved.setup, saved.seed, saved.actions);
+      final notifier = container.read(gameProvider.notifier);
+      notifier.startReplay(saved);
+
+      for (final turn in [5, 12, starts.length]) {
+        notifier.seekReplay(turn);
+
+        final expected = replayGame(saved.setup, saved.seed, saved.actions.sublist(0, starts[turn - 1])).engine!;
+        expect(notifier.replayProgress.turn, turn);
+        expect(scoresOf(notifier), expected.players.map((p) => p.totalScore).toList(), reason: 'tour $turn');
+        expect(notifier.state!.currentPlayerIndex, expected.currentPlayerIndex, reason: 'tour $turn');
+      }
+    });
+
+    test('aller à un tour puis laisser jouer mène au même résultat que la partie', () {
+      // Le point délicat : le générateur de dés doit reprendre là où le journal
+      // l'a laissé. Un générateur neuf ferait tomber d'autres dés, et une
+      // partie qui ne finit pas comme celle qu'on regarde.
+      final saved = finishedGame(21);
+      final played = playedScores(saved);
+      final notifier = container.read(gameProvider.notifier);
+
+      for (final turn in [1, 7, 20]) {
+        notifier.startReplay(saved);
+        notifier.seekReplay(turn);
+        playToEnd(notifier);
+
+        expect(notifier.state!.gameOver, isTrue, reason: 'à partir du tour $turn');
+        expect(scoresOf(notifier), played, reason: 'à partir du tour $turn');
+      }
+    });
+
+    test('on peut revenir en arrière', () {
+      final saved = finishedGame(21);
+      final notifier = container.read(gameProvider.notifier);
+      notifier.startReplay(saved);
+      notifier.seekReplay(15);
+      for (var i = 0; i < 12; i++) {
+        notifier.applyNextReplayAction();
+      }
+
+      notifier.seekReplay(3);
+
+      expect(notifier.replayProgress.turn, 3);
+      playToEnd(notifier);
+      expect(scoresOf(notifier), playedScores(saved));
+    });
+
+    test('sans run source, il n\'y a ni progression ni navigation', () {
+      final saved = finishedGame(21);
+      final diceOff = diceOffActionCount(saved.actions);
+      final afterDiceOff = replayGame(saved.setup, saved.seed, saved.actions.sublist(0, diceOff));
+      final notifier = container.read(gameProvider.notifier);
+      notifier.startGameReplay(
+        afterDiceOff.rotatedSetup!,
+        GameRecordingHandoff(
+          seed: 0,
+          random: afterDiceOff.random,
+          originalSetup: saved.setup,
+          alias: '',
+          createdAt: DateTime(2026, 1, 1),
+          actions: saved.actions.sublist(diceOff),
+        ),
+      );
+
+      expect(notifier.replayProgress.count, 0);
+      notifier.seekReplay(5);
+      expect(notifier.state!.activeTurn, isNull, reason: 'rien n\'a bougé');
+    });
+  });
 }

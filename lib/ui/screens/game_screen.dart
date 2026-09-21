@@ -13,6 +13,7 @@ import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
 import '../../state/player_providers.dart';
+import '../../state/replay_pause_provider.dart';
 import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
@@ -24,7 +25,7 @@ import '../widgets/bordered_section.dart';
 import '../widgets/dice3d/dice_face_texture.dart' show kExtensionLabelColor, pipColorFor;
 import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
-import '../widgets/replay_speed_control.dart';
+import '../widgets/replay_controls.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
@@ -670,6 +671,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (engine == null || engine.gameOver || !notifier.hasNextReplayAction) {
       return;
     }
+    // En pause, le rejeu n'avance plus : la relance reprogramme le pas
+    // suivant (voir le `ref.listen` de [replayPausedProvider] dans `build`).
+    if (ref.read(replayPausedProvider)) return;
     final baseDelay = ref.read(settingsProvider).aiMessageDelay;
     final speed = ref.read(replaySpeedProvider);
     var delay = Duration(microseconds: baseDelay.inMicroseconds ~/ speed);
@@ -690,6 +694,75 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ref.read(gameProvider.notifier).applyNextReplayAction();
       _scheduleReplayStep();
     });
+  }
+
+  /// Vrai le temps que le rejeu saute à un autre tour (voir [_seekReplay]) : le
+  /// moteur change alors d'un coup, et ce que l'écran déduit d'ordinaire d'une
+  /// transition (journal, sons, animations) n'a pas de sens sur un saut.
+  bool _seeking = false;
+
+  /// Amène le rejeu au début du tour [turn], avant ou après le tour actuel.
+  ///
+  /// Tout ce que l'écran avait bâti de la lecture en cours est écarté — la
+  /// popup ouverte, le pas programmé, les animations de dés et le journal — et
+  /// le journal est reconstruit depuis le début, comme si le rejeu était
+  /// arrivé là de lui-même. La lecture reprend ensuite, sauf en pause.
+  void _seekReplay(int turn) {
+    _pendingTimer?.cancel();
+    _closeReplayPopup();
+    _seeking = true;
+    final notifier = ref.read(gameProvider.notifier);
+    try {
+      notifier.seekReplay(turn);
+    } finally {
+      _seeking = false;
+    }
+
+    _bustRevealTimer?.cancel();
+    _rollSettleTimer?.cancel();
+    _previewMoveTimer?.cancel();
+    _previewFrameTimer?.cancel();
+    _bustKeyBeingRevealed = null;
+    _bustRevealed = false;
+    // Pas de popup sur l'état où l'on vient d'arriver : son fond couvrirait les
+    // commandes, dont le spectateur se sert justement pour continuer. Les
+    // popups des états suivants s'ouvrent normalement.
+    _inheritedHandDialogShownFor = ref.read(gameProvider);
+    _gainLoggedForRoll = null;
+    _selectedKeep = 0;
+    _rollSettled = true;
+    _previewMoveRevealed = true;
+    _previewFrameShown = true;
+
+    final record = notifier.gameRecord;
+    final l10n = AppLocalizations.of(context);
+    final entries = <_LogEntry>[];
+    if (record != null) {
+      replayGame(
+        record.setup,
+        record.seed,
+        notifier.replayAppliedActions,
+        onGameAction: (previous, next, action) {
+          entries.addAll(
+            _logEntriesForStep(
+              previous,
+              next,
+              l10n: l10n,
+              at: DateTime.now(),
+              includeBust: true,
+              includeGain: true,
+            ),
+          );
+        },
+      );
+    }
+    setState(() {
+      _log
+        ..clear()
+        ..addAll(entries);
+    });
+    _lockControlsBriefly();
+    _scheduleReplayStep();
   }
 
   /// Referme la popup du rejeu, si elle est encore là : le spectateur n'a
@@ -1175,8 +1248,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
         _shakeDetector.stop();
       }
     });
+    if (widget.replayMode) {
+      ref.listen<bool>(replayPausedProvider, (previous, paused) {
+        if (paused) {
+          _pendingTimer?.cancel();
+        } else {
+          _scheduleReplayStep();
+        }
+      });
+    }
     ref.listen<GameEngine?>(gameProvider, (previous, next) {
-      if (next == null || _coveredByReplay) return;
+      if (next == null || _coveredByReplay || _seeking) return;
       // Toute transition du moteur redessine la ligne de contrôle : on la
       // rend inerte le temps qu'un tap en cours de route retombe.
       _lockControlsBriefly();
@@ -1392,6 +1474,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
             : null,
         actions: _scoreGridAction(engine.players),
       ),
+      // Les commandes du rejeu, fixées en bas : hors du corps de l'écran, que
+      // l'`AbsorbPointer` ci-dessous rend inerte — elles seules répondent au
+      // doigt du spectateur.
+      bottomNavigationBar: widget.replayMode
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: ReplayControls(onSeek: _seekReplay),
+              ),
+            )
+          : null,
       body: AbsorbPointer(
         absorbing: widget.replayMode,
         child: GestureDetector(
@@ -1468,7 +1561,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 240,
+                      // Le journal cède aux commandes du rejeu la place
+                      // qu'elles prennent : l'ensemble garde la hauteur qu'il
+                      // a en partie jouée.
+                      height: widget.replayMode ? 240 - ReplayControls.height : 240,
                       child: _buildGameLog(assignAvatarColors(engine.players.map((p) => p.name))),
                     ),
                   ],
@@ -1499,8 +1595,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   List<Widget> _scoreGridAction(List<Player> players) {
     // En mode rejeu, seul le retour compte (flèche standard de l'AppBar) :
-    // pas d'icône grille de score, juste le sélecteur de vitesse x1/x2/x4.
-    if (widget.replayMode) return const [ReplaySpeedControl()];
+    // pas d'icône grille de score. Les commandes du rejeu (vitesse comprise)
+    // sont en bas de l'écran, sous le journal.
+    if (widget.replayMode) return const [];
 
     final l10n = AppLocalizations.of(context);
     return [

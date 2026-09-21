@@ -8,11 +8,12 @@ import 'package:le10000/game/player_stats.dart';
 import 'package:le10000/game/score_series.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_providers.dart';
-import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
+import 'package:le10000/state/replay_pause_provider.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/dice_off_screen.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
+import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/game_statistics_screen.dart';
 import 'package:le10000/ui/screens/score_chart_screen.dart';
 import 'package:le10000/ui/widgets/bordered_section.dart';
@@ -100,6 +101,8 @@ void main() {
     // Dernier de la colonne : sous le pli d'un écran de test, le tap le
     // manquerait sans le faire défiler d'abord.
     await tester.ensureVisible(replayButton);
+    // Un rejeu précédent quitté en pause : le nouveau démarre quand même en lecture.
+    container.read(replayPausedProvider.notifier).set(true);
     await tester.tap(replayButton);
     // Deux pas plutôt que `pumpAndSettle` : le rejeu s'enchaîne de lui-même à
     // coups de minuteries, dont celui-ci attendrait indéfiniment la fin. Le
@@ -108,10 +111,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byType(DiceOffScreen), findsOneWidget);
-    final diceOff = container.read(diceOffProvider.notifier);
-    expect(diceOff.isReplay, isTrue);
-    expect(diceOff.replaySource?.seed, 51, reason: 'le rejeu est celui de la partie qu\'on vient de finir');
+    // Droit sur la partie : le tirage au sort qui a fixé l'ordre de jeu n'est
+    // pas remis en scène.
+    expect(find.byType(DiceOffScreen), findsNothing);
+    expect(tester.widget<GameScreen>(find.byType(GameScreen)).replayMode, isTrue);
+    final game = container.read(gameProvider.notifier);
+    expect(game.isReplay, isTrue);
+    expect(game.gameRecord?.seed, 51, reason: 'le rejeu est celui de la partie qu\'on vient de finir');
+    expect(container.read(replayPausedProvider), isFalse, reason: 'un rejeu démarre toujours en lecture');
   });
 
   testWidgets('la courbe ouverte est celle de la partie terminée', (tester) async {

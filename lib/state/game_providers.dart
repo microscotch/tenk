@@ -17,6 +17,15 @@ export '../game/game_setup.dart' show GameSetup;
 
 final gameProvider = NotifierProvider<GameNotifier, GameEngine?>(GameNotifier.new);
 
+/// Où en est le rejeu : [turn] tours de joueur déjà joués, sur [count] que
+/// compte la partie. Sert de valeur et de borne au curseur du rejeu.
+class ReplayProgress {
+  final int turn;
+  final int count;
+
+  const ReplayProgress({required this.turn, required this.count});
+}
+
 class GameNotifier extends Notifier<GameEngine?> {
   /// Config courante, dans l'ordre de jeu réordonné (index 0 = vainqueur du
   /// départage) — sert aux lookups IA/auto par index de joueur courant.
@@ -148,12 +157,64 @@ class GameNotifier extends Notifier<GameEngine?> {
   List<GameAction> _replayQueue = const [];
   Random? _replayRandom;
 
+  /// Toutes les actions de la partie principale du rejeu (le départage n'en
+  /// fait pas partie, on ne le rejoue pas), dont [_replayQueue] est la fin
+  /// restant à appliquer.
+  List<GameAction> _replayGameActions = const [];
+
+  /// Début de chaque tour dans le journal du run rejoué (voir
+  /// [replayTurnStarts]) ; vide sans run source, on ne peut alors pas
+  /// naviguer.
+  List<int> _replayTurnStarts = const [];
+
   /// Vrai depuis [startGameReplay] jusqu'à la partie suivante ([startGame],
   /// [resumeFromSave]) : le moteur exposé est alors celui d'un rejeu, que
   /// l'écran de jeu « vivant » resté empilé dessous ne doit pas prendre pour
   /// sa partie (voir `GameScreen`).
   bool get isReplay => _isReplay;
   bool get hasNextReplayAction => _replayQueue.isNotEmpty;
+
+  /// Nombre d'actions du départage en tête du journal du run rejoué : la
+  /// partie rejouée commence après.
+  int get _replayDiceOffCount => _replaySource == null
+      ? 0
+      : _replaySource!.actions.length - _replayGameActions.length;
+
+  /// Progression du rejeu en tours de joueur (voir `ReplayProgress`) : le tour
+  /// à l'écran, sur le nombre de tours de la partie. Sans run source, ni
+  /// progression ni navigation : zéro tour.
+  ReplayProgress get replayProgress {
+    if (_replayTurnStarts.isEmpty) return const ReplayProgress(turn: 0, count: 0);
+    final consumed = _replayDiceOffCount + _replayGameActions.length - _replayQueue.length;
+    final started = _replayTurnStarts.where((start) => start <= consumed).length;
+    return ReplayProgress(
+      turn: started.clamp(1, _replayTurnStarts.length),
+      count: _replayTurnStarts.length,
+    );
+  }
+
+  /// Amène le rejeu au début du tour [turn] (de 1 au nombre de tours), qu'il
+  /// soit avant ou après le tour actuel : l'état exact en est reconstruit en
+  /// rejouant le journal jusque-là, et le générateur de dés y reprend là où le
+  /// journal l'a laissé — la suite du rejeu tombe donc sur les mêmes tirages
+  /// que la partie jouée.
+  void seekReplay(int turn) {
+    final source = _replaySource;
+    if (source == null || _replayTurnStarts.isEmpty) return;
+    final target = _replayTurnStarts[(turn - 1).clamp(0, _replayTurnStarts.length - 1)];
+    final replayed = replayGame(source.setup, source.seed, source.actions.sublist(0, target));
+    _replayRandom = replayed.random;
+    _replayQueue = _replayGameActions.sublist(target - _replayDiceOffCount);
+    state = replayed.engine;
+  }
+
+  /// Les actions déjà appliquées du rejeu, départage compris : de quoi en
+  /// reconstruire le journal de partie affiché (voir `GameScreen`).
+  List<GameAction> get replayAppliedActions {
+    final source = _replaySource;
+    if (source == null) return const [];
+    return source.actions.sublist(0, _replayDiceOffCount + _replayGameActions.length - _replayQueue.length);
+  }
 
   /// La prochaine action du journal de rejeu qui change quelque chose à
   /// l'écran (une reprise de partie n'en est pas une, voir
@@ -166,9 +227,9 @@ class GameNotifier extends Notifier<GameEngine?> {
     return null;
   }
 
-  /// Démarre le rejeu de la partie principale une fois le départage rejoué
-  /// (voir `DiceOffNotifier.startReplay`/`replayHandoff`) : même principe que
-  /// [startGame], mais sans seed donc sans aucune persistance.
+  /// Démarre le rejeu de la partie principale (voir [startReplay], qui le fait
+  /// depuis un run archivé) : même principe que [startGame], mais sans seed
+  /// donc sans aucune persistance.
   ///
   /// [source] est le run archivé rejoué, pour [gameRecord]. Les champs de la
   /// partie « vivante » sont vidés au passage : ils gardaient sinon la
@@ -182,8 +243,45 @@ class GameNotifier extends Notifier<GameEngine?> {
     _originalSetup = null;
     _actions.clear();
     _replayRandom = handoff.random;
+    _replayGameActions = List.unmodifiable(handoff.actions);
     _replayQueue = List.of(handoff.actions);
+    // Un journal qui se rejoue mal n'empêche pas de regarder ce qui peut l'être :
+    // seule la navigation par tour en fait les frais.
+    List<int> starts = const [];
+    if (source != null) {
+      try {
+        starts = replayTurnStarts(source.setup, source.seed, source.actions);
+      } catch (_) {
+        starts = const [];
+      }
+    }
+    _replayTurnStarts = starts;
     state = GameEngine.newGame(rotatedSetup.playerNames);
+  }
+
+  /// Démarre le rejeu de [saved], un run archivé, directement sur sa partie :
+  /// le départage qui a fixé l'ordre de jeu n'est pas remis en scène, on n'en
+  /// garde que le résultat (qui commence, et le générateur de dés dans l'état
+  /// où il laisse la partie).
+  void startReplay(SavedGame saved) {
+    final diceOffCount = diceOffActionCount(saved.actions);
+    final afterDiceOff = replayGame(saved.setup, saved.seed, saved.actions.sublist(0, diceOffCount));
+    final rotatedSetup = afterDiceOff.rotatedSetup;
+    if (rotatedSetup == null) {
+      throw StateError('le départage de ce run n\'est pas résolu : il n\'y a pas de partie à rejouer');
+    }
+    startGameReplay(
+      rotatedSetup,
+      GameRecordingHandoff(
+        seed: 0,
+        random: afterDiceOff.random,
+        originalSetup: saved.setup,
+        alias: '',
+        createdAt: saved.createdAt,
+        actions: saved.actions.sublist(diceOffCount),
+      ),
+      source: saved,
+    );
   }
 
   /// Applique la prochaine action du journal de rejeu, via le même dispatch

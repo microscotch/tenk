@@ -6,7 +6,7 @@ import 'package:le10000/game/game_setup.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
-import 'package:le10000/ui/screens/dice_off_screen.dart';
+import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/finished_games_screen.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 
@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(GameOverScreen), findsOneWidget);
-    expect(find.byType(DiceOffScreen), findsNothing, reason: 'plus de rejeu direct');
+    expect(find.byType(GameScreen), findsNothing, reason: 'l\'écran de fin, pas le rejeu direct');
 
     // Le vainqueur relu en rejouant le journal, indépendamment de l'écran.
     final engine = replayGame(saved.setup, saved.seed, saved.actions).engine!;
@@ -133,7 +133,7 @@ void main() {
     expect(find.byType(GameOverScreen), findsNothing);
   });
 
-  testWidgets('une partie qui ne va pas à son terme retombe sur l\'ancien rejeu direct', (tester) async {
+  testWidgets('une partie qui ne va pas à son terme est rejouée directement', (tester) async {
     // Pas de classement final à montrer : le journal s'arrête avant la victoire.
     final complete = finishedGame(15, 'Partie 15');
     await archive.write(SavedGame(
@@ -150,10 +150,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byType(GameOverScreen), findsNothing);
-    expect(find.byType(DiceOffScreen), findsOneWidget);
+    expect(tester.widget<GameScreen>(find.byType(GameScreen)).replayMode, isTrue,
+        reason: 'rejeu spectateur, droit sur la partie');
   });
 
-  testWidgets('un journal illisible ne fait pas planter la liste : rejeu direct', (tester) async {
+  testWidgets('un journal illisible ne fait pas planter la liste, et le dit', (tester) async {
     await archive.write(SavedGame(
       seed: 16,
       setup: setup,
@@ -170,6 +171,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(GameOverScreen), findsNothing);
-    expect(find.byType(DiceOffScreen), findsOneWidget);
+    expect(find.byType(GameScreen), findsNothing);
+    expect(find.text('Cette partie ne peut pas être rejouée : son journal est incomplet.'), findsOneWidget);
   });
 }

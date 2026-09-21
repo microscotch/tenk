@@ -259,6 +259,21 @@
   "scoreChartEmpty": "Aucun tour terminé pour l'instant : il n'y a encore rien à tracer.",
   "@scoreChartEmpty": {"description": "Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé."},
 
+  "replayUnavailable": "Cette partie ne peut pas être rejouée : son journal est incomplet.",
+  "@replayUnavailable": {"description": "Message affiché quand on demande le rejeu d'une partie archivée dont le journal ne permet pas de la reconstruire."},
+
+  "replayPlay": "Lecture",
+  "@replayPlay": {"description": "Infobulle du bouton qui relance le rejeu quand il est en pause."},
+
+  "replayPause": "Pause",
+  "@replayPause": {"description": "Infobulle du bouton qui met le rejeu en pause."},
+
+  "replayTurnOf": "{turn} / {count}",
+  "@replayTurnOf": {
+    "description": "Position du curseur du rejeu : le nombre de tours de joueur déjà joués, sur le total de la partie.",
+    "placeholders": {"turn": {"type": "int"}, "count": {"type": "int"}}
+  },
+
   "scoreChartTurn": "Tour {turn}",
   "@scoreChartTurn": {
     "description": "Titre de l'infobulle de la courbe des scores : le tour que le curseur désigne.",

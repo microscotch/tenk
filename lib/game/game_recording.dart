@@ -42,9 +42,8 @@ class GameRecordingHandoff {
 /// jamais au moteur ni au flux de tirages.
 ///
 /// Ajouter une valeur ici casse volontairement tous les `switch` exhaustifs
-/// qui l'énumèrent — c'est le bon échec : l'un d'eux
-/// (`applyNextDiceOffReplayAction`) lèverait sinon à l'exécution sur une
-/// action qu'il ne connaît pas.
+/// qui l'énumèrent — c'est le bon échec : l'un d'eux ([applyGameAction])
+/// lèverait sinon à l'exécution sur une action qu'il ne connaît pas.
 enum GameActionType { diceOffRoll, diceOffResolveRound, startTurn, roll, applyKeep, endBustedTurn, bank, resume }
 
 /// Une transition journalisée : son type, l'instant où elle a eu lieu (pour
@@ -161,6 +160,60 @@ ReplayResult replayGame(
   }
 
   return ReplayResult(diceOff: diceOff, engine: engine, rotatedSetup: rotatedSetup, random: random);
+}
+
+/// Les actions du départage sont toutes en tête du journal : la partie
+/// principale commence juste après la dernière. Une reprise peut s'y glisser
+/// des deux côtés sans conséquence (voir [GameActionType.resume]).
+int diceOffActionCount(List<GameAction> actions) => actions.lastIndexWhere(
+      (a) => a.type == GameActionType.diceOffRoll || a.type == GameActionType.diceOffResolveRound,
+    ) +
+    1;
+
+/// Le début de chaque tour de joueur de la partie, en nombre d'actions du
+/// journal à appliquer pour y arriver (départage compris) : la première entrée
+/// est le tout premier tour, la dernière le tour qui gagne. Le curseur du
+/// rejeu s'en sert pour aller droit à un tour (voir `GameNotifier.seekReplay`).
+///
+/// Un tour commence quand le précédent a pris fin — un banquage, un craque, ou
+/// la quinte d'as qui gagne d'un coup — et que le suivant est lancé : quand ce
+/// dernier démarre tout seul (personne n'a de main à reprendre), l'action
+/// `startTurn` qui le lance est incluse, sinon le tour commence sur le choix de
+/// reprise, avant la réponse du joueur.
+List<int> replayTurnStarts(GameSetup setup, int seed, List<GameAction> actions) {
+  final starts = <int>[];
+
+  // Position, dans [actions], de l'action que [replayGame] vient de traiter :
+  // il ne transmet pas les reprises, qu'il faut donc sauter.
+  var pos = diceOffActionCount(actions) - 1;
+
+  /// Le début d'un tour dont l'état est atteint après [consumed] actions : y
+  /// ajoute le `startTurn` qui suit s'il se joue seul.
+  int startAfter(int consumed, {required bool autoStart}) {
+    var j = consumed;
+    while (j < actions.length && actions[j].type == GameActionType.resume) {
+      j++;
+    }
+    if (autoStart && j < actions.length && actions[j].type == GameActionType.startTurn) return j + 1;
+    return consumed;
+  }
+
+  // Une partie neuve n'a pas de main à reprendre : son premier tour démarre tout seul.
+  starts.add(startAfter(pos + 1, autoStart: true));
+
+  replayGame(setup, seed, actions, onGameAction: (previous, next, action) {
+    do {
+      pos++;
+    } while (actions[pos].type == GameActionType.resume);
+
+    final endsTurn = action.type == GameActionType.bank ||
+        action.type == GameActionType.endBustedTurn ||
+        (action.type == GameActionType.applyKeep && next.activeTurn == null);
+    if (!endsTurn || next.gameOver) return;
+    final autoStart = next.nextTurnDice >= 5 || next.inheritedHandCannotBank;
+    starts.add(startAfter(pos + 1, autoStart: autoStart));
+  });
+  return starts;
 }
 
 /// Applique une seule action de la PARTIE PRINCIPALE (pas le départage) à

@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../state/dice_off_providers.dart';
+import '../state/game_providers.dart';
 import '../state/game_save_store.dart';
-import 'screens/dice_off_screen.dart';
+import '../state/replay_pause_provider.dart';
+import 'screens/game_screen.dart';
 import 'screens/setup_screen.dart';
 
-/// Lance le rejeu spectateur de [game], départage compris : le même chemin,
-/// que le rejeu soit demandé depuis l'écran de fin de partie ou depuis une
-/// partie archivée (voir `DiceOffNotifier.startReplay`).
-void openReplay(BuildContext context, WidgetRef ref, SavedGame game) {
-  ref.read(diceOffProvider.notifier).startReplay(game);
+/// Lance le rejeu spectateur de [game], droit sur sa partie : le tirage au sort
+/// qui a fixé l'ordre de jeu n'est pas remis en scène (voir
+/// `GameNotifier.startReplay`). Le même chemin, que le rejeu soit demandé depuis
+/// l'écran de fin de partie ou depuis une partie archivée.
+///
+/// Rend faux, sans rien ouvrir, quand le journal ne permet pas de rejouer (un
+/// run illisible, dont le départage n'a pas de vainqueur) : à l'appelant de le
+/// dire à l'utilisateur.
+bool openReplay(BuildContext context, WidgetRef ref, SavedGame game) {
+  // Un rejeu démarre toujours en lecture, même si le précédent a été quitté
+  // en pause.
+  ref.read(replayPausedProvider.notifier).set(false);
+  try {
+    ref.read(gameProvider.notifier).startReplay(game);
+  } catch (_) {
+    return false;
+  }
   Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => const DiceOffScreen(replayMode: true)),
+    MaterialPageRoute(builder: (_) => const GameScreen(replayMode: true)),
   );
+  return true;
 }
 
 /// Dépile jusqu'à l'écran d'accueil, depuis n'importe quelle profondeur
