@@ -251,6 +251,8 @@ void main() {
     }
     expect(found, isTrue, reason: 'aucune partie de test ne réunit les conditions du scénario');
 
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(430, 1800));
     container.read(gameProvider.notifier).resumeFromSave(saved);
     await pumpGameOver(tester);
     await tester.tap(statsButton);
@@ -276,8 +278,23 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.descendant(of: section, matching: find.byType(BreakdownRow)), findsNothing,
-        reason: 'la ventilation par valeur de dé est réservée au détail d\'un joueur');
+    // La même ventilation que la fiche d'un joueur, sommée sur la table : six
+    // valeurs sous les brelans, puis sous les carrés, puis sous les quintes.
+    final rows = tester
+        .widgetList<BreakdownRow>(find.descendant(of: section, matching: find.byType(BreakdownRow)))
+        .toList();
+    expect(rows, hasLength(18));
+    // Les détails « dont » portent le tiret, ici comme sur la fiche d'un joueur.
+    expect(find.descendant(of: section, matching: find.text('– dont petites')), findsOneWidget);
+    expect(find.descendant(of: section, matching: find.text('– dont grandes')), findsOneWidget);
+    int onTable(Map<int, int> Function(PlayerStats) byValue, int face) =>
+        stats.bySeat.fold<int>(0, (sum, p) => sum + (byValue(p)[face] ?? 0));
+    for (var face = 1; face <= 6; face++) {
+      expect(rows[face - 1].value, face);
+      expect(rows[face - 1].count, onTable((p) => p.brelans, face), reason: 'brelans de valeur $face');
+      expect(rows[6 + face - 1].count, onTable((p) => p.carres, face), reason: 'carrés de valeur $face');
+      expect(rows[12 + face - 1].count, onTable((p) => p.quintes, face), reason: 'quintes de valeur $face');
+    }
     expect(find.descendant(of: section, matching: find.text('Meilleur tour')), findsNothing,
         reason: 'un record personnel ne se totalise pas à l\'échelle d\'une table');
   });
@@ -322,6 +339,8 @@ void main() {
   });
 
   testWidgets('le détail d\'un joueur se déplie', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(430, 1800));
     container.read(gameProvider.notifier).resumeFromSave(finishedGame(41));
     await pumpGameOver(tester);
     await tester.tap(statsButton);

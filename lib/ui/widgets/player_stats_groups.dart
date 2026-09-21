@@ -11,7 +11,8 @@ import 'stat_row.dart';
 /// bilan d'une seule partie, qui n'en garde que les figures et le divers : sur
 /// une partie unique, « parties jouées » vaut toujours 1 et le temps est le
 /// même pour tous, ces groupes n'y diraient rien et se lisent une seule fois
-/// en tête de l'écran (voir `GameStatisticsScreen`).
+/// en tête de l'écran (voir `GameStatisticsScreen`). Les figures y sont
+/// détaillées par valeur de dé dans les deux cas.
 class PlayerStatsGroups extends StatelessWidget {
   final PlayerStats stats;
 
@@ -28,10 +29,6 @@ class PlayerStatsGroups extends StatelessWidget {
   /// d'une partie.
   final bool includeRolls;
 
-  /// Une ligne par valeur de dé sous chaque brelan, carré et quinte. Utile au
-  /// détail d'un joueur ; trop long pour le résumé de toute la table.
-  final bool showBreakdown;
-
   /// Le titre de chaque groupe. À retirer quand le widget est déjà logé dans un
   /// cadre qui le porte, sous peine de le dire deux fois.
   final bool showTitles;
@@ -42,7 +39,6 @@ class PlayerStatsGroups extends StatelessWidget {
     this.includeGamesAndTime = true,
     this.includeMisc = true,
     this.includeRolls = true,
-    this.showBreakdown = true,
     this.showTitles = true,
   });
 
@@ -83,19 +79,19 @@ class PlayerStatsGroups extends StatelessWidget {
           ..._figureRows(l10n.statsCarres, s.carresTotal, s.carres),
           ..._figureRows(l10n.statsQuintes, s.quintesTotal, s.quintes),
           StatRow(label: l10n.statsSuites, value: '${s.suitesTotal}'),
-          StatRow(label: l10n.statsSmallSuites, value: '${s.petitesSuites}'),
-          StatRow(label: l10n.statsBigSuites, value: '${s.grandesSuites}'),
+          StatRow(label: l10n.statsSmallSuites, value: '${s.petitesSuites}', detail: true),
+          StatRow(label: l10n.statsBigSuites, value: '${s.grandesSuites}', detail: true),
           StatRow(label: l10n.statsLoneAces, value: '${s.keptLoneAces}'),
           StatRow(label: l10n.statsLoneFives, value: '${s.keptLoneFives}'),
           StatRow(label: l10n.statsAceQuints, value: '${s.quintesDAsTotal}'),
-          StatRow(label: l10n.statsAceQuintsWon, value: '${s.quintesDAsReussies}'),
+          StatRow(label: l10n.statsAceQuintsWon, value: '${s.quintesDAsReussies}', detail: true),
         ]),
         if (includeMisc)
           _group(context, l10n.statsSectionMisc, [
             StatRow(label: l10n.statsBestTurn, value: '${s.bestBankedTurn}'),
             StatRow(label: l10n.statsHotDiceRun, value: '${s.longestHotDiceRun}'),
             StatRow(label: l10n.statsBusts, value: '${s.bustsTotal}'),
-            StatRow(label: l10n.statsLongestBustStreak, value: '${s.longestBustStreak}'),
+            StatRow(label: l10n.statsLongestBustStreak, value: '${s.longestBustStreak}', detail: true),
             StatRow(label: l10n.statsSelfBars, value: '${s.selfBarsTotal}'),
             StatRow(label: l10n.statsBarsInflicted, value: '${s.barsInflictedTotal}'),
           ]),
@@ -122,9 +118,8 @@ class PlayerStatsGroups extends StatelessWidget {
   List<Widget> _figureRows(String label, int total, Map<int, int> byValue) {
     return [
       StatRow(label: label, value: '$total'),
-      if (showBreakdown)
-        for (var value = 1; value <= 6; value++)
-          BreakdownRow(value: value, count: byValue[value] ?? 0),
+      for (var value = 1; value <= 6; value++)
+        BreakdownRow(value: value, count: byValue[value] ?? 0),
     ];
   }
 }

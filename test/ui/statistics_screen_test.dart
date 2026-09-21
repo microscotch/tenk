@@ -8,6 +8,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_statistics.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/statistics_screen.dart';
+import 'package:le10000/ui/widgets/bordered_section.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/stat_row.dart';
 
@@ -96,7 +97,7 @@ void main() {
       findsOneWidget,
       reason: 'le résumé se lit sans rien déplier',
     );
-    expect(find.text('Figures'), findsNothing, reason: 'le détail est replié par défaut');
+    expect(find.text('Temps de jeu'), findsNothing, reason: 'le détail est replié par défaut');
   });
 
   testWidgets('chaque joueur a son propre résumé', (tester) async {
@@ -121,19 +122,19 @@ void main() {
     await players.write(PlayerProfile.create(name: 'Marie')
         .copyWith(stats: const PlayerStats(gamesPlayed: 4, gamesWon: 3, brelans: {4: 3})));
     await pump(tester);
-    expect(find.text('Figures'), findsNothing);
+    expect(find.text('Temps de jeu'), findsNothing);
 
     await tester.tap(find.text('Marie'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Figures'), findsOneWidget, reason: 'le détail est apparu');
+    expect(find.text('Temps de jeu'), findsOneWidget, reason: 'le détail est apparu');
     expect(find.byType(StatisticsScreen), findsOneWidget, reason: 'toujours sur l\'écran général');
     expect(find.byType(BackButton), findsNothing, reason: 'aucun écran n\'a été empilé');
     expect(find.text('Records'), findsOneWidget, reason: 'les records restent visibles en tête');
 
     await tester.tap(find.text('Marie'));
     await tester.pumpAndSettle();
-    expect(find.text('Figures'), findsNothing, reason: 'un second toucher le replie');
+    expect(find.text('Temps de jeu'), findsNothing, reason: 'un second toucher le replie');
   });
 
   testWidgets('les compteurs du joueur sont rendus', (tester) async {
@@ -165,11 +166,13 @@ void main() {
     );
 
     // Brelans, carrés et quintes : trois figures ventilées sur six valeurs.
-    expect(find.byType(BreakdownRow), findsNWidgets(18));
-    expect(find.byType(DieGlyph), findsNWidgets(18),
+    final panneau = find.byType(ExpansionTile);
+    Finder inPanel(Finder f) => find.descendant(of: panneau, matching: f);
+    expect(inPanel(find.byType(BreakdownRow)), findsNWidgets(18));
+    expect(inPanel(find.byType(DieGlyph)), findsNWidgets(18),
         reason: 'la valeur est dessinée, pas écrite en chiffres');
 
-    final brelans = tester.widgetList<BreakdownRow>(find.byType(BreakdownRow)).take(6).toList();
+    final brelans = tester.widgetList<BreakdownRow>(inPanel(find.byType(BreakdownRow))).take(6).toList();
     expect(brelans.map((r) => r.value), [1, 2, 3, 4, 5, 6], reason: 'toujours dans l\'ordre');
     expect(brelans.map((r) => r.count), [1, 0, 0, 3, 0, 0],
         reason: 'une valeur jamais sortie s\'affiche à zéro plutôt que de disparaître');
@@ -210,6 +213,130 @@ void main() {
     final panneau = find.byType(ExpansionTile);
     expect(find.descendant(of: panneau, matching: find.text('Mimi')), findsOneWidget);
     expect(find.text('Marie Curie'), findsNothing);
+  });
+
+  group('records des figures', () {
+    final records = find.widgetWithText(BorderedSection, 'Records');
+
+    List<BreakdownRow> facesOf(WidgetTester tester) => tester
+        .widgetList<BreakdownRow>(find.descendant(of: records, matching: find.byType(BreakdownRow)))
+        .toList();
+
+    Finder recordOf(String label, String value) => find.descendant(
+          of: find.descendant(of: records, matching: find.widgetWithText(StatRow, label)),
+          matching: find.text(value),
+        );
+
+    Future<void> twoPlayers() async {
+      await players.write(PlayerProfile.create(name: 'Marie').copyWith(
+          stats: const PlayerStats(
+              gamesPlayed: 2, brelans: {4: 3}, carres: {2: 1}, grandesSuites: 1)));
+      await players.write(PlayerProfile.create(name: 'Bob').copyWith(
+          stats: const PlayerStats(
+              gamesPlayed: 2, brelans: {4: 1, 1: 2}, petitesSuites: 2)));
+    }
+
+    testWidgets('chaque figure est ventilée par valeur de dé, avec le détenteur de chaque record',
+        (tester) async {
+      await twoPlayers();
+      await pump(tester);
+
+      final rows = facesOf(tester);
+      expect(rows, hasLength(18), reason: 'brelans, carrés et quintes, six valeurs chacun');
+      expect(rows.take(6).map((r) => r.value), [1, 2, 3, 4, 5, 6]);
+
+      // Brelans : Bob a le plus de brelans de 1, Marie le plus de brelans de 4.
+      expect(rows.take(6).map((r) => r.display), [
+        '2 — Bob',
+        '0',
+        '0',
+        '3 — Marie',
+        '0',
+        '0',
+      ]);
+      // Carrés : seule Marie en a sorti, de 2.
+      expect(rows.skip(6).take(6).map((r) => r.display), [
+        '0',
+        '1 — Marie',
+        '0',
+        '0',
+        '0',
+        '0',
+      ]);
+      expect(rows.skip(12).map((r) => r.display), everyElement('0'), reason: 'aucune quinte');
+    });
+
+    testWidgets('le total de la figure donne tous ses détenteurs, ou rien si personne n\'en a',
+        (tester) async {
+      await twoPlayers();
+      await pump(tester);
+
+      expect(recordOf('Brelans', '3 — Bob, Marie'), findsOneWidget,
+          reason: 'à égalité, les deux sont nommés');
+      expect(recordOf('Carrés', '1 — Marie'), findsOneWidget);
+      expect(recordOf('Quintes', '0'), findsOneWidget,
+          reason: 'un record à zéro n\'a pas de détenteur à nommer');
+    });
+
+    testWidgets('les suites sont détaillées en petites et grandes', (tester) async {
+      await twoPlayers();
+      await pump(tester);
+
+      expect(recordOf('Suites', '2 — Bob'), findsOneWidget);
+      expect(recordOf('– dont petites', '2 — Bob'), findsOneWidget);
+      expect(recordOf('– dont grandes', '1 — Marie'), findsOneWidget);
+    });
+
+    testWidgets('le record de série de craquages suit celui des craquages qu\'il détaille',
+        (tester) async {
+      await players.write(PlayerProfile.create(name: 'Marie')
+          .copyWith(stats: const PlayerStats(gamesPlayed: 1, bustsTotal: 5, longestBustStreak: 3)));
+      await pump(tester);
+
+      expect(recordOf('Craquages', '5 — Marie'), findsOneWidget);
+      final labels = tester
+          .widgetList<StatRow>(find.descendant(of: records, matching: find.byType(StatRow)))
+          .map((r) => r.label)
+          .toList();
+      expect(labels[labels.indexOf('Craquages') + 1], 'dont série la plus longue',
+          reason: 'sans son parent, « dont » se lirait comme le détail de la ligne précédente');
+    });
+
+    testWidgets('les figures ont leur titre, comme sur la fiche d\'un joueur', (tester) async {
+      await twoPlayers();
+      await pump(tester);
+
+      expect(find.descendant(of: records, matching: find.text('Figures')), findsOneWidget);
+    });
+  });
+
+  testWidgets('tous les détails « dont » portent le tiret, sur la fiche d\'un joueur comme ailleurs',
+      (tester) async {
+    await pumpExpanded(
+      tester,
+      PlayerProfile.create(name: 'Marie').copyWith(
+        stats: const PlayerStats(
+          gamesPlayed: 1,
+          petitesSuites: 1,
+          grandesSuites: 1,
+          quintesDAsReussies: 1,
+          bustsTotal: 2,
+          longestBustStreak: 2,
+        ),
+      ),
+    );
+
+    final panneau = find.byType(ExpansionTile);
+    for (final label in [
+      '– dont petites',
+      '– dont grandes',
+      '– dont gagnantes',
+      '– dont série la plus longue',
+    ]) {
+      expect(find.descendant(of: panneau, matching: find.text(label)), findsOneWidget, reason: label);
+    }
+    expect(find.text('dont petites'), findsNothing, reason: 'jamais sans son tiret');
+    expect(find.text('dont grandes'), findsNothing);
   });
 
   testWidgets('un record à égalité nomme tous ses détenteurs', (tester) async {

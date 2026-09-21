@@ -97,9 +97,8 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            // Les figures sorties pendant la partie, toujours visibles : sans
-            // ventilation par valeur de dé, réservée au détail d'un joueur,
-            // pour ne pas repousser les joueurs hors de l'écran.
+            // Les figures sorties pendant la partie, toujours visibles, avec la
+            // même ventilation par valeur de dé que la fiche d'un joueur.
             BorderedSection(
               label: l10n.gameStatsFiguresSection,
               fillAvailableSpace: false,
@@ -108,7 +107,6 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
                 includeGamesAndTime: false,
                 includeMisc: false,
                 includeRolls: false,
-                showBreakdown: false,
                 showTitles: false,
               ),
             ),

@@ -12,7 +12,11 @@ class BreakdownRow extends StatelessWidget {
   final int value;
   final int count;
 
-  const BreakdownRow({super.key, required this.value, required this.count});
+  /// Ce qui s'affiche à droite à la place de [count] : un record y ajoute ceux
+  /// qui le détiennent (voir `StatisticsScreen`).
+  final String? display;
+
+  const BreakdownRow({super.key, required this.value, required this.count, this.display});
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +28,7 @@ class BreakdownRow extends StatelessWidget {
         children: [
           Text('– ${l10n.statsBreakdownRow} ', style: style),
           DieGlyph(value: value, size: 14),
-          const Spacer(),
-          Text('$count', style: style),
+          Expanded(child: Text(display ?? '$count', style: style, textAlign: TextAlign.end)),
         ],
       ),
     );
@@ -36,16 +39,24 @@ class StatRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const StatRow({super.key, required this.label, required this.value});
+  /// Le détail d'une ligne qui précède (« – dont petites ») : mis en retrait et
+  /// précédé du même tiret que [BreakdownRow], pour que toutes les ventilations
+  /// se lisent pareil, qu'elles portent sur une valeur de dé ou sur autre chose.
+  /// Le tiret est posé ici plutôt que dans les libellés, qui restent des mots.
+  final bool detail;
+
+  const StatRow({super.key, required this.label, required this.value, this.detail = false});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: EdgeInsets.only(left: detail ? 12 : 0, top: 2, bottom: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(child: Text(label, style: Theme.of(context).textTheme.bodySmall)),
+          Expanded(
+            child: Text(detail ? '– $label' : label, style: Theme.of(context).textTheme.bodySmall),
+          ),
           Text(value),
         ],
       ),
