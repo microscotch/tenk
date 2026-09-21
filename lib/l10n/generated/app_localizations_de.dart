@@ -286,6 +286,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
 
   @override
+  String scoreChartTurn(int turn) {
+    return 'Tour $turn';
+  }
+
+  @override
   String get scoreChartXAxis => 'Tours joués';
 
   @override

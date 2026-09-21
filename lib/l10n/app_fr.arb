@@ -259,6 +259,12 @@
   "scoreChartEmpty": "Aucun tour terminé pour l'instant : il n'y a encore rien à tracer.",
   "@scoreChartEmpty": {"description": "Message affiché quand la courbe des scores n'a aucun point, faute de tour achevé."},
 
+  "scoreChartTurn": "Tour {turn}",
+  "@scoreChartTurn": {
+    "description": "Titre de l'infobulle de la courbe des scores : le tour que le curseur désigne.",
+    "placeholders": {"turn": {"type": "int"}}
+  },
+
   "scoreChartXAxis": "Tours joués",
   "@scoreChartXAxis": {"description": "Légende de l'axe horizontal de la courbe des scores : le numéro de tour de chaque joueur."},
 

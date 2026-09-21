@@ -584,6 +584,12 @@ abstract class AppLocalizations {
   /// **'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.'**
   String get scoreChartEmpty;
 
+  /// Titre de l'infobulle de la courbe des scores : le tour que le curseur désigne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tour {turn}'**
+  String scoreChartTurn(int turn);
+
   /// Légende de l'axe horizontal de la courbe des scores : le numéro de tour de chaque joueur.
   ///
   /// In fr, this message translates to:

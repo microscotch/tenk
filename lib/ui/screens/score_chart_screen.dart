@@ -56,6 +56,9 @@ class ScoreChartScreen extends ConsumerWidget {
           name: name,
           color: colors[name] ?? Colors.white,
           scores: scores[seat],
+          // L'infobulle appelle le joueur comme le reste de l'écran : par son
+          // surnom quand il en a un.
+          label: displayNameOf(displayNames, name),
         ));
       }
     }
