@@ -95,6 +95,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// consommée.
   void startGame(GameSetup setup, {GameRecordingHandoff? handoff}) {
     _setup = setup;
+    _isReplay = false;
     _replaySource = null;
     if (handoff != null) {
       _originalSetup = handoff.originalSetup;
@@ -121,6 +122,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     assert(replay.engine != null, 'une sauvegarde ne devrait jamais être persistée avant la fin du départage');
 
     _setup = replay.rotatedSetup;
+    _isReplay = false;
     _replaySource = null;
     _originalSetup = saved.setup;
     _seed = saved.seed;
@@ -146,8 +148,23 @@ class GameNotifier extends Notifier<GameEngine?> {
   List<GameAction> _replayQueue = const [];
   Random? _replayRandom;
 
+  /// Vrai depuis [startGameReplay] jusqu'à la partie suivante ([startGame],
+  /// [resumeFromSave]) : le moteur exposé est alors celui d'un rejeu, que
+  /// l'écran de jeu « vivant » resté empilé dessous ne doit pas prendre pour
+  /// sa partie (voir `GameScreen`).
   bool get isReplay => _isReplay;
   bool get hasNextReplayAction => _replayQueue.isNotEmpty;
+
+  /// La prochaine action du journal de rejeu qui change quelque chose à
+  /// l'écran (une reprise de partie n'en est pas une, voir
+  /// [applyNextReplayAction]) : de quoi montrer d'avance, sur la popup de
+  /// reprise de main, le choix que le joueur va faire.
+  GameAction? get nextReplayAction {
+    for (final action in _replayQueue) {
+      if (action.type != GameActionType.resume) return action;
+    }
+    return null;
+  }
 
   /// Démarre le rejeu de la partie principale une fois le départage rejoué
   /// (voir `DiceOffNotifier.startReplay`/`replayHandoff`) : même principe que

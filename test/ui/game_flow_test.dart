@@ -874,8 +874,7 @@ void main() {
 
     // Popup dédiée (voir _showInheritedHandDialog) : la rangée d'icônes est
     // fixe, l'icône de reprise reste donc à sa place — mais désactivée, pour
-    // ne pas recentrer l'autre en disparaissant (même arbitrage que la ligne
-    // de contrôle, voir _buildInheritedChoiceRow).
+    // ne pas recentrer l'autre en disparaissant.
     final resume = tester.widget<IconButton>(
       find.ancestor(
         of: find.byTooltip('Reprendre la main'),
