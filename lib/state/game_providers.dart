@@ -108,9 +108,10 @@ class GameNotifier extends Notifier<GameEngine?> {
         ..addAll(handoff.actions);
     }
     _enteredPlayAt = DateTime.now();
-    final action = GameAction.startTurn(useFullHand: false, at: _enteredPlayAt);
-    state = GameEngine.newGame(setup.playerNames).startTurn();
-    _record(action);
+    _commit(
+      GameEngine.newGame(setup.playerNames).startTurn(),
+      [GameAction.startTurn(useFullHand: false, at: _enteredPlayAt)],
+    );
   }
 
   /// Reprend une partie en pause : rejoue son journal d'actions (voir
@@ -133,17 +134,16 @@ class GameNotifier extends Notifier<GameEngine?> {
     _actions
       ..clear()
       ..addAll(saved.actions);
-    state = replay.engine;
     // Borne l'interruption qui vient de s'achever : sans ce marqueur, le temps
     // passé hors du jeu compterait dans la durée active de la partie (voir
-    // [activePlayingSecondsFor]). Posé APRÈS `_seed` et `state`, dont `_record`
-    // dépend pour persister.
-    _record(GameAction.resume());
+    // [activePlayingSecondsFor]). Posé APRÈS `_seed`, dont la persistance
+    // dépend.
+    _commit(replay.engine!, [GameAction.resume()]);
   }
 
   // Rejeu (spectateur) d'un run archivé : lecture seule, aucune écriture —
-  // `_seed` n'est jamais posée sur ce chemin, donc `_record`/la persistance
-  // ne sont jamais impliqués.
+  // `_seed` n'est jamais posée sur ce chemin, donc `_commit` ne persiste
+  // jamais rien.
   bool _isReplay = false;
   List<GameAction> _replayQueue = const [];
   Random? _replayRandom;
@@ -211,35 +211,29 @@ class GameNotifier extends Notifier<GameEngine?> {
     state = engine;
   }
 
-  void roll() {
-    state = state!.roll(random: _random);
-    _record(GameAction.roll());
-  }
+  void roll() => _commit(state!.roll(random: _random), [GameAction.roll()]);
 
-  void applyKeep({int declineFivesCount = 0}) {
-    state = state!.applyKeep(declineFivesCount: declineFivesCount);
-    _record(GameAction.applyKeep(declineFivesCount: declineFivesCount));
-  }
+  void applyKeep({int declineFivesCount = 0}) => _commit(
+        state!.applyKeep(declineFivesCount: declineFivesCount),
+        [GameAction.applyKeep(declineFivesCount: declineFivesCount)],
+      );
 
   void endBustedTurn() {
     // Un craque remet toujours à 5 dés neufs : aucun choix de main possible.
     final ended = state!.endBustedTurn();
-    state = ended.gameOver ? ended : ended.startTurn();
-    _record(GameAction.endBustedTurn());
-    if (!ended.gameOver) {
-      _record(GameAction.startTurn(useFullHand: false));
-    }
+    _commit(
+      ended.gameOver ? ended : ended.startTurn(),
+      [
+        GameAction.endBustedTurn(),
+        if (!ended.gameOver) GameAction.startTurn(useFullHand: false),
+      ],
+    );
   }
 
   BankAttempt bank() {
     final (engine, attempt) = state!.bank();
     if (attempt.success) {
-      // `state` DOIT déjà refléter `engine` avant `_record` : elle décide
-      // persister-vs-supprimer d'après `state!.gameOver`, qui lirait sinon
-      // encore l'ancien état (pré-banquage) et ne supprimerait jamais la
-      // sauvegarde du coup qui fait gagner la partie.
-      state = engine;
-      _record(GameAction.bank());
+      _commit(engine, [GameAction.bank()]);
       if (!engine.gameOver && (engine.nextTurnDice >= 5 || engine.inheritedHandCannotBank)) {
         // Le joueur suivant n'a aucun choix de main à faire : soit il n'hérite
         // d'aucun dé (cas limite), soit la main héritée ne pourrait plus
@@ -247,8 +241,7 @@ class GameNotifier extends Notifier<GameEngine?> {
         // dés neufs est sa seule suite jouable. Son tour démarre donc
         // directement, sans lui poser une question à une seule réponse.
         final useFullHand = engine.inheritedHandCannotBank;
-        state = engine.startTurn(useFullHand: useFullHand);
-        _record(GameAction.startTurn(useFullHand: useFullHand));
+        _commit(engine.startTurn(useFullHand: useFullHand), [GameAction.startTurn(useFullHand: useFullHand)]);
       }
       // Sinon : gameOver (rien de plus à faire), ou le joueur suivant hérite
       // de dés d'un tour précédent — activeTurn reste à null en attendant
@@ -260,10 +253,10 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// À appeler quand le joueur courant doit choisir entre hériter des dés
   /// du tour précédent ou repartir avec une main pleine de 5 dés neufs
   /// (state.activeTurn est alors null, cf. [bank]).
-  void startTurn({required bool useFullHand}) {
-    state = state!.startTurn(useFullHand: useFullHand);
-    _record(GameAction.startTurn(useFullHand: useFullHand));
-  }
+  void startTurn({required bool useFullHand}) => _commit(
+        state!.startTurn(useFullHand: useFullHand),
+        [GameAction.startTurn(useFullHand: useFullHand)],
+      );
 
   /// Joue une unique action du tour du joueur IA courant (un lancer, une
   /// décision de garde, ou un banquage/craque). L'appelant (UI) répète les
@@ -376,12 +369,21 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// fichier temporaire de l'autre).
   Future<void> _persistChain = Future.value();
 
-  /// Journalise [action] puis persiste (ou archive dans `over/` et retire de
-  /// `in-progress/`, si la partie vient de se terminer) la sauvegarde
-  /// correspondante. Sans seed (ex: [debugLoadState] en test), ne fait
-  /// rien : il n'y a pas de partie à persister.
-  void _record(GameAction action) {
-    _actions.add(action);
+  /// Passe la partie à l'état [next] : journalise [actions] puis persiste (ou
+  /// archive dans `over/` et retire de `in-progress/`, si la partie vient de se
+  /// terminer) la sauvegarde correspondante. Sans seed (ex: [debugLoadState]
+  /// en test), ne persiste rien : il n'y a pas de partie à persister.
+  ///
+  /// Le journal est complété AVANT d'assigner `state` : tout ce qui écoute le
+  /// moteur (l'écran de jeu, qui lit le journal pour l'écran de fin dès que la
+  /// partie est gagnée) s'exécute dans l'assignation, et verrait sinon un
+  /// journal auquel manque le coup qu'il vient d'annoncer — une partie
+  /// « inachevée » pour ses statistiques et son rejeu. Pour la même raison
+  /// `state` reflète déjà [next] quand on décide de persister ou d'archiver,
+  /// d'après `state!.gameOver`.
+  void _commit(GameEngine next, List<GameAction> actions) {
+    _actions.addAll(actions);
+    state = next;
     if (_seed == null) return;
     // .catchError avale l'échec d'UNE persistance (ex: disque plein) sans
     // jamais laisser la chaîne elle-même rejetée — sinon, plus aucune

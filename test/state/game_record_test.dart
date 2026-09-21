@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
+import 'package:le10000/game/game_statistics.dart';
+import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
 
@@ -43,6 +45,75 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
         actions: const [],
       );
+
+  /// Joue une vraie partie à travers le notifier, comme l'écran de jeu, avec
+  /// les mêmes décisions simples que `playScriptedGame`, jusqu'à la victoire.
+  void playLiveGame(GameNotifier notifier, int seed) {
+    final diceOff = playScriptedGame(setup, seed)
+        .actions
+        .takeWhile((a) => a.type == GameActionType.diceOffRoll || a.type == GameActionType.diceOffResolveRound)
+        .toList();
+    final replayed = replayGame(setup, seed, diceOff);
+    notifier.startGame(
+      replayed.rotatedSetup!,
+      handoff: GameRecordingHandoff(
+        seed: seed,
+        random: replayed.random,
+        originalSetup: setup,
+        alias: '',
+        createdAt: DateTime(2026, 1, 1),
+        actions: diceOff,
+      ),
+    );
+    for (var guard = 0; guard < 4000 && !container.read(gameProvider)!.gameOver; guard++) {
+      final engine = container.read(gameProvider)!;
+      final turn = engine.activeTurn;
+      if (turn == null) {
+        notifier.startTurn(useFullHand: true);
+      } else if (turn.busted) {
+        notifier.endBustedTurn();
+      } else if (turn.pendingRoll != null) {
+        notifier.applyKeep();
+      } else if (!turn.mustContinue &&
+          tryBank(turn,
+                  minimumRequired: engine.minimumForCurrentPlayer,
+                  currentTotal: engine.currentPlayer.totalScore)
+              .success) {
+        notifier.bank();
+      } else {
+        notifier.roll();
+      }
+    }
+  }
+
+  test('au moment où la partie se termine, son journal contient déjà son dernier coup', () {
+    // L'écran de jeu lit le journal dans un `ref.listen`, c'est-à-dire À
+    // L'INSTANT où le moteur devient `gameOver`. Un journal auquel il manque
+    // encore le coup qui vient de gagner décrit une partie inachevée : ses
+    // statistiques sont alors toutes à zéro, et son rejeu n'arrive jamais à la
+    // victoire.
+    final notifier = container.read(gameProvider.notifier);
+    SavedGame? atGameOver;
+    container.listen(gameProvider, (previous, next) {
+      if (next != null && next.gameOver) atGameOver = notifier.gameRecord;
+    });
+
+    playLiveGame(notifier, 21);
+
+    expect(container.read(gameProvider)!.gameOver, isTrue, reason: 'prémisse : la partie est allée au bout');
+    expect(atGameOver, isNotNull);
+    expect(atGameOver!.actions, hasLength(notifier.gameRecord!.actions.length),
+        reason: 'le dernier coup était déjà journalisé quand la victoire a été annoncée');
+
+    final stats = collectGameStatistics(
+      setup: atGameOver!.setup,
+      seed: atGameOver!.seed,
+      actions: atGameOver!.actions,
+    );
+    expect(stats.bySeat.fold<int>(0, (sum, p) => sum + p.gamesWon), 1,
+        reason: 'une partie terminée a un vainqueur : ses statistiques ne sont pas vides');
+    expect(stats.bySeat.fold<int>(0, (sum, p) => sum + p.turnsTotal), greaterThan(0));
+  });
 
   test('un état chargé sans journal (debugLoadState) n\'a pas de journal', () {
     container.read(gameProvider.notifier).debugLoadState(GameEngine.newGame(['A', 'B']), setup);
