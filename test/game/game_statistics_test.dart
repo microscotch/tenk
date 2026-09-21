@@ -223,6 +223,54 @@ void main() {
     });
   });
 
+  group('lancers et tours', () {
+    test('chaque lancer compte, y compris celui qui fait craquer', () {
+      final e = engineAtTurn();
+      roll(e, [1, 2, 3, 4, 6]);
+      roll(e, [2, 3, 4, 6, 2]); // ne marque rien : le lancer fatal compte aussi
+
+      expect(stats(0).rollsTotal, 2);
+      expect(stats(1).rollsTotal, 0, reason: 'les lancers sont ceux du siège dont c\'est le tour');
+    });
+
+    test('un tour se termine par un banquage comme par un craque', () {
+      final e = engineAtTurn();
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.bank());
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.endBustedTurn());
+
+      expect(stats(0).turnsTotal, 2);
+    });
+
+    test('la quinte d\'as, qui banque sur place, termine aussi son tour', () {
+      // Seule figure autorisée à conclure une main pleine : `applyKeep` laisse
+      // alors `activeTurn` nul, sans action `bank` derrière.
+      final e = engineAtTurn();
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.applyKeep(declineFivesCount: 0));
+
+      expect(stats(0).turnsTotal, 1);
+    });
+
+    test('une garde qui laisse le tour ouvert ne le termine pas', () {
+      final e = engineAtTurn();
+      collector.apply(e, e, GameAction.applyKeep(declineFivesCount: 0));
+
+      expect(stats(0).turnsTotal, 0);
+    });
+
+    test('la moyenne est celle des lancers rapportés aux tours', () {
+      final e = engineAtTurn();
+      for (var i = 0; i < 6; i++) {
+        roll(e, [1, 2, 3, 4, 6]);
+      }
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.bank());
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.endBustedTurn());
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.bank());
+      collector.apply(e, e.copyWith(clearActiveTurn: true), GameAction.bank());
+
+      expect(stats(0).averageRollsPerTurn, 1.5, reason: '6 lancers sur 4 tours');
+    });
+  });
+
   group('barrés', () {
     test('un second craque consécutif barre sa propre ligne', () {
       final before = GameEngine.newGame(const ['A', 'B']).copyWith(
@@ -283,6 +331,26 @@ void main() {
       expect(result.bySeat.every((s) => s.gamesPlayed == 1), isTrue);
       expect(result.bySeat.where((s) => s.gamesWon == 1), hasLength(1));
       expect(result.bySeat.fold<int>(0, (a, s) => a + s.gamesLost), 2);
+    });
+
+    test('les lancers et les tours des sièges retombent sur ceux du journal', () {
+      // Attendus lus dans le journal lui-même, sans passer par le collecteur :
+      // chaque `roll` est un lancer, chaque `bank` ou `endBustedTurn` un tour.
+      for (final seed in const [3, 7, 42, 123]) {
+        final played = playScriptedGame(setup, seed);
+        final actions = played.actions;
+        final result = collectGameStatistics(setup: setup, seed: seed, actions: actions);
+
+        final rolls = actions.where((a) => a.type == GameActionType.roll).length;
+        final turns = actions
+            .where((a) => a.type == GameActionType.bank || a.type == GameActionType.endBustedTurn)
+            .length;
+
+        expect(result.bySeat.fold<int>(0, (sum, s) => sum + s.rollsTotal), rolls, reason: 'seed $seed');
+        expect(result.bySeat.fold<int>(0, (sum, s) => sum + s.turnsTotal), turns, reason: 'seed $seed');
+        expect(result.bySeat.every((s) => s.rollsTotal >= s.turnsTotal), isTrue,
+            reason: 'un tour compte au moins un lancer (seed $seed)');
+      }
     });
 
     test('deux calculs de la même partie donnent le même résultat', () {

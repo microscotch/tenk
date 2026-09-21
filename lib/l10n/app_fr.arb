@@ -145,6 +145,18 @@
   "statsSectionFigures": "Figures",
   "@statsSectionFigures": {"description": "Titre de la section des statistiques de combinaisons (brelans, carrés, quintes, suites)."},
 
+  "statsSectionRolls": "Tours et lancers",
+  "@statsSectionRolls": {"description": "Titre de la section des statistiques de volume de jeu : tours joués, lancers, lancers par tour."},
+
+  "statsTurns": "Tours joués",
+  "@statsTurns": {"description": "Nombre de tours joués, banqués comme craqués. Pour un joueur, ou au total pour une partie."},
+
+  "statsRolls": "Lancers",
+  "@statsRolls": {"description": "Nombre de lancers de dés, y compris celui qui fait craquer et les relances de main pleine."},
+
+  "statsRollsPerTurn": "Lancers par tour",
+  "@statsRollsPerTurn": {"description": "Nombre moyen de lancers par tour : le total des lancers rapporté au total des tours."},
+
   "statsSectionMisc": "Faits d'armes",
   "@statsSectionMisc": {"description": "Titre de la section des statistiques diverses : meilleur tour, mains pleines, craquages, barrés."},
 
@@ -231,9 +243,6 @@
 
   "gameStatsDuration": "Durée de jeu",
   "@gameStatsDuration": {"description": "Durée active de la partie terminée, hors temps passé en pause."},
-
-  "gameStatsTurns": "Tours joués",
-  "@gameStatsTurns": {"description": "Nombre de tours joués — banqués comme craqués — au total pour la partie."},
 
   "gameStatsPlayerSummary": "{turns, plural, one{{turns} tour} other{{turns} tours}} · meilleur {best} · {busts, plural, one{{busts} craque} other{{busts} craques}}",
   "@gameStatsPlayerSummary": {
@@ -340,6 +349,9 @@
 
   "resumeGameButton": "Reprendre",
   "@resumeGameButton": {"description": "Bouton pour confirmer la reprise de la dernière partie interrompue."},
+
+  "gameOverReplayButton": "Revoir la partie",
+  "@gameOverReplayButton": {"description": "Bouton de l'écran de fin de partie qui relance le rejeu spectateur de la partie, départage compris."},
 
   "scoreGridLabel": "Grille des scores",
   "@scoreGridLabel": {"description": "Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs."},

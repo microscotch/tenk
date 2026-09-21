@@ -11,6 +11,9 @@ void main() {
   Future<void> pump(WidgetTester tester, PlayerProfile player) async {
     await tester.pumpWidget(
       MaterialApp(
+        // Fixé plutôt que laissé au défaut de l'environnement de test : le
+        // séparateur décimal d'une moyenne en dépend (« 3,3 » ou « 3.3 »).
+        locale: const Locale('fr'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: PlayerStatsScreen(player: player),
@@ -56,6 +59,35 @@ void main() {
     expect(brelans.map((r) => r.value), [1, 2, 3, 4, 5, 6], reason: 'toujours dans l\'ordre');
     expect(brelans.map((r) => r.count), [1, 0, 0, 3, 0, 0],
         reason: 'une valeur jamais sortie s\'affiche à zéro plutôt que de disparaître');
+  });
+
+  testWidgets('les tours, les lancers et leur moyenne sont rendus, cumulés sur les parties',
+      (tester) async {
+    // Deux parties cumulées : 10 lancers en 2 tours puis 30 en 10. La moyenne
+    // du cumul est 40 / 12 = 3,3 ; la moyenne des deux moyennes (5 et 3), 4,0,
+    // serait fausse — c'est ce que ce test empêche d'écrire.
+    final cumul = const PlayerStats(gamesPlayed: 1, rollsTotal: 10, turnsTotal: 2) +
+        const PlayerStats(gamesPlayed: 1, rollsTotal: 30, turnsTotal: 10);
+    await pump(tester, PlayerProfile.create(name: 'Marie').copyWith(stats: cumul));
+
+    Finder valueOf(String label, String text) => find.descendant(
+          of: find.widgetWithText(StatRow, label),
+          matching: find.text(text),
+        );
+    expect(valueOf('Tours joués', '12'), findsOneWidget);
+    expect(valueOf('Lancers', '40'), findsOneWidget);
+    expect(valueOf('Lancers par tour', '3,3'), findsOneWidget, reason: '40 lancers en 12 tours');
+    expect(find.text('4,0'), findsNothing, reason: 'pas une moyenne de moyennes');
+  });
+
+  testWidgets('sans aucun tour, la moyenne de lancers s\'affiche en tiret', (tester) async {
+    await pump(tester, PlayerProfile.create(name: 'Marie'));
+
+    final moyenne = find.descendant(
+      of: find.widgetWithText(StatRow, 'Lancers par tour'),
+      matching: find.text('—'),
+    );
+    expect(moyenne, findsOneWidget, reason: 'zéro tour : une moyenne n\'existe pas, ce n\'est pas 0');
   });
 
   testWidgets('une fiche vierge ne plante pas et affiche des tirets', (tester) async {

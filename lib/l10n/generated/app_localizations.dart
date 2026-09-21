@@ -368,6 +368,30 @@ abstract class AppLocalizations {
   /// **'Figures'**
   String get statsSectionFigures;
 
+  /// Titre de la section des statistiques de volume de jeu : tours joués, lancers, lancers par tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tours et lancers'**
+  String get statsSectionRolls;
+
+  /// Nombre de tours joués, banqués comme craqués. Pour un joueur, ou au total pour une partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tours joués'**
+  String get statsTurns;
+
+  /// Nombre de lancers de dés, y compris celui qui fait craquer et les relances de main pleine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lancers'**
+  String get statsRolls;
+
+  /// Nombre moyen de lancers par tour : le total des lancers rapporté au total des tours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lancers par tour'**
+  String get statsRollsPerTurn;
+
   /// Titre de la section des statistiques diverses : meilleur tour, mains pleines, craquages, barrés.
   ///
   /// In fr, this message translates to:
@@ -542,12 +566,6 @@ abstract class AppLocalizations {
   /// **'Durée de jeu'**
   String get gameStatsDuration;
 
-  /// Nombre de tours joués — banqués comme craqués — au total pour la partie.
-  ///
-  /// In fr, this message translates to:
-  /// **'Tours joués'**
-  String get gameStatsTurns;
-
   /// Résumé sous le nom d'un joueur dans les statistiques d'une partie, lisible sans déplier son détail : ses tours joués, son meilleur tour banqué, ses craques.
   ///
   /// In fr, this message translates to:
@@ -709,6 +727,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Reprendre'**
   String get resumeGameButton;
+
+  /// Bouton de l'écran de fin de partie qui relance le rejeu spectateur de la partie, départage compris.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revoir la partie'**
+  String get gameOverReplayButton;
 
   /// Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs.
   ///

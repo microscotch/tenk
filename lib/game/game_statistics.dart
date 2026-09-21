@@ -102,6 +102,7 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
       tally.hotDiceRun = 0;
 
     case GameActionType.roll:
+      tally.rolls++;
       final analysis = next.activeTurn?.pendingRoll;
       if (analysis != null) {
         _countFigures(tally, analysis);
@@ -125,6 +126,7 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
       _endTurnByBank(tally, previous);
 
     case GameActionType.endBustedTurn:
+      tally.turns++;
       tally.hotDiceRun = 0;
       tally.busts++;
       tally.bustStreak++;
@@ -143,6 +145,7 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
 }
 
 void _endTurnByBank(_SeatTally tally, GameEngine previous) {
+  tally.turns++;
   tally.hotDiceRun = 0;
   tally.bustStreak = 0;
   tally.bestBankedTurn = _max(tally.bestBankedTurn, previous.activeTurn?.bankedScore ?? 0);
@@ -259,6 +262,8 @@ class _SeatTally {
   int bustStreakCount = 0;
   int selfBars = 0;
   int barsInflicted = 0;
+  int rolls = 0;
+  int turns = 0;
 
   /// Sur une seule partie, un maximum « par partie » se confond avec le total :
   /// c'est l'addition de [PlayerStats] qui en fera un maximum entre parties.
@@ -286,5 +291,7 @@ class _SeatTally {
         selfBarsMaxInGame: selfBars,
         barsInflictedTotal: barsInflicted,
         barsInflictedMaxInGame: barsInflicted,
+        rollsTotal: rolls,
+        turnsTotal: turns,
       );
 }

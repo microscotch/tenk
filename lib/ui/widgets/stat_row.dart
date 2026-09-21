@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import 'die_widget.dart';
@@ -50,6 +51,14 @@ class StatRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Moyenne à une décimale, au séparateur de la langue : « 2,4 » en français.
+/// `null` (aucun tour, donc aucune moyenne) s'affiche en tiret plutôt qu'en
+/// zéro, qui se lirait « aucun lancer par tour ».
+String formatAverage(double? value, String locale) {
+  if (value == null) return '—';
+  return NumberFormat.decimalPatternDigits(locale: locale, decimalDigits: 1).format(value);
 }
 
 /// Durée lisible : « 1 h 05 », « 12 min », « 45 s ». `null` (aucune partie)

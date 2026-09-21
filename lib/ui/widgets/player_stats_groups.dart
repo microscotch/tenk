@@ -23,6 +23,11 @@ class PlayerStatsGroups extends StatelessWidget {
   /// un joueur, il ne s'additionne pas à l'échelle d'une table.
   final bool includeMisc;
 
+  /// Le groupe « tours et lancers ». À écarter quand ces lignes vivent déjà
+  /// ailleurs sur l'écran, comme dans le cadre « Partie » des statistiques
+  /// d'une partie.
+  final bool includeRolls;
+
   /// Une ligne par valeur de dé sous chaque brelan, carré et quinte. Utile au
   /// détail d'un joueur ; trop long pour le résumé de toute la table.
   final bool showBreakdown;
@@ -36,6 +41,7 @@ class PlayerStatsGroups extends StatelessWidget {
     required this.stats,
     this.includeGamesAndTime = true,
     this.includeMisc = true,
+    this.includeRolls = true,
     this.showBreakdown = true,
     this.showTitles = true,
   });
@@ -63,6 +69,15 @@ class PlayerStatsGroups extends StatelessWidget {
             StatRow(label: l10n.statsLongestTime, value: formatDuration(s.longestActiveSeconds)),
           ]),
         ],
+        if (includeRolls)
+          _group(context, l10n.statsSectionRolls, [
+            StatRow(label: l10n.statsTurns, value: '${s.turnsTotal}'),
+            StatRow(label: l10n.statsRolls, value: '${s.rollsTotal}'),
+            StatRow(
+              label: l10n.statsRollsPerTurn,
+              value: formatAverage(s.averageRollsPerTurn, Localizations.localeOf(context).toString()),
+            ),
+          ]),
         _group(context, l10n.statsSectionFigures, [
           ..._figureRows(l10n.statsBrelans, s.brelansTotal, s.brelans),
           ..._figureRows(l10n.statsCarres, s.carresTotal, s.carres),

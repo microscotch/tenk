@@ -67,6 +67,22 @@ void main() {
     });
   });
 
+  group('addition des lancers et des tours', () {
+    test('somme les deux totaux, sans en faire une moyenne de moyennes', () {
+      // Deux parties : 10 lancers sur 2 tours (5 par tour) puis 30 sur 10 tours
+      // (3 par tour). La moyenne du cumul est 40/12, pas la moyenne de 5 et 3.
+      const a = PlayerStats(rollsTotal: 10, turnsTotal: 2);
+      const b = PlayerStats(rollsTotal: 30, turnsTotal: 10);
+
+      final total = a + b;
+
+      expect(total.rollsTotal, 40);
+      expect(total.turnsTotal, 12);
+      expect(total.averageRollsPerTurn, closeTo(40 / 12, 1e-9));
+      expect(total.averageRollsPerTurn, isNot(4), reason: '(5 + 3) / 2 serait faux');
+    });
+  });
+
   group('grandeurs dérivées', () {
     test('sans aucune partie, les moyennes et les bornes valent null', () {
       const stats = PlayerStats.empty;
@@ -93,6 +109,13 @@ void main() {
       expect(stats.averageBustStreak, 3, reason: '9 craquages répartis en 3 séries');
       expect(stats.averageSelfBarsPerGame, 0.5);
       expect(stats.averageBarsInflictedPerGame, 1.5);
+    });
+
+    test('les lancers par tour se calculent depuis les deux totaux', () {
+      const stats = PlayerStats(rollsTotal: 150, turnsTotal: 60);
+
+      expect(stats.averageRollsPerTurn, 2.5);
+      expect(PlayerStats.empty.averageRollsPerTurn, isNull);
     });
 
     test('les totaux de figures se déduisent de leur ventilation', () {
@@ -136,12 +159,26 @@ void main() {
         selfBarsMaxInGame: 2,
         barsInflictedTotal: 5,
         barsInflictedMaxInGame: 3,
+        rollsTotal: 140,
+        turnsTotal: 60,
       );
 
       final restored = PlayerStats.fromJson(stats.toJson());
 
       expect(restored.toJson(), stats.toJson());
       expect(restored.brelans, {1: 2, 4: 5}, reason: 'clés numériques restituées');
+      expect(restored.rollsTotal, 140);
+      expect(restored.turnsTotal, 60);
+    });
+
+    test('une fiche enregistrée avant les lancers reste lisible, à zéro', () {
+      // Une fiche écrite avant l'existence de ces deux totaux : elle doit se
+      // lire sans erreur en attendant que le recalcul l'en complète.
+      final restored = PlayerStats.fromJson(const {'gamesPlayed': 3, 'bustsTotal': 7});
+
+      expect(restored.rollsTotal, 0);
+      expect(restored.turnsTotal, 0);
+      expect(restored.averageRollsPerTurn, isNull, reason: 'pas de tour, pas de moyenne');
     });
 
     test('un champ absent retombe sur sa valeur par défaut', () {

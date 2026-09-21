@@ -71,6 +71,13 @@ class PlayerStats {
   final int barsInflictedTotal;
   final int barsInflictedMaxInGame;
 
+  /// Lancers de dés, tous comptés : celui qui fait craquer, les relances de
+  /// main pleine. Et tours terminés, banqués comme craqués — de quoi donner
+  /// les lancers PAR TOUR sans stocker cette moyenne (voir
+  /// [averageRollsPerTurn]).
+  final int rollsTotal;
+  final int turnsTotal;
+
   const PlayerStats({
     this.gamesPlayed = 0,
     this.gamesWon = 0,
@@ -95,6 +102,8 @@ class PlayerStats {
     this.selfBarsMaxInGame = 0,
     this.barsInflictedTotal = 0,
     this.barsInflictedMaxInGame = 0,
+    this.rollsTotal = 0,
+    this.turnsTotal = 0,
   });
 
   static const empty = PlayerStats();
@@ -116,6 +125,7 @@ class PlayerStats {
   double? get averageSelfBarsPerGame => gamesPlayed == 0 ? null : selfBarsTotal / gamesPlayed;
   double? get averageBarsInflictedPerGame =>
       gamesPlayed == 0 ? null : barsInflictedTotal / gamesPlayed;
+  double? get averageRollsPerTurn => turnsTotal == 0 ? null : rollsTotal / turnsTotal;
 
   /// Replie une partie (ou un autre cumul) dans celui-ci. Chaque grandeur est
   /// combinée selon sa nature, et les bornes de durée absorbent proprement le
@@ -150,6 +160,8 @@ class PlayerStats {
       barsInflictedMaxInGame: barsInflictedMaxInGame > other.barsInflictedMaxInGame
           ? barsInflictedMaxInGame
           : other.barsInflictedMaxInGame,
+      rollsTotal: rollsTotal + other.rollsTotal,
+      turnsTotal: turnsTotal + other.turnsTotal,
     );
   }
 
@@ -177,6 +189,8 @@ class PlayerStats {
         'selfBarsMaxInGame': selfBarsMaxInGame,
         'barsInflictedTotal': barsInflictedTotal,
         'barsInflictedMaxInGame': barsInflictedMaxInGame,
+        'rollsTotal': rollsTotal,
+        'turnsTotal': turnsTotal,
       };
 
   /// Lecture tolérante : tout champ absent retombe sur sa valeur par défaut,
@@ -208,6 +222,8 @@ class PlayerStats {
       selfBarsMaxInGame: at('selfBarsMaxInGame'),
       barsInflictedTotal: at('barsInflictedTotal'),
       barsInflictedMaxInGame: at('barsInflictedMaxInGame'),
+      rollsTotal: at('rollsTotal'),
+      turnsTotal: at('turnsTotal'),
     );
   }
 }

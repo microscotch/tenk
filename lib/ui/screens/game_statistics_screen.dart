@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/game_statistics.dart';
 import '../../game/player.dart';
 import '../../game/player_stats.dart';
-import '../../game/score_series.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../state/game_providers.dart';
+import '../../state/game_save_store.dart';
 import '../../state/player_providers.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/player_avatar.dart';
@@ -21,11 +20,20 @@ import '../widgets/stat_row.dart';
 /// dont il partage les lignes (voir [PlayerStatsGroups]).
 class GameStatisticsScreen extends ConsumerStatefulWidget {
   /// Les joueurs dans l'ordre du MOTEUR, grilles finales comprises — celui de
-  /// `GameEngine.players`, que suit aussi `scoreSeriesByPlayer`.
+  /// `GameEngine.players`.
   final List<Player> players;
   final int winnerIndex;
 
-  const GameStatisticsScreen({super.key, required this.players, required this.winnerIndex});
+  /// Le journal de la partie bilanée. Passé explicitement plutôt que lu dans le
+  /// notifier de partie : un run archivé ouvert depuis la liste n'y est pas.
+  final SavedGame record;
+
+  const GameStatisticsScreen({
+    super.key,
+    required this.players,
+    required this.winnerIndex,
+    required this.record,
+  });
 
   @override
   ConsumerState<GameStatisticsScreen> createState() => _GameStatisticsScreenState();
@@ -33,15 +41,14 @@ class GameStatisticsScreen extends ConsumerStatefulWidget {
 
 class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
   /// Statistiques par NOM de joueur, et non par siège : `collectGameStatistics`
-  /// rend l'ordre de la config d'origine, `scoreSeriesByPlayer` celui du
-  /// moteur, deux ordres que seul le nom permet de rapprocher sans se tromper.
+  /// rend l'ordre de la config d'origine, `widget.players` celui du moteur, deux
+  /// ordres que seul le nom permet de rapprocher sans se tromper.
   late final Map<String, PlayerStats> _statsByName;
-  late final Map<String, int> _turnsByName;
   late final int _activeSeconds;
 
-  /// Les figures de toute la table, cumulées. Seuls ses compteurs de figures
-  /// ont un sens : les autres champs s'y additionnent ou s'y maximisent sans
-  /// rien dire d'une table (voir `PlayerStats.operator +`).
+  /// Les compteurs de toute la table, cumulés. Sert aux figures, aux lancers et
+  /// aux tours ; les autres champs s'y additionnent ou s'y maximisent sans rien
+  /// dire d'une table (voir `PlayerStats.operator +`).
   late final PlayerStats _tableStats;
 
   @override
@@ -49,29 +56,24 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
     super.initState();
     // Calculé une fois, ici : c'est un rejeu complet de la partie, qui n'a pas
     // à être refait à chaque reconstruction de l'écran.
-    final record = ref.read(gameProvider.notifier).gameRecord!;
+    final record = widget.record;
     final stats = collectGameStatistics(setup: record.setup, seed: record.seed, actions: record.actions);
-    final series = scoreSeriesByPlayer(record.setup, record.seed, record.actions);
 
     _activeSeconds = stats.activeSeconds;
     _tableStats = stats.bySeat.fold(PlayerStats.empty, (total, seat) => total + seat);
     _statsByName = {
       for (var i = 0; i < record.setup.playerNames.length; i++) record.setup.playerNames[i]: stats.bySeat[i],
     };
-    // Chaque série commence à 0 puis gagne un point par tour terminé.
-    _turnsByName = {
-      for (var i = 0; i < widget.players.length && i < series.length; i++) widget.players[i].name: series[i].length - 1,
-    };
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
     final displayNames = ref.watch(displayNamesProvider);
     final colors = assignAvatarColors(widget.players.map((p) => p.name));
     final winnerName = widget.players[widget.winnerIndex].name;
     final ranking = [...widget.players]..sort((a, b) => b.totalScore.compareTo(a.totalScore));
-    final totalTurns = _turnsByName.values.fold<int>(0, (sum, turns) => sum + turns);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.gameStatsTitle)),
@@ -85,7 +87,12 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
               child: Column(
                 children: [
                   StatRow(label: l10n.gameStatsDuration, value: formatDuration(_activeSeconds)),
-                  StatRow(label: l10n.gameStatsTurns, value: '$totalTurns'),
+                  StatRow(label: l10n.statsTurns, value: '${_tableStats.turnsTotal}'),
+                  StatRow(label: l10n.statsRolls, value: '${_tableStats.rollsTotal}'),
+                  StatRow(
+                    label: l10n.statsRollsPerTurn,
+                    value: formatAverage(_tableStats.averageRollsPerTurn, locale),
+                  ),
                 ],
               ),
             ),
@@ -100,6 +107,7 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
                 stats: _tableStats,
                 includeGamesAndTime: false,
                 includeMisc: false,
+                includeRolls: false,
                 showBreakdown: false,
                 showTitles: false,
               ),
@@ -125,7 +133,7 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
                     ],
                   ),
                   subtitle: Text(l10n.gameStatsPlayerSummary(
-                    _turnsByName[player.name] ?? 0,
+                    stats.turnsTotal,
                     stats.bestBankedTurn,
                     stats.bustsTotal,
                   )),

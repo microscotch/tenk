@@ -1119,11 +1119,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
       _lockControlsBriefly();
       if (next.gameOver) {
         SoundEffects.instance.playVictory();
+        // Lu ICI, une fois, et non dans le `builder` : celui-ci se rejoue à
+        // chaque reconstruction de la route, et un rejeu lancé depuis l'écran de
+        // fin vide entre-temps les champs de la partie (voir
+        // `GameNotifier.startGameReplay`) — l'écran resté dessous aurait alors
+        // changé de journal.
+        final record = ref.read(gameProvider.notifier).gameRecord;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => GameOverScreen(
               players: next.players,
               winnerIndex: next.winnerIndex!,
+              // Sans lui, ni courbe, ni statistiques, ni rejeu : le journal de
+              // la partie (jouée, reprise ou rejouée) vient du notifier.
+              record: record,
             ),
           ),
         );

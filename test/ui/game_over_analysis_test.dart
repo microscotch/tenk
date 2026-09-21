@@ -4,11 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/game_statistics.dart';
+import 'package:le10000/game/player_stats.dart';
 import 'package:le10000/game/score_series.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
+import 'package:le10000/ui/screens/dice_off_screen.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_statistics_screen.dart';
 import 'package:le10000/ui/screens/score_chart_screen.dart';
@@ -45,15 +48,25 @@ void main() {
         actions: playScriptedGame(setup, seed).actions,
       );
 
+  /// Pose l'écran de fin comme l'écran de jeu le fait : avec le journal que le
+  /// notifier expose pour la partie à l'écran (voir le `ref.listen` de
+  /// `game_screen.dart`, que `GameScreen passe le journal` plus bas vérifie).
   Future<void> pumpGameOver(WidgetTester tester) async {
     final engine = container.read(gameProvider)!;
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
+          // Le français, langue de l'app : sans quoi le locale de test est `en`,
+          // et une moyenne s'y écrirait « 2.4 » au lieu de « 2,4 ».
+          locale: const Locale('fr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: GameOverScreen(players: engine.players, winnerIndex: engine.winnerIndex!),
+          home: GameOverScreen(
+            players: engine.players,
+            winnerIndex: engine.winnerIndex!,
+            record: container.read(gameProvider.notifier).gameRecord,
+          ),
         ),
       ),
     );
@@ -62,8 +75,10 @@ void main() {
 
   final chartButton = find.widgetWithText(OutlinedButton, 'Évolution des scores');
   final statsButton = find.widgetWithText(OutlinedButton, 'Statistiques de la partie');
+  final replayButton = find.widgetWithText(OutlinedButton, 'Revoir la partie');
 
-  testWidgets('sans journal de partie, ni courbe ni statistiques ne sont proposées', (tester) async {
+  testWidgets('sans journal de partie, ni courbe, ni statistiques, ni rejeu ne sont proposés',
+      (tester) async {
     container.read(gameProvider.notifier).debugLoadState(
           GameEngine.newGame(['A', 'B']).copyWith(gameOver: true, winnerIndex: 0),
           setup,
@@ -73,6 +88,30 @@ void main() {
 
     expect(chartButton, findsNothing);
     expect(statsButton, findsNothing);
+    expect(replayButton, findsNothing);
+  });
+
+  testWidgets('le bouton de rejeu relance le rejeu de CETTE partie', (tester) async {
+    final saved = finishedGame(51);
+    container.read(gameProvider.notifier).resumeFromSave(saved);
+    await pumpGameOver(tester);
+    expect(replayButton, findsOneWidget);
+
+    // Dernier de la colonne : sous le pli d'un écran de test, le tap le
+    // manquerait sans le faire défiler d'abord.
+    await tester.ensureVisible(replayButton);
+    await tester.tap(replayButton);
+    // Deux pas plutôt que `pumpAndSettle` : le rejeu s'enchaîne de lui-même à
+    // coups de minuteries, dont celui-ci attendrait indéfiniment la fin. Le
+    // second laisse passer la transition de route, sans quoi l'écran n'est pas
+    // encore là.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byType(DiceOffScreen), findsOneWidget);
+    final diceOff = container.read(diceOffProvider.notifier);
+    expect(diceOff.isReplay, isTrue);
+    expect(diceOff.replaySource?.seed, 51, reason: 'le rejeu est celui de la partie qu\'on vient de finir');
   });
 
   testWidgets('la courbe ouverte est celle de la partie terminée', (tester) async {
@@ -141,25 +180,27 @@ void main() {
     // où les deux joueurs n'ont pas les mêmes chiffres.
     late SavedGame saved;
     late GameStatistics stats;
-    late List<List<int>> series;
-    late List<String> engineOrder;
     var found = false;
     for (var seed = 1; seed < 300 && !found; seed++) {
       final candidate = finishedGame(seed);
       final replay = replayGame(candidate.setup, candidate.seed, candidate.actions);
       final order = replay.rotatedSetup!.playerNames;
       final s = collectGameStatistics(setup: candidate.setup, seed: candidate.seed, actions: candidate.actions);
-      final t = scoreSeriesByPlayer(candidate.setup, candidate.seed, candidate.actions);
       if (order.first != candidate.setup.playerNames.first &&
-          (t[0].length != t[1].length || s.bySeat[0].bestBankedTurn != s.bySeat[1].bestBankedTurn)) {
+          (s.bySeat[0].turnsTotal != s.bySeat[1].turnsTotal ||
+              s.bySeat[0].bestBankedTurn != s.bySeat[1].bestBankedTurn)) {
         saved = candidate;
         stats = s;
-        series = t;
-        engineOrder = order;
         found = true;
       }
     }
     expect(found, isTrue, reason: 'aucune partie de test ne réunit les conditions du scénario');
+
+    // Assez haute pour que les DEUX tuiles soient construites : `ListView` ne
+    // construit pas ce qui est sous le pli, et les cadres du haut (partie,
+    // figures) occupent la moitié d'un écran de test par défaut.
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(430, 1400));
 
     container.read(gameProvider.notifier).resumeFromSave(saved);
     await pumpGameOver(tester);
@@ -172,7 +213,6 @@ void main() {
 
     for (final name in saved.setup.playerNames) {
       final original = saved.setup.playerNames.indexOf(name);
-      final engineSeat = engineOrder.indexOf(name);
       final s = stats.bySeat[original];
       // Dans SA tuile : chercher le résumé n'importe où à l'écran ne prouverait
       // rien, deux joueurs aux chiffres permutés le trouvant chacun dans la
@@ -180,7 +220,7 @@ void main() {
       expect(
         find.descendant(
           of: find.widgetWithText(ExpansionTile, name),
-          matching: find.text(summary(series[engineSeat].length - 1, s.bestBankedTurn, s.bustsTotal)),
+          matching: find.text(summary(s.turnsTotal, s.bestBankedTurn, s.bustsTotal)),
         ),
         findsOneWidget,
         reason: 'le résumé de $name doit venir de SES chiffres, pas de ceux de l\'autre siège',
@@ -240,6 +280,45 @@ void main() {
         reason: 'la ventilation par valeur de dé est réservée au détail d\'un joueur');
     expect(find.descendant(of: section, matching: find.text('Meilleur tour')), findsNothing,
         reason: 'un record personnel ne se totalise pas à l\'échelle d\'une table');
+  });
+
+  testWidgets('les lancers et les lancers par tour figurent pour la table et pour chaque joueur',
+      (tester) async {
+    final saved = finishedGame(61);
+    final stats = collectGameStatistics(setup: saved.setup, seed: saved.seed, actions: saved.actions);
+    final table = stats.bySeat.fold(PlayerStats.empty, (total, seat) => total + seat);
+    String average(PlayerStats s) => formatAverage(s.averageRollsPerTurn, 'fr');
+    // Prémisse : la moyenne de la table n'est celle d'aucun joueur, sans quoi
+    // on ne saurait pas si l'écran totalise ou recopie un joueur.
+    expect(stats.bySeat.map(average), isNot(contains(average(table))),
+        reason: 'ce test doit pouvoir distinguer la table d\'un joueur');
+
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(430, 1400));
+    container.read(gameProvider.notifier).resumeFromSave(saved);
+    await pumpGameOver(tester);
+    await tester.tap(statsButton);
+    await tester.pumpAndSettle();
+
+    Finder value(Finder within, String label, String text) => find.descendant(
+          of: find.descendant(of: within, matching: find.widgetWithText(StatRow, label)),
+          matching: find.text(text),
+        );
+
+    final tableSection = find.widgetWithText(BorderedSection, 'Partie');
+    expect(value(tableSection, 'Tours joués', '${table.turnsTotal}'), findsOneWidget);
+    expect(value(tableSection, 'Lancers', '${table.rollsTotal}'), findsOneWidget);
+    expect(value(tableSection, 'Lancers par tour', average(table)), findsOneWidget);
+
+    for (final name in saved.setup.playerNames) {
+      final own = stats.bySeat[saved.setup.playerNames.indexOf(name)];
+      final tile = find.widgetWithText(ExpansionTile, name);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(value(tile, 'Tours joués', '${own.turnsTotal}'), findsOneWidget, reason: 'tours de $name');
+      expect(value(tile, 'Lancers', '${own.rollsTotal}'), findsOneWidget, reason: 'lancers de $name');
+      expect(value(tile, 'Lancers par tour', average(own)), findsOneWidget, reason: 'moyenne de $name');
+    }
   });
 
   testWidgets('le détail d\'un joueur se déplie', (tester) async {

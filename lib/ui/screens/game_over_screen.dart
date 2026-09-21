@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../state/game_providers.dart';
+import '../../state/game_save_store.dart';
 import '../../state/player_providers.dart';
 import '../navigation.dart';
 import 'game_statistics_screen.dart';
@@ -14,10 +14,24 @@ class GameOverScreen extends ConsumerWidget {
   final List<Player> players;
   final int winnerIndex;
 
+  /// Le journal de la partie : c'est de lui que se dérivent la courbe des
+  /// scores, les statistiques et le rejeu. Sans lui (état chargé par
+  /// `debugLoadState`), il n'y aurait rien à montrer, et les trois boutons ne
+  /// s'affichent donc pas.
+  final SavedGame? record;
+
+  /// Vrai quand l'écran est ouvert depuis la liste des runs terminées, sans
+  /// partie jouée dessous : le retour ramène alors à cette liste. Faux à la fin
+  /// d'une partie qu'on vient de jouer, où il ramène à l'accueil (voir le
+  /// `PopScope` plus bas).
+  final bool archived;
+
   const GameOverScreen({
     super.key,
     required this.players,
     required this.winnerIndex,
+    this.record,
+    this.archived = false,
   });
 
   @override
@@ -29,10 +43,7 @@ class GameOverScreen extends ConsumerWidget {
     final displayNames = ref.watch(displayNamesProvider);
     final sorted = [...players]
       ..sort((a, b) => b.totalScore.compareTo(a.totalScore));
-    // La courbe et les statistiques se dérivent du journal de la partie : sans
-    // lui (état chargé par `debugLoadState`), il n'y aurait rien à montrer, et
-    // les deux boutons ne s'affichent donc pas.
-    final hasRecord = ref.read(gameProvider.notifier).gameRecord != null;
+    final journal = record;
     return PopScope(
       // Cet écran est empilé PAR-DESSUS le GameScreen de la partie qui vient
       // de se terminer (voir le ref.listen dans game_screen.dart) : un pop()
@@ -40,7 +51,10 @@ class GameOverScreen extends ConsumerWidget {
       // fois `engine.gameOver` vrai il n'affiche plus jamais qu'un indicateur
       // de chargement (voir ce commentaire côté GameScreen). Le retour
       // système ramène donc à l'accueil, seule sortie de cet écran.
-      canPop: false,
+      //
+      // Ouvert depuis la liste des runs terminées ([archived]), rien de tel
+      // dessous : un pop() ordinaire revient à la liste, ce qu'on attend.
+      canPop: archived,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         popToHome(context);
@@ -57,8 +71,11 @@ class GameOverScreen extends ConsumerWidget {
           // (`ModalRoute.popGestureEnabled` est faux dès que la route refuse
           // de se dépiler). Sans cette flèche, cet écran serait sans issue.
           // Elle ramène à l'accueil, comme le retour système ailleurs.
-          automaticallyImplyLeading: false,
-          leading: Theme.of(context).platform == TargetPlatform.iOS
+          //
+          // Archivé, c'est l'inverse : la flèche automatique de Flutter fait
+          // exactement le retour voulu.
+          automaticallyImplyLeading: archived,
+          leading: !archived && Theme.of(context).platform == TargetPlatform.iOS
               ? BackButton(onPressed: () => popToHome(context))
               : null,
           actions: [
@@ -109,11 +126,13 @@ class GameOverScreen extends ConsumerWidget {
                     icon: const Icon(Icons.grid_on),
                     label: Text(l10n.scoreGridLabel),
                   ),
-                  if (hasRecord) ...[
+                  if (journal != null) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ScoreChartScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => ScoreChartScreen(players: players, record: journal),
+                        ),
                       ),
                       icon: const Icon(Icons.show_chart),
                       label: Text(l10n.scoreChartTitle),
@@ -122,11 +141,21 @@ class GameOverScreen extends ConsumerWidget {
                     OutlinedButton.icon(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => GameStatisticsScreen(players: players, winnerIndex: winnerIndex),
+                          builder: (_) => GameStatisticsScreen(
+                            players: players,
+                            winnerIndex: winnerIndex,
+                            record: journal,
+                          ),
                         ),
                       ),
                       icon: const Icon(Icons.bar_chart),
                       label: Text(l10n.gameStatsTitle),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => openReplay(context, ref, journal),
+                      icon: const Icon(Icons.replay),
+                      label: Text(l10n.gameOverReplayButton),
                     ),
                   ],
                 ],

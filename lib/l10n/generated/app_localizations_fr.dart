@@ -149,6 +149,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsSectionFigures => 'Figures';
 
   @override
+  String get statsSectionRolls => 'Tours et lancers';
+
+  @override
+  String get statsTurns => 'Tours joués';
+
+  @override
+  String get statsRolls => 'Lancers';
+
+  @override
+  String get statsRollsPerTurn => 'Lancers par tour';
+
+  @override
   String get statsSectionMisc => 'Faits d\'armes';
 
   @override
@@ -234,9 +246,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gameStatsDuration => 'Durée de jeu';
-
-  @override
-  String get gameStatsTurns => 'Tours joués';
 
   @override
   String gameStatsPlayerSummary(int turns, int best, int busts) {
@@ -353,6 +362,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get resumeGameButton => 'Reprendre';
+
+  @override
+  String get gameOverReplayButton => 'Revoir la partie';
 
   @override
   String get scoreGridLabel => 'Grille des scores';
