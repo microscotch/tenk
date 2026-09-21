@@ -28,6 +28,7 @@ import '../widgets/replay_speed_control.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
+import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
 
 /// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
@@ -1430,6 +1431,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
         tooltip: l10n.scoreGridLabel,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
+        ),
+      ),
+      IconButton(
+        icon: const Icon(Icons.show_chart),
+        tooltip: l10n.scoreChartTitle,
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ScoreChartScreen()),
         ),
       ),
     ];
