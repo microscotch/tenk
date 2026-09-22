@@ -376,6 +376,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noFinishedRunsMessage => 'Aucune run terminée pour l\'instant.';
 
   @override
+  String get gameRunParticipantsSeparator => ' vs ';
+
+  @override
   String get deleteGameConfirmTitle => 'Supprimer cette partie ?';
 
   @override

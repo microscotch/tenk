@@ -722,6 +722,12 @@ abstract class AppLocalizations {
   /// **'Aucune run terminée pour l\'instant.'**
   String get noFinishedRunsMessage;
 
+  /// Sépare les participants d'une partie dans la liste des runs (« Marie vs Bob vs HAL »).
+  ///
+  /// In fr, this message translates to:
+  /// **' vs '**
+  String get gameRunParticipantsSeparator;
+
   /// Titre de la boîte de dialogue confirmant la suppression d'une partie en pause.
   ///
   /// In fr, this message translates to:

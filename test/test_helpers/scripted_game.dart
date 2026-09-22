@@ -62,6 +62,7 @@ SavedGame buildResumableSavedGame({
   required List<String> playerNames,
   DateTime? createdAt,
   bool applyKeepAfterRoll = false,
+  Map<int, String> playerIds = const {},
 }) {
   final log = buildResumableActionLog(
     seed: seed,
@@ -70,7 +71,7 @@ SavedGame buildResumableSavedGame({
   );
   return SavedGame(
     seed: seed,
-    setup: GameSetup(playerNames: playerNames),
+    setup: GameSetup(playerNames: playerNames, playerIds: playerIds),
     alias: alias,
     createdAt: createdAt ?? DateTime(2026, 1, 1),
     actions: log.actions,

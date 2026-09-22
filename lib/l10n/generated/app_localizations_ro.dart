@@ -376,6 +376,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get noFinishedRunsMessage => 'Niciun run terminat momentan.';
 
   @override
+  String get gameRunParticipantsSeparator => ' vs ';
+
+  @override
   String get deleteGameConfirmTitle => 'Ștergi acest joc?';
 
   @override

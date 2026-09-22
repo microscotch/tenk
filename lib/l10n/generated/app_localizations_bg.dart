@@ -376,6 +376,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get noFinishedRunsMessage => 'Все още няма завършени runs.';
 
   @override
+  String get gameRunParticipantsSeparator => ' vs ';
+
+  @override
   String get deleteGameConfirmTitle => 'Изтриване на тази игра?';
 
   @override

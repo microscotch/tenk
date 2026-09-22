@@ -376,6 +376,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get noFinishedRunsMessage => 'Ei vielä päättyneitä runeja.';
 
   @override
+  String get gameRunParticipantsSeparator => ' vs ';
+
+  @override
   String get deleteGameConfirmTitle => 'Poistetaanko tämä peli?';
 
   @override

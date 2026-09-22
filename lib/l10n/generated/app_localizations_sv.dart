@@ -376,6 +376,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get noFinishedRunsMessage => 'Inga avslutade runs än.';
 
   @override
+  String get gameRunParticipantsSeparator => ' vs ';
+
+  @override
   String get deleteGameConfirmTitle => 'Radera det här spelet?';
 
   @override

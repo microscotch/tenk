@@ -346,6 +346,9 @@
   "noFinishedRunsMessage": "Aucune run terminée pour l'instant.",
   "@noFinishedRunsMessage": {"description": "Message affiché quand la liste des runs terminés est vide."},
 
+  "gameRunParticipantsSeparator": " vs ",
+  "@gameRunParticipantsSeparator": {"description": "Sépare les participants d'une partie dans la liste des runs (« Marie vs Bob vs HAL »)."},
+
   "deleteGameConfirmTitle": "Supprimer cette partie ?",
   "@deleteGameConfirmTitle": {"description": "Titre de la boîte de dialogue confirmant la suppression d'une partie en pause."},
 
