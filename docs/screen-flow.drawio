@@ -1,88 +1,140 @@
-<mxfile host="app.diagrams.net" agent="Claude Code" version="24.0.0">
+<mxfile host="app.diagrams.net" modified="2026-09-22T00:00:00.000Z" agent="Claude Code" version="24.0.0">
   <diagram name="Flux d'écrans" id="tenk-screen-flow">
-    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="800" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <!-- Nodes -->
         <mxCell id="splash" value="Splash&#10;(écran de démarrage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="400" y="40" width="200" height="60" as="geometry" />
+          <mxGeometry x="380" y="20" width="220" height="50" as="geometry" />
         </mxCell>
-
-        <mxCell id="setup" value="Setup&#10;(configuration de la partie)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="400" y="180" width="200" height="60" as="geometry" />
+        <mxCell id="setup" value="Setup&#10;(accueil)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="110" width="220" height="60" as="geometry" />
         </mxCell>
-
+        <mxCell id="paused" value="PausedGames&#10;(parties en pause)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="finished" value="FinishedGames&#10;(parties terminées)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="190" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="statistics" value="Statistics&#10;(records + fiches dépliables)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="190" width="200" height="50" as="geometry" />
+        </mxCell>
         <mxCell id="settings" value="Settings&#10;(réglages)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="720" y="180" width="200" height="60" as="geometry" />
+          <mxGeometry x="760" y="60" width="200" height="50" as="geometry" />
         </mxCell>
-
+        <mxCell id="rules" value="Rules&#10;(règles du jeu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="125" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="players" value="Players&#10;(base de joueurs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="255" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="playeredit" value="PlayerEdit&#10;(créer / modifier une fiche)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="255" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="newgame" value="NewGame&#10;(joueurs, IA, mode auto)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="250" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="playerpicker" value="PlayerPicker&#10;(choisir une fiche)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="345" width="200" height="50" as="geometry" />
+        </mxCell>
         <mxCell id="diceoff" value="DiceOff&#10;(lancer de départ)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="400" y="320" width="200" height="60" as="geometry" />
+          <mxGeometry x="380" y="360" width="220" height="50" as="geometry" />
         </mxCell>
-
-        <mxCell id="passdevice" value="PassDevice&#10;(&quot;passez l'appareil&quot;)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="720" y="400" width="200" height="60" as="geometry" />
+        <mxCell id="passdevice" value="PassDevice&#10;(« passez l&#x27;appareil »)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="440" width="200" height="50" as="geometry" />
         </mxCell>
-
-        <mxCell id="game" value="Game&#10;(écran de jeu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="400" y="480" width="200" height="70" as="geometry" />
+        <mxCell id="game" value="Game&#10;(jeu — ou rejeu spectateur)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="500" width="220" height="60" as="geometry" />
         </mxCell>
-
         <mxCell id="scoregrid" value="ScoreGrid&#10;(grille des scores)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="120" y="620" width="200" height="60" as="geometry" />
+          <mxGeometry x="40" y="500" width="200" height="50" as="geometry" />
         </mxCell>
-
+        <mxCell id="scorechart" value="ScoreChart&#10;(évolution des scores)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="200" height="50" as="geometry" />
+        </mxCell>
         <mxCell id="gameover" value="GameOver&#10;(fin de partie)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="680" y="620" width="200" height="60" as="geometry" />
+          <mxGeometry x="380" y="680" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gamestats" value="GameStatistics&#10;(bilan de la partie)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="690" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="note" value="Retour à l&#x27;accueil : le retour système (la flèche sur iOS) depuis Game ou GameOver dépile jusqu&#x27;à Setup (popToHome). Une partie en cours n&#x27;est jamais perdue : elle est persistée après chaque action." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;align=left;verticalAlign=top;dashed=1;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="760" y="560" width="300" height="90" as="geometry" />
         </mxCell>
 
-        <!-- Edges -->
-        <mxCell id="e-splash-setup" value="fin de l'animation / tap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="splash" target="setup">
+        <mxCell id="e1" value="fin de l&#x27;animation / tap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="splash" target="setup">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-setup-settings" value="⚙ Réglages          Retour" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="setup" target="settings">
+        <mxCell id="e2" value="Réglages" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.1;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="settings">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-setup-diceoff" value="Commencer la partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="setup" target="diceoff">
+        <mxCell id="e3" value="Règles" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.35;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="rules">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-diceoff-passdevice" value="Changement de joueur          Continuer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.25;" edge="1" parent="1" source="diceoff" target="passdevice">
+        <mxCell id="e4" value="Joueurs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.9;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="players">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-diceoff-game" value="lancer de départ résolu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="diceoff" target="game">
+        <mxCell id="e5" value="En pause" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="setup" target="paused">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-game-passdevice" value="Changement de joueur          Continuer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.75;" edge="1" parent="1" source="game" target="passdevice">
+        <mxCell id="e6" value="Terminées" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.8;entryX=1;entryY=0.5;" edge="1" parent="1" source="setup" target="finished">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-game-scoregrid" value="Grille / score d'un joueur          Retour" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="game" target="scoregrid">
+        <mxCell id="e7" value="Statistiques" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.65;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="statistics">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-game-gameover" value="Victoire (10000 exact)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="game" target="gameover">
+        <mxCell id="e8" value="Nouvelle partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="setup" target="newgame">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-gameover-scoregrid" value="Voir la grille          Retour" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="gameover" target="scoregrid">
+        <mxCell id="e9" value="ajouter / modifier" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="players" target="playeredit">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e-gameover-setup" value="Nouvelle partie (retour à la racine)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="gameover" target="setup">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="960" y="210" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="e10" value="ajouter un joueur" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="newgame" target="playerpicker">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="660" y="275" /><mxPoint x="660" y="370" /></Array></mxGeometry>
         </mxCell>
-
+        <mxCell id="e11" value="nouvelle fiche" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="playerpicker" target="playeredit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="Commencer la partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="newgame" target="diceoff">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="changement de joueur" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="diceoff" target="passdevice">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="départage résolu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="diceoff" target="game">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="changement de joueur" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.3;entryX=0;entryY=0.8;" edge="1" parent="1" source="game" target="passdevice">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="grille" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.25;entryX=1;entryY=0.5;" edge="1" parent="1" source="game" target="scoregrid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="courbe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.75;entryX=1;entryY=0.5;" edge="1" parent="1" source="game" target="scorechart">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" value="Reprendre" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="paused" target="game">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="300" y="135" /><mxPoint x="300" y="530" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e19" value="victoire (10000 pile) / fin du rejeu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="game" target="gameover">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="ouvrir une partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0;entryY=0.8;" edge="1" parent="1" source="finished" target="gameover">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="15" y="215" /><mxPoint x="15" y="725" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e21" value="grille" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.2;entryX=0;entryY=0.5;" edge="1" parent="1" source="gameover" target="scoregrid">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="28" y="692" /><mxPoint x="28" y="525" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e22" value="courbe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="gameover" target="scorechart">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="140" y="660" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e23" value="statistiques" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="gameover" target="gamestats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" value="Revoir la partie (rejeu)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;dashed=1;exitX=1;exitY=0.25;entryX=1;entryY=0.75;" edge="1" parent="1" source="gameover" target="game">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="700" /><mxPoint x="650" y="545" /></Array></mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

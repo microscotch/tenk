@@ -24,6 +24,9 @@ une interface. D'où la séparation :
 Sur le diagramme, aucune flèche ne relie directement l'UI au moteur : elles
 passent toutes par les providers. C'est l'invariant à préserver.
 
+Le losange (◆) se lit du côté du **tout** : `GameEngine ◆── Player` veut dire que
+le moteur possède ses joueurs.
+
 ## Le moteur (bleu)
 
 **Tout y est immuable.** Chaque transition renvoie une nouvelle instance plutôt
@@ -33,6 +36,12 @@ une partie rejouable à l'identique.
 - **`GameEngine`** orchestre la partie : rotation des joueurs, héritage des dés
   entre tours, condition de victoire. Ses transitions (`startTurn`, `roll`,
   `applyKeep`, `bank`, `endBustedTurn`) sont les seules portes d'entrée.
+  **`roll` prononce le craque dès le lancer** quand rien ne peut plus le
+  sauver — dépassement de 10000, ou main pleine tombant pile sur 10000 — les
+  dés restant affichables le temps de les révéler ; `applyKeep` garde les mêmes
+  contrôles en filet, pour les journaux enregistrés avant ce changement.
+  `inheritedHandCannotBank` (`>=`, pas `>`) écarte une main héritée qui
+  atteint déjà 10000 : la reprendre serait un craque certain.
   `bank()` et l'exception de la quinte d'as dans `applyKeep()` (ci-dessous)
   partagent la même conséquence — appliquer le score, barrer les collisions,
   passer la main — factorisée dans `_applySuccessfulBank`, pour qu'un
@@ -51,15 +60,50 @@ une partie rejouable à l'identique.
 - **`TurnState`** modélise un tour sur plusieurs lancers : dés à lancer, score
   en cours, valeurs étendues, dés gardés, main pleine, craque et sa raison.
   Une main pleine qui tombe pile sur 10000 craque toujours (`BustReason.
-  fullHandAtTarget`) — sauf la quinte d'as (5 as en un seul lancer), seule
-  combinaison capable de totaliser exactement 10000 en un lancer de 5 dés,
-  qui gagne la partie sur-le-champ par exception traditionnelle.
+  fullHandAtTarget`), dès le lancer — sauf la quinte d'as (5 as en un seul
+  lancer), seule combinaison capable de totaliser exactement 10000 en un lancer
+  de 5 dés, qui gagne la partie sur-le-champ par exception traditionnelle.
 - **`RollAnalysis` / `ScoringGroup`** décrivent ce qu'un lancer vaut, en
   distinguant les groupes obligatoires des 5 isolés que le joueur peut décliner.
 
-Les **fonctions pures** (encart violet) — `rollDice`, `analyzeRoll`, `rollTurn`,
-`applyKeepDecision`, `tryBank` — sont des fonctions de haut niveau, pas des
-méthodes. Le RNG y est injectable, ce qui rend les tests déterministes.
+- **`GameSetup`** décrit une partie avant qu'elle commence : joueurs, IA, mode
+  auto — et, pour chaque siège humain, l'**identifiant de sa fiche**
+  (`playerIds`). C'est ce lien, jamais le nom, qui rattache une partie à un
+  joueur : un renommage ne casse rien.
+
+Les **fonctions pures** (encarts violets) — `rollDice`, `analyzeRoll`, `rollTurn`,
+`applyKeepDecision`, `tryBank`, mais aussi celles qui lisent un journal
+(`replayGame`, `replayTurnStarts`, `collectGameStatistics`, `scoreSeriesByPlayer`)
+— sont des fonctions de haut niveau, pas des méthodes. Le RNG y est injectable,
+ce qui rend les tests déterministes.
+
+## Fiches, statistiques et journal (bas du diagramme)
+
+Tout ce qu'on sait d'une partie terminée — sa courbe des scores, ses statistiques,
+son rejeu — **se dérive du journal**, rien de plus n'est stocké :
+
+- **`replayGame`** rejoue un journal (`GameAction` + seed) et rend l'état exact,
+  ainsi que le générateur de dés là où le journal l'a laissé. C'est ce dernier
+  point qui permet de **reprendre en cours de route** (reprise d'une partie mise
+  en pause, saut à un tour du rejeu) sans jamais retomber sur d'autres dés.
+- **`replayTurnStarts`** repère où commence chaque tour dans le journal : c'est
+  ce qui borne le curseur du rejeu.
+- **`GameStatisticsCollector`** observe le moteur avant et après chaque action
+  (via le callback de `replayGame`) et n'implémente **aucune règle** : il compte.
+  `GameStatistics` en rend un `PlayerStats` par siège, dans l'ordre de la config
+  d'origine (l'ordre de jeu, lui, est réordonné par le tirage au sort — deux
+  espaces d'index qu'il ne faut pas confondre).
+- **`PlayerStats`** cumule les compteurs d'un joueur sur toutes ses parties
+  (`operator +`). Il est immuable et tolérant à la lecture : un champ absent d'un
+  fichier ancien vaut zéro.
+- **`PlayerProfile`** est la fiche d'un joueur (nom, surnom, latéralité,
+  anciens noms, statistiques). `displayName` est le surnom quand il y en a un, le
+  nom sinon : c'est la règle d'affichage partout dans le jeu.
+
+Conséquence de conception : les statistiques des fiches ne se **migrent** pas, elles
+se **recalculent** en entier depuis les parties archivées
+(`syncPlayerStatistics`). Corriger une statistique, c'est corriger le code qui la
+compte, pas des données.
 
 ## L'IA (vert, dans le moteur)
 
@@ -75,23 +119,58 @@ pas.
 
 - **`GameNotifier`** enveloppe le `GameEngine` et expose les actions à l'UI. Ses
   méthodes `previewAi*` permettent d'afficher à l'avance ce que l'IA fera, sans
-  rien modifier.
+  rien modifier. Toute transition passe par `_commit`, qui **journalise l'action
+  AVANT de publier le nouvel état**, puis persiste : les écrans écoutent le
+  moteur et lisent le journal à l'instant où la partie est gagnée — un journal
+  auquel manquerait le coup gagnant décrirait une partie « inachevée » (statistiques
+  à zéro, rejeu qui n'atteint jamais la victoire). `gameRecord` est l'unique point
+  d'entrée qui dit quelle partie est à l'écran, jouée ou rejouée.
 - **`SavedGame` ne stocke pas l'état, mais le journal d'actions** (`GameAction`)
   et la seed. Une partie se reconstruit en rejouant ce journal
-  (`replayGame` → `ReplayResult`). C'est aussi ce qui permet le mode rejeu
-  spectateur d'un run terminé.
+  (`replayGame` → `ReplayResult`).
+- **Le rejeu spectateur** (`startReplay`) démarre directement sur la partie : le
+  tirage au sort qui a fixé l'ordre de jeu n'est pas remis en scène, on n'en garde
+  que le résultat. `seekReplay(tour)` reconstruit l'état exact au début d'un tour
+  (avant comme après le tour actuel) ; `replayProgress` donne le tour à l'écran.
+  Les providers du rejeu (vitesse, pause, progression) sont à part. Pendant un
+  rejeu, l'écran de la partie jouée éventuellement resté empilé dessous se
+  désintéresse du moteur (`isReplay`).
+- **`PlayerStore`** persiste les fiches, un fichier par joueur, comme
+  `GameSaveStore` le fait des parties.
+- **`displayNamesFor`** résout les surnoms **à partir de la config de la partie
+  affichée**, pas de la partie en cours : une partie archivée, ouverte quand aucune
+  partie n'est en cours, se nomme correctement, et deux parties ayant un joueur du
+  même nom ne se prêtent pas leurs surnoms.
 - **`GameSaveStore`** lit/écrit les fichiers `.run` ; deux instances coexistent,
   une pour les parties en cours, une pour les archives.
-- **`SettingsNotifier` / `AppSettings`** portent les préférences persistées.
+- **`SettingsNotifier` / `AppSettings`** portent les préférences persistées ; la
+  latéralité d'un joueur, elle, vient de sa fiche (`currentSeatRightHandedProvider`),
+  le réglage d'appareil n'étant qu'un repli.
 
 ## L'interface (orange)
 
 Représentée volontairement en couche grossière : les widgets Flutter sont
 structurellement uniformes, et les détailler noierait le modèle. À retenir :
 `GameScreen` est de loin l'écran le plus dense (il rend des vues différentes
-selon l'état du tour et pilote l'avancement automatique), et deux services
+selon l'état du tour, pilote l'avancement automatique et sert aussi de rejeu
+spectateur, avec ses commandes fixées en bas), et deux services
 vivent à part — `SoundEffects` (singleton observant le cycle de vie) et
 `ShakeDetector` (accéléromètre → lancer de dés).
+
+## Les autres schémas
+
+Trois schémas complètent le diagramme de classes ; chacun se rouvre et se
+ré-édite dans draw.io à partir de son PNG (ou de son `.drawio`) :
+
+- [`screen-flow.png`](screen-flow.png) — les écrans et les navigations entre eux
+  (source : [`screen-flow.drawio`](screen-flow.drawio)). Le retour à l'accueil
+  dépile jusqu'à `Setup` (`popToHome`) ; le rejeu spectateur est `Game` en
+  `replayMode`, pas un écran à part.
+- [`game-state.png`](game-state.png) — les états d'une partie (`activeTurn`
+  nul ou non, partie terminée) et le tour final.
+- [`turn-state.png`](turn-state.png) — les états d'un tour, avec les deux
+  impasses que `roll` détecte dès le lancer et l'exception de la quinte d'as
+  (source : [`turn-state.drawio`](turn-state.drawio)).
 
 ## Régénérer le diagramme
 

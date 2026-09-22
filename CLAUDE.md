@@ -118,6 +118,17 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   carried over as a bonus base) or starts fresh with 5 dice.
 - `game/dice_off.dart` — separate mini state machine for the pre-game 1-die roll-off that decides
   turn order (lowest single die starts; ties re-roll among only the tied players).
+- `game/game_recording.dart` — the action journal (`GameAction`, `GameActionType`) and everything
+  read from it: `replayGame` (rebuilds the exact engine state *and* the dice generator where the
+  journal left it), `applyGameAction`, `replayTurnStarts` (where each turn begins — bounds the
+  replay slider), `diceOffActionCount`, active-duration helpers.
+- `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
+  (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
+  re-implements no rule) and the per-player score curve, both **derived from the journal**.
+- `game/player_profile.dart`, `game/player_stats.dart` — a player's record (`displayName` is the
+  nickname if any, else the name — the display rule everywhere) and its cumulated counters.
+  Statistics are never migrated: they are recomputed from the archived games (see
+  `syncPlayerStatistics` below).
 - `game/ai/` — `AiStrategy` interface plus three difficulty profiles (`ai_profiles.dart`) built on a
   shared `bustProbability()` calculation.
 
@@ -128,12 +139,26 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   inherited-hand via `startTurn()`. `playAiTurnStep()` drives one AI action per call; the UI schedules
   repeated calls with a delay to simulate "thinking". `debugLoadState()` is a `@visibleForTesting` seam
   used throughout the test suite to inject a specific `GameEngine` state without relying on real RNG.
+  Every transition goes through `_commit`, which **appends the action to the journal BEFORE assigning
+  `state`** (listeners run inside the assignment and read the journal — the game-over screen would
+  otherwise see a game missing its winning move, i.e. "unfinished": all statistics at 0), then persists.
+  `gameRecord` is the single answer to "which game is on screen" (played or replayed).
+  Replay: `startReplay(saved)` opens straight on the game (the roll-off is not replayed, only its
+  result is kept), `seekReplay(turn)` rebuilds the exact state at a turn start, `replayProgress`
+  gives the turn on screen; `isReplay` makes a played game's screen, left stacked underneath, ignore
+  the engine. Pause/speed/progress providers live in `replay_*_provider.dart`.
 - `dice_off_providers.dart` — `DiceOffNotifier` drives the roll-off screen and, once resolved,
   `buildRotatedSetup()` reorders players so the winner becomes index 0 for the real game.
+- `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
+  file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
+  config of the game **being shown**, linking by profile id, never by name — so an archived game
+  shows nicknames with no game in progress), and `syncPlayerStatistics`, which recomputes every
+  profile's statistics from the archived journals.
 
 ### UI layer (`lib/ui/`)
 
-- `game_screen.dart` is the densest file: it renders different sub-views depending on
+- `game_screen.dart` (also the spectator replay, `replayMode`, with its controls pinned in a bottom bar
+  outside the inert body) is the densest file: it renders different sub-views depending on
   `GameEngine.activeTurn` state (hand-choice / pending-roll-with-decision / idle-ready-to-roll-or-bank
   / busted / AI-thinking), and drives **automatic turn advancement** for the human player when there
   is no real decision to make:
@@ -149,6 +174,15 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   - Widget test states are built with `debugLoadState` snapshots; because of the auto-advance behavior,
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.
+
+## Design documents — keep them current
+
+`docs/architecture.md` and its class diagram (`docs/architecture/class-diagram.drawio` + `.png`)
+document `lib/game` and `lib/state` class by class. **Whenever a change adds, removes or renames a
+class, field or method in those two layers, or moves a responsibility between layers, update them in
+the same batch** — run the `architecture-diagram` skill (`/architecture-diagram`), look at the
+exported PNG, and update the prose. `docs/screen-flow.drawio` does the same for the screens. A diagram
+that is a few batches late is how the documents ended up three weeks behind the code once already.
 
 ## Game rules reference (non-obvious, load-bearing — don't reinterpret from first principles)
 
