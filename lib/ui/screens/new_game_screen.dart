@@ -20,7 +20,16 @@ import 'player_picker_screen.dart';
 /// parallèles (noms, focus, bot, auto) qu'il fallait garder synchronisées.
 sealed class _Seat {
   final bool isAuto;
-  const _Seat({required this.isAuto});
+
+  /// Identité stable pour la liste réordonnable, propre à chaque siège :
+  /// [withAuto] recrée l'objet (une clé d'objet perdrait la ligne), et un nom
+  /// n'est pas garanti unique (une ancienne sauvegarde peut en répéter un).
+  final int key;
+
+  const _Seat({required this.isAuto, required this.key});
+
+  static var _nextKey = 0;
+  static int newKey() => _nextKey++;
 
   String get name;
   _Seat withAuto(bool auto);
@@ -28,22 +37,22 @@ sealed class _Seat {
 
 class _HumanSeat extends _Seat {
   final PlayerProfile profile;
-  const _HumanSeat(this.profile, {required super.isAuto});
+  const _HumanSeat(this.profile, {required super.isAuto, required super.key});
 
   @override
   String get name => profile.name;
 
   @override
-  _Seat withAuto(bool auto) => _HumanSeat(profile, isAuto: auto);
+  _Seat withAuto(bool auto) => _HumanSeat(profile, isAuto: auto, key: key);
 }
 
 class _BotSeat extends _Seat {
   @override
   final String name;
-  const _BotSeat(this.name, {required super.isAuto});
+  const _BotSeat(this.name, {required super.isAuto, required super.key});
 
   @override
-  _Seat withAuto(bool auto) => _BotSeat(name, isAuto: auto);
+  _Seat withAuto(bool auto) => _BotSeat(name, isAuto: auto, key: key);
 }
 
 class NewGameScreen extends ConsumerStatefulWidget {
@@ -84,11 +93,11 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
     final seats = <_Seat>[];
     for (var i = 0; i < setup.playerNames.length; i++) {
       if (setup.isAi(i)) {
-        seats.add(_BotSeat(setup.playerNames[i], isAuto: setup.isAuto(i)));
+        seats.add(_BotSeat(setup.playerNames[i], isAuto: setup.isAuto(i), key: _Seat.newKey()));
         continue;
       }
       final profile = byId[setup.playerIdAt(i)];
-      if (profile != null) seats.add(_HumanSeat(profile, isAuto: setup.isAuto(i)));
+      if (profile != null) seats.add(_HumanSeat(profile, isAuto: setup.isAuto(i), key: _Seat.newKey()));
     }
 
     if (!mounted || seats.length < _minPlayers) return;
@@ -111,7 +120,7 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
       for (final profile in picked) {
         if (_seats.length >= _maxPlayers) break;
         // Un humain clique lui-même : pas d'auto-validation par défaut.
-        _seats.add(_HumanSeat(profile, isAuto: false));
+        _seats.add(_HumanSeat(profile, isAuto: false, key: _Seat.newKey()));
       }
       _error = null;
     });
@@ -124,9 +133,13 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
     final name = free.isEmpty ? kAiCharacterNames.first : free[Random().nextInt(free.length)];
     // Un bot s'auto-valide : rien ne justifie de cliquer à sa place.
     setState(() {
-      _seats.add(_BotSeat(name, isAuto: true));
+      _seats.add(_BotSeat(name, isAuto: true, key: _Seat.newKey()));
       _error = null;
     });
+  }
+
+  void _moveSeat(int oldIndex, int newIndex) {
+    setState(() => _seats.insert(newIndex, _seats.removeAt(oldIndex)));
   }
 
   void _start() {
@@ -186,8 +199,16 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
             children: [
               Text(l10n.playersCountTitle(_seats.length),
                   style: Theme.of(context).textTheme.titleMedium),
+              if (_seats.length > 1)
+                Text(l10n.reorderPlayersHint, style: Theme.of(context).textTheme.bodySmall),
               const SizedBox(height: 8),
-              for (var i = 0; i < _seats.length; i++) _seatRow(l10n, i),
+              ReorderableListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                onReorderItem: _moveSeat,
+                children: [for (var i = 0; i < _seats.length; i++) _seatRow(l10n, i)],
+              ),
               if (_error != null) ...[
                 const SizedBox(height: 8),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
@@ -204,9 +225,17 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
   Widget _seatRow(AppLocalizations l10n, int index) {
     final seat = _seats[index];
     return Padding(
+      key: ValueKey(seat.key),
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Icon(Icons.drag_handle, semanticLabel: l10n.reorderPlayerHandleLabel),
+            ),
+          ),
           PlayerAvatarWidget(name: seat.name, size: 36),
           const SizedBox(width: 12),
           Expanded(

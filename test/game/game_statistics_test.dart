@@ -376,8 +376,7 @@ void main() {
       for (final seed in const [1, 7, 42, 123, 2024]) {
         final played = playScriptedGame(setup, seed);
         final replay = replayGame(setup, seed, played.actions);
-        final diceOffWinner = replay.diceOff.winnerIndex!;
-        if (diceOffWinner != 0) rotationExercised = true;
+        if (replay.playOrder!.first != 0) rotationExercised = true;
 
         final result = collectGameStatistics(setup: setup, seed: seed, actions: played.actions);
 
@@ -392,6 +391,28 @@ void main() {
       expect(rotationExercised, isTrue,
           reason: 'au moins une seed doit faire gagner le départage à un autre que le siège 0, '
               'sans quoi ce test passerait sans jamais exercer la traduction');
+    });
+
+    test('la victoire suit son joueur aussi quand le départage inverse le sens', () {
+      // Le vainqueur doit en plus occuper un siège que l'inversion déplace
+      // (pas le premier) : sinon ce test passerait même sans en tenir compte.
+      late int seed;
+      late ({GameEngine engine, List<GameAction> actions}) played;
+      for (seed = 0; seed < 1000; seed++) {
+        played = playScriptedGame(setup, seed);
+        final replay = replayGame(setup, seed, played.actions);
+        if (replay.diceOff.reversesOrder && played.engine.winnerIndex != 0) break;
+      }
+      expect(seed, lessThan(1000), reason: 'aucune seed ne produit d\'inversion');
+
+      final result = collectGameStatistics(setup: setup, seed: seed, actions: played.actions);
+
+      final winnerName = played.engine.players[played.engine.winnerIndex!].name;
+      final expectedSeat = setup.playerNames.indexOf(winnerName);
+      for (var seat = 0; seat < setup.playerNames.length; seat++) {
+        expect(result.bySeat[seat].gamesWon, seat == expectedSeat ? 1 : 0,
+            reason: 'seed $seed : «$winnerName» occupe le siège d\'origine $expectedSeat');
+      }
     });
 
     test('une partie non terminée ne compte pour rien', () {

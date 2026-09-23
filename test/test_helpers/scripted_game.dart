@@ -7,6 +7,27 @@ import 'package:le10000/game/game_setup.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_save_store.dart';
 
+/// Joue un départage complet au format actuel (tous les dés d'un round
+/// ensemble) en journalisant ses actions dans [actions] ; [legacy] le joue à
+/// l'ancien format (un joueur à la fois), pour les tests de compatibilité.
+DiceOffState playDiceOff(int playerCount, Random random, List<GameAction> actions, {bool legacy = false}) {
+  var diceOff = DiceOffState.start(playerCount);
+  while (!diceOff.isResolved) {
+    if (legacy) {
+      final idx = diceOff.nextToRoll!;
+      diceOff = diceOff.rollFor(idx, random: random);
+      actions.add(GameAction.diceOffRoll(idx));
+      if (!diceOff.roundComplete) continue;
+    } else {
+      diceOff = diceOff.rollAll(random: random);
+      actions.add(GameAction.diceOffRollAll());
+    }
+    diceOff = diceOff.resolveRound();
+    actions.add(GameAction.diceOffResolveRound());
+  }
+  return diceOff;
+}
+
 /// Rejoue le départage (à partir de [seed]) jusqu'à sa résolution, puis lance
 /// un premier tour et un premier lancer : un journal d'actions minimal mais
 /// authentique pour une sauvegarde "en cours de tour", reprenable.
@@ -18,26 +39,16 @@ import 'package:le10000/state/game_save_store.dart';
 /// que ce lancer a bien de quoi être gardé pour cette [seed] : un craque
 /// rendrait cette action illégale, autant échouer ici, franchement, que plus
 /// loin dans un test au symptôme obscur.
-({List<GameAction> actions, GameSetup rotatedSetup}) buildResumableActionLog({
+({List<GameAction> actions, GameSetup orderedSetup}) buildResumableActionLog({
   required int seed,
   required List<String> playerNames,
   bool applyKeepAfterRoll = false,
 }) {
   final random = Random(seed);
   final actions = <GameAction>[];
-  var diceOff = DiceOffState.start(playerNames.length);
-  while (!diceOff.isResolved) {
-    final idx = diceOff.nextToRoll;
-    if (idx != null) {
-      diceOff = diceOff.rollFor(idx, random: random);
-      actions.add(GameAction.diceOffRoll(idx));
-    } else {
-      diceOff = diceOff.resolveRound();
-      actions.add(GameAction.diceOffResolveRound());
-    }
-  }
+  final diceOff = playDiceOff(playerNames.length, random, actions);
   final setup = GameSetup(playerNames: playerNames);
-  final rotated = setup.rotated(diceOff.winnerIndex!);
+  final ordered = setup.reordered(diceOff.playOrder);
   // Toujours légaux juste après le départage (tour frais, aucun lancer en
   // attente) : pas besoin de construire/faire progresser un GameEngine ici,
   // seule la SÉQUENCE d'actions compte pour un journal à rejouer plus tard.
@@ -51,7 +62,7 @@ import 'package:le10000/state/game_save_store.dart';
     );
     actions.add(GameAction.applyKeep(declineFivesCount: 0));
   }
-  return (actions: actions, rotatedSetup: rotated);
+  return (actions: actions, orderedSetup: ordered);
 }
 
 /// Une [SavedGame] "en cours de tour" (départage résolu + un lancer déjà
@@ -87,20 +98,9 @@ SavedGame buildResumableSavedGame({
   final random = Random(seed);
   final actions = <GameAction>[];
 
-  var diceOff = DiceOffState.start(setup.playerNames.length);
-  while (!diceOff.isResolved) {
-    final idx = diceOff.nextToRoll;
-    if (idx != null) {
-      diceOff = diceOff.rollFor(idx, random: random);
-      actions.add(GameAction.diceOffRoll(idx));
-    } else {
-      diceOff = diceOff.resolveRound();
-      actions.add(GameAction.diceOffResolveRound());
-    }
-  }
-
-  final rotatedSetup = setup.rotated(diceOff.winnerIndex!);
-  var engine = GameEngine.newGame(rotatedSetup.playerNames);
+  final diceOff = playDiceOff(setup.playerNames.length, random, actions);
+  final orderedSetup = setup.reordered(diceOff.playOrder);
+  var engine = GameEngine.newGame(orderedSetup.playerNames);
 
   var guard = 0;
   while (!engine.gameOver) {

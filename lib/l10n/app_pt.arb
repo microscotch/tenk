@@ -68,8 +68,6 @@
   "diceOffTitle": "Quem começa?",
   "diceOffInstructions": "Cada um lança um dado: a pontuação mais baixa começa o jogo.",
   "diceOffTieBreak": "Empate: {names} relançam.",
-  "diceOffPlayerTurn": "{playerName} lança o dado",
-  "diceOffRollButton": "Lançar o dado",
   "diceOffWinnerAnnouncement": "{playerName} começa o jogo!",
   "gameOverTitle": "Fim do jogo",
   "winnerAnnouncement": "{playerName} vence!",

@@ -117,11 +117,16 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `startTurn(useFullHand:)` is where a player either continues an inherited hand (score + kept dice
   carried over as a bonus base) or starts fresh with 5 dice.
 - `game/dice_off.dart` — separate mini state machine for the pre-game 1-die roll-off that decides
-  turn order (lowest single die starts; ties re-roll among only the tied players).
+  turn order: everyone rolls at once (`rollAll`), lowest die starts, ties at the lowest re-roll among
+  only themselves; `playOrder` gives the seats in play order (see the order rule below). Old journals
+  used per-player `rollFor` and always plain rotation — `simultaneous` tells the two apart, and must
+  keep doing so, or archived games would silently replay with players on the wrong seats.
 - `game/game_recording.dart` — the action journal (`GameAction`, `GameActionType`) and everything
   read from it: `replayGame` (rebuilds the exact engine state *and* the dice generator where the
   journal left it), `applyGameAction`, `replayTurnStarts` (where each turn begins — bounds the
-  replay slider), `diceOffActionCount`, active-duration helpers.
+  replay slider), `diceOffActionCount`, active-duration helpers. `ReplayResult.playOrder` maps each
+  engine index back to its original seat (`GameStatistics` relies on it); a `diceOffRollAll` action in
+  a journal is what marks it as using the current order rule.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.
@@ -147,8 +152,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   result is kept), `seekReplay(turn)` rebuilds the exact state at a turn start, `replayProgress`
   gives the turn on screen; `isReplay` makes a played game's screen, left stacked underneath, ignore
   the engine. Pause/speed/progress providers live in `replay_*_provider.dart`.
-- `dice_off_providers.dart` — `DiceOffNotifier` drives the roll-off screen and, once resolved,
-  `buildRotatedSetup()` reorders players so the winner becomes index 0 for the real game.
+- `dice_off_providers.dart` — `DiceOffNotifier` drives the roll-off screen (`rollRound()` plays a
+  whole round) and, once resolved, `buildOrderedSetup()` reorders players into `playOrder` for the
+  real game (winner at index 0).
 - `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
   file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
   config of the game **being shown**, linking by profile id, never by name — so an archived game
@@ -226,6 +232,13 @@ that is a few batches late is how the documents ended up three weeks behind the 
   it always wins on the spot, full hand or not — the only combination able to total exactly 10000 in one
   roll of 5 dice (any other quint tops out at 6000), so `applyKeep` detects it by inspecting that roll's
   scoring groups rather than reopening the rule generally.
+- Turn order (roll-off): everyone rolls one die at once; the lowest starts, ties at the lowest
+  re-roll among themselves. Play then follows the player list as set up on the new-game screen
+  (reorderable by drag) — **except** when the last roll-off round was a duel between two
+  neighbours (the list is circular: last and first are neighbours) won by the one that comes
+  *second* in list order: then play runs backwards from the winner (duel J2/J3 won by J3 in a
+  5-player game → J3, J2, J1, J5, J4). A tie between three or more that resolves in one round, or a
+  duel between non-neighbours, keeps the normal direction.
 - Victory: first exact 10000 triggers a final round giving every other player one more turn to match
   it; if another player also reaches exactly 10000 during that round, they bar the previous holder and
   a fresh final round starts around them.

@@ -21,7 +21,7 @@ final currentSeatRightHandedProvider = Provider<bool>((ref) {
 
   // `GameNotifier` expose la config RÉORDONNÉE : c'est bien elle qu'indexe
   // `currentPlayerIndex`.
-  final id = ref.watch(gameProvider.notifier).rotatedSetup?.playerIdAt(engine.currentPlayerIndex);
+  final id = ref.watch(gameProvider.notifier).orderedSetup?.playerIdAt(engine.currentPlayerIndex);
   if (id == null) return deviceDefault;
 
   final players = ref.watch(playersProvider).value;
@@ -72,7 +72,7 @@ Map<String, String> displayNamesFor(GameSetup setup, Iterable<PlayerProfile>? pr
 /// moteur exposé par [gameProvider].
 final displayNamesProvider = Provider<Map<String, String>>((ref) {
   final engine = ref.watch(gameProvider);
-  final setup = ref.watch(gameProvider.notifier).rotatedSetup;
+  final setup = ref.watch(gameProvider.notifier).orderedSetup;
   if (engine == null || setup == null) return const {};
   return displayNamesFor(setup, ref.watch(playersProvider).value);
 });

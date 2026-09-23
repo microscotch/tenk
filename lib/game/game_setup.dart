@@ -33,24 +33,17 @@ class GameSetup {
   /// aucune (bot, ou partie antérieure à la base de joueurs).
   String? playerIdAt(int index) => playerIds[index];
 
-  /// Réordonne les joueurs pour que [winnerIndex] (vainqueur du tirage au
-  /// sort) devienne l'index 0, en conservant la correspondance IA/auto de
-  /// chaque joueur d'origine.
-  GameSetup rotated(int winnerIndex) {
-    final n = playerNames.length;
-    final rotatedNames = [for (var i = 0; i < n; i++) playerNames[(winnerIndex + i) % n]];
-    final rotatedAi = <int, AiDifficulty>{};
-    aiPlayers.forEach((origIndex, difficulty) {
-      rotatedAi[(origIndex - winnerIndex + n) % n] = difficulty;
-    });
-    final rotatedAuto = {for (final origIndex in autoPlayers) (origIndex - winnerIndex + n) % n};
-    final rotatedIds = <int, String>{};
-    playerIds.forEach((origIndex, id) => rotatedIds[(origIndex - winnerIndex + n) % n] = id);
+  /// Réordonne les joueurs selon [order] (le siège d'origine de chaque joueur,
+  /// dans l'ordre où ils joueront — voir `DiceOffState.playOrder`), en
+  /// conservant la correspondance IA/auto/fiche de chaque joueur d'origine.
+  GameSetup reordered(List<int> order) {
+    assert(order.length == playerNames.length && order.toSet().length == order.length);
+    final newSeatOf = {for (var k = 0; k < order.length; k++) order[k]: k};
     return GameSetup(
-      playerNames: rotatedNames,
-      aiPlayers: rotatedAi,
-      autoPlayers: rotatedAuto,
-      playerIds: rotatedIds,
+      playerNames: [for (final seat in order) playerNames[seat]],
+      aiPlayers: {for (final e in aiPlayers.entries) newSeatOf[e.key]!: e.value},
+      autoPlayers: {for (final seat in autoPlayers) newSeatOf[seat]!},
+      playerIds: {for (final e in playerIds.entries) newSeatOf[e.key]!: e.value},
     );
   }
 }

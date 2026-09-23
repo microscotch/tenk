@@ -581,10 +581,16 @@
   "settingsLanguageSystemOption": "Langue du téléphone",
   "@settingsLanguageSystemOption": {"description": "Option du sélecteur de langue qui suit automatiquement la langue de l'appareil."},
 
+  "reorderPlayersHint": "Glissez un joueur par sa poignée pour changer l'ordre autour de la table.",
+  "@reorderPlayersHint": {"description": "Aide sous la liste des joueurs d'une nouvelle partie : l'ordre se change en glissant les lignes."},
+
+  "reorderPlayerHandleLabel": "Déplacer ce joueur",
+  "@reorderPlayerHandleLabel": {"description": "Libellé d'accessibilité de la poignée qui déplace un joueur dans la liste."},
+
   "diceOffTitle": "Qui commence ?",
   "@diceOffTitle": {"description": "Titre de l'écran de tirage au sort de l'ordre de jeu."},
 
-  "diceOffInstructions": "Chacun lance un dé : le score le plus faible commence la partie.",
+  "diceOffInstructions": "Tout le monde lance son dé en même temps : le plus faible commence. En cas d'égalité, les ex-aequo relancent.",
   "@diceOffInstructions": {"description": "Explication de la règle du tirage au sort."},
 
   "diceOffTieBreak": "Égalité : {names} relancent.",
@@ -593,20 +599,17 @@
     "placeholders": {"names": {"type": "String"}}
   },
 
-  "diceOffPlayerTurn": "{playerName} lance le dé",
-  "@diceOffPlayerTurn": {
-    "description": "Indique quel joueur doit lancer le dé, pendant le tirage au sort.",
-    "placeholders": {"playerName": {"type": "String"}}
-  },
-
-  "diceOffRollButton": "Lancer le dé",
-  "@diceOffRollButton": {"description": "Bouton pour lancer le dé pendant le tirage au sort."},
-
   "diceOffWinnerAnnouncement": "{playerName} commence la partie !",
   "@diceOffWinnerAnnouncement": {
     "description": "Annonce du joueur qui commence la partie, à l'issue du tirage au sort.",
     "placeholders": {"playerName": {"type": "String"}}
   },
+
+  "diceOffPlayOrderLabel": "Ordre de jeu",
+  "@diceOffPlayOrderLabel": {"description": "Intitulé de l'ordre de jeu affiché à l'issue du tirage au sort."},
+
+  "diceOffReversedNote": "Duel entre voisins remporté par le second : la partie tourne à rebours.",
+  "@diceOffReversedNote": {"description": "Explique pourquoi l'ordre de jeu est inversé : le tirage s'est joué en duel entre deux voisins et le second dans l'ordre de la liste l'a gagné."},
 
   "gameOverTitle": "Fin de la partie",
   "@gameOverTitle": {"description": "Titre de l'écran de fin de partie."},
@@ -625,7 +628,6 @@
       "score": {"type": "int"}
     }
   },
-
 
   "passDeviceInstruction": "Passez l'appareil à",
   "@passDeviceInstruction": {"description": "Instruction affichée entre deux tours, avant le nom du joueur suivant."},

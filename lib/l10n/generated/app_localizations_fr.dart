@@ -609,11 +609,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsLanguageSystemOption => 'Langue du téléphone';
 
   @override
+  String get reorderPlayersHint =>
+      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+
+  @override
+  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+
+  @override
   String get diceOffTitle => 'Qui commence ?';
 
   @override
   String get diceOffInstructions =>
-      'Chacun lance un dé : le score le plus faible commence la partie.';
+      'Tout le monde lance son dé en même temps : le plus faible commence. En cas d\'égalité, les ex-aequo relancent.';
 
   @override
   String diceOffTieBreak(String names) {
@@ -621,17 +628,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String diceOffPlayerTurn(String playerName) {
-    return '$playerName lance le dé';
-  }
-
-  @override
-  String get diceOffRollButton => 'Lancer le dé';
-
-  @override
   String diceOffWinnerAnnouncement(String playerName) {
     return '$playerName commence la partie !';
   }
+
+  @override
+  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+
+  @override
+  String get diceOffReversedNote =>
+      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
 
   @override
   String get gameOverTitle => 'Fin de la partie';

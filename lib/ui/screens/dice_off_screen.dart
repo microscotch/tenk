@@ -14,12 +14,20 @@ import '../dice_colors.dart';
 import '../sound_effects.dart';
 import '../widgets/die_widget.dart';
 import 'game_screen.dart';
-import 'pass_device_screen.dart';
 
-/// Détermine qui commence la partie : chaque joueur lance un dé, le score le
-/// plus faible commence (égalité = relance entre les ex-aequo uniquement).
+/// Détermine qui commence la partie et dans quel sens elle tourne : tous les
+/// joueurs lancent leur dé en même temps, le plus faible commence, et les
+/// ex-aequo au plus bas relancent seuls jusqu'à se départager. Tout se joue
+/// sans intervention ; un tap sur l'écran abrège l'attente avant une relance.
 class DiceOffScreen extends ConsumerStatefulWidget {
   const DiceOffScreen({super.key});
+
+  /// Pause avant le premier lancer, le temps que l'écran s'installe.
+  static const firstRollDelay = Duration(milliseconds: 500);
+
+  /// Pause entre deux rounds : l'animation du dé, puis de quoi lire qui est à
+  /// égalité avant que ses dés repartent.
+  static const tieRerollDelay = Duration(milliseconds: 1800);
 
   @override
   ConsumerState<DiceOffScreen> createState() => _DiceOffScreenState();
@@ -33,8 +41,13 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scheduleAiIfNeeded();
-      _scheduleAutoStartIfNeeded();
+      final state = ref.read(diceOffProvider);
+      if (state == null) return;
+      if (state.isResolved) {
+        _scheduleAutoStartIfNeeded();
+      } else {
+        _schedule(_rollRound, DiceOffScreen.firstRollDelay);
+      }
     });
   }
 
@@ -44,23 +57,8 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     super.dispose();
   }
 
-  /// Programme (ou annule) l'auto-validation d'[action] après le délai IA
-  /// réglé dans les préférences, si [autoEnabled] (mode auto du/des joueur(s)
-  /// concerné(s) et délai > 0). Un bouton explicite reste dans tous les cas
-  /// affiché et cliquable (voir les méthodes `_build*`) ; l'utilisateur peut
-  /// aussi cliquer n'importe où sur l'écran pour sauter l'attente restante
-  /// (voir [_skipPendingAction]).
-  void _scheduleAutoAction(VoidCallback action, {required bool autoEnabled}) {
+  void _schedule(VoidCallback action, Duration delay) {
     _pendingTimer?.cancel();
-    if (!autoEnabled) {
-      _pendingAction = null;
-      return;
-    }
-    final delay = ref.read(settingsProvider).aiMessageDelay;
-    if (delay <= Duration.zero) {
-      _pendingAction = null;
-      return;
-    }
     _pendingAction = action;
     _pendingTimer = Timer(delay, () {
       if (!mounted) return;
@@ -78,29 +76,25 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     action();
   }
 
-  void _scheduleAiIfNeeded() {
-    final state = ref.read(diceOffProvider);
-    final notifier = ref.read(diceOffProvider.notifier);
-    if (state == null || state.isResolved) return;
-    final next = state.nextToRoll;
-    if (next == null || !notifier.isAiPlayer(next)) return;
-    _scheduleAutoAction(_rollDie, autoEnabled: notifier.isAutoPlayer(next));
-  }
-
-  void _rollDie() {
+  void _rollRound() {
     SoundEffects.instance.playDiceRoll();
-    ref.read(diceOffProvider.notifier).rollForCurrent();
+    ref.read(diceOffProvider.notifier).rollRound();
+    if (ref.read(diceOffProvider)!.isResolved) {
+      _scheduleAutoStartIfNeeded();
+    } else {
+      _schedule(_rollRound, DiceOffScreen.tieRerollDelay);
+    }
   }
 
   /// Quand tous les joueurs sont des IA en mode auto, personne n'est là pour
   /// cliquer sur "Commencer la partie" une fois l'ordre déterminé : la
-  /// partie démarre donc seule, comme les autres transitions automatiques.
+  /// partie démarre donc seule, après le délai IA réglé dans les préférences.
   void _scheduleAutoStartIfNeeded() {
-    final state = ref.read(diceOffProvider);
     final notifier = ref.read(diceOffProvider.notifier);
-    if (state == null || !state.isResolved) return;
-    if (notifier.humanPlayerCount > 0) return;
-    _scheduleAutoAction(_startGame, autoEnabled: notifier.allPlayersAreAuto);
+    if (notifier.humanPlayerCount > 0 || !notifier.allPlayersAreAuto) return;
+    final delay = ref.read(settingsProvider).aiMessageDelay;
+    if (delay <= Duration.zero) return;
+    _schedule(_startGame, delay);
   }
 
   /// Le nom sous lequel le joueur du siège [seat] est appelé : son surnom quand
@@ -114,50 +108,43 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
 
   void _startGame() {
     if (!mounted) return;
+    _pendingTimer?.cancel();
+    _pendingAction = null;
     final diceOffNotifier = ref.read(diceOffProvider.notifier);
-    final rotated = diceOffNotifier.buildRotatedSetup();
-    ref.read(gameProvider.notifier).startGame(rotated, handoff: diceOffNotifier.handoff());
+    final ordered = diceOffNotifier.buildOrderedSetup();
+    ref.read(gameProvider.notifier).startGame(ordered, handoff: diceOffNotifier.handoff());
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const GameScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(diceOffProvider, (previous, next) {
-      if (next == null) return;
-      if (!next.isResolved) {
-        if (previous != null &&
-            previous.nextToRoll != next.nextToRoll &&
-            next.nextToRoll != null &&
-            ref.read(diceOffProvider.notifier).shouldShowPassDevice(next.nextToRoll!)) {
-          Navigator.of(context)
-              .push(MaterialPageRoute(
-                builder: (_) => PassDeviceScreen(
-                  nextPlayerName: _shownName(next.nextToRoll!),
-                ),
-              ))
-              .then((_) => _scheduleAiIfNeeded());
-        }
-        _scheduleAiIfNeeded();
-        return;
-      }
-      _scheduleAutoStartIfNeeded();
-    });
-
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(diceOffProvider);
-    final notifier = ref.read(diceOffProvider.notifier);
     if (state == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).diceOffTitle)),
+      appBar: AppBar(title: Text(l10n.diceOffTitle)),
       body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: _skipPendingAction,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Center(
-              child: state.isResolved ? _buildResult(state, notifier) : _buildRollView(state, notifier),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.diceOffInstructions, textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
+                    _diceRow(state),
+                    const SizedBox(height: 24),
+                    if (state.isResolved) _result(l10n, state) else _status(l10n, state),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -165,81 +152,98 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     );
   }
 
-  Widget _buildRollView(DiceOffState state, DiceOffNotifier notifier) {
-    final l10n = AppLocalizations.of(context);
-    final next = state.nextToRoll!;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          l10n.diceOffInstructions,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        if (state.roundHistory.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              l10n.diceOffTieBreak(state.activeIndices.map(_shownName).join(', ')),
-              style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        if (state.rollsThisRound.isNotEmpty) ...[
-          _diceOffRow(state.rollsThisRound, notifier, roundIndex: state.roundHistory.length),
-          const SizedBox(height: 16),
-        ],
-        Text(l10n.diceOffPlayerTurn(_shownName(next)), style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: _rollDie,
-          child: Text(l10n.diceOffRollButton),
-        ),
-      ],
+  Widget _status(AppLocalizations l10n, DiceOffState state) {
+    // Avant le premier round, rien à dire : les dés partent d'eux-mêmes.
+    if (state.roundHistory.isEmpty) return const SizedBox.shrink();
+    return Text(
+      l10n.diceOffTieBreak(state.activeIndices.map(_shownName).join(', ')),
+      style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
+      textAlign: TextAlign.center,
     );
   }
 
-  Widget _buildResult(DiceOffState state, DiceOffNotifier notifier) {
-    final l10n = AppLocalizations.of(context);
-    final lastRound = state.roundHistory.last;
+  Widget _result(AppLocalizations l10n, DiceOffState state) {
+    final theme = Theme.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           l10n.diceOffWinnerAnnouncement(_shownName(state.winnerIndex!)),
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        _diceOffRow(lastRound, notifier, roundIndex: state.roundHistory.length - 1),
+        Text(l10n.diceOffPlayOrderLabel, style: theme.textTheme.labelLarge),
+        const SizedBox(height: 4),
+        Text(
+          state.playOrder.map(_shownName).join('  →  '),
+          style: theme.textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+        if (state.reversesOrder) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.diceOffReversedNote,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade400),
+            textAlign: TextAlign.center,
+          ),
+        ],
         const SizedBox(height: 32),
         FilledButton(onPressed: _startGame, child: Text(l10n.startGameButton)),
       ],
     );
   }
 
-  Widget _diceOffRow(Map<int, int> rolls, DiceOffNotifier notifier, {required int roundIndex}) {
+  /// Un dé par joueur, dans l'ordre de la liste, montrant son dernier lancer.
+  /// Seuls les dés du round qui vient d'être joué s'animent ; ceux des joueurs
+  /// déjà départagés restent posés, estompés.
+  Widget _diceRow(DiceOffState state) {
     final colorMode = ref.watch(settingsProvider).diceColorMode;
+    final lastRoll = <int, ({int value, int round})>{};
+    for (var r = 0; r < state.roundHistory.length; r++) {
+      state.roundHistory[r].forEach((seat, value) => lastRoll[seat] = (value: value, round: r));
+    }
+
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 16,
-      runSpacing: 8,
+      runSpacing: 12,
       children: [
-        for (final i in rolls.keys)
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_shownName(i), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-              const SizedBox(height: 4),
-              DieWidget(
-                value: rolls[i]!,
-                state: DieVisualState.kept,
-                rollToken: '$roundIndex-$i',
-                bodyColor: diceBodyColorFor(colorMode, i),
-              ),
-            ],
-          ),
+        for (var seat = 0; seat < state.playerCount; seat++)
+          _seatDie(state, seat, lastRoll[seat], diceBodyColorFor(colorMode, seat)),
       ],
+    );
+  }
+
+  Widget _seatDie(DiceOffState state, int seat, ({int value, int round})? roll, Color? bodyColor) {
+    final stillIn = state.isResolved ? seat == state.winnerIndex : state.activeIndices.contains(seat);
+    final visualState = !stillIn
+        ? DieVisualState.junk
+        : state.isResolved
+            ? DieVisualState.kept
+            : DieVisualState.declined;
+
+    return Opacity(
+      opacity: roll != null && !stillIn ? 0.45 : 1,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_shownName(seat), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+          const SizedBox(height: 4),
+          if (roll == null)
+            const SizedBox.square(
+              dimension: DieWidget.defaultSize,
+              child: Center(child: Icon(Icons.casino_outlined, color: Colors.grey)),
+            )
+          else
+            DieWidget(
+              value: roll.value,
+              state: visualState,
+              rollToken: '${roll.round}-$seat',
+              bodyColor: bodyColor,
+            ),
+        ],
+      ),
     );
   }
 }

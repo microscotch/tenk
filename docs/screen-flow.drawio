@@ -32,13 +32,13 @@
         <mxCell id="playeredit" value="PlayerEdit&#10;(créer / modifier une fiche)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="1020" y="255" width="200" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="newgame" value="NewGame&#10;(joueurs, IA, mode auto)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="newgame" value="NewGame&#10;(joueurs et leur ordre, IA, auto)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="250" width="220" height="50" as="geometry" />
         </mxCell>
         <mxCell id="playerpicker" value="PlayerPicker&#10;(choisir une fiche)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="760" y="345" width="200" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="diceoff" value="DiceOff&#10;(lancer de départ)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="diceoff" value="DiceOff&#10;(lancer simultané, auto)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="360" width="220" height="50" as="geometry" />
         </mxCell>
         <mxCell id="passdevice" value="PassDevice&#10;(« passez l&#x27;appareil »)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
@@ -99,10 +99,7 @@
         <mxCell id="e12" value="Commencer la partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="newgame" target="diceoff">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e13" value="changement de joueur" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="diceoff" target="passdevice">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e14" value="départage résolu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="diceoff" target="game">
+        <mxCell id="e14" value="Commencer la partie&#10;(ordre de jeu fixé)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="diceoff" target="game">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e15" value="changement de joueur" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.3;entryX=0;entryY=0.8;" edge="1" parent="1" source="game" target="passdevice">

@@ -150,11 +150,11 @@ void main() {
 
     final replayed = finishedGame(32);
     bool isDiceOff(GameAction a) =>
-        a.type == GameActionType.diceOffRoll || a.type == GameActionType.diceOffResolveRound;
+        a.type.isDiceOff;
     final diceOff = replayed.actions.takeWhile(isDiceOff).toList();
     final afterDiceOff = replayGame(replayed.setup, replayed.seed, diceOff);
     notifier.startGameReplay(
-      afterDiceOff.rotatedSetup!,
+      afterDiceOff.orderedSetup!,
       GameRecordingHandoff(
         seed: 0,
         random: afterDiceOff.random,
@@ -191,7 +191,7 @@ void main() {
     for (var seed = 1; seed < 300 && !found; seed++) {
       final candidate = finishedGame(seed);
       final replay = replayGame(candidate.setup, candidate.seed, candidate.actions);
-      final order = replay.rotatedSetup!.playerNames;
+      final order = replay.orderedSetup!.playerNames;
       final s = collectGameStatistics(setup: candidate.setup, seed: candidate.seed, actions: candidate.actions);
       if (order.first != candidate.setup.playerNames.first &&
           (s.bySeat[0].turnsTotal != s.bySeat[1].turnsTotal ||

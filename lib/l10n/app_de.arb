@@ -68,8 +68,6 @@
   "diceOffTitle": "Wer beginnt?",
   "diceOffInstructions": "Jeder würfelt einmal: Die niedrigste Punktzahl beginnt das Spiel.",
   "diceOffTieBreak": "Unentschieden: {names} würfeln erneut.",
-  "diceOffPlayerTurn": "{playerName} würfelt",
-  "diceOffRollButton": "Würfeln",
   "diceOffWinnerAnnouncement": "{playerName} beginnt das Spiel!",
   "gameOverTitle": "Spielende",
   "winnerAnnouncement": "{playerName} gewinnt!",

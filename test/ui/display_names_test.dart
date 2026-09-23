@@ -16,6 +16,7 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/game_statistics_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
 import 'package:le10000/ui/screens/score_chart_screen.dart';
+import 'package:le10000/ui/widgets/die_widget.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
@@ -170,13 +171,29 @@ void main() {
   });
 
   testWidgets('le tirage au sort nomme les joueurs par leur surnom', (tester) async {
+    late ProviderContainer diceOff;
     await pumpApp(
       tester,
       const DiceOffScreen(),
-      before: (container) => container.read(diceOffProvider.notifier).start(setup),
+      before: (container) {
+        diceOff = container;
+        container.read(diceOffProvider.notifier).start(setup);
+      },
     );
 
-    expect(find.text('Mimi lance le dé'), findsOneWidget);
+    expect(find.text('Mimi'), findsOneWidget, reason: 'le nom sous son dé');
+
+    await tester.pump(DiceOffScreen.firstRollDelay);
+    while (!diceOff.read(diceOffProvider)!.isResolved) {
+      await tester.pump(DiceOffScreen.tieRerollDelay);
+    }
+    await tester.pump(DieWidget.rollAnimationDuration);
+
+    expect(
+      find.byWidgetPredicate((w) => w is Text && w.data != null && w.data!.contains('→') && w.data!.contains('Mimi')),
+      findsOneWidget,
+      reason: "l'ordre de jeu aussi",
+    );
     expect(find.textContaining('Marie Curie'), findsNothing);
   });
 

@@ -69,7 +69,16 @@ une partie rejouable à l'identique.
 - **`GameSetup`** décrit une partie avant qu'elle commence : joueurs, IA, mode
   auto — et, pour chaque siège humain, l'**identifiant de sa fiche**
   (`playerIds`). C'est ce lien, jamais le nom, qui rattache une partie à un
-  joueur : un renommage ne casse rien.
+  joueur : un renommage ne casse rien. `reordered(ordre)` la réordonne dans
+  l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
+- **`DiceOffState`** est le tirage au sort qui fixe l'ordre de jeu : tout le
+  monde lance son dé en même temps (`rollAll`), le plus faible commence, les
+  ex-aequo au plus bas relancent seuls. `playOrder` donne les sièges dans
+  l'ordre de jeu : le sens de la liste, sauf quand le dernier round était un
+  duel entre voisins (table circulaire) gagné par le second — la partie tourne
+  alors à rebours (`reversesOrder`). Les anciens journaux, joués un joueur à la
+  fois (`rollFor`), gardent toujours la simple rotation : `simultaneous` les
+  distingue, pour qu'une partie archivée ne change jamais de sièges au rejeu.
 
 Les **fonctions pures** (encarts violets) — `rollDice`, `analyzeRoll`, `rollTurn`,
 `applyKeepDecision`, `tryBank`, mais aussi celles qui lisent un journal
@@ -92,7 +101,8 @@ son rejeu — **se dérive du journal**, rien de plus n'est stocké :
   (via le callback de `replayGame`) et n'implémente **aucune règle** : il compte.
   `GameStatistics` en rend un `PlayerStats` par siège, dans l'ordre de la config
   d'origine (l'ordre de jeu, lui, est réordonné par le tirage au sort — deux
-  espaces d'index qu'il ne faut pas confondre).
+  espaces d'index qu'il ne faut pas confondre ; `ReplayResult.playOrder` fait le
+  pont).
 - **`PlayerStats`** cumule les compteurs d'un joueur sur toutes ses parties
   (`operator +`). Il est immuable et tolérant à la lecture : un champ absent d'un
   fichier ancien vaut zéro.

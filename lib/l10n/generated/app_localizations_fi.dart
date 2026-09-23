@@ -610,6 +610,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsLanguageSystemOption => 'Puhelimen kieli';
 
   @override
+  String get reorderPlayersHint =>
+      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+
+  @override
+  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+
+  @override
   String get diceOffTitle => 'Kuka aloittaa?';
 
   @override
@@ -622,17 +629,16 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String diceOffPlayerTurn(String playerName) {
-    return '$playerName heittää nopan';
-  }
-
-  @override
-  String get diceOffRollButton => 'Heitä noppa';
-
-  @override
   String diceOffWinnerAnnouncement(String playerName) {
     return '$playerName aloittaa pelin!';
   }
+
+  @override
+  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+
+  @override
+  String get diceOffReversedNote =>
+      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
 
   @override
   String get gameOverTitle => 'Peli päättyi';

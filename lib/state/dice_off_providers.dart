@@ -25,8 +25,8 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   late DateTime _createdAt;
   final List<GameAction> _actions = [];
 
-  // Sérialise les écritures : deux lancers rapprochés (ex: départage 100%
-  // IA/auto) déclenchent chacun une persistance fire-and-forget, et sans
+  // Sérialise les écritures : deux rounds rapprochés (relance immédiate
+  // d'une égalité) déclenchent chacun une persistance fire-and-forget, et sans
   // cette chaîne deux écritures concurrentes sur le même fichier `.tmp`
   // peuvent se marcher dessus (PathNotFoundException au renommage).
   Future<void> _persistChain = Future.value();
@@ -35,9 +35,6 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
   DiceOffState? build() => null;
 
   int get humanPlayerCount => _setup.playerNames.length - _setup.aiPlayers.length;
-  bool shouldShowPassDevice(int index) => !isAiPlayer(index) && humanPlayerCount > 1;
-  bool isAiPlayer(int index) => _setup.isAi(index);
-  bool isAutoPlayer(int index) => _setup.isAuto(index);
   String nameOf(int index) => _setup.playerNames[index];
 
   /// Vrai si tous les joueurs de la partie sont en mode auto : utilisé pour
@@ -64,15 +61,14 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
     _enqueuePersist();
   }
 
-  void rollForCurrent() {
-    final s = state!;
-    final idx = s.nextToRoll!;
-    var next = s.rollFor(idx, random: _random);
-    _actions.add(GameAction.diceOffRoll(idx));
-    if (next.roundComplete) {
-      next = next.resolveRound();
-      _actions.add(GameAction.diceOffResolveRound());
-    }
+  /// Joue un round : tous les joueurs encore en lice lancent leur dé en même
+  /// temps, puis le round est tranché (vainqueur, ou relance des ex-aequo au
+  /// plus bas au prochain appel).
+  void rollRound() {
+    final next = state!.rollAll(random: _random).resolveRound();
+    _actions
+      ..add(GameAction.diceOffRollAll())
+      ..add(GameAction.diceOffResolveRound());
     state = next;
     _enqueuePersist();
   }
@@ -84,14 +80,15 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
     _persistChain = _persistChain.then((_) => _persist()).catchError((_) {});
   }
 
-  /// Construit la configuration de partie finale, les joueurs étant
-  /// réordonnés pour que le vainqueur du départage commence (index 0).
   /// La config telle que saisie, avant réordonnancement — pendant du
-  /// `originalSetup` de [GameNotifier]. [buildRotatedSetup] exige un départage
+  /// `originalSetup` de [GameNotifier]. [buildOrderedSetup] exige un départage
   /// résolu, celle-ci est lisible dès [start].
   GameSetup get setup => _setup;
 
-  GameSetup buildRotatedSetup() => _setup.rotated(state!.winnerIndex!);
+  /// Construit la configuration de partie finale, les joueurs étant
+  /// réordonnés dans l'ordre de jeu tranché par le départage (voir
+  /// `DiceOffState.playOrder`) : le vainqueur à l'index 0.
+  GameSetup buildOrderedSetup() => _setup.reordered(state!.playOrder);
 
   /// Transmet la seed/le générateur/le journal accumulés à la partie
   /// principale une fois le départage résolu.

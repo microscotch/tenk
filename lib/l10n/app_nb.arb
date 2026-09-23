@@ -68,8 +68,6 @@
   "diceOffTitle": "Hvem begynner?",
   "diceOffInstructions": "Alle kaster en terning: laveste poengsum begynner spillet.",
   "diceOffTieBreak": "Uavgjort: {names} kaster på nytt.",
-  "diceOffPlayerTurn": "{playerName} kaster terningen",
-  "diceOffRollButton": "Kast terningen",
   "diceOffWinnerAnnouncement": "{playerName} begynner spillet!",
   "gameOverTitle": "Spillet er over",
   "winnerAnnouncement": "{playerName} vinner!",

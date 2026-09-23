@@ -163,4 +163,53 @@ void main() {
           reason: 'une reprise n\'est pas un coup : aucun consommateur ne doit la voir');
     });
   });
+
+  group('ordre de jeu tranché par le départage', () {
+    const setup = GameSetup(playerNames: ['J1', 'J2', 'J3', 'J4', 'J5']);
+
+    /// La première seed dont le départage, joué au format actuel, finit en
+    /// duel entre voisins gagné par le second.
+    int reversingSeed() {
+      for (var seed = 0; seed < 1000; seed++) {
+        if (playDiceOff(5, Random(seed), []).reversesOrder) return seed;
+      }
+      fail('aucune seed ne produit d\'inversion');
+    }
+
+    test('un journal au format actuel rejoue l\'ordre inversé', () {
+      final seed = reversingSeed();
+      final actions = <GameAction>[];
+      final played = playDiceOff(5, Random(seed), actions);
+
+      final replay = replayGame(setup, seed, actions);
+
+      expect(replay.playOrder, played.playOrder);
+      expect(replay.orderedSetup!.playerNames, [for (final i in played.playOrder) setup.playerNames[i]]);
+      expect(replay.orderedSetup!.playerNames[1], setup.playerNames[played.playOrder[1]]);
+      expect((played.playOrder[0] - played.playOrder[1]) % 5, 1, reason: 'le second joueur est le voisin d\'avant');
+    });
+
+    test('un ancien journal (un joueur à la fois) garde sa rotation, même tirage à l\'appui', () {
+      // Même seed, donc mêmes dés et même duel final : seule la forme du
+      // journal diffère. Un ancien journal inversé à son rejeu changerait en
+      // silence qui occupe quel siège, et fausserait les statistiques.
+      final seed = reversingSeed();
+      final legacy = <GameAction>[];
+      final played = playDiceOff(5, Random(seed), legacy, legacy: true);
+
+      final replay = replayGame(setup, seed, legacy);
+
+      final w = played.winnerIndex!;
+      expect(replay.playOrder, [for (var k = 0; k < 5; k++) (w + k) % 5]);
+      expect(legacy.map((a) => a.type), isNot(contains(GameActionType.diceOffRollAll)));
+    });
+
+    test('les deux formats tirent les mêmes dés : la partie qui suit est identique', () {
+      final seed = reversingSeed();
+      final current = playDiceOff(5, Random(seed), []);
+      final legacy = playDiceOff(5, Random(seed), [], legacy: true);
+
+      expect(current.roundHistory, legacy.roundHistory);
+    });
+  });
 }

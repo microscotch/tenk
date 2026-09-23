@@ -28,7 +28,7 @@ void main() {
   );
 
   bool isDiceOff(GameAction a) =>
-      a.type == GameActionType.diceOffRoll || a.type == GameActionType.diceOffResolveRound;
+      a.type.isDiceOff;
 
   /// Le premier état d'une partie scriptée pour lequel [wanted] est vrai, et le
   /// journal qui y mène, terminé par l'action qui le quitte — ou par
@@ -42,7 +42,7 @@ void main() {
       final all = playScriptedGame(setup, seed).actions;
       final diceOff = all.takeWhile(isDiceOff).toList();
       final replayed = replayGame(setup, seed, diceOff);
-      var engine = GameEngine.newGame(replayed.rotatedSetup!.playerNames);
+      var engine = GameEngine.newGame(replayed.orderedSetup!.playerNames);
       for (var i = diceOff.length; i < all.length; i++) {
         if (!engine.gameOver && wanted(engine)) {
           return (
@@ -99,7 +99,7 @@ void main() {
 
     final replayed = replayGame(setup, s.seed, s.diceOff);
     notifier.startGameReplay(
-      replayed.rotatedSetup!,
+      replayed.orderedSetup!,
       GameRecordingHandoff(
         seed: 0,
         random: replayed.random,

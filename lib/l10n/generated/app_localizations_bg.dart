@@ -609,6 +609,13 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsLanguageSystemOption => 'Език на телефона';
 
   @override
+  String get reorderPlayersHint =>
+      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+
+  @override
+  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+
+  @override
   String get diceOffTitle => 'Кой започва?';
 
   @override
@@ -621,17 +628,16 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String diceOffPlayerTurn(String playerName) {
-    return '$playerName хвърля зара';
-  }
-
-  @override
-  String get diceOffRollButton => 'Хвърли зара';
-
-  @override
   String diceOffWinnerAnnouncement(String playerName) {
     return '$playerName започва играта!';
   }
+
+  @override
+  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+
+  @override
+  String get diceOffReversedNote =>
+      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
 
   @override
   String get gameOverTitle => 'Край на играта';

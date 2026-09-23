@@ -68,8 +68,6 @@
   "diceOffTitle": "Kuka aloittaa?",
   "diceOffInstructions": "Jokainen heittää yhden nopan: alhaisin pistemäärä aloittaa pelin.",
   "diceOffTieBreak": "Tasapeli: {names} heittävät uudelleen.",
-  "diceOffPlayerTurn": "{playerName} heittää nopan",
-  "diceOffRollButton": "Heitä noppa",
   "diceOffWinnerAnnouncement": "{playerName} aloittaa pelin!",
   "gameOverTitle": "Peli päättyi",
   "winnerAnnouncement": "{playerName} voittaa!",

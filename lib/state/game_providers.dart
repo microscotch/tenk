@@ -78,7 +78,7 @@ class GameNotifier extends Notifier<GameEngine?> {
 
   /// Config réordonnée par le départage — celle qu'indexent
   /// `currentPlayerIndex` et consorts (voir [currentSeatRightHandedProvider]).
-  GameSetup? get rotatedSetup => _setup;
+  GameSetup? get orderedSetup => _setup;
   List<GameAction> get actions => List.unmodifiable(_actions);
 
   bool isAiPlayer(int index) => _setup?.isAi(index) ?? false;
@@ -131,7 +131,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     final replay = replayGame(saved.setup, saved.seed, saved.actions);
     assert(replay.engine != null, 'une sauvegarde ne devrait jamais être persistée avant la fin du départage');
 
-    _setup = replay.rotatedSetup;
+    _setup = replay.orderedSetup;
     _isReplay = false;
     _replaySource = null;
     _originalSetup = saved.setup;
@@ -235,8 +235,8 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// partie « vivante » sont vidés au passage : ils gardaient sinon la
   /// dernière partie jouée dans la session, que [gameRecord] aurait prise
   /// pour celle qu'on regarde.
-  void startGameReplay(GameSetup rotatedSetup, GameRecordingHandoff handoff, {SavedGame? source}) {
-    _setup = rotatedSetup;
+  void startGameReplay(GameSetup orderedSetup, GameRecordingHandoff handoff, {SavedGame? source}) {
+    _setup = orderedSetup;
     _isReplay = true;
     _replaySource = source;
     _seed = null;
@@ -256,7 +256,7 @@ class GameNotifier extends Notifier<GameEngine?> {
       }
     }
     _replayTurnStarts = starts;
-    state = GameEngine.newGame(rotatedSetup.playerNames);
+    state = GameEngine.newGame(orderedSetup.playerNames);
   }
 
   /// Démarre le rejeu de [saved], un run archivé, directement sur sa partie :
@@ -266,12 +266,12 @@ class GameNotifier extends Notifier<GameEngine?> {
   void startReplay(SavedGame saved) {
     final diceOffCount = diceOffActionCount(saved.actions);
     final afterDiceOff = replayGame(saved.setup, saved.seed, saved.actions.sublist(0, diceOffCount));
-    final rotatedSetup = afterDiceOff.rotatedSetup;
-    if (rotatedSetup == null) {
+    final orderedSetup = afterDiceOff.orderedSetup;
+    if (orderedSetup == null) {
       throw StateError('le départage de ce run n\'est pas résolu : il n\'y a pas de partie à rejouer');
     }
     startGameReplay(
-      rotatedSetup,
+      orderedSetup,
       GameRecordingHandoff(
         seed: 0,
         random: afterDiceOff.random,

@@ -41,10 +41,28 @@ class GameRecordingHandoff {
 /// dans sa durée active (voir [activePlayingSecondsFor]). Elle ne touche donc
 /// jamais au moteur ni au flux de tirages.
 ///
+/// [diceOffRollAll] (tous les dés d'un round lancés ensemble) remplace
+/// [diceOffRoll] (un joueur à la fois) pour les parties nouvelles ; sa présence
+/// dans un journal est aussi ce qui applique la règle d'ordre actuelle (voir
+/// `DiceOffState.playOrder`). [diceOffRoll] ne sert plus qu'à rejouer les
+/// anciens journaux, qui gardent leur rotation d'origine.
+///
 /// Ajouter une valeur ici casse volontairement tous les `switch` exhaustifs
 /// qui l'énumèrent — c'est le bon échec : l'un d'eux ([applyGameAction])
 /// lèverait sinon à l'exécution sur une action qu'il ne connaît pas.
-enum GameActionType { diceOffRoll, diceOffResolveRound, startTurn, roll, applyKeep, endBustedTurn, bank, resume }
+enum GameActionType {
+  diceOffRoll,
+  diceOffResolveRound,
+  startTurn,
+  roll,
+  applyKeep,
+  endBustedTurn,
+  bank,
+  resume,
+  diceOffRollAll;
+
+  bool get isDiceOff => this == diceOffRoll || this == diceOffRollAll || this == diceOffResolveRound;
+}
 
 /// Une transition journalisée : son type, l'instant où elle a eu lieu (pour
 /// la durée de partie), et ses éventuels paramètres.
@@ -57,6 +75,9 @@ class GameAction {
 
   factory GameAction.diceOffRoll(int index, {DateTime? at}) =>
       GameAction(type: GameActionType.diceOffRoll, at: at ?? DateTime.now(), params: {'index': index});
+
+  factory GameAction.diceOffRollAll({DateTime? at}) =>
+      GameAction(type: GameActionType.diceOffRollAll, at: at ?? DateTime.now());
 
   factory GameAction.diceOffResolveRound({DateTime? at}) =>
       GameAction(type: GameActionType.diceOffResolveRound, at: at ?? DateTime.now());
@@ -99,7 +120,12 @@ class GameAction {
 class ReplayResult {
   final DiceOffState diceOff;
   final GameEngine? engine;
-  final GameSetup? rotatedSetup;
+  final GameSetup? orderedSetup;
+
+  /// Le siège d'origine de chaque joueur, dans l'ordre de jeu : le joueur
+  /// d'index `k` du moteur est le siège `playOrder[k]` de la config d'origine.
+  /// Null tant que le départage n'est pas tranché.
+  final List<int>? playOrder;
 
   /// Le générateur utilisé pour le rejeu, dans l'état où le journal l'a
   /// laissé : à réutiliser tel quel (pas un [Random] fraîchement re-seedé)
@@ -107,7 +133,13 @@ class ReplayResult {
   /// répéter un tirage déjà consommé pendant le rejeu.
   final Random random;
 
-  const ReplayResult({required this.diceOff, this.engine, this.rotatedSetup, required this.random});
+  const ReplayResult({
+    required this.diceOff,
+    this.engine,
+    this.orderedSetup,
+    this.playOrder,
+    required this.random,
+  });
 }
 
 /// Reconstruit l'état complet (départage puis partie) en rejouant [actions]
@@ -135,18 +167,22 @@ ReplayResult replayGame(
 }) {
   final random = Random(seed);
   var diceOff = DiceOffState.start(setup.playerNames.length);
-  GameSetup? rotatedSetup;
+  GameSetup? orderedSetup;
+  List<int>? playOrder;
   GameEngine? engine;
 
   for (final action in actions) {
     switch (action.type) {
       case GameActionType.diceOffRoll:
         diceOff = diceOff.rollFor(action.params['index'] as int, random: random);
+      case GameActionType.diceOffRollAll:
+        diceOff = diceOff.rollAll(random: random);
       case GameActionType.diceOffResolveRound:
         diceOff = diceOff.resolveRound();
         if (diceOff.isResolved) {
-          rotatedSetup = setup.rotated(diceOff.winnerIndex!);
-          engine = GameEngine.newGame(rotatedSetup.playerNames);
+          playOrder = diceOff.playOrder;
+          orderedSetup = setup.reordered(playOrder);
+          engine = GameEngine.newGame(orderedSetup.playerNames);
         }
       case GameActionType.resume:
         // Une reprise n'est pas un coup : ni le moteur ni [onGameAction] ne
@@ -159,16 +195,19 @@ ReplayResult replayGame(
     }
   }
 
-  return ReplayResult(diceOff: diceOff, engine: engine, rotatedSetup: rotatedSetup, random: random);
+  return ReplayResult(
+    diceOff: diceOff,
+    engine: engine,
+    orderedSetup: orderedSetup,
+    playOrder: playOrder,
+    random: random,
+  );
 }
 
 /// Les actions du départage sont toutes en tête du journal : la partie
 /// principale commence juste après la dernière. Une reprise peut s'y glisser
 /// des deux côtés sans conséquence (voir [GameActionType.resume]).
-int diceOffActionCount(List<GameAction> actions) => actions.lastIndexWhere(
-      (a) => a.type == GameActionType.diceOffRoll || a.type == GameActionType.diceOffResolveRound,
-    ) +
-    1;
+int diceOffActionCount(List<GameAction> actions) => actions.lastIndexWhere((a) => a.type.isDiceOff) + 1;
 
 /// Le début de chaque tour de joueur de la partie, en nombre d'actions du
 /// journal à appliquer pour y arriver (départage compris) : la première entrée
@@ -237,6 +276,7 @@ GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) 
     case GameActionType.resume:
       return engine;
     case GameActionType.diceOffRoll:
+    case GameActionType.diceOffRollAll:
     case GameActionType.diceOffResolveRound:
       throw ArgumentError('${action.type} concerne le départage, pas la partie principale');
   }

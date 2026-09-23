@@ -68,8 +68,6 @@
   "diceOffTitle": "Кой започва?",
   "diceOffInstructions": "Всеки хвърля по един зар: най-ниският резултат започва играта.",
   "diceOffTieBreak": "Равенство: {names} хвърлят отново.",
-  "diceOffPlayerTurn": "{playerName} хвърля зара",
-  "diceOffRollButton": "Хвърли зара",
   "diceOffWinnerAnnouncement": "{playerName} започва играта!",
   "gameOverTitle": "Край на играта",
   "winnerAnnouncement": "{playerName} печели!",

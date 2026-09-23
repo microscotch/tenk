@@ -68,8 +68,6 @@
   "diceOffTitle": "Cine începe?",
   "diceOffInstructions": "Fiecare aruncă un zar: cel mai mic scor începe jocul.",
   "diceOffTieBreak": "Egalitate: {names} aruncă din nou.",
-  "diceOffPlayerTurn": "{playerName} aruncă zarul",
-  "diceOffRollButton": "Aruncă zarul",
   "diceOffWinnerAnnouncement": "{playerName} începe jocul!",
   "gameOverTitle": "Sfârșitul jocului",
   "winnerAnnouncement": "{playerName} câștigă!",

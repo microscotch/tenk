@@ -610,6 +610,13 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsLanguageSystemOption => 'Limba telefonului';
 
   @override
+  String get reorderPlayersHint =>
+      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+
+  @override
+  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+
+  @override
   String get diceOffTitle => 'Cine începe?';
 
   @override
@@ -622,17 +629,16 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String diceOffPlayerTurn(String playerName) {
-    return '$playerName aruncă zarul';
-  }
-
-  @override
-  String get diceOffRollButton => 'Aruncă zarul';
-
-  @override
   String diceOffWinnerAnnouncement(String playerName) {
     return '$playerName începe jocul!';
   }
+
+  @override
+  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+
+  @override
+  String get diceOffReversedNote =>
+      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
 
   @override
   String get gameOverTitle => 'Sfârșitul jocului';

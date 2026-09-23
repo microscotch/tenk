@@ -44,8 +44,8 @@ GameStatistics collectGameStatistics({
   final replay = replayGame(setup, seed, actions, onGameAction: collector.apply);
 
   final engine = replay.engine;
-  final winnerIndex = replay.diceOff.winnerIndex;
-  if (engine == null || !engine.gameOver || winnerIndex == null) {
+  final playOrder = replay.playOrder;
+  if (engine == null || !engine.gameOver || playOrder == null) {
     return GameStatistics(
       bySeat: List.filled(playerCount, PlayerStats.empty),
       activeSeconds: 0,
@@ -58,11 +58,11 @@ GameStatistics collectGameStatistics({
     (seat) => collector.statsFor(seat, activeSeconds: activeSeconds, won: seat == engine.winnerIndex),
   );
 
-  // Retour à l'ordre d'origine : `GameSetup.rotated` a placé le joueur
-  // d'origine `(winnerIndex + i) % n` au siège réordonné `i`.
+  // Retour à l'ordre d'origine : le joueur d'index `i` du moteur occupe le
+  // siège d'origine `playOrder[i]`.
   final bySeat = List.filled(playerCount, PlayerStats.empty);
   for (var i = 0; i < playerCount; i++) {
-    bySeat[(winnerIndex + i) % playerCount] = rotated[i];
+    bySeat[playOrder[i]] = rotated[i];
   }
   return GameStatistics(bySeat: bySeat, activeSeconds: activeSeconds);
 }
@@ -134,6 +134,7 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
       tally.longestBustStreak = _max(tally.longestBustStreak, tally.bustStreak);
 
     case GameActionType.diceOffRoll:
+    case GameActionType.diceOffRollAll:
     case GameActionType.diceOffResolveRound:
     case GameActionType.resume:
       // Une reprise n'est pas un coup : `replayGame` ne la transmet même pas

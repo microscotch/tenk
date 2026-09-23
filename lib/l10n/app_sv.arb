@@ -68,8 +68,6 @@
   "diceOffTitle": "Vem börjar?",
   "diceOffInstructions": "Alla kastar en tärning: lägsta poängen börjar spelet.",
   "diceOffTieBreak": "Oavgjort: {names} kastar igen.",
-  "diceOffPlayerTurn": "{playerName} kastar tärningen",
-  "diceOffRollButton": "Kasta tärningen",
   "diceOffWinnerAnnouncement": "{playerName} börjar spelet!",
   "gameOverTitle": "Spelet är slut",
   "winnerAnnouncement": "{playerName} vinner!",

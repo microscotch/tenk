@@ -68,8 +68,6 @@
   "diceOffTitle": "Who starts?",
   "diceOffInstructions": "Everyone rolls a die: the lowest score starts the game.",
   "diceOffTieBreak": "Tie: {names} roll again.",
-  "diceOffPlayerTurn": "{playerName} rolls the die",
-  "diceOffRollButton": "Roll the die",
   "diceOffWinnerAnnouncement": "{playerName} starts the game!",
   "gameOverTitle": "Game over",
   "winnerAnnouncement": "{playerName} wins!",

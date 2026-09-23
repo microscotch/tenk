@@ -611,6 +611,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsLanguageSystemOption => 'Lingua del telefono';
 
   @override
+  String get reorderPlayersHint =>
+      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+
+  @override
+  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+
+  @override
   String get diceOffTitle => 'Chi inizia?';
 
   @override
@@ -623,17 +630,16 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String diceOffPlayerTurn(String playerName) {
-    return '$playerName lancia il dado';
-  }
-
-  @override
-  String get diceOffRollButton => 'Lancia il dado';
-
-  @override
   String diceOffWinnerAnnouncement(String playerName) {
     return '$playerName inizia la partita!';
   }
+
+  @override
+  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+
+  @override
+  String get diceOffReversedNote =>
+      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
 
   @override
   String get gameOverTitle => 'Fine della partita';

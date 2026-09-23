@@ -51,11 +51,11 @@ void main() {
   void playLiveGame(GameNotifier notifier, int seed) {
     final diceOff = playScriptedGame(setup, seed)
         .actions
-        .takeWhile((a) => a.type == GameActionType.diceOffRoll || a.type == GameActionType.diceOffResolveRound)
+        .takeWhile((a) => a.type.isDiceOff)
         .toList();
     final replayed = replayGame(setup, seed, diceOff);
     notifier.startGame(
-      replayed.rotatedSetup!,
+      replayed.orderedSetup!,
       handoff: GameRecordingHandoff(
         seed: seed,
         random: replayed.random,
@@ -199,7 +199,7 @@ void main() {
       expect(notifier.gameRecord?.seed, 21, reason: 'c\'est ce run-là qui est à l\'écran');
       expect(notifier.state!.gameOver, isFalse);
       expect(notifier.state!.activeTurn, isNull, reason: 'le premier tour n\'est pas encore lancé');
-      expect(notifier.rotatedSetup!.playerNames, replayGame(saved.setup, saved.seed, saved.actions).rotatedSetup!.playerNames,
+      expect(notifier.orderedSetup!.playerNames, replayGame(saved.setup, saved.seed, saved.actions).orderedSetup!.playerNames,
           reason: 'le vainqueur du départage joue en premier, comme dans la partie');
       expect(notifier.nextReplayAction?.type, GameActionType.startTurn);
     });
@@ -279,7 +279,7 @@ void main() {
       final afterDiceOff = replayGame(saved.setup, saved.seed, saved.actions.sublist(0, diceOff));
       final notifier = container.read(gameProvider.notifier);
       notifier.startGameReplay(
-        afterDiceOff.rotatedSetup!,
+        afterDiceOff.orderedSetup!,
         GameRecordingHandoff(
           seed: 0,
           random: afterDiceOff.random,

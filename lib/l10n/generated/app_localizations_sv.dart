@@ -609,6 +609,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsLanguageSystemOption => 'Telefonens språk';
 
   @override
+  String get reorderPlayersHint =>
+      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+
+  @override
+  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+
+  @override
   String get diceOffTitle => 'Vem börjar?';
 
   @override
@@ -621,17 +628,16 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String diceOffPlayerTurn(String playerName) {
-    return '$playerName kastar tärningen';
-  }
-
-  @override
-  String get diceOffRollButton => 'Kasta tärningen';
-
-  @override
   String diceOffWinnerAnnouncement(String playerName) {
     return '$playerName börjar spelet!';
   }
+
+  @override
+  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+
+  @override
+  String get diceOffReversedNote =>
+      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
 
   @override
   String get gameOverTitle => 'Spelet är slut';

@@ -80,28 +80,28 @@
           <mxGeometry x="1100" y="390" width="290" height="70" as="geometry" />
         </mxCell>
 
-        <mxCell id="GameSetup" value="&lt;b&gt;GameSetup&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;config de partie&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;playerNames : List&amp;lt;String&amp;gt;&lt;br/&gt;aiPlayers : Map&amp;lt;int, AiDifficulty&amp;gt;&lt;br/&gt;autoPlayers : Set&amp;lt;int&amp;gt;&lt;br/&gt;playerIds : Map&amp;lt;int, String&amp;gt;  &lt;i&gt;(id de fiche)&lt;/i&gt;&lt;hr size=&quot;1&quot;/&gt;+ isAi(i) / isAuto(i) : bool&lt;br/&gt;+ playerIdAt(i) : String?&lt;br/&gt;+ rotated(winnerIndex) : GameSetup" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="GameSetup" value="&lt;b&gt;GameSetup&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;config de partie&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;playerNames : List&amp;lt;String&amp;gt;&lt;br/&gt;aiPlayers : Map&amp;lt;int, AiDifficulty&amp;gt;&lt;br/&gt;autoPlayers : Set&amp;lt;int&amp;gt;&lt;br/&gt;playerIds : Map&amp;lt;int, String&amp;gt;  &lt;i&gt;(id de fiche)&lt;/i&gt;&lt;hr size=&quot;1&quot;/&gt;+ isAi(i) / isAuto(i) : bool&lt;br/&gt;+ playerIdAt(i) : String?&lt;br/&gt;+ reordered(order) : GameSetup" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="800" y="340" width="240" height="180" as="geometry" />
         </mxCell>
 
-        <mxCell id="DiceOffState" value="&lt;b&gt;DiceOffState&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;tirage au sort du premier joueur&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;activeIndices : List&amp;lt;int&amp;gt;&lt;br/&gt;rollsThisRound : Map&amp;lt;int, int&amp;gt;&lt;br/&gt;roundHistory : List&amp;lt;Map&amp;lt;int, int&amp;gt;&amp;gt;&lt;br/&gt;winnerIndex : int?&lt;hr size=&quot;1&quot;/&gt;+ isResolved / roundComplete : bool&lt;br/&gt;+ nextToRoll : int?&lt;br/&gt;+ rollFor(index, {random}) : DiceOffState&lt;br/&gt;+ resolveRound() : DiceOffState" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="600" y="915" width="300" height="180" as="geometry" />
+        <mxCell id="DiceOffState" value="&lt;b&gt;DiceOffState&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;tirage au sort : qui commence, dans quel sens&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;activeIndices : List&amp;lt;int&amp;gt; · winnerIndex : int?&lt;br/&gt;rollsThisRound / roundHistory : Map&amp;lt;int, int&amp;gt;…&lt;br/&gt;playerCount : int&lt;br/&gt;simultaneous : bool  &lt;i&gt;(format actuel du journal)&lt;/i&gt;&lt;hr size=&quot;1&quot;/&gt;+ isResolved / roundComplete : bool · nextToRoll : int?&lt;br/&gt;+ rollAll({random}) · rollFor(i)  &lt;i&gt;(anciens journaux)&lt;/i&gt;&lt;br/&gt;+ resolveRound() : DiceOffState&lt;br/&gt;+ reversesOrder : bool · playOrder : List&amp;lt;int&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="915" width="300" height="185" as="geometry" />
         </mxCell>
 
         <mxCell id="GameAction" value="&lt;b&gt;GameAction&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;journal rejouable&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;type : GameActionType&lt;br/&gt;at : DateTime&lt;br/&gt;params : Map&amp;lt;String, dynamic&amp;gt;&lt;hr size=&quot;1&quot;/&gt;+ toJson() / fromJson()" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="960" y="1030" width="230" height="130" as="geometry" />
         </mxCell>
 
-        <mxCell id="GameActionType" value="&lt;b&gt;«enum» GameActionType&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;diceOffRoll | diceOffResolveRound&lt;br/&gt;startTurn | roll | applyKeep&lt;br/&gt;bank | endBustedTurn | resume" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="1210" y="1030" width="230" height="100" as="geometry" />
+        <mxCell id="GameActionType" value="&lt;b&gt;«enum» GameActionType&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;diceOffRollAll | diceOffResolveRound&lt;br/&gt;diceOffRoll  &lt;i&gt;(anciens journaux)&lt;/i&gt;&lt;br/&gt;startTurn | roll | applyKeep&lt;br/&gt;bank | endBustedTurn | resume" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1030" width="230" height="115" as="geometry" />
         </mxCell>
 
         <mxCell id="GameRecordingHandoff" value="&lt;b&gt;GameRecordingHandoff&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;seed : int&lt;br/&gt;random : Random&lt;br/&gt;originalSetup : GameSetup&lt;br/&gt;alias : String&lt;br/&gt;createdAt : DateTime&lt;br/&gt;actions : List&amp;lt;GameAction&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="600" y="1110" width="230" height="140" as="geometry" />
         </mxCell>
 
-        <mxCell id="ReplayResult" value="&lt;b&gt;ReplayResult&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;replayGame(setup, seed, actions)&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;diceOff : DiceOffState&lt;br/&gt;engine : GameEngine?&lt;br/&gt;rotatedSetup : GameSetup?&lt;br/&gt;random : Random" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="860" y="1180" width="240" height="120" as="geometry" />
+        <mxCell id="ReplayResult" value="&lt;b&gt;ReplayResult&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;replayGame(setup, seed, actions)&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;diceOff : DiceOffState&lt;br/&gt;engine : GameEngine?&lt;br/&gt;orderedSetup : GameSetup?&lt;br/&gt;playOrder : List&amp;lt;int&amp;gt;?&lt;br/&gt;random : Random" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1180" width="240" height="140" as="geometry" />
         </mxCell>
 
         <!-- ===================== ZONE ÉTAT ===================== -->
@@ -113,7 +113,7 @@
           <mxGeometry x="1530" y="150" width="350" height="300" as="geometry" />
         </mxCell>
 
-        <mxCell id="DiceOffNotifier" value="&lt;b&gt;DiceOffNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;DiceOffState?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;diceOffProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ start(setup) / rollForCurrent()&lt;br/&gt;+ buildRotatedSetup() : GameSetup&lt;br/&gt;+ handoff() : GameRecordingHandoff&lt;br/&gt;+ setup / nameOf(i) / allPlayersAreAuto" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="DiceOffNotifier" value="&lt;b&gt;DiceOffNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;DiceOffState?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;diceOffProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ start(setup) / rollRound()&lt;br/&gt;+ buildOrderedSetup() : GameSetup&lt;br/&gt;+ handoff() : GameRecordingHandoff&lt;br/&gt;+ setup / nameOf(i) / allPlayersAreAuto" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="1930" y="150" width="320" height="130" as="geometry" />
         </mxCell>
 
@@ -146,7 +146,7 @@
           <mxGeometry x="1500" y="1580" width="780" height="380" as="geometry" />
         </mxCell>
 
-        <mxCell id="Screens" value="&lt;b&gt;Écrans&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;(ConsumerStatefulWidget)&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;SplashScreen → SetupScreen → NewGameScreen (PlayerPickerScreen)&lt;br/&gt;DiceOffScreen → GameScreen → GameOverScreen&lt;br/&gt;PassDeviceScreen · ScoreGridScreen · ScoreChartScreen&lt;br/&gt;StatisticsScreen · GameStatisticsScreen&lt;br/&gt;PlayersScreen · PlayerEditScreen&lt;br/&gt;PausedGamesScreen · FinishedGamesScreen&lt;br/&gt;SettingsScreen · RulesScreen" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="Screens" value="&lt;b&gt;Écrans&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;(ConsumerStatefulWidget)&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;SplashScreen → SetupScreen → NewGameScreen (PlayerPickerScreen)&lt;br/&gt;DiceOffScreen (auto) → GameScreen → GameOverScreen&lt;br/&gt;PassDeviceScreen · ScoreGridScreen · ScoreChartScreen&lt;br/&gt;StatisticsScreen · GameStatisticsScreen&lt;br/&gt;PlayersScreen · PlayerEditScreen&lt;br/&gt;PausedGamesScreen · FinishedGamesScreen&lt;br/&gt;SettingsScreen · RulesScreen" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="1530" y="1625" width="350" height="180" as="geometry" />
         </mxCell>
 

@@ -1106,6 +1106,18 @@ abstract class AppLocalizations {
   /// **'Langue du téléphone'**
   String get settingsLanguageSystemOption;
 
+  /// Aide sous la liste des joueurs d'une nouvelle partie : l'ordre se change en glissant les lignes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.'**
+  String get reorderPlayersHint;
+
+  /// Libellé d'accessibilité de la poignée qui déplace un joueur dans la liste.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacer ce joueur'**
+  String get reorderPlayerHandleLabel;
+
   /// Titre de l'écran de tirage au sort de l'ordre de jeu.
   ///
   /// In fr, this message translates to:
@@ -1115,7 +1127,7 @@ abstract class AppLocalizations {
   /// Explication de la règle du tirage au sort.
   ///
   /// In fr, this message translates to:
-  /// **'Chacun lance un dé : le score le plus faible commence la partie.'**
+  /// **'Tout le monde lance son dé en même temps : le plus faible commence. En cas d\'égalité, les ex-aequo relancent.'**
   String get diceOffInstructions;
 
   /// Annonce d'une égalité au tirage au sort ; noms déjà joints par des virgules.
@@ -1124,23 +1136,23 @@ abstract class AppLocalizations {
   /// **'Égalité : {names} relancent.'**
   String diceOffTieBreak(String names);
 
-  /// Indique quel joueur doit lancer le dé, pendant le tirage au sort.
-  ///
-  /// In fr, this message translates to:
-  /// **'{playerName} lance le dé'**
-  String diceOffPlayerTurn(String playerName);
-
-  /// Bouton pour lancer le dé pendant le tirage au sort.
-  ///
-  /// In fr, this message translates to:
-  /// **'Lancer le dé'**
-  String get diceOffRollButton;
-
   /// Annonce du joueur qui commence la partie, à l'issue du tirage au sort.
   ///
   /// In fr, this message translates to:
   /// **'{playerName} commence la partie !'**
   String diceOffWinnerAnnouncement(String playerName);
+
+  /// Intitulé de l'ordre de jeu affiché à l'issue du tirage au sort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordre de jeu'**
+  String get diceOffPlayOrderLabel;
+
+  /// Explique pourquoi l'ordre de jeu est inversé : le tirage s'est joué en duel entre deux voisins et le second dans l'ordre de la liste l'a gagné.
+  ///
+  /// In fr, this message translates to:
+  /// **'Duel entre voisins remporté par le second : la partie tourne à rebours.'**
+  String get diceOffReversedNote;
 
   /// Titre de l'écran de fin de partie.
   ///

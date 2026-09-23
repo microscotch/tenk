@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
+import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/settings_providers.dart';
@@ -11,128 +11,143 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/pass_device_screen.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 
-/// Marge au-dessus du délai IA par défaut réglé dans les préférences : assez
-/// pour laisser une étape se déclencher, sans risquer d'en enchaîner deux
-/// dans le même pump (ce qui rendrait le test dépendant du hasard).
-final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
-
 void main() {
-  testWidgets('le dé d\'un joueur reste affiché à l\'écran une fois lancé', (tester) async {
+  Widget app(ProviderContainer container) => UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          locale: Locale('fr'),
+          home: DiceOffScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+
+  /// Laisse les rounds s'enchaîner seuls jusqu'à ce que le départage soit
+  /// tranché — le vrai hasard peut produire des égalités, d'où la boucle.
+  Future<void> waitUntilResolved(WidgetTester tester, ProviderContainer container) async {
+    await tester.pump(DiceOffScreen.firstRollDelay);
+    var rounds = 1;
+    while (!container.read(diceOffProvider)!.isResolved) {
+      await tester.pump(DiceOffScreen.tieRerollDelay);
+      rounds++;
+      expect(rounds, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
+    }
+    await tester.pump(DieWidget.rollAnimationDuration);
+  }
+
+  testWidgets('tous les dés partent ensemble, sans que personne n\'ait à cliquer', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
+    container.read(diceOffProvider.notifier).start(const GameSetup(playerNames: ['A', 'B', 'C', 'D']));
 
-    // Solo vs IA : pas d'écran "passez l'appareil" entre les lancers, donc le
-    // dé du joueur humain doit rester visible pendant que les IA lancent le
-    // leur juste après, sur le même écran.
-    container.read(diceOffProvider.notifier).start(
-          const GameSetup(
-            playerNames: ['Joueur', 'IA 1', 'IA 2'],
-            aiPlayers: {1: AiDifficulty.equilibre, 2: AiDifficulty.equilibre},
-          ),
-        );
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
-      ),
-    );
+    await tester.pumpWidget(app(container));
     await tester.pump();
+    expect(find.byType(DieWidget), findsNothing, reason: 'personne n\'a encore lancé');
 
-    expect(find.byType(DieWidget), findsNothing, reason: 'personne n\'a encore lancé de dé');
+    await tester.pump(DiceOffScreen.firstRollDelay);
 
-    await tester.tap(find.text('Lancer le dé'));
-    await tester.pump();
+    expect(find.byType(DieWidget), findsNWidgets(4), reason: 'un dé par joueur, tous lancés d\'un coup');
+    expect(container.read(diceOffProvider)!.roundHistory, hasLength(1));
 
-    expect(find.byType(DieWidget), findsOneWidget, reason: 'le dé du joueur qui vient de lancer doit être visible');
+    await waitUntilResolved(tester, container);
   });
 
-
-  testWidgets('le départage se joue à l\'écran et lance la partie avec le vainqueur en premier', (tester) async {
+  testWidgets('pas d\'écran « passez l\'appareil » entre les joueurs humains', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
+    container.read(diceOffProvider.notifier).start(const GameSetup(playerNames: ['A', 'B', 'C']));
 
-    container.read(diceOffProvider.notifier).start(const GameSetup(playerNames: ['A', 'B']));
+    await tester.pumpWidget(app(container));
+    await waitUntilResolved(tester, container);
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
-      ),
-    );
-    await tester.pumpAndSettle();
+    expect(find.byType(PassDeviceScreen), findsNothing);
+  });
 
-    // Le vrai hasard peut produire une égalité (les ex-aequo relancent) :
-    // on boucle jusqu'à résolution plutôt que de supposer exactement 2 lancers.
-    var iterations = 0;
-    while (!container.read(diceOffProvider)!.isResolved) {
-      if (find.byType(PassDeviceScreen).evaluate().isNotEmpty) {
-        await tester.tap(find.text('Prêt'));
-        await tester.pumpAndSettle();
+  testWidgets('une égalité fait relancer les seuls ex-aequo, les autres dés restent posés', (tester) async {
+    // Le hasard n'est pas injectable ici : on rejoue des départages jusqu'à
+    // tomber sur une égalité, ce qui arrive très vite à six joueurs.
+    for (var attempt = 0; attempt < 30; attempt++) {
+      final container = ProviderContainer();
+      container.read(diceOffProvider.notifier).start(
+            const GameSetup(playerNames: ['A', 'B', 'C', 'D', 'E', 'F']),
+          );
+      await tester.pumpWidget(app(container));
+      await tester.pump(DiceOffScreen.firstRollDelay);
+
+      final afterFirst = container.read(diceOffProvider)!;
+      if (afterFirst.isResolved) {
+        await tester.pumpWidget(const SizedBox());
+        container.dispose();
+        continue;
       }
-      expect(find.text('Lancer le dé'), findsOneWidget);
-      await tester.tap(find.text('Lancer le dé'));
-      await tester.pumpAndSettle();
-      iterations++;
-      expect(iterations, lessThan(20), reason: 'le départage ne devrait pas s\'éterniser');
-    }
 
+      expect(find.textContaining('Égalité'), findsOneWidget);
+      await tester.pump(DiceOffScreen.tieRerollDelay);
+      final second = container.read(diceOffProvider)!.roundHistory[1];
+      expect(second.keys.toSet(), afterFirst.activeIndices.toSet(), reason: 'seuls les ex-aequo relancent');
+      expect(find.byType(DieWidget), findsNWidgets(6), reason: 'les dés des départagés restent affichés');
+
+      await waitUntilResolved(tester, container);
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      return;
+    }
+    fail('aucune égalité en 30 départages à six joueurs');
+  });
+
+  testWidgets('un tap sur l\'écran relance les ex-aequo sans attendre', (tester) async {
+    for (var attempt = 0; attempt < 30; attempt++) {
+      final container = ProviderContainer();
+      container.read(diceOffProvider.notifier).start(
+            const GameSetup(playerNames: ['A', 'B', 'C', 'D', 'E', 'F']),
+          );
+      await tester.pumpWidget(app(container));
+      await tester.pump(DiceOffScreen.firstRollDelay);
+
+      if (!container.read(diceOffProvider)!.isResolved) {
+        await tester.tapAt(const Offset(10, 300));
+        await tester.pump();
+        expect(container.read(diceOffProvider)!.roundHistory, hasLength(2));
+
+        await waitUntilResolved(tester, container);
+        await tester.pumpWidget(const SizedBox());
+        container.dispose();
+        return;
+      }
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    }
+    fail('aucune égalité en 30 départages à six joueurs');
+  });
+
+  testWidgets('le résultat annonce l\'ordre de jeu, et la partie démarre dans cet ordre', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    const names = ['A', 'B', 'C', 'D'];
+    container.read(diceOffProvider.notifier).start(const GameSetup(playerNames: names));
+
+    await tester.pumpWidget(app(container));
+    await waitUntilResolved(tester, container);
+
+    final state = container.read(diceOffProvider)!;
+    final expectedOrder = [for (final i in state.playOrder) names[i]];
     expect(find.textContaining('commence la partie !'), findsOneWidget);
+    expect(find.text('Ordre de jeu'), findsOneWidget);
+    expect(find.text(expectedOrder.join('  →  ')), findsOneWidget);
+    expect(find.textContaining('à rebours'), state.reversesOrder ? findsOneWidget : findsNothing);
 
     await tester.tap(find.text('Commencer la partie'));
     await tester.pumpAndSettle();
 
     expect(find.byType(GameScreen), findsOneWidget);
     final engine = container.read(gameProvider)!;
-    expect(engine.players.map((p) => p.name).toSet(), {'A', 'B'});
+    expect(engine.players.map((p) => p.name).toList(), expectedOrder);
     expect(engine.currentPlayerIndex, 0);
   });
 
-  testWidgets('le départage IA se résout automatiquement sans interaction humaine', (tester) async {
+  testWidgets('une partie 100% IA démarre seule une fois l\'ordre déterminé', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-
-    container.read(diceOffProvider.notifier).start(
-          const GameSetup(
-            playerNames: ['Joueur', 'IA'],
-            aiPlayers: {1: AiDifficulty.equilibre},
-            autoPlayers: {1},
-          ),
-        );
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
-      ),
-    );
-    await tester.pump();
-
-    // Le joueur humain (index 0) lance en premier ; s'il n'y a pas égalité,
-    // l'IA (index 1) enchaîne toute seule après son délai de "réflexion".
-    if (find.text('Joueur lance le dé').evaluate().isNotEmpty) {
-      await tester.tap(find.text('Lancer le dé'));
-    }
-
-    var iterations = 0;
-    while (!container.read(diceOffProvider)!.isResolved) {
-      await tester.pump(_aiStepPump);
-      iterations++;
-      expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
-      if (find.text('Lancer le dé').evaluate().isNotEmpty) {
-        await tester.tap(find.text('Lancer le dé'));
-        await tester.pump();
-      }
-    }
-
-    expect(container.read(diceOffProvider)!.isResolved, isTrue);
-  });
-
-  testWidgets('une partie 100% IA démarre seule une fois l\'ordre déterminé, sans "Commencer la partie"',
-      (tester) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-
     container.read(diceOffProvider.notifier).start(
           const GameSetup(
             playerNames: ['IA 1', 'IA 2'],
@@ -141,31 +156,36 @@ void main() {
           ),
         );
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const MaterialApp(home: DiceOffScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
-      ),
-    );
-    await tester.pump();
+    await tester.pumpWidget(app(container));
+    await waitUntilResolved(tester, container);
 
-    var iterations = 0;
-    while (!container.read(diceOffProvider)!.isResolved) {
-      await tester.pump(_aiStepPump);
-      iterations++;
-      expect(iterations, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
-    }
-
-    // Aucun joueur humain : le bouton "Commencer la partie" est affiché
-    // immédiatement (explicite), mais se valide seul (tous les joueurs sont
-    // en mode auto), sans qu'il faille cliquer dessus.
     expect(find.text('Commencer la partie'), findsOneWidget);
-    expect(find.byType(GameScreen), findsNothing, reason: 'pas encore écoulé le délai de transition automatique');
+    expect(find.byType(GameScreen), findsNothing, reason: 'le délai de transition automatique n\'est pas écoulé');
 
-    await tester.pump(_aiStepPump);
+    await tester.pump(const AppSettings().aiMessageDelay);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byType(GameScreen), findsOneWidget);
     expect(container.read(gameProvider), isNotNull);
+  });
+
+  testWidgets('avec un humain à la table, la partie attend son clic', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(diceOffProvider.notifier).start(
+          const GameSetup(
+            playerNames: ['Joueur', 'IA'],
+            aiPlayers: {1: AiDifficulty.equilibre},
+            autoPlayers: {1},
+          ),
+        );
+
+    await tester.pumpWidget(app(container));
+    await waitUntilResolved(tester, container);
+    await tester.pump(const AppSettings().aiMessageDelay * 3);
+
+    expect(find.byType(GameScreen), findsNothing);
+    expect(find.text('Commencer la partie'), findsOneWidget);
   });
 }

@@ -68,8 +68,6 @@
   "diceOffTitle": "Chi inizia?",
   "diceOffInstructions": "Ognuno lancia un dado: il punteggio più basso inizia la partita.",
   "diceOffTieBreak": "Parità: {names} rilanciano.",
-  "diceOffPlayerTurn": "{playerName} lancia il dado",
-  "diceOffRollButton": "Lancia il dado",
   "diceOffWinnerAnnouncement": "{playerName} inizia la partita!",
   "gameOverTitle": "Fine della partita",
   "winnerAnnouncement": "{playerName} vince!",

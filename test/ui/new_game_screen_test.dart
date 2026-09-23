@@ -136,6 +136,48 @@ void main() {
         reason: 'le réglage de difficulté a disparu : tous les bots sont prudents');
   });
 
+  testWidgets('un joueur se déplace par sa poignée, et la partie suit ce nouvel ordre', (tester) async {
+    final a = PlayerProfile.create(name: 'Anna');
+    final b = PlayerProfile.create(name: 'Basile');
+    final c = PlayerProfile.create(name: 'Céleste');
+    for (final p in [a, b, c]) {
+      await players.write(p);
+    }
+    await paused.write(buildResumableSavedGame(
+      seed: 1,
+      alias: 'Précédente',
+      playerNames: const ['Anna', 'Basile', 'Céleste'],
+      playerIds: {0: a.id, 1: b.id, 2: c.id},
+    ));
+    final container = await pump(tester);
+
+    List<double> rowTops() => [
+          for (final name in ['Anna', 'Basile', 'Céleste']) tester.getTopLeft(find.text(name)).dy,
+        ];
+    final before = rowTops();
+    expect(before[0] < before[1] && before[1] < before[2], isTrue, reason: 'ordre repris de la dernière partie');
+
+    // Anna glisse sous Céleste.
+    final gesture = await tester.startGesture(tester.getCenter(find.byIcon(Icons.drag_handle).first));
+    for (var i = 0; i < 10; i++) {
+      await gesture.moveBy(Offset(0, (before[2] - before[0] + 30) / 10));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    final after = rowTops();
+    expect(after[1] < after[2] && after[2] < after[0], isTrue, reason: 'Basile, Céleste, puis Anna');
+
+    await tester.tap(find.text('Commencer la partie'));
+    await tester.pump();
+
+    final setup = container.read(diceOffProvider.notifier).setup;
+    expect(setup.playerNames, ['Basile', 'Céleste', 'Anna']);
+    expect(setup.playerIds, {0: b.id, 1: c.id, 2: a.id}, reason: 'chaque fiche suit son joueur');
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('un siège se retire', (tester) async {
     await pump(tester);
     await tester.tap(find.byIcon(Icons.smart_toy));
