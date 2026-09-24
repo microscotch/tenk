@@ -12,6 +12,7 @@ import '../game/game_setup.dart';
 import '../game/turn_result.dart';
 import '../game/turn_state.dart';
 import 'game_save_store.dart';
+import 'player_statistics.dart';
 
 export '../game/game_setup.dart' show GameSetup;
 
@@ -511,8 +512,14 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// Une partie terminée n'est plus "en pause" : son fichier passe de
   /// `in-progress/` à `over/` (archivage) au lieu d'être simplement effacé,
   /// pour rester rejouable depuis la zone "Runs terminés".
+  ///
+  /// Les statistiques des fiches ne se recalculent qu'à la lecture de
+  /// [playerStatisticsSyncProvider], mis en cache pour la session : sans cette
+  /// invalidation, une partie terminée après une première visite des
+  /// statistiques n'y apparaîtrait qu'au prochain lancement.
   Future<void> _archiveAndRemove() async {
     await ref.read(archivedGameSaveStoreProvider).write(_currentSavedGame());
+    ref.invalidate(playerStatisticsSyncProvider);
     await ref.read(gameSaveStoreProvider).delete(_seed!);
   }
 }

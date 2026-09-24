@@ -5,11 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/game_statistics.dart';
+import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
+import 'package:le10000/state/player_statistics.dart';
+import 'package:le10000/state/player_store.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
+import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
 
 /// `GameNotifier.gameRecord` : LE point d'entrée qui dit quelle partie est à
@@ -85,6 +89,32 @@ void main() {
       }
     }
   }
+
+  test('une partie terminée compte dans les statistiques même si elles ont déjà été calculées', () async {
+    // Le recalcul est gardé pour la session : un écran de statistiques ouvert
+    // AVANT la partie ne doit pas figer des chiffres qui l'ignorent.
+    final archive = FakeGameSaveStore();
+    final players = FakePlayerStore();
+    final a = PlayerProfile.create(name: 'A');
+    await players.write(a);
+    container.dispose();
+    container = ProviderContainer(overrides: [
+      gameSaveStoreProvider.overrideWithValue(FakeGameSaveStore()),
+      archivedGameSaveStoreProvider.overrideWithValue(archive),
+      playerStoreProvider.overrideWithValue(players),
+    ]);
+
+    await container.read(playerStatisticsSyncProvider.future);
+    expect((await players.read(a.id))!.stats.gamesPlayed, 0);
+
+    playLiveGame(container.read(gameProvider.notifier), 7);
+    expect(container.read(gameProvider)!.gameOver, isTrue, reason: 'prémisse : la partie est allée au bout');
+    await pumpEventQueue();
+    expect(await archive.list(), hasLength(1), reason: 'prémisse : la partie est archivée');
+
+    await container.read(playerStatisticsSyncProvider.future);
+    expect((await players.read(a.id))!.stats.gamesPlayed, 1);
+  });
 
   test('au moment où la partie se termine, son journal contient déjà son dernier coup', () {
     // L'écran de jeu lit le journal dans un `ref.listen`, c'est-à-dire À

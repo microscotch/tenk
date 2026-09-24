@@ -87,9 +87,9 @@ Future<int> syncPlayerStatistics({
   return created;
 }
 
-/// Amorçage + recalcul, une fois par session, déclenché par le premier écran
-/// qui a besoin de statistiques à jour. `ref.invalidate` force un nouveau
-/// passage, par exemple après qu'une partie s'est terminée.
+/// Amorçage + recalcul, déclenché par le premier écran qui a besoin de
+/// statistiques à jour, puis gardé pour la session. `GameNotifier` l'invalide
+/// quand il archive une partie terminée, pour qu'elle soit comptée.
 final playerStatisticsSyncProvider = FutureProvider<int>((ref) async {
   final created = await syncPlayerStatistics(
     archive: ref.watch(archivedGameSaveStoreProvider),
