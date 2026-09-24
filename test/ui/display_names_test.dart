@@ -187,7 +187,7 @@ void main() {
     while (!diceOff.read(diceOffProvider)!.isResolved) {
       await tester.pump(DiceOffScreen.tieRerollDelay);
     }
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
 
     expect(
       find.byWidgetPredicate((w) => w is Text && w.data != null && w.data!.contains('→') && w.data!.contains('Mimi')),

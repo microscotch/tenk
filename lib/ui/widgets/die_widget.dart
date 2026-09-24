@@ -49,11 +49,15 @@ class DieWidget extends StatelessWidget {
   /// les 5 dés sur une seule ligne.
   static const double margin = 2.0;
 
-  /// Durée de l'animation de lancer (tumble), identique entre le rendu 3D
-  /// ([Scene3DDie]) et son repli Matrix4/Transform ([_TransformCubeDie]) —
-  /// exposée pour que l'UI (voir `game_screen.dart`) sache quand les dés se
-  /// sont immobilisés, par ex. pour temporiser l'affichage d'un score.
-  static const Duration rollAnimationDuration = Duration(milliseconds: 650);
+  /// Plage de durée d'un lancer (tumble) : chaque dé tire la sienne à chaque
+  /// lancer (voir [DieRollMotion]), pour que les dés ne s'immobilisent pas
+  /// tous au même instant.
+  static const Duration minRollDuration = Duration(milliseconds: 500);
+
+  /// Borne haute de cette plage : passé ce délai, TOUS les dés d'un lancer
+  /// sont immobiles. C'est elle que l'UI attend (voir `game_screen.dart`)
+  /// avant, par exemple, d'afficher un score.
+  static const Duration maxRollDuration = Duration(milliseconds: 1000);
 
   const DieWidget({
     super.key,
@@ -72,6 +76,56 @@ class DieWidget extends StatelessWidget {
     }
     return _TransformCubeDie(
         value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size);
+  }
+}
+
+/// Le mouvement d'un dé pendant un lancer, tiré au sort pour chaque dé à
+/// chaque lancer : sa durée, dans la plage [DieWidget.minRollDuration] –
+/// [DieWidget.maxRollDuration], et un nombre de tours signé sur chaque axe,
+/// dont le signe donne le sens de rotation. Partagé par les deux rendus
+/// ([Scene3DDie] et son repli dessiné), qui tournent donc à l'identique.
+@immutable
+class DieRollMotion {
+  final Duration duration;
+  final int turnsX;
+  final int turnsY;
+  final int turnsZ;
+
+  const DieRollMotion({required this.duration, required this.turnsX, required this.turnsY, required this.turnsZ});
+
+  /// Mouvement d'un dé qui n'a pas (encore) été lancé : seule son inclinaison
+  /// de repos compte, [rotationAt] étant appelé avec une progression de 1.
+  static const rest = DieRollMotion(duration: DieWidget.maxRollDuration, turnsX: 3, turnsY: 2, turnsZ: 1);
+
+  factory DieRollMotion.random(math.Random random) {
+    int signed(int turns) => random.nextBool() ? turns : -turns;
+    final spanMs = (DieWidget.maxRollDuration - DieWidget.minRollDuration).inMilliseconds;
+    return DieRollMotion(
+      duration: DieWidget.minRollDuration + Duration(milliseconds: random.nextInt(spanMs + 1)),
+      turnsX: signed(2 + random.nextInt(3)),
+      turnsY: signed(2 + random.nextInt(3)),
+      turnsZ: signed(1 + random.nextInt(2)),
+    );
+  }
+
+  /// Inclinaison de repos (dé immobile) : vue plongeante donnant l'impression
+  /// de regarder le dé du dessus (la face "top" domine), avec juste assez
+  /// d'écart par rapport à la verticale pure pour distinguer les faces
+  /// latérales et garder un rendu clairement 3D (pas un carré plat).
+  static const restTiltX = -0.95;
+  static const restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
+
+  /// Angles (radians) du dé sur chaque axe à la [progress] du lancer
+  /// (0 = départ, 1 = immobile) : les tours restants décroissent (easeOut)
+  /// jusqu'à l'inclinaison de repos. Des angles plutôt qu'une matrice : le
+  /// rendu 3D et le repli n'utilisent pas le même type de `Matrix4`.
+  ({double x, double y, double z}) anglesAt(double progress) {
+    final remaining = 1 - Curves.easeOut.transform(progress.clamp(0.0, 1.0));
+    return (
+      x: restTiltX + remaining * turnsX * 2 * math.pi,
+      y: restTiltY + remaining * turnsY * 2 * math.pi,
+      z: remaining * turnsZ * 2 * math.pi * 0.3,
+    );
   }
 }
 
@@ -126,29 +180,19 @@ Map<String, int> _faceValues(int top) {
 class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerProviderStateMixin {
   double get _size => widget.size;
   double get _half => _size / 2;
-  // Inclinaison de repos (dé immobile) : assez pour voir le dessus et le
-  // côté du cube, pas assez pour gêner la lecture de la face avant.
-  // Vue plongeante (impression de regarder le dé du dessus), cohérente avec
-  // le rendu 3D réel de Scene3DDie.
-  static const _restTiltX = -0.95;
-  static const _restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
-
   late final AnimationController _controller;
   Object? _lastRollToken;
   final _random = math.Random();
-  int _turnsX = 3;
-  int _turnsY = 2;
-  int _turnsZ = 1;
+  DieRollMotion _motion = DieRollMotion.rest;
 
   @override
   void initState() {
     super.initState();
     _lastRollToken = widget.rollToken;
-    _controller = AnimationController(vsync: this, duration: DieWidget.rollAnimationDuration)
+    _controller = AnimationController(vsync: this, duration: _motion.duration)
       ..addListener(() => setState(() {}));
     if (widget.rollToken != null) {
-      _rollRandomTurns();
-      _controller.forward(from: 0);
+      _startRoll();
     } else {
       _controller.value = 1;
     }
@@ -159,15 +203,15 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
     super.didUpdateWidget(oldWidget);
     if (widget.rollToken != null && widget.rollToken != _lastRollToken) {
       _lastRollToken = widget.rollToken;
-      _rollRandomTurns();
-      _controller.forward(from: 0);
+      _startRoll();
     }
   }
 
-  void _rollRandomTurns() {
-    _turnsX = 2 + _random.nextInt(3);
-    _turnsY = 2 + _random.nextInt(3);
-    _turnsZ = 1 + _random.nextInt(2);
+  void _startRoll() {
+    _motion = DieRollMotion.random(_random);
+    _controller
+      ..duration = _motion.duration
+      ..forward(from: 0);
   }
 
   @override
@@ -178,13 +222,13 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
-    final remaining = 1 - Curves.easeOut.transform(_controller.value);
     // Le dé ne revient jamais complètement à plat : même immobile, il garde
     // une légère inclinaison pour rester visiblement un cube en 3D.
+    final angles = _motion.anglesAt(_controller.value);
     final spin = Matrix4.identity()
-      ..rotateX(_restTiltX + remaining * _turnsX * 2 * math.pi)
-      ..rotateY(_restTiltY + remaining * _turnsY * 2 * math.pi)
-      ..rotateZ(remaining * _turnsZ * 2 * math.pi * 0.3);
+      ..rotateX(angles.x)
+      ..rotateY(angles.y)
+      ..rotateZ(angles.z);
 
     final values = _faceValues(widget.value);
     final faces = [

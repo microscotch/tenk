@@ -512,7 +512,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// Les scores affichés dans les libellés (zone "Piste" et zone "Main
   /// courante") ne doivent se rafraîchir qu'une fois les dés du lancer en
   /// attente immobilisés (fin de l'animation de lancer, voir
-  /// [DieWidget.rollAnimationDuration]), pas dès que le lancer est connu côté
+  /// [DieWidget.maxRollDuration]), pas dès que le lancer est connu côté
   /// moteur — sinon le score apparaît avant que le joueur ait vu le résultat.
   /// `true` par défaut : un lancer déjà en attente au montage de l'écran
   /// (partie reprise) n'a pas d'animation à attendre.
@@ -873,7 +873,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _rollSettled = false;
     _previewMoveRevealed = false;
     _previewFrameShown = false;
-    _rollSettleTimer = Timer(DieWidget.rollAnimationDuration, () {
+    _rollSettleTimer = Timer(DieWidget.maxRollDuration, () {
       if (!mounted) return;
       setState(() => _rollSettled = true);
       _maybeLogGainEarly(pendingRoll);

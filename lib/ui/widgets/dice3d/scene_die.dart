@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart' hide Matrix4;
 import 'package:flutter_scene/scene.dart';
 import 'package:vector_math/vector_math.dart' show Matrix4, Vector3;
 
-import '../die_widget.dart' show DieVisualState, DieWidget;
+import '../die_widget.dart' show DieRollMotion, DieVisualState, DieWidget;
 import 'dice_face_texture.dart';
 
 /// Valeurs des 6 faces d'un dé standard (faces opposées = 7) pour un [top]
@@ -82,13 +82,6 @@ class Scene3DDie extends StatefulWidget {
 class _Scene3DDieState extends State<Scene3DDie> {
   double get _size => widget.size;
   static const _half = 0.5;
-  // Inclinaison de repos (dé immobile) : vue plongeante donnant l'impression
-  // de regarder le dé du dessus (la face "top" domine), avec juste assez
-  // d'écart par rapport à la verticale pure pour distinguer les faces
-  // latérales et garder un rendu clairement 3D (pas un carré plat).
-  static const _restTiltX = -0.95;
-  static const _restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
-  static final _rollSeconds = DieWidget.rollAnimationDuration.inMilliseconds / 1000.0;
 
   final _random = math.Random();
   final Scene _scene = Scene();
@@ -96,9 +89,7 @@ class _Scene3DDieState extends State<Scene3DDie> {
 
   Object? _lastRollToken;
   double? _rollStartSeconds;
-  int _turnsX = 3;
-  int _turnsY = 2;
-  int _turnsZ = 1;
+  DieRollMotion _motion = DieRollMotion.rest;
   bool _facesReady = false;
   int _loadGeneration = 0;
 
@@ -147,17 +138,15 @@ class _Scene3DDieState extends State<Scene3DDie> {
     if (widget.rollToken != null && widget.rollToken != _lastRollToken) {
       _lastRollToken = widget.rollToken;
       _rollStartSeconds = now;
-      _turnsX = 2 + _random.nextInt(3);
-      _turnsY = 2 + _random.nextInt(3);
-      _turnsZ = 1 + _random.nextInt(2);
+      _motion = DieRollMotion.random(_random);
     }
     final start = _rollStartSeconds;
-    final t = start == null ? 1.0 : ((now - start) / _rollSeconds).clamp(0.0, 1.0);
-    final remaining = 1 - Curves.easeOut.transform(t);
+    final seconds = _motion.duration.inMicroseconds / 1e6;
+    final angles = _motion.anglesAt(start == null ? 1.0 : (now - start) / seconds);
     _dieNode.localTransform = Matrix4.identity()
-      ..rotateX(_restTiltX + remaining * _turnsX * 2 * math.pi)
-      ..rotateY(_restTiltY + remaining * _turnsY * 2 * math.pi)
-      ..rotateZ(remaining * _turnsZ * 2 * math.pi * 0.3);
+      ..rotateX(angles.x)
+      ..rotateY(angles.y)
+      ..rotateZ(angles.z);
   }
 
   @override

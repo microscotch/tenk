@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
   // doivent devenir visibles ET commencer à tourner qu'au même instant (sinon
   // le lancer est déjà terminé quand on peut enfin le voir), et "10K" ne
   // doit apparaître qu'après la fin RÉELLE du lancer
-  // ([DieWidget.rollAnimationDuration]) plus une pause fixe de 250 ms.
+  // ([DieWidget.maxRollDuration]) plus une pause fixe de 250 ms.
   static const _avatarFadeIn = Duration(milliseconds: 500);
   static const _gapBeforePresente = Duration(milliseconds: 200);
   static const _presenteFadeIn = Duration(milliseconds: 350);
@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
   // ci-dessus (pas `const` : l'opérateur `+` de Duration n'est pas évaluable
   // à la compilation).
   static final _diceStart = _avatarFadeIn + _gapBeforePresente + _presenteFadeIn + _gapBeforeDice;
-  static final _resultStart = _diceStart + _diceFadeIn + DieWidget.rollAnimationDuration + _pauseAfterRoll;
+  static final _resultStart = _diceStart + _diceFadeIn + DieWidget.maxRollDuration + _pauseAfterRoll;
   static final _footerStart = _resultStart + _resultFadeIn + _gapBeforeFooter;
   static final _choreographyDuration = _footerStart + _footerFadeIn;
 

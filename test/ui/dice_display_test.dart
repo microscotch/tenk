@@ -169,7 +169,7 @@ void main() {
     // Rotation des dés, puis attente avant migration, puis fondu : les
     // minuteries ne sont pas portées par une animation, `pumpAndSettle`
     // s'arrêterait avant elles.
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 300));
     expect(opacitesMainCourante(), contains(1.0),
@@ -272,7 +272,7 @@ void main() {
     await tester.pump();
     expect(frame, findsNothing, reason: 'les dés roulent encore');
 
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
     expect(frame, findsNothing, reason: 'immobilisés, mais toujours sur la piste');
 
     await tester.pump(const Duration(milliseconds: 500));

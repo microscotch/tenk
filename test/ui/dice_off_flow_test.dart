@@ -32,7 +32,7 @@ void main() {
       rounds++;
       expect(rounds, lessThan(30), reason: 'le départage ne devrait pas s\'éterniser');
     }
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
   }
 
   testWidgets('tous les dés partent ensemble, sans que personne n\'ait à cliquer', (tester) async {

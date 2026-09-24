@@ -1735,7 +1735,7 @@ void main() {
 
     // Dés immobilisés : le résumé est là, sans qu'aucune action n'ait été
     // faite (le tour n'a pas bougé côté moteur).
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
     expect(find.textContaining('1 as : 100, 4 dés => 100 pts'), findsOneWidget);
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
         reason: 'le résumé est affiché avant l\'action, pas après');
@@ -1785,7 +1785,7 @@ void main() {
       const GameSetup(playerNames: ['A', 'B']),
     );
     await tester.pump();
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
 
     expect(find.textContaining('2 cinq : 100'), findsNothing,
         reason: 'le joueur peut encore choisir combien de 5 garder, ou s\'arrêter');
@@ -1877,7 +1877,7 @@ void main() {
     expect(_stopEnabled(tester), isFalse,
         reason: 'les dés roulent encore : un Stop actif révélerait que ce lancer marque');
 
-    await tester.pump(DieWidget.rollAnimationDuration);
+    await tester.pump(DieWidget.maxRollDuration);
     expect(_stopEnabled(tester), isTrue, reason: 'dés immobilisés : Stop peut enfin devenir actif');
 
     await tester.pumpAndSettle();
