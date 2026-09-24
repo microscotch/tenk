@@ -190,6 +190,12 @@ the same batch** — run the `architecture-diagram` skill (`/architecture-diagra
 exported PNG, and update the prose. `docs/screen-flow.drawio` does the same for the screens. A diagram
 that is a few batches late is how the documents ended up three weeks behind the code once already.
 
+The rest of the UML set lives in `docs/uml/` and is indexed by `docs/uml.md` (use cases, components,
+deployment, the game-lifecycle and roll-off state machines, five sequence diagrams). The same rule
+applies: a change to a call chain, a state transition, a storage location or the CI pipeline updates the
+matching diagram in the same batch. Export each one with
+`.claude/skills/architecture-diagram/export.sh <file.drawio>` and look at the PNG.
+
 ## Game rules reference (non-obvious, load-bearing — don't reinterpret from first principles)
 
 - 5 dice. Entry into the game requires ≥500 in one turn; once entered, ≥200/turn. A score can never

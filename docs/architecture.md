@@ -169,15 +169,18 @@ vivent à part — `SoundEffects` (singleton observant le cycle de vie) et
 
 ## Les autres schémas
 
-Trois schémas complètent le diagramme de classes ; chacun se rouvre et se
-ré-édite dans draw.io à partir de son PNG (ou de son `.drawio`) :
+Ces schémas complètent le diagramme de classes ; chacun se rouvre et se
+ré-édite dans draw.io à partir de son PNG (ou de son `.drawio`). L'ensemble des
+diagrammes UML (cas d'utilisation, composants, déploiement, machines à états,
+séquences) est présenté dans [`uml.md`](uml.md).
 
 - [`screen-flow.png`](screen-flow.png) — les écrans et les navigations entre eux
   (source : [`screen-flow.drawio`](screen-flow.drawio)). Le retour à l'accueil
   dépile jusqu'à `Setup` (`popToHome`) ; le rejeu spectateur est `Game` en
   `replayMode`, pas un écran à part.
-- [`game-state.png`](game-state.png) — les états d'une partie (`activeTurn`
-  nul ou non, partie terminée) et le tour final.
+- [`uml/state-game.png`](uml/state-game.png) — le cycle de vie d'une partie :
+  choix de la main héritée, tour final et couronne qui change de main, pause,
+  fin de partie et archivage (source : [`uml/state-game.drawio`](uml/state-game.drawio)).
 - [`turn-state.png`](turn-state.png) — les états d'un tour, avec les deux
   impasses que `roll` détecte dès le lancer et l'exception de la quinte d'as
   (source : [`turn-state.drawio`](turn-state.drawio)).
