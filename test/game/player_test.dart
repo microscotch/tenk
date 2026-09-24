@@ -94,17 +94,17 @@ void main() {
     expect(p.minimumForNextTurn, entryThreshold);
   });
 
-  group('applyScoreCollisionBar', () {
+  group('applyScoreCollisionBarAt, collision sur la ligne courante', () {
     test('barre même sans tiret actif', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
-      p = p.applyScoreCollisionBar(barredByName: 'B');
+      p = p.applyScoreCollisionBarAt(p.totalScore, barredByName: 'B');
       expect(p.totalScore, 0);
       expect(p.hasTiret, isFalse);
     });
 
     test('une collision qui ramène à 0 remet aussi l\'entrée en jeu à zéro', () {
       var p = Player(name: 'A').applySuccessfulTurn(700); // 0 -> 700
-      p = p.applyScoreCollisionBar(barredByName: 'B'); // collision -> retombe à 0
+      p = p.applyScoreCollisionBarAt(p.totalScore, barredByName: 'B'); // collision -> retombe à 0
       expect(p.totalScore, 0);
       expect(p.hasEntered, isFalse);
       expect(p.minimumForNextTurn, entryThreshold);
@@ -113,7 +113,7 @@ void main() {
     test('une collision qui ne ramène pas à 0 ne touche pas à l\'entrée en jeu', () {
       var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
       p = p.applySuccessfulTurn(300); // 500 -> 800
-      p = p.applyScoreCollisionBar(barredByName: 'B'); // collision -> retombe à 500, toujours entré
+      p = p.applyScoreCollisionBarAt(p.totalScore, barredByName: 'B'); // collision -> retombe à 500, toujours entré
       expect(p.totalScore, 500);
       expect(p.hasEntered, isTrue);
       expect(p.minimumForNextTurn, normalThreshold);
@@ -123,7 +123,7 @@ void main() {
       var p = Player(name: 'A').applySuccessfulTurn(500); // 0 -> 500
       p = p.applyBust(); // tiret posé sur 500, point de retour = 0
       p = p.applySuccessfulTurn(300); // 500 -> 800, point de retour = 500
-      p = p.applyScoreCollisionBar(barredByName: 'B'); // barre 800 -> retour à 500
+      p = p.applyScoreCollisionBarAt(p.totalScore, barredByName: 'B'); // barre 800 -> retour à 500
       expect(p.totalScore, 500);
       // Le tiret de 500 est resté attaché à sa ligne : y revenir le remet en
       // vigueur (voir le test des deux craques consécutifs).

@@ -90,8 +90,6 @@ void main() {
       expect(stats.averageActiveSeconds, isNull, reason: 'une moyenne sur zéro partie n\'existe pas');
       expect(stats.shortestActiveSeconds, isNull);
       expect(stats.longestActiveSeconds, isNull);
-      expect(stats.averageBustStreak, isNull);
-      expect(stats.averageSelfBarsPerGame, isNull);
       expect(stats.gamesLost, 0);
     });
 
@@ -99,16 +97,9 @@ void main() {
       const stats = PlayerStats(
         gamesPlayed: 4,
         totalActiveSeconds: 1000,
-        bustsTotal: 9,
-        bustStreakCount: 3,
-        selfBarsTotal: 2,
-        barsInflictedTotal: 6,
       );
 
       expect(stats.averageActiveSeconds, 250);
-      expect(stats.averageBustStreak, 3, reason: '9 craquages répartis en 3 séries');
-      expect(stats.averageSelfBarsPerGame, 0.5);
-      expect(stats.averageBarsInflictedPerGame, 1.5);
     });
 
     test('les lancers par tour se calculent depuis les deux totaux', () {
@@ -154,7 +145,6 @@ void main() {
         longestHotDiceRun: 4,
         bustsTotal: 20,
         longestBustStreak: 4,
-        bustStreakCount: 8,
         selfBarsTotal: 3,
         selfBarsMaxInGame: 2,
         barsInflictedTotal: 5,

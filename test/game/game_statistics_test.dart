@@ -218,8 +218,6 @@ void main() {
       final s = stats(0);
       expect(s.bustsTotal, 5);
       expect(s.longestBustStreak, 3);
-      expect(s.bustStreakCount, 2);
-      expect(s.averageBustStreak, 2.5);
     });
   });
 

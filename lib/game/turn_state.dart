@@ -216,8 +216,6 @@ class TurnState {
 
   factory TurnState.initial(int diceToRoll) => TurnState(diceToRoll: diceToRoll);
 
-  bool get isOver => busted;
-
   int get turnScoreEndsIn50 => bankedScore % 100;
 
   TurnState copyWith({

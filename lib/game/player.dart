@@ -161,13 +161,6 @@ class Player {
     return _bar(barredByName: name);
   }
 
-  /// Applique un score barré suite à une collision : un autre joueur vient
-  /// de terminer son tour avec exactement le même score que celui-ci. Barre
-  /// toujours la ligne courante, qu'elle porte ou non un tiret actif.
-  /// [barredByName] est le nom de cet autre joueur, l'auteur du tour qui
-  /// vient de provoquer la collision (voir [ScoreEntry.barredBy]).
-  Player applyScoreCollisionBar({required String barredByName}) => _bar(barredByName: barredByName);
-
   /// Recherche, dans TOUTE la grille (pas seulement la ligne courante), une
   /// ligne non barrée valant exactement [value] — un autre joueur ([barredByName],
   /// l'auteur du tour qui vient de banquer ce score, voir [ScoreEntry.barredBy])

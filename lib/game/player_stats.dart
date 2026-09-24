@@ -56,12 +56,9 @@ class PlayerStats {
   /// Plus longue série de mains pleines enchaînées à l'intérieur d'un tour.
   final int longestHotDiceRun;
 
-  /// Craquages : le total, la plus longue série de tours craqués d'affilée, et
-  /// le nombre de séries — ce dernier n'existe que pour pouvoir donner la
-  /// longueur MOYENNE d'une série sans la stocker (voir [averageBustStreak]).
+  /// Craquages : le total, et la plus longue série de tours craqués d'affilée.
   final int bustsTotal;
   final int longestBustStreak;
-  final int bustStreakCount;
 
   /// Lignes barrées par son propre second craque consécutif.
   final int selfBarsTotal;
@@ -97,7 +94,6 @@ class PlayerStats {
     this.longestHotDiceRun = 0,
     this.bustsTotal = 0,
     this.longestBustStreak = 0,
-    this.bustStreakCount = 0,
     this.selfBarsTotal = 0,
     this.selfBarsMaxInGame = 0,
     this.barsInflictedTotal = 0,
@@ -119,12 +115,8 @@ class PlayerStats {
   int get quintesDAsTotal => quintesDAsReussies + quintesDAsPerdues;
 
   /// Moyennes, toutes dérivées : `null` quand elles n'ont pas de sens faute de
-  /// partie (ou, pour les séries de craquages, faute de série).
+  /// partie (ou de tour).
   double? get averageActiveSeconds => gamesPlayed == 0 ? null : totalActiveSeconds / gamesPlayed;
-  double? get averageBustStreak => bustStreakCount == 0 ? null : bustsTotal / bustStreakCount;
-  double? get averageSelfBarsPerGame => gamesPlayed == 0 ? null : selfBarsTotal / gamesPlayed;
-  double? get averageBarsInflictedPerGame =>
-      gamesPlayed == 0 ? null : barsInflictedTotal / gamesPlayed;
   double? get averageRollsPerTurn => turnsTotal == 0 ? null : rollsTotal / turnsTotal;
 
   /// Replie une partie (ou un autre cumul) dans celui-ci. Chaque grandeur est
@@ -152,7 +144,6 @@ class PlayerStats {
       bustsTotal: bustsTotal + other.bustsTotal,
       longestBustStreak:
           longestBustStreak > other.longestBustStreak ? longestBustStreak : other.longestBustStreak,
-      bustStreakCount: bustStreakCount + other.bustStreakCount,
       selfBarsTotal: selfBarsTotal + other.selfBarsTotal,
       selfBarsMaxInGame:
           selfBarsMaxInGame > other.selfBarsMaxInGame ? selfBarsMaxInGame : other.selfBarsMaxInGame,
@@ -184,7 +175,6 @@ class PlayerStats {
         'longestHotDiceRun': longestHotDiceRun,
         'bustsTotal': bustsTotal,
         'longestBustStreak': longestBustStreak,
-        'bustStreakCount': bustStreakCount,
         'selfBarsTotal': selfBarsTotal,
         'selfBarsMaxInGame': selfBarsMaxInGame,
         'barsInflictedTotal': barsInflictedTotal,
@@ -217,7 +207,6 @@ class PlayerStats {
       longestHotDiceRun: at('longestHotDiceRun'),
       bustsTotal: at('bustsTotal'),
       longestBustStreak: at('longestBustStreak'),
-      bustStreakCount: at('bustStreakCount'),
       selfBarsTotal: at('selfBarsTotal'),
       selfBarsMaxInGame: at('selfBarsMaxInGame'),
       barsInflictedTotal: at('barsInflictedTotal'),

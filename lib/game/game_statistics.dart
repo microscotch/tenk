@@ -53,7 +53,7 @@ GameStatistics collectGameStatistics({
   }
 
   final activeSeconds = activePlayingSecondsFor(actions);
-  final rotated = List.generate(
+  final byPlayOrder = List.generate(
     playerCount,
     (seat) => collector.statsFor(seat, activeSeconds: activeSeconds, won: seat == engine.winnerIndex),
   );
@@ -62,7 +62,7 @@ GameStatistics collectGameStatistics({
   // siège d'origine `playOrder[i]`.
   final bySeat = List.filled(playerCount, PlayerStats.empty);
   for (var i = 0; i < playerCount; i++) {
-    bySeat[playOrder[i]] = rotated[i];
+    bySeat[playOrder[i]] = byPlayOrder[i];
   }
   return GameStatistics(bySeat: bySeat, activeSeconds: activeSeconds);
 }
@@ -130,7 +130,6 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
       tally.hotDiceRun = 0;
       tally.busts++;
       tally.bustStreak++;
-      if (tally.bustStreak == 1) tally.bustStreakCount++;
       tally.longestBustStreak = _max(tally.longestBustStreak, tally.bustStreak);
 
     case GameActionType.diceOffRoll:
@@ -260,7 +259,6 @@ class _SeatTally {
   int busts = 0;
   int bustStreak = 0;
   int longestBustStreak = 0;
-  int bustStreakCount = 0;
   int selfBars = 0;
   int barsInflicted = 0;
   int rolls = 0;
@@ -287,7 +285,6 @@ class _SeatTally {
         longestHotDiceRun: longestHotDiceRun,
         bustsTotal: busts,
         longestBustStreak: longestBustStreak,
-        bustStreakCount: bustStreakCount,
         selfBarsTotal: selfBars,
         selfBarsMaxInGame: selfBars,
         barsInflictedTotal: barsInflicted,
