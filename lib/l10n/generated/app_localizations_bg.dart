@@ -13,33 +13,24 @@ class AppLocalizationsBg extends AppLocalizations {
   String get splashPresents => 'представя';
 
   @override
-  String get ownerNameDialogTitle => 'Как се казваш?';
-
-  @override
-  String get ownerNameFieldLabel => 'Име на основния играч';
-
-  @override
-  String get laterButton => 'По-късно';
-
-  @override
   String get validateButton => 'Потвърди';
 
   @override
   String get settingsTooltip => 'Настройки';
 
   @override
-  String get helpTooltip => 'Règles du jeu';
+  String get helpTooltip => 'Правила на играта';
 
   @override
-  String get aboutTooltip => 'À propos';
+  String get aboutTooltip => 'Относно';
 
   @override
   String aboutVersionLabel(String version, String buildNumber) {
-    return 'Version $version ($buildNumber)';
+    return 'Версия $version ($buildNumber)';
   }
 
   @override
-  String get closeButton => 'Fermer';
+  String get closeButton => 'Затвори';
 
   @override
   String playersCountTitle(int count) {
@@ -47,41 +38,7 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String defaultPlayerName(int number) {
-    return 'Играч $number';
-  }
-
-  @override
-  String get unnamedPlayerFallback => 'Играч';
-
-  @override
-  String playerNameFieldLabel(int number) {
-    return 'Име на играч $number';
-  }
-
-  @override
   String get autoChipLabel => 'AutoRoll';
-
-  @override
-  String get aiChipLabel => 'ИИ';
-
-  @override
-  String get addPlayerButton => 'Добави';
-
-  @override
-  String get removePlayerButton => 'Премахни';
-
-  @override
-  String get botDifficultyTitle => 'Трудност на ботовете';
-
-  @override
-  String get aiDifficultyCautious => 'Предпазлив';
-
-  @override
-  String get aiDifficultyBalanced => 'Балансиран';
-
-  @override
-  String get aiDifficultyAggressive => 'Агресивен';
 
   @override
   String get startGameButton => 'Започни играта';
@@ -90,178 +47,177 @@ class AppLocalizationsBg extends AppLocalizations {
   String get newGameSectionLabel => 'Нов run...';
 
   @override
-  String get resumeGamesButton => 'Reprise de parties';
+  String get resumeGamesButton => 'Продължаване на игри';
 
   @override
-  String get managePlayersButton => 'Gestion des joueurs';
+  String get managePlayersButton => 'Управление на играчите';
 
   @override
-  String get finishedGamesButton => 'Dernières parties terminées';
+  String get finishedGamesButton => 'Последни завършени игри';
 
   @override
-  String get statisticsButton => 'Statistiques';
+  String get statisticsButton => 'Статистика';
 
   @override
   String playersScreenTitle(int count) {
-    return 'Joueurs ($count)';
+    return 'Играчи ($count)';
   }
 
   @override
-  String get addPlayerTooltip => 'Ajouter un joueur';
+  String get addPlayerTooltip => 'Добави играч';
 
   @override
-  String get noPlayersMessage => 'Aucun joueur enregistré pour l\'instant.';
+  String get noPlayersMessage => 'Все още няма записани играчи.';
 
   @override
-  String get newPlayerTitle => 'Nouveau joueur';
+  String get newPlayerTitle => 'Нов играч';
 
   @override
-  String get editPlayerTitle => 'Modifier le joueur';
+  String get editPlayerTitle => 'Редактиране на играч';
 
   @override
-  String get playerNameLabel => 'Nom';
+  String get playerNameLabel => 'Име';
 
   @override
-  String get playerNicknameLabel => 'Surnom (facultatif)';
+  String get playerNicknameLabel => 'Прякор (по избор)';
 
   @override
-  String get playerNameRequiredError => 'Le nom est obligatoire.';
+  String get playerNameRequiredError => 'Името е задължително.';
 
   @override
-  String get playerNameTakenError =>
-      'Ce nom est déjà utilisé par un autre joueur.';
+  String get playerNameTakenError => 'Това име вече се използва от друг играч.';
 
   @override
-  String get deletePlayerConfirmTitle => 'Supprimer ce joueur ?';
+  String get deletePlayerConfirmTitle => 'Изтриване на този играч?';
 
   @override
   String deletePlayerConfirmMessage(String name) {
-    return 'La fiche de « $name » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.';
+    return 'Профилът на „$name“ и статистиката му ще бъдат окончателно изтрити. Вече изиграните игри се запазват.';
   }
 
   @override
-  String get statsSectionTime => 'Temps de jeu';
+  String get statsSectionTime => 'Време за игра';
 
   @override
-  String get statsSectionGames => 'Parties';
+  String get statsSectionGames => 'Игри';
 
   @override
-  String get statsSectionFigures => 'Figures';
+  String get statsSectionFigures => 'Комбинации';
 
   @override
-  String get statsSectionRolls => 'Tours et lancers';
+  String get statsSectionRolls => 'Ходове и хвърляния';
 
   @override
-  String get statsTurns => 'Tours joués';
+  String get statsTurns => 'Изиграни ходове';
 
   @override
-  String get statsRolls => 'Lancers';
+  String get statsRolls => 'Хвърляния';
 
   @override
-  String get statsRollsPerTurn => 'Lancers par tour';
+  String get statsRollsPerTurn => 'Хвърляния на ход';
 
   @override
-  String get statsSectionMisc => 'Faits d\'armes';
+  String get statsSectionMisc => 'Подвизи';
 
   @override
-  String get statsTotalTime => 'Total';
+  String get statsTotalTime => 'Общо';
 
   @override
-  String get statsAverageTime => 'Moyenne par partie';
+  String get statsAverageTime => 'Средно на игра';
 
   @override
-  String get statsShortestTime => 'La plus courte';
+  String get statsShortestTime => 'Най-кратка';
 
   @override
-  String get statsLongestTime => 'La plus longue';
+  String get statsLongestTime => 'Най-дълга';
 
   @override
-  String get statsGamesPlayed => 'Jouées';
+  String get statsGamesPlayed => 'Изиграни';
 
   @override
-  String get statsGamesWon => 'Gagnées';
+  String get statsGamesWon => 'Спечелени';
 
   @override
-  String get statsGamesLost => 'Perdues';
+  String get statsGamesLost => 'Загубени';
 
   @override
-  String get statsLoneAces => 'As isolés gardés';
+  String get statsLoneAces => 'Запазени единични 1';
 
   @override
-  String get statsLoneFives => '5 isolés gardés';
+  String get statsLoneFives => 'Запазени единични 5';
 
   @override
-  String get statsBrelans => 'Brelans';
+  String get statsBrelans => 'Тройки';
 
   @override
-  String get statsCarres => 'Carrés';
+  String get statsCarres => 'Каре';
 
   @override
-  String get statsQuintes => 'Quintes';
+  String get statsQuintes => 'Пет еднакви';
 
   @override
-  String get statsSuites => 'Suites';
+  String get statsSuites => 'Кентове';
 
   @override
-  String get statsSmallSuites => 'dont petites';
+  String get statsSmallSuites => 'от тях малки';
 
   @override
-  String get statsBigSuites => 'dont grandes';
+  String get statsBigSuites => 'от тях големи';
 
   @override
-  String get statsAceQuints => 'Quintes d\'as';
+  String get statsAceQuints => 'Пет единици';
 
   @override
-  String get statsAceQuintsWon => 'dont gagnantes';
+  String get statsAceQuintsWon => 'от тях печеливши';
 
   @override
-  String get statsBestTurn => 'Meilleur tour';
+  String get statsBestTurn => 'Най-добър ход';
 
   @override
-  String get statsHotDiceRun => 'Mains pleines d\'affilée';
+  String get statsHotDiceRun => 'Горещи зарове подред';
 
   @override
-  String get statsBusts => 'Craquages';
+  String get statsBusts => 'Провали';
 
   @override
-  String get statsLongestBustStreak => 'dont série la plus longue';
+  String get statsLongestBustStreak => 'най-дълга серия';
 
   @override
-  String get statsSelfBars => 'Auto-barrés';
+  String get statsSelfBars => 'Зачеркнати сами';
 
   @override
-  String get statsBarsInflicted => 'Barrés infligés';
+  String get statsBarsInflicted => 'Зачеркнати други';
 
   @override
-  String get scoreChartTitle => 'Évolution des scores';
+  String get scoreChartTitle => 'Развитие на резултатите';
 
   @override
-  String get gameStatsTitle => 'Statistiques de la partie';
+  String get gameStatsTitle => 'Статистика на играта';
 
   @override
-  String get gameStatsGameSection => 'Partie';
+  String get gameStatsGameSection => 'Игра';
 
   @override
-  String get gameStatsFiguresSection => 'Figures de la partie';
+  String get gameStatsFiguresSection => 'Комбинации в играта';
 
   @override
-  String get gameStatsDuration => 'Durée de jeu';
+  String get gameStatsDuration => 'Време за игра';
 
   @override
   String gameStatsPlayerSummary(int turns, int best, int busts) {
     String _temp0 = intl.Intl.pluralLogic(
       turns,
       locale: localeName,
-      other: '$turns tours',
-      one: '$turns tour',
+      other: '$turns хода',
+      one: '$turns ход',
     );
     String _temp1 = intl.Intl.pluralLogic(
       busts,
       locale: localeName,
-      other: '$busts craques',
-      one: '$busts craque',
+      other: '$busts провала',
+      one: '$busts провал',
     );
-    return '$_temp0 · meilleur $best · $_temp1';
+    return '$_temp0 · най-добър $best · $_temp1';
   }
 
   @override
@@ -269,31 +225,31 @@ class AppLocalizationsBg extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       games,
       locale: localeName,
-      other: '$games parties',
-      one: '$games partie',
+      other: '$games игри',
+      one: '$games игра',
     );
     String _temp1 = intl.Intl.pluralLogic(
       won,
       locale: localeName,
-      other: '$won gagnées',
-      one: '$won gagnée',
+      other: '$won спечелени',
+      one: '$won спечелена',
     );
-    return '$_temp0 · $_temp1 · meilleur $best';
+    return '$_temp0 · $_temp1 · най-добър $best';
   }
 
   @override
   String get scoreChartEmpty =>
-      'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
+      'Все още няма завършен ход: няма какво да се начертае.';
 
   @override
   String get replayUnavailable =>
-      'Cette partie ne peut pas être rejouée : son journal est incomplet.';
+      'Тази игра не може да бъде преиграна: дневникът ѝ е непълен.';
 
   @override
-  String get replayPlay => 'Lecture';
+  String get replayPlay => 'Пусни';
 
   @override
-  String get replayPause => 'Pause';
+  String get replayPause => 'Пауза';
 
   @override
   String replayTurnOf(int turn, int count) {
@@ -302,20 +258,20 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String scoreChartTurn(int turn) {
-    return 'Tour $turn';
+    return 'Ход $turn';
   }
 
   @override
-  String get scoreChartXAxis => 'Tours joués';
+  String get scoreChartXAxis => 'Изиграни ходове';
 
   @override
-  String get statsBreakdownRow => 'dont';
+  String get statsBreakdownRow => 'от тях';
 
   @override
-  String get statsRecordsTitle => 'Records';
+  String get statsRecordsTitle => 'Рекорди';
 
   @override
-  String get statsNoRecordYet => 'Aucun record pour l\'instant.';
+  String get statsNoRecordYet => 'Все още няма рекорди.';
 
   @override
   String statsValueWithHolder(String value, String holders) {
@@ -323,38 +279,38 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get pickPlayersTitle => 'Choisir des joueurs';
+  String get pickPlayersTitle => 'Избор на играчи';
 
   @override
-  String get addHumanTooltip => 'Ajouter un joueur';
+  String get addHumanTooltip => 'Добави играч';
 
   @override
-  String get addBotTooltip => 'Ajouter un bot';
+  String get addBotTooltip => 'Добави бот';
 
   @override
-  String get createPlayerButton => 'Nouveau joueur';
+  String get createPlayerButton => 'Нов играч';
 
   @override
   String get noPlayersToPickMessage =>
-      'Aucun joueur en base. Créez-en un pour commencer.';
+      'Няма записани играчи. Създайте един, за да започнете.';
 
   @override
-  String get botLabel => 'Bot';
+  String get botLabel => 'Бот';
 
   @override
-  String get removeSeatTooltip => 'Retirer de la partie';
+  String get removeSeatTooltip => 'Премахни от играта';
 
   @override
-  String get notEnoughPlayersMessage => 'Il faut au moins deux joueurs.';
+  String get notEnoughPlayersMessage => 'Нужни са поне двама играчи.';
 
   @override
   String playerGamesSummary(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count parties jouées',
-      one: '$count partie jouée',
-      zero: 'Aucune partie jouée',
+      other: '$count изиграни игри',
+      one: '$count изиграна игра',
+      zero: 'Няма изиграни игри',
     );
     return '$_temp0';
   }
@@ -376,7 +332,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get noFinishedRunsMessage => 'Все още няма завършени runs.';
 
   @override
-  String get gameRunParticipantsSeparator => ' vs ';
+  String get gameRunParticipantsSeparator => ' срещу ';
 
   @override
   String get deleteGameConfirmTitle => 'Изтриване на тази игра?';
@@ -393,18 +349,18 @@ class AppLocalizationsBg extends AppLocalizations {
   String get deleteButton => 'Изтрий';
 
   @override
-  String get resumeLastGameDialogTitle => 'Reprendre la partie ?';
+  String get resumeLastGameDialogTitle => 'Продължаване на играта?';
 
   @override
   String resumeLastGameDialogMessage(String alias) {
-    return 'Une partie « $alias » est en cours. Voulez-vous la reprendre ?';
+    return 'Игра „$alias“ е в ход. Искате ли да я продължите?';
   }
 
   @override
-  String get resumeGameButton => 'Reprendre';
+  String get resumeGameButton => 'Продължи';
 
   @override
-  String get gameOverReplayButton => 'Revoir la partie';
+  String get gameOverReplayButton => 'Преглед на играта';
 
   @override
   String get scoreGridLabel => 'Таблица с резултати';
@@ -413,62 +369,59 @@ class AppLocalizationsBg extends AppLocalizations {
   String get finalRoundBanner => 'Последен рунд: играч достигна 10000!';
 
   @override
-  String get currentRollZoneLabel => 'Piste';
+  String get currentRollZoneLabel => 'Писта';
 
   @override
   String currentRollZoneLabelWithScore(int points) {
-    return 'Piste ($points)';
+    return 'Писта ($points)';
   }
 
   @override
-  String get currentHandZoneLabel => 'Main courante';
+  String get currentHandZoneLabel => 'Текуща ръка';
 
   @override
-  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+  String get logHotDiceMessage => 'Горещи зарове!';
 
   @override
-  String get logHotDiceMessage => 'Main pleine !';
-
-  @override
-  String get logScoreCollisionMessage => 'Score barré :';
+  String get logScoreCollisionMessage => 'Зачеркнат резултат:';
 
   @override
   String logRollGainMessage(String kept, int gain, int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count зара',
+      one: '$count зар',
     );
-    return '$kept : $gain, $_temp0 => $total pts';
+    return '$kept: $gain, $_temp0 => $total т.';
   }
 
   @override
   String logRollGainHotDiceMessage(String kept, int gain, int total) {
-    return '$kept : $gain, main pleine => $total pts';
+    return '$kept: $gain, горещи зарове => $total т.';
   }
 
   @override
   String logBankedMessage(int score, int total) {
-    return '$score pts sont pris => $total pts';
+    return '$score т. записани => $total т.';
   }
 
   @override
   String logResumedHandMessage(int score) {
-    return '$score pts sont repris';
+    return '$score т. поети';
   }
 
   @override
   String logBustTiretMessage(int score) {
-    return 'Craqué ! => $score petit trait';
+    return 'Изгоря! => $score черта';
   }
 
   @override
-  String get logBustBarredPrefix => 'Craqué ! =>';
+  String get logBustBarredPrefix => 'Изгоря! =>';
 
   @override
   String logBustBarredReturnMessage(int score) {
-    return 'retour à $score';
+    return 'обратно на $score';
   }
 
   @override
@@ -476,17 +429,14 @@ class AppLocalizationsBg extends AppLocalizations {
       'Поемането на тази ръка вече би надвишило 10000: не може да запишеш резултата.';
 
   @override
-  String get declineInheritedHandButton => 'Refuser';
+  String get rollButton => 'Хвърли';
 
   @override
-  String get rollButton => 'Lancer';
-
-  @override
-  String get showProbabilitiesSetting => 'Afficher les probabilités';
+  String get showProbabilitiesSetting => 'Показване на вероятностите';
 
   @override
   String get showProbabilitiesSettingSubtitle =>
-      'Affiche sur le bouton \"Lancer\" la chance de marquer au moins un point';
+      'Показва на бутона „Хвърли“ шанса да вкарате поне една точка';
 
   @override
   String get stopButton => 'Спри се';
@@ -499,30 +449,30 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get bustFullHandAtTarget =>
-      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+      'Горещи зарове на 10000: не можете да спрете, а хвърлянето на всичко отново би надвишило.';
 
   @override
-  String get bustContinueButton => 'Continuer';
+  String get bustContinueButton => 'Продължи';
 
   @override
-  String get inheritedHandDialogTitle => 'Reprendre ?';
+  String get inheritedHandDialogTitle => 'Поемане?';
 
   @override
   String inheritedHandDialogMessage(int score, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count зара',
+      one: '$count зар',
     );
     return '$score, $_temp0';
   }
 
   @override
-  String get resumeHandButton => 'Reprendre la main';
+  String get resumeHandButton => 'Поеми ръката';
 
   @override
-  String get newHandButton => 'Nouvelle main';
+  String get newHandButton => 'Нова ръка';
 
   @override
   String get failureBelowMinimum => 'Недостатъчен резултат, за да спреш.';
@@ -581,19 +531,19 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Звукови ефекти';
 
   @override
-  String get settingsHandednessLabel => 'Disposition des boutons';
+  String get settingsHandednessLabel => 'Разположение на бутоните';
 
   @override
-  String get settingsHandednessRight => 'Droitier';
+  String get settingsHandednessRight => 'Десняк';
 
   @override
-  String get settingsHandednessLeft => 'Gaucher';
+  String get settingsHandednessLeft => 'Левичар';
 
   @override
-  String get settingsControlsTitle => 'Contrôles';
+  String get settingsControlsTitle => 'Управление';
 
   @override
-  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+  String get settingsShakeToRollLabel => 'Разклатете, за да хвърлите заровете';
 
   @override
   String get settingsPausedGamesTitle => 'Игри на пауза';
@@ -610,17 +560,17 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get reorderPlayersHint =>
-      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+      'Плъзнете играч за дръжката му, за да промените реда около масата.';
 
   @override
-  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+  String get reorderPlayerHandleLabel => 'Преместване на този играч';
 
   @override
   String get diceOffTitle => 'Кой започва?';
 
   @override
   String get diceOffInstructions =>
-      'Всеки хвърля по един зар: най-ниският резултат започва играта.';
+      'Всички хвърлят зара си едновременно: започва най-ниският. При равенство изравнените хвърлят отново.';
 
   @override
   String diceOffTieBreak(String names) {
@@ -633,11 +583,11 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+  String get diceOffPlayOrderLabel => 'Ред на игра';
 
   @override
   String get diceOffReversedNote =>
-      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
+      'Дуел между съседи, спечелен от втория: играта върви в обратна посока.';
 
   @override
   String get gameOverTitle => 'Край на играта';
@@ -676,91 +626,91 @@ class AppLocalizationsBg extends AppLocalizations {
   String get previousScoreHadTiretTooltip => 'Предишният резултат имаше черта';
 
   @override
-  String get rankFirstTooltip => 'En tête';
+  String get rankFirstTooltip => 'Води';
 
   @override
-  String get rankSecondTooltip => '2e au score';
+  String get rankSecondTooltip => '2-ри по точки';
 
   @override
-  String get rankThirdTooltip => '3e au score';
+  String get rankThirdTooltip => '3-ти по точки';
 
   @override
-  String get rulesScreenTitle => 'Règles du jeu';
+  String get rulesScreenTitle => 'Правила на играта';
 
   @override
-  String get rulesGoalTitle => 'But du jeu';
+  String get rulesGoalTitle => 'Цел на играта';
 
   @override
   String get rulesGoalBody =>
-      'Le premier joueur à atteindre exactement 10 000 points gagne la partie. Il faut viser ce chiffre pile : le dépasser ne compte pas.';
+      'Първият играч, достигнал точно 10 000 точки, печели играта. Трябва да уцелите точно това число: надхвърлянето не се брои.';
 
   @override
-  String get rulesTurnTitle => 'Comment se joue un tour';
+  String get rulesTurnTitle => 'Как се играе един ход';
 
   @override
   String get rulesTurnBody =>
-      'À votre tour, vous lancez 5 dés. Certaines valeurs rapportent des points (voir ci-dessous), d\'autres ne servent à rien. Vous mettez de côté au moins un dé qui rapporte, puis vous choisissez : relancer les dés restants pour tenter d\'engranger plus de points, ou vous arrêter et encaisser ce que vous avez accumulé ce tour. Si un lancer ne rapporte aucun point, c\'est un craque (voir plus bas) et vous perdez tout ce que vous aviez accumulé ce tour.';
+      'На своя ход хвърляте 5 зара. Някои стойности носят точки (вижте по-долу), други не носят нищо. Отделяте поне един точкуващ зар и после избирате: да хвърлите отново останалите зарове, за да съберете още точки, или да спрете и да запишете натрупаното през този ход. Ако едно хвърляне не донесе нито една точка, това е провал (вижте по-долу) и губите всичко натрупано през този ход.';
 
   @override
-  String get rulesScoringTitle => 'Ce qui rapporte des points';
+  String get rulesScoringTitle => 'Какво носи точки';
 
   @override
   String get rulesScoringBody =>
-      '• Un 1 isolé : 100 points. Un 5 isolé : 50 points. Les autres valeurs isolées (2, 3, 4, 6) ne rapportent rien.\n• Trois dés identiques : 1000 points pour trois 1, sinon la valeur du dé × 100 (trois 4 valent 400, trois 6 valent 600).\n• Un quatrième dé de la même valeur ajoute 1000 points de plus.\n• Les 5 dés identiques valent la valeur du dé × 1000, sauf cinq 1 qui rapportent directement 10 000 points : la victoire immédiate.\n• Une suite de 5 dés qui se suivent (1-2-3-4-5 ou 2-3-4-5-6) vaut 500 points.';
+      '• Единична 1: 100 точки. Единична 5: 50 точки. Другите единични стойности (2, 3, 4, 6) не носят нищо.\n• Три еднакви зара: 1000 точки за три единици, иначе стойността на зара × 100 (три четворки са 400, три шестици — 600).\n• Четвърти зар със същата стойност добавя още 1000 точки.\n• Пет еднакви зара струват стойността на зара × 1000, освен пет единици, които носят направо 10 000 точки: незабавна победа.\n• Кент от 5 последователни зара (1-2-3-4-5 или 2-3-4-5-6) струва 500 точки.';
 
   @override
-  String get rulesHotDiceTitle => 'Dés chauds : une seconde chance forcée';
+  String get rulesHotDiceTitle => 'Горещи зарове: принудителен втори шанс';
 
   @override
   String get rulesHotDiceBody =>
-      'Si tous les dés que vous venez de lancer rapportent des points, vous devez relancer les 5 dés en main : impossible de s\'arrêter à ce moment précis. C\'est ce qu\'on appelle des « dés chauds ».';
+      'Ако всички зарове, които току-що хвърлихте, носят точки, трябва да хвърлите отново всичките 5 зара: не можете да спрете точно в този момент. Това се нарича „горещи зарове“.';
 
   @override
-  String get rulesBustTitle => 'Le craque';
+  String get rulesBustTitle => 'Провалът';
 
   @override
   String get rulesBustBody =>
-      'Si un lancer ne rapporte strictement aucun point, votre tour s\'arrête immédiatement et vous perdez tous les points accumulés ce tour (ce que vous aviez déjà encaissé lors des tours précédents reste acquis). Un craque marque aussi votre ligne de score actuelle d\'un tiret ; si elle en portait déjà un, elle est barrée et votre score retombe à sa valeur précédente.';
+      'Ако едно хвърляне не донесе абсолютно никакви точки, ходът ви приключва веднага и губите всички точки, натрупани през този ход (записаното в предишните ходове остава). Провалът освен това отбелязва текущия ви ред в резултатите с черта; ако вече е имал такава, редът се зачерква и резултатът ви се връща към предишната стойност.';
 
   @override
-  String get rulesEntryTitle => 'Entrer dans la partie';
+  String get rulesEntryTitle => 'Влизане в играта';
 
   @override
   String get rulesEntryBody =>
-      'Pour commencer à marquer des points, votre tout premier tour réussi doit rapporter au moins 500 points. Une fois entré dans la partie, chaque tour suivant doit rapporter au moins 200 points pour pouvoir s\'arrêter.';
+      'За да започнете да трупате точки, първият ви успешен ход трябва да донесе поне 500 точки. След като влезете в играта, всеки следващ ход трябва да донесе поне 200 точки, за да можете да спрете.';
 
   @override
-  String get rulesNoFiftyTitle => 'Jamais de score finissant par 50';
+  String get rulesNoFiftyTitle => 'Никога резултат, завършващ на 50';
 
   @override
   String get rulesNoFiftyBody =>
-      'Vous ne pouvez jamais choisir de vous arrêter volontairement sur un total de tour qui finit par 50 (comme 250 ou 450) : il faut relancer les dés jusqu\'à obtenir un total valide.';
+      'Никога не можете да изберете доброволно да спрете при сбор за хода, завършващ на 50 (например 250 или 450): трябва да хвърляте отново, докато получите валиден сбор.';
 
   @override
-  String get rulesExtensionTitle => 'La règle d\'extension';
+  String get rulesExtensionTitle => 'Правилото за разширение';
 
   @override
   String get rulesExtensionBody =>
-      'Une fois que vous avez encaissé un brelan ou un carré d\'une valeur donnée (par exemple trois 4), tout dé isolé de cette même valeur obtenu plus tard dans le même tour rapporte 100 points au lieu de sa valeur habituelle — y compris un 5 isolé, qui vaut alors 100 au lieu de 50. Cet avantage disparaît dès que vous obtenez des dés chauds.';
+      'След като сте записали тройка или каре с дадена стойност (например три четворки), всеки единичен зар със същата стойност, паднал по-късно в същия ход, носи 100 точки вместо обичайната си стойност — включително единична 5, която тогава струва 100 вместо 50. Това предимство изчезва веднага щом получите горещи зарове.';
 
   @override
-  String get rulesInheritTitle => 'Hériter des dés du joueur précédent';
+  String get rulesInheritTitle => 'Наследяване на заровете на предишния играч';
 
   @override
   String get rulesInheritBody =>
-      'Quand un joueur s\'arrête volontairement en ayant encore des dés non lancés, le joueur suivant peut choisir de reprendre ces dés restants ainsi que le score déjà accumulé comme base de départ, ou de repartir à zéro avec 5 dés neufs. En cas de craque, en revanche, le joueur suivant repart toujours avec 5 dés neufs, sans rien hériter.';
+      'Когато играч спре доброволно, като все още има нехвърлени зарове, следващият играч може да избере да поеме тези оставащи зарове заедно с вече натрупания резултат като начална база, или да започне от нулата с 5 нови зара. След провал обаче следващият играч винаги започва с 5 нови зара, без да наследява нищо.';
 
   @override
-  String get rulesBarredTitle => 'Tiret et barré';
+  String get rulesBarredTitle => 'Черта и зачеркване';
 
   @override
   String get rulesBarredBody =>
-      'Un craque place un tiret d\'avertissement sur votre ligne de score actuelle si elle n\'en a pas déjà un. Si elle en a déjà un, la ligne est barrée et votre score retombe à sa valeur précédente. Si votre score atteint exactement le même total qu\'un autre joueur, ce dernier est barré de la même façon, qu\'il ait déjà un tiret ou non.';
+      'Провалът поставя предупредителна черта на текущия ви ред в резултатите, ако той още няма такава. Ако вече има, редът се зачерква и резултатът ви се връща към предишната стойност. Ако резултатът ви стане точно равен на този на друг играч, той бива зачеркнат по същия начин, независимо дали вече има черта.';
 
   @override
-  String get rulesVictoryTitle => 'Comment gagner';
+  String get rulesVictoryTitle => 'Как се печели';
 
   @override
   String get rulesVictoryBody =>
-      'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.';
+      'Първият играч, достигнал точно 10 000 точки, задейства финален кръг: всеки от останалите играчи има последен шанс да го изравни или надмине на своя ход. Ако по време на финалния кръг друг играч също достигне точно 10 000, той поема короната и около него започва нов финален кръг.';
 }

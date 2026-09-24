@@ -13,33 +13,24 @@ class AppLocalizationsFi extends AppLocalizations {
   String get splashPresents => 'esittää';
 
   @override
-  String get ownerNameDialogTitle => 'Mikä on nimesi?';
-
-  @override
-  String get ownerNameFieldLabel => 'Pääpelaajan nimi';
-
-  @override
-  String get laterButton => 'Myöhemmin';
-
-  @override
   String get validateButton => 'Vahvista';
 
   @override
   String get settingsTooltip => 'Asetukset';
 
   @override
-  String get helpTooltip => 'Règles du jeu';
+  String get helpTooltip => 'Pelisäännöt';
 
   @override
-  String get aboutTooltip => 'À propos';
+  String get aboutTooltip => 'Tietoja';
 
   @override
   String aboutVersionLabel(String version, String buildNumber) {
-    return 'Version $version ($buildNumber)';
+    return 'Versio $version ($buildNumber)';
   }
 
   @override
-  String get closeButton => 'Fermer';
+  String get closeButton => 'Sulje';
 
   @override
   String playersCountTitle(int count) {
@@ -47,41 +38,7 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String defaultPlayerName(int number) {
-    return 'Pelaaja $number';
-  }
-
-  @override
-  String get unnamedPlayerFallback => 'Pelaaja';
-
-  @override
-  String playerNameFieldLabel(int number) {
-    return 'Pelaajan $number nimi';
-  }
-
-  @override
   String get autoChipLabel => 'AutoRoll';
-
-  @override
-  String get aiChipLabel => 'AI';
-
-  @override
-  String get addPlayerButton => 'Lisää';
-
-  @override
-  String get removePlayerButton => 'Poista';
-
-  @override
-  String get botDifficultyTitle => 'Bottien vaikeustaso';
-
-  @override
-  String get aiDifficultyCautious => 'Varovainen';
-
-  @override
-  String get aiDifficultyBalanced => 'Tasapainoinen';
-
-  @override
-  String get aiDifficultyAggressive => 'Aggressiivinen';
 
   @override
   String get startGameButton => 'Aloita peli';
@@ -90,178 +47,177 @@ class AppLocalizationsFi extends AppLocalizations {
   String get newGameSectionLabel => 'Uusi run...';
 
   @override
-  String get resumeGamesButton => 'Reprise de parties';
+  String get resumeGamesButton => 'Jatka pelejä';
 
   @override
-  String get managePlayersButton => 'Gestion des joueurs';
+  String get managePlayersButton => 'Pelaajien hallinta';
 
   @override
-  String get finishedGamesButton => 'Dernières parties terminées';
+  String get finishedGamesButton => 'Viimeksi päättyneet pelit';
 
   @override
-  String get statisticsButton => 'Statistiques';
+  String get statisticsButton => 'Tilastot';
 
   @override
   String playersScreenTitle(int count) {
-    return 'Joueurs ($count)';
+    return 'Pelaajat ($count)';
   }
 
   @override
-  String get addPlayerTooltip => 'Ajouter un joueur';
+  String get addPlayerTooltip => 'Lisää pelaaja';
 
   @override
-  String get noPlayersMessage => 'Aucun joueur enregistré pour l\'instant.';
+  String get noPlayersMessage => 'Ei vielä tallennettuja pelaajia.';
 
   @override
-  String get newPlayerTitle => 'Nouveau joueur';
+  String get newPlayerTitle => 'Uusi pelaaja';
 
   @override
-  String get editPlayerTitle => 'Modifier le joueur';
+  String get editPlayerTitle => 'Muokkaa pelaajaa';
 
   @override
-  String get playerNameLabel => 'Nom';
+  String get playerNameLabel => 'Nimi';
 
   @override
-  String get playerNicknameLabel => 'Surnom (facultatif)';
+  String get playerNicknameLabel => 'Lempinimi (valinnainen)';
 
   @override
-  String get playerNameRequiredError => 'Le nom est obligatoire.';
+  String get playerNameRequiredError => 'Nimi on pakollinen.';
 
   @override
-  String get playerNameTakenError =>
-      'Ce nom est déjà utilisé par un autre joueur.';
+  String get playerNameTakenError => 'Toinen pelaaja käyttää jo tätä nimeä.';
 
   @override
-  String get deletePlayerConfirmTitle => 'Supprimer ce joueur ?';
+  String get deletePlayerConfirmTitle => 'Poistetaanko tämä pelaaja?';
 
   @override
   String deletePlayerConfirmMessage(String name) {
-    return 'La fiche de « $name » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.';
+    return 'Pelaajan ”$name” tiedot ja tilastot poistetaan pysyvästi. Jo pelatut pelit säilytetään.';
   }
 
   @override
-  String get statsSectionTime => 'Temps de jeu';
+  String get statsSectionTime => 'Peliaika';
 
   @override
-  String get statsSectionGames => 'Parties';
+  String get statsSectionGames => 'Pelit';
 
   @override
-  String get statsSectionFigures => 'Figures';
+  String get statsSectionFigures => 'Yhdistelmät';
 
   @override
-  String get statsSectionRolls => 'Tours et lancers';
+  String get statsSectionRolls => 'Vuorot ja heitot';
 
   @override
-  String get statsTurns => 'Tours joués';
+  String get statsTurns => 'Pelatut vuorot';
 
   @override
-  String get statsRolls => 'Lancers';
+  String get statsRolls => 'Heitot';
 
   @override
-  String get statsRollsPerTurn => 'Lancers par tour';
+  String get statsRollsPerTurn => 'Heittoja vuorossa';
 
   @override
-  String get statsSectionMisc => 'Faits d\'armes';
+  String get statsSectionMisc => 'Urotyöt';
 
   @override
-  String get statsTotalTime => 'Total';
+  String get statsTotalTime => 'Yhteensä';
 
   @override
-  String get statsAverageTime => 'Moyenne par partie';
+  String get statsAverageTime => 'Keskimäärin pelissä';
 
   @override
-  String get statsShortestTime => 'La plus courte';
+  String get statsShortestTime => 'Lyhin';
 
   @override
-  String get statsLongestTime => 'La plus longue';
+  String get statsLongestTime => 'Pisin';
 
   @override
-  String get statsGamesPlayed => 'Jouées';
+  String get statsGamesPlayed => 'Pelatut';
 
   @override
-  String get statsGamesWon => 'Gagnées';
+  String get statsGamesWon => 'Voitetut';
 
   @override
-  String get statsGamesLost => 'Perdues';
+  String get statsGamesLost => 'Hävityt';
 
   @override
-  String get statsLoneAces => 'As isolés gardés';
+  String get statsLoneAces => 'Säilytetyt yksittäiset ykköset';
 
   @override
-  String get statsLoneFives => '5 isolés gardés';
+  String get statsLoneFives => 'Säilytetyt yksittäiset viitoset';
 
   @override
-  String get statsBrelans => 'Brelans';
+  String get statsBrelans => 'Kolmoset';
 
   @override
-  String get statsCarres => 'Carrés';
+  String get statsCarres => 'Neloset';
 
   @override
-  String get statsQuintes => 'Quintes';
+  String get statsQuintes => 'Viisi samaa';
 
   @override
-  String get statsSuites => 'Suites';
+  String get statsSuites => 'Suorat';
 
   @override
-  String get statsSmallSuites => 'dont petites';
+  String get statsSmallSuites => 'joista pieniä';
 
   @override
-  String get statsBigSuites => 'dont grandes';
+  String get statsBigSuites => 'joista suuria';
 
   @override
-  String get statsAceQuints => 'Quintes d\'as';
+  String get statsAceQuints => 'Viisi ykköstä';
 
   @override
-  String get statsAceQuintsWon => 'dont gagnantes';
+  String get statsAceQuintsWon => 'joista voittoon';
 
   @override
-  String get statsBestTurn => 'Meilleur tour';
+  String get statsBestTurn => 'Paras vuoro';
 
   @override
-  String get statsHotDiceRun => 'Mains pleines d\'affilée';
+  String get statsHotDiceRun => 'Kuumat nopat peräkkäin';
 
   @override
-  String get statsBusts => 'Craquages';
+  String get statsBusts => 'Epäonnistumiset';
 
   @override
-  String get statsLongestBustStreak => 'dont série la plus longue';
+  String get statsLongestBustStreak => 'pisin putki';
 
   @override
-  String get statsSelfBars => 'Auto-barrés';
+  String get statsSelfBars => 'Itse yliviivatut';
 
   @override
-  String get statsBarsInflicted => 'Barrés infligés';
+  String get statsBarsInflicted => 'Muilta yliviivatut';
 
   @override
-  String get scoreChartTitle => 'Évolution des scores';
+  String get scoreChartTitle => 'Pisteiden kehitys';
 
   @override
-  String get gameStatsTitle => 'Statistiques de la partie';
+  String get gameStatsTitle => 'Pelin tilastot';
 
   @override
-  String get gameStatsGameSection => 'Partie';
+  String get gameStatsGameSection => 'Peli';
 
   @override
-  String get gameStatsFiguresSection => 'Figures de la partie';
+  String get gameStatsFiguresSection => 'Pelin yhdistelmät';
 
   @override
-  String get gameStatsDuration => 'Durée de jeu';
+  String get gameStatsDuration => 'Peliaika';
 
   @override
   String gameStatsPlayerSummary(int turns, int best, int busts) {
     String _temp0 = intl.Intl.pluralLogic(
       turns,
       locale: localeName,
-      other: '$turns tours',
-      one: '$turns tour',
+      other: '$turns vuoroa',
+      one: '$turns vuoro',
     );
     String _temp1 = intl.Intl.pluralLogic(
       busts,
       locale: localeName,
-      other: '$busts craques',
-      one: '$busts craque',
+      other: '$busts epäonnistumista',
+      one: '$busts epäonnistuminen',
     );
-    return '$_temp0 · meilleur $best · $_temp1';
+    return '$_temp0 · paras $best · $_temp1';
   }
 
   @override
@@ -269,31 +225,31 @@ class AppLocalizationsFi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       games,
       locale: localeName,
-      other: '$games parties',
-      one: '$games partie',
+      other: '$games peliä',
+      one: '$games peli',
     );
     String _temp1 = intl.Intl.pluralLogic(
       won,
       locale: localeName,
-      other: '$won gagnées',
-      one: '$won gagnée',
+      other: '$won voitettua',
+      one: '$won voitettu',
     );
-    return '$_temp0 · $_temp1 · meilleur $best';
+    return '$_temp0 · $_temp1 · paras $best';
   }
 
   @override
   String get scoreChartEmpty =>
-      'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
+      'Yhtään vuoroa ei ole vielä päättynyt: piirrettävää ei ole.';
 
   @override
   String get replayUnavailable =>
-      'Cette partie ne peut pas être rejouée : son journal est incomplet.';
+      'Tätä peliä ei voi katsoa uudelleen: sen loki on puutteellinen.';
 
   @override
-  String get replayPlay => 'Lecture';
+  String get replayPlay => 'Toista';
 
   @override
-  String get replayPause => 'Pause';
+  String get replayPause => 'Tauko';
 
   @override
   String replayTurnOf(int turn, int count) {
@@ -302,20 +258,20 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String scoreChartTurn(int turn) {
-    return 'Tour $turn';
+    return 'Vuoro $turn';
   }
 
   @override
-  String get scoreChartXAxis => 'Tours joués';
+  String get scoreChartXAxis => 'Pelatut vuorot';
 
   @override
-  String get statsBreakdownRow => 'dont';
+  String get statsBreakdownRow => 'joista';
 
   @override
-  String get statsRecordsTitle => 'Records';
+  String get statsRecordsTitle => 'Ennätykset';
 
   @override
-  String get statsNoRecordYet => 'Aucun record pour l\'instant.';
+  String get statsNoRecordYet => 'Ei vielä ennätyksiä.';
 
   @override
   String statsValueWithHolder(String value, String holders) {
@@ -323,38 +279,38 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get pickPlayersTitle => 'Choisir des joueurs';
+  String get pickPlayersTitle => 'Valitse pelaajat';
 
   @override
-  String get addHumanTooltip => 'Ajouter un joueur';
+  String get addHumanTooltip => 'Lisää pelaaja';
 
   @override
-  String get addBotTooltip => 'Ajouter un bot';
+  String get addBotTooltip => 'Lisää botti';
 
   @override
-  String get createPlayerButton => 'Nouveau joueur';
+  String get createPlayerButton => 'Uusi pelaaja';
 
   @override
   String get noPlayersToPickMessage =>
-      'Aucun joueur en base. Créez-en un pour commencer.';
+      'Ei tallennettuja pelaajia. Luo yksi aloittaaksesi.';
 
   @override
-  String get botLabel => 'Bot';
+  String get botLabel => 'Botti';
 
   @override
-  String get removeSeatTooltip => 'Retirer de la partie';
+  String get removeSeatTooltip => 'Poista pelistä';
 
   @override
-  String get notEnoughPlayersMessage => 'Il faut au moins deux joueurs.';
+  String get notEnoughPlayersMessage => 'Tarvitaan vähintään kaksi pelaajaa.';
 
   @override
   String playerGamesSummary(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count parties jouées',
-      one: '$count partie jouée',
-      zero: 'Aucune partie jouée',
+      other: '$count pelattua peliä',
+      one: '$count pelattu peli',
+      zero: 'Ei pelattuja pelejä',
     );
     return '$_temp0';
   }
@@ -393,18 +349,18 @@ class AppLocalizationsFi extends AppLocalizations {
   String get deleteButton => 'Poista';
 
   @override
-  String get resumeLastGameDialogTitle => 'Reprendre la partie ?';
+  String get resumeLastGameDialogTitle => 'Jatketaanko peliä?';
 
   @override
   String resumeLastGameDialogMessage(String alias) {
-    return 'Une partie « $alias » est en cours. Voulez-vous la reprendre ?';
+    return 'Peli ”$alias” on kesken. Haluatko jatkaa sitä?';
   }
 
   @override
-  String get resumeGameButton => 'Reprendre';
+  String get resumeGameButton => 'Jatka';
 
   @override
-  String get gameOverReplayButton => 'Revoir la partie';
+  String get gameOverReplayButton => 'Katso peli uudelleen';
 
   @override
   String get scoreGridLabel => 'Pistetaulukko';
@@ -414,62 +370,59 @@ class AppLocalizationsFi extends AppLocalizations {
       'Viimeinen kierros: pelaaja on saavuttanut 10000!';
 
   @override
-  String get currentRollZoneLabel => 'Piste';
+  String get currentRollZoneLabel => 'Rata';
 
   @override
   String currentRollZoneLabelWithScore(int points) {
-    return 'Piste ($points)';
+    return 'Rata ($points)';
   }
 
   @override
-  String get currentHandZoneLabel => 'Main courante';
+  String get currentHandZoneLabel => 'Nykyinen käsi';
 
   @override
-  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+  String get logHotDiceMessage => 'Kuumat nopat!';
 
   @override
-  String get logHotDiceMessage => 'Main pleine !';
-
-  @override
-  String get logScoreCollisionMessage => 'Score barré :';
+  String get logScoreCollisionMessage => 'Pisteet yliviivattu:';
 
   @override
   String logRollGainMessage(String kept, int gain, int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count noppaa',
+      one: '$count noppa',
     );
-    return '$kept : $gain, $_temp0 => $total pts';
+    return '$kept: $gain, $_temp0 => $total p';
   }
 
   @override
   String logRollGainHotDiceMessage(String kept, int gain, int total) {
-    return '$kept : $gain, main pleine => $total pts';
+    return '$kept: $gain, kuumat nopat => $total p';
   }
 
   @override
   String logBankedMessage(int score, int total) {
-    return '$score pts sont pris => $total pts';
+    return '$score p kirjattu => $total p';
   }
 
   @override
   String logResumedHandMessage(int score) {
-    return '$score pts sont repris';
+    return '$score p otettu haltuun';
   }
 
   @override
   String logBustTiretMessage(int score) {
-    return 'Craqué ! => $score petit trait';
+    return 'Meni pieleen! => $score viiva';
   }
 
   @override
-  String get logBustBarredPrefix => 'Craqué ! =>';
+  String get logBustBarredPrefix => 'Meni pieleen! =>';
 
   @override
   String logBustBarredReturnMessage(int score) {
-    return 'retour à $score';
+    return 'takaisin $score';
   }
 
   @override
@@ -477,17 +430,14 @@ class AppLocalizationsFi extends AppLocalizations {
       'Tämän käden ottaminen ylittäisi jo 10000: et voi lopettaa.';
 
   @override
-  String get declineInheritedHandButton => 'Refuser';
+  String get rollButton => 'Heitä';
 
   @override
-  String get rollButton => 'Lancer';
-
-  @override
-  String get showProbabilitiesSetting => 'Afficher les probabilités';
+  String get showProbabilitiesSetting => 'Näytä todennäköisyydet';
 
   @override
   String get showProbabilitiesSettingSubtitle =>
-      'Affiche sur le bouton \"Lancer\" la chance de marquer au moins un point';
+      'Näyttää ”Heitä”-painikkeessa todennäköisyyden saada vähintään yksi piste';
 
   @override
   String get stopButton => 'Lopeta';
@@ -500,30 +450,30 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get bustFullHandAtTarget =>
-      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+      'Kuumat nopat 10000 pisteessä: et voi lopettaa, ja kaikkien heittäminen uudelleen ylittäisi.';
 
   @override
-  String get bustContinueButton => 'Continuer';
+  String get bustContinueButton => 'Jatka';
 
   @override
-  String get inheritedHandDialogTitle => 'Reprendre ?';
+  String get inheritedHandDialogTitle => 'Otatko haltuun?';
 
   @override
   String inheritedHandDialogMessage(int score, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count noppaa',
+      one: '$count noppa',
     );
     return '$score, $_temp0';
   }
 
   @override
-  String get resumeHandButton => 'Reprendre la main';
+  String get resumeHandButton => 'Ota käsi haltuun';
 
   @override
-  String get newHandButton => 'Nouvelle main';
+  String get newHandButton => 'Uusi käsi';
 
   @override
   String get failureBelowMinimum => 'Pisteet liian alhaiset lopettamiseen.';
@@ -582,19 +532,19 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Äänitehosteet';
 
   @override
-  String get settingsHandednessLabel => 'Disposition des boutons';
+  String get settingsHandednessLabel => 'Painikkeiden asettelu';
 
   @override
-  String get settingsHandednessRight => 'Droitier';
+  String get settingsHandednessRight => 'Oikeakätinen';
 
   @override
-  String get settingsHandednessLeft => 'Gaucher';
+  String get settingsHandednessLeft => 'Vasenkätinen';
 
   @override
-  String get settingsControlsTitle => 'Contrôles';
+  String get settingsControlsTitle => 'Ohjaimet';
 
   @override
-  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+  String get settingsShakeToRollLabel => 'Heitä nopat ravistamalla';
 
   @override
   String get settingsPausedGamesTitle => 'Tauolla olevat pelit';
@@ -611,17 +561,17 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get reorderPlayersHint =>
-      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+      'Vedä pelaajaa kahvasta muuttaaksesi järjestystä pöydän ympärillä.';
 
   @override
-  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+  String get reorderPlayerHandleLabel => 'Siirrä tätä pelaajaa';
 
   @override
   String get diceOffTitle => 'Kuka aloittaa?';
 
   @override
   String get diceOffInstructions =>
-      'Jokainen heittää yhden nopan: alhaisin pistemäärä aloittaa pelin.';
+      'Kaikki heittävät noppaa samaan aikaan: pienin aloittaa. Tasapelissä tasoihin jääneet heittävät uudelleen.';
 
   @override
   String diceOffTieBreak(String names) {
@@ -634,11 +584,11 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+  String get diceOffPlayOrderLabel => 'Pelijärjestys';
 
   @override
   String get diceOffReversedNote =>
-      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
+      'Naapureiden kaksintaistelun voitti jälkimmäinen: peli kiertää toiseen suuntaan.';
 
   @override
   String get gameOverTitle => 'Peli päättyi';
@@ -677,91 +627,91 @@ class AppLocalizationsFi extends AppLocalizations {
   String get previousScoreHadTiretTooltip => 'Edellisissä pisteissä oli viiva';
 
   @override
-  String get rankFirstTooltip => 'En tête';
+  String get rankFirstTooltip => 'Johdossa';
 
   @override
-  String get rankSecondTooltip => '2e au score';
+  String get rankSecondTooltip => '2. pisteissä';
 
   @override
-  String get rankThirdTooltip => '3e au score';
+  String get rankThirdTooltip => '3. pisteissä';
 
   @override
-  String get rulesScreenTitle => 'Règles du jeu';
+  String get rulesScreenTitle => 'Pelisäännöt';
 
   @override
-  String get rulesGoalTitle => 'But du jeu';
+  String get rulesGoalTitle => 'Pelin tavoite';
 
   @override
   String get rulesGoalBody =>
-      'Le premier joueur à atteindre exactement 10 000 points gagne la partie. Il faut viser ce chiffre pile : le dépasser ne compte pas.';
+      'Ensimmäinen pelaaja, joka saavuttaa tasan 10 000 pistettä, voittaa pelin. Luku on osuttava tarkalleen: sen ylittäminen ei kelpaa.';
 
   @override
-  String get rulesTurnTitle => 'Comment se joue un tour';
+  String get rulesTurnTitle => 'Miten vuoro pelataan';
 
   @override
   String get rulesTurnBody =>
-      'À votre tour, vous lancez 5 dés. Certaines valeurs rapportent des points (voir ci-dessous), d\'autres ne servent à rien. Vous mettez de côté au moins un dé qui rapporte, puis vous choisissez : relancer les dés restants pour tenter d\'engranger plus de points, ou vous arrêter et encaisser ce que vous avez accumulé ce tour. Si un lancer ne rapporte aucun point, c\'est un craque (voir plus bas) et vous perdez tout ce que vous aviez accumulé ce tour.';
+      'Vuorollasi heität 5 noppaa. Jotkin silmäluvut tuovat pisteitä (katso alla), toiset eivät mitään. Siirrät sivuun vähintään yhden pisteitä tuovan nopan ja valitset sitten: heitätkö jäljellä olevat nopat uudelleen kerätäksesi lisää pisteitä vai lopetatko ja kirjaat tämän vuoron aikana kertyneet pisteet. Jos heitto ei tuo yhtään pistettä, heitto menee pieleen (katso alla) ja menetät kaiken tällä vuorolla kertyneen.';
 
   @override
-  String get rulesScoringTitle => 'Ce qui rapporte des points';
+  String get rulesScoringTitle => 'Mikä tuo pisteitä';
 
   @override
   String get rulesScoringBody =>
-      '• Un 1 isolé : 100 points. Un 5 isolé : 50 points. Les autres valeurs isolées (2, 3, 4, 6) ne rapportent rien.\n• Trois dés identiques : 1000 points pour trois 1, sinon la valeur du dé × 100 (trois 4 valent 400, trois 6 valent 600).\n• Un quatrième dé de la même valeur ajoute 1000 points de plus.\n• Les 5 dés identiques valent la valeur du dé × 1000, sauf cinq 1 qui rapportent directement 10 000 points : la victoire immédiate.\n• Une suite de 5 dés qui se suivent (1-2-3-4-5 ou 2-3-4-5-6) vaut 500 points.';
+      '• Yksittäinen ykkönen: 100 pistettä. Yksittäinen viitonen: 50 pistettä. Muut yksittäiset silmäluvut (2, 3, 4, 6) eivät tuo mitään.\n• Kolme samaa noppaa: 1000 pistettä kolmesta ykkösestä, muuten silmäluku × 100 (kolme nelosta on 400, kolme kutosta 600).\n• Neljäs samanarvoinen noppa tuo vielä 1000 pistettä lisää.\n• Viisi samaa noppaa on silmäluku × 1000, paitsi viisi ykköstä, jotka tuovat suoraan 10 000 pistettä: välitön voitto.\n• Viiden peräkkäisen nopan suora (1-2-3-4-5 tai 2-3-4-5-6) on 500 pistettä.';
 
   @override
-  String get rulesHotDiceTitle => 'Dés chauds : une seconde chance forcée';
+  String get rulesHotDiceTitle => 'Kuumat nopat: pakotettu toinen mahdollisuus';
 
   @override
   String get rulesHotDiceBody =>
-      'Si tous les dés que vous venez de lancer rapportent des points, vous devez relancer les 5 dés en main : impossible de s\'arrêter à ce moment précis. C\'est ce qu\'on appelle des « dés chauds ».';
+      'Jos kaikki juuri heittämäsi nopat tuovat pisteitä, sinun on heitettävä kaikki 5 noppaa uudelleen: juuri sillä hetkellä et voi lopettaa. Tätä kutsutaan ”kuumiksi nopiksi”.';
 
   @override
-  String get rulesBustTitle => 'Le craque';
+  String get rulesBustTitle => 'Epäonnistuminen';
 
   @override
   String get rulesBustBody =>
-      'Si un lancer ne rapporte strictement aucun point, votre tour s\'arrête immédiatement et vous perdez tous les points accumulés ce tour (ce que vous aviez déjà encaissé lors des tours précédents reste acquis). Un craque marque aussi votre ligne de score actuelle d\'un tiret ; si elle en portait déjà un, elle est barrée et votre score retombe à sa valeur précédente.';
+      'Jos heitto ei tuo yhtään pistettä, vuorosi päättyy heti ja menetät kaikki tällä vuorolla kertyneet pisteet (aiemmilla vuoroilla kirjatut pisteet säilyvät). Epäonnistuminen merkitsee lisäksi nykyisen pisterivisi viivalla; jos rivillä oli jo viiva, se yliviivataan ja pisteesi palaavat edelliseen arvoon.';
 
   @override
-  String get rulesEntryTitle => 'Entrer dans la partie';
+  String get rulesEntryTitle => 'Peliin pääseminen';
 
   @override
   String get rulesEntryBody =>
-      'Pour commencer à marquer des points, votre tout premier tour réussi doit rapporter au moins 500 points. Une fois entré dans la partie, chaque tour suivant doit rapporter au moins 200 points pour pouvoir s\'arrêter.';
+      'Jotta voisit alkaa kerätä pisteitä, aivan ensimmäisen onnistuneen vuorosi on tuotava vähintään 500 pistettä. Kun olet päässyt peliin, jokaisen seuraavan vuoron on tuotava vähintään 200 pistettä, jotta voit lopettaa.';
 
   @override
-  String get rulesNoFiftyTitle => 'Jamais de score finissant par 50';
+  String get rulesNoFiftyTitle => 'Pisteet eivät koskaan pääty 50:een';
 
   @override
   String get rulesNoFiftyBody =>
-      'Vous ne pouvez jamais choisir de vous arrêter volontairement sur un total de tour qui finit par 50 (comme 250 ou 450) : il faut relancer les dés jusqu\'à obtenir un total valide.';
+      'Et voi koskaan lopettaa vapaaehtoisesti, jos vuoron summa päättyy 50:een (kuten 250 tai 450): on heitettävä uudelleen, kunnes summa kelpaa.';
 
   @override
-  String get rulesExtensionTitle => 'La règle d\'extension';
+  String get rulesExtensionTitle => 'Laajennussääntö';
 
   @override
   String get rulesExtensionBody =>
-      'Une fois que vous avez encaissé un brelan ou un carré d\'une valeur donnée (par exemple trois 4), tout dé isolé de cette même valeur obtenu plus tard dans le même tour rapporte 100 points au lieu de sa valeur habituelle — y compris un 5 isolé, qui vaut alors 100 au lieu de 50. Cet avantage disparaît dès que vous obtenez des dés chauds.';
+      'Kun olet kirjannut kolmoset tai neloset tietystä silmäluvusta (esimerkiksi kolme nelosta), jokainen samanarvoinen yksittäinen noppa, joka tulee myöhemmin samalla vuorolla, tuo 100 pistettä tavallisen arvonsa sijaan — myös yksittäinen viitonen, joka on silloin 100 eikä 50. Etu katoaa heti, kun saat kuumat nopat.';
 
   @override
-  String get rulesInheritTitle => 'Hériter des dés du joueur précédent';
+  String get rulesInheritTitle => 'Edellisen pelaajan noppien periminen';
 
   @override
   String get rulesInheritBody =>
-      'Quand un joueur s\'arrête volontairement en ayant encore des dés non lancés, le joueur suivant peut choisir de reprendre ces dés restants ainsi que le score déjà accumulé comme base de départ, ou de repartir à zéro avec 5 dés neufs. En cas de craque, en revanche, le joueur suivant repart toujours avec 5 dés neufs, sans rien hériter.';
+      'Kun pelaaja lopettaa vapaaehtoisesti ja hänellä on vielä heittämättömiä noppia, seuraava pelaaja voi valita, ottaako hän jäljellä olevat nopat ja jo kertyneet pisteet lähtöpohjaksi vai aloittaako alusta viidellä uudella nopalla. Epäonnistumisen jälkeen seuraava pelaaja aloittaa kuitenkin aina viidellä uudella nopalla perimättä mitään.';
 
   @override
-  String get rulesBarredTitle => 'Tiret et barré';
+  String get rulesBarredTitle => 'Viiva ja yliviivaus';
 
   @override
   String get rulesBarredBody =>
-      'Un craque place un tiret d\'avertissement sur votre ligne de score actuelle si elle n\'en a pas déjà un. Si elle en a déjà un, la ligne est barrée et votre score retombe à sa valeur précédente. Si votre score atteint exactement le même total qu\'un autre joueur, ce dernier est barré de la même façon, qu\'il ait déjà un tiret ou non.';
+      'Epäonnistuminen lisää varoitusviivan nykyiselle pisterivillesi, jos siinä ei vielä ole sellaista. Jos siinä on jo viiva, rivi yliviivataan ja pisteesi palaavat edelliseen arvoon. Jos pisteesi osuvat täsmälleen samaan summaan kuin toisen pelaajan, hänet yliviivataan samalla tavalla, oli hänellä jo viiva tai ei.';
 
   @override
-  String get rulesVictoryTitle => 'Comment gagner';
+  String get rulesVictoryTitle => 'Miten voitetaan';
 
   @override
   String get rulesVictoryBody =>
-      'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.';
+      'Ensimmäinen pelaaja, joka saavuttaa tasan 10 000 pistettä, käynnistää loppukierroksen: jokaisella muulla pelaajalla on vuorollaan viimeinen mahdollisuus tasoittaa tai ohittaa hänet. Jos toinenkin pelaaja saavuttaa loppukierroksen aikana tasan 10 000, hän ottaa kruunun ja hänen ympärillään alkaa uusi loppukierros.';
 }

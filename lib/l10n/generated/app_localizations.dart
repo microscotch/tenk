@@ -122,24 +122,6 @@ abstract class AppLocalizations {
   /// **'présente'**
   String get splashPresents;
 
-  /// Titre du dialogue demandant son nom au propriétaire de l'appareil.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre nom ?'**
-  String get ownerNameDialogTitle;
-
-  /// Libellé du champ de saisie dans le dialogue "Votre nom ?".
-  ///
-  /// In fr, this message translates to:
-  /// **'Nom du joueur principal'**
-  String get ownerNameFieldLabel;
-
-  /// Bouton pour repousser la saisie du nom du joueur principal.
-  ///
-  /// In fr, this message translates to:
-  /// **'Plus tard'**
-  String get laterButton;
-
   /// Bouton de validation d'un dialogue.
   ///
   /// In fr, this message translates to:
@@ -182,71 +164,11 @@ abstract class AppLocalizations {
   /// **'Joueurs ({count})'**
   String playersCountTitle(int count);
 
-  /// Nom par défaut attribué à un joueur humain (ex. "Joueur 1").
-  ///
-  /// In fr, this message translates to:
-  /// **'Joueur {number}'**
-  String defaultPlayerName(int number);
-
-  /// Nom de secours si le champ de nom d'un joueur est laissé vide au démarrage de la partie.
-  ///
-  /// In fr, this message translates to:
-  /// **'Joueur'**
-  String get unnamedPlayerFallback;
-
-  /// Libellé du champ de saisie du nom d'un joueur, sur l'écran de configuration.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nom du joueur {number}'**
-  String playerNameFieldLabel(int number);
-
   /// Libellé du bouton à bascule activant le mode automatique d'un joueur.
   ///
   /// In fr, this message translates to:
   /// **'AutoRoll'**
   String get autoChipLabel;
-
-  /// Libellé du bouton à bascule désignant un joueur comme IA.
-  ///
-  /// In fr, this message translates to:
-  /// **'IA'**
-  String get aiChipLabel;
-
-  /// Bouton pour ajouter un joueur sur l'écran de configuration.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter'**
-  String get addPlayerButton;
-
-  /// Bouton pour retirer un joueur sur l'écran de configuration.
-  ///
-  /// In fr, this message translates to:
-  /// **'Retirer'**
-  String get removePlayerButton;
-
-  /// Titre du sélecteur de difficulté des joueurs IA.
-  ///
-  /// In fr, this message translates to:
-  /// **'Difficulté des bots'**
-  String get botDifficultyTitle;
-
-  /// Niveau de difficulté IA le plus prudent.
-  ///
-  /// In fr, this message translates to:
-  /// **'Prudent'**
-  String get aiDifficultyCautious;
-
-  /// Niveau de difficulté IA intermédiaire.
-  ///
-  /// In fr, this message translates to:
-  /// **'Équilibré'**
-  String get aiDifficultyBalanced;
-
-  /// Niveau de difficulté IA le plus agressif.
-  ///
-  /// In fr, this message translates to:
-  /// **'Agressif'**
-  String get aiDifficultyAggressive;
 
   /// Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort).
   ///
@@ -806,12 +728,6 @@ abstract class AppLocalizations {
   /// **'Main courante'**
   String get currentHandZoneLabel;
 
-  /// Texte de substitution dans la zone "Lancé" quand aucun lancer n'est en attente de décision.
-  ///
-  /// In fr, this message translates to:
-  /// **'En attente du prochain lancer'**
-  String get awaitingRollPlaceholder;
-
   /// Entrée du journal de partie quand un lancer déclenche des dés chauds (tous les dés ont scoré).
   ///
   /// In fr, this message translates to:
@@ -871,12 +787,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Reprendre cette main atteindrait déjà 10000 : impossible de banquer.'**
   String get inheritedHandExceedsWinning;
-
-  /// Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain).
-  ///
-  /// In fr, this message translates to:
-  /// **'Refuser'**
-  String get declineInheritedHandButton;
 
   /// Bouton pour lancer les dés, quand l'affichage des probabilités est désactivé (sinon le bouton porte le pourcentage).
   ///

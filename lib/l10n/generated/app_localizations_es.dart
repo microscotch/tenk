@@ -13,33 +13,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get splashPresents => 'presenta';
 
   @override
-  String get ownerNameDialogTitle => '¿Cuál es tu nombre?';
-
-  @override
-  String get ownerNameFieldLabel => 'Nombre del jugador principal';
-
-  @override
-  String get laterButton => 'Más tarde';
-
-  @override
   String get validateButton => 'Confirmar';
 
   @override
   String get settingsTooltip => 'Ajustes';
 
   @override
-  String get helpTooltip => 'Règles du jeu';
+  String get helpTooltip => 'Reglas del juego';
 
   @override
-  String get aboutTooltip => 'À propos';
+  String get aboutTooltip => 'Acerca de';
 
   @override
   String aboutVersionLabel(String version, String buildNumber) {
-    return 'Version $version ($buildNumber)';
+    return 'Versión $version ($buildNumber)';
   }
 
   @override
-  String get closeButton => 'Fermer';
+  String get closeButton => 'Cerrar';
 
   @override
   String playersCountTitle(int count) {
@@ -47,41 +38,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String defaultPlayerName(int number) {
-    return 'Jugador $number';
-  }
-
-  @override
-  String get unnamedPlayerFallback => 'Jugador';
-
-  @override
-  String playerNameFieldLabel(int number) {
-    return 'Nombre del jugador $number';
-  }
-
-  @override
   String get autoChipLabel => 'AutoRoll';
-
-  @override
-  String get aiChipLabel => 'IA';
-
-  @override
-  String get addPlayerButton => 'Añadir';
-
-  @override
-  String get removePlayerButton => 'Quitar';
-
-  @override
-  String get botDifficultyTitle => 'Dificultad de los bots';
-
-  @override
-  String get aiDifficultyCautious => 'Prudente';
-
-  @override
-  String get aiDifficultyBalanced => 'Equilibrado';
-
-  @override
-  String get aiDifficultyAggressive => 'Agresivo';
 
   @override
   String get startGameButton => 'Empezar partida';
@@ -90,178 +47,177 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newGameSectionLabel => 'Nueva run...';
 
   @override
-  String get resumeGamesButton => 'Reprise de parties';
+  String get resumeGamesButton => 'Reanudar partidas';
 
   @override
-  String get managePlayersButton => 'Gestion des joueurs';
+  String get managePlayersButton => 'Gestionar jugadores';
 
   @override
-  String get finishedGamesButton => 'Dernières parties terminées';
+  String get finishedGamesButton => 'Últimas partidas terminadas';
 
   @override
-  String get statisticsButton => 'Statistiques';
+  String get statisticsButton => 'Estadísticas';
 
   @override
   String playersScreenTitle(int count) {
-    return 'Joueurs ($count)';
+    return 'Jugadores ($count)';
   }
 
   @override
-  String get addPlayerTooltip => 'Ajouter un joueur';
+  String get addPlayerTooltip => 'Añadir un jugador';
 
   @override
-  String get noPlayersMessage => 'Aucun joueur enregistré pour l\'instant.';
+  String get noPlayersMessage => 'Aún no hay jugadores guardados.';
 
   @override
-  String get newPlayerTitle => 'Nouveau joueur';
+  String get newPlayerTitle => 'Nuevo jugador';
 
   @override
-  String get editPlayerTitle => 'Modifier le joueur';
+  String get editPlayerTitle => 'Editar jugador';
 
   @override
-  String get playerNameLabel => 'Nom';
+  String get playerNameLabel => 'Nombre';
 
   @override
-  String get playerNicknameLabel => 'Surnom (facultatif)';
+  String get playerNicknameLabel => 'Apodo (opcional)';
 
   @override
-  String get playerNameRequiredError => 'Le nom est obligatoire.';
+  String get playerNameRequiredError => 'El nombre es obligatorio.';
 
   @override
-  String get playerNameTakenError =>
-      'Ce nom est déjà utilisé par un autre joueur.';
+  String get playerNameTakenError => 'Este nombre ya lo usa otro jugador.';
 
   @override
-  String get deletePlayerConfirmTitle => 'Supprimer ce joueur ?';
+  String get deletePlayerConfirmTitle => '¿Eliminar este jugador?';
 
   @override
   String deletePlayerConfirmMessage(String name) {
-    return 'La fiche de « $name » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.';
+    return 'La ficha de «$name» y sus estadísticas se eliminarán definitivamente. Las partidas ya jugadas se conservan.';
   }
 
   @override
-  String get statsSectionTime => 'Temps de jeu';
+  String get statsSectionTime => 'Tiempo de juego';
 
   @override
-  String get statsSectionGames => 'Parties';
+  String get statsSectionGames => 'Partidas';
 
   @override
-  String get statsSectionFigures => 'Figures';
+  String get statsSectionFigures => 'Combinaciones';
 
   @override
-  String get statsSectionRolls => 'Tours et lancers';
+  String get statsSectionRolls => 'Turnos y tiradas';
 
   @override
-  String get statsTurns => 'Tours joués';
+  String get statsTurns => 'Turnos jugados';
 
   @override
-  String get statsRolls => 'Lancers';
+  String get statsRolls => 'Tiradas';
 
   @override
-  String get statsRollsPerTurn => 'Lancers par tour';
+  String get statsRollsPerTurn => 'Tiradas por turno';
 
   @override
-  String get statsSectionMisc => 'Faits d\'armes';
+  String get statsSectionMisc => 'Hazañas';
 
   @override
   String get statsTotalTime => 'Total';
 
   @override
-  String get statsAverageTime => 'Moyenne par partie';
+  String get statsAverageTime => 'Media por partida';
 
   @override
-  String get statsShortestTime => 'La plus courte';
+  String get statsShortestTime => 'La más corta';
 
   @override
-  String get statsLongestTime => 'La plus longue';
+  String get statsLongestTime => 'La más larga';
 
   @override
-  String get statsGamesPlayed => 'Jouées';
+  String get statsGamesPlayed => 'Jugadas';
 
   @override
-  String get statsGamesWon => 'Gagnées';
+  String get statsGamesWon => 'Ganadas';
 
   @override
-  String get statsGamesLost => 'Perdues';
+  String get statsGamesLost => 'Perdidas';
 
   @override
-  String get statsLoneAces => 'As isolés gardés';
+  String get statsLoneAces => '1 sueltos guardados';
 
   @override
-  String get statsLoneFives => '5 isolés gardés';
+  String get statsLoneFives => '5 sueltos guardados';
 
   @override
-  String get statsBrelans => 'Brelans';
+  String get statsBrelans => 'Tríos';
 
   @override
-  String get statsCarres => 'Carrés';
+  String get statsCarres => 'Póqueres';
 
   @override
-  String get statsQuintes => 'Quintes';
+  String get statsQuintes => 'Repóqueres';
 
   @override
-  String get statsSuites => 'Suites';
+  String get statsSuites => 'Escaleras';
 
   @override
-  String get statsSmallSuites => 'dont petites';
+  String get statsSmallSuites => 'de ellas bajas';
 
   @override
-  String get statsBigSuites => 'dont grandes';
+  String get statsBigSuites => 'de ellas altas';
 
   @override
-  String get statsAceQuints => 'Quintes d\'as';
+  String get statsAceQuints => 'Cinco 1';
 
   @override
-  String get statsAceQuintsWon => 'dont gagnantes';
+  String get statsAceQuintsWon => 'de ellos ganadores';
 
   @override
-  String get statsBestTurn => 'Meilleur tour';
+  String get statsBestTurn => 'Mejor turno';
 
   @override
-  String get statsHotDiceRun => 'Mains pleines d\'affilée';
+  String get statsHotDiceRun => 'Dados calientes seguidos';
 
   @override
-  String get statsBusts => 'Craquages';
+  String get statsBusts => 'Pases';
 
   @override
-  String get statsLongestBustStreak => 'dont série la plus longue';
+  String get statsLongestBustStreak => 'racha más larga';
 
   @override
-  String get statsSelfBars => 'Auto-barrés';
+  String get statsSelfBars => 'Tachados a sí mismo';
 
   @override
-  String get statsBarsInflicted => 'Barrés infligés';
+  String get statsBarsInflicted => 'Tachados a otros';
 
   @override
-  String get scoreChartTitle => 'Évolution des scores';
+  String get scoreChartTitle => 'Evolución de las puntuaciones';
 
   @override
-  String get gameStatsTitle => 'Statistiques de la partie';
+  String get gameStatsTitle => 'Estadísticas de la partida';
 
   @override
-  String get gameStatsGameSection => 'Partie';
+  String get gameStatsGameSection => 'Partida';
 
   @override
-  String get gameStatsFiguresSection => 'Figures de la partie';
+  String get gameStatsFiguresSection => 'Combinaciones de la partida';
 
   @override
-  String get gameStatsDuration => 'Durée de jeu';
+  String get gameStatsDuration => 'Tiempo de juego';
 
   @override
   String gameStatsPlayerSummary(int turns, int best, int busts) {
     String _temp0 = intl.Intl.pluralLogic(
       turns,
       locale: localeName,
-      other: '$turns tours',
-      one: '$turns tour',
+      other: '$turns turnos',
+      one: '$turns turno',
     );
     String _temp1 = intl.Intl.pluralLogic(
       busts,
       locale: localeName,
-      other: '$busts craques',
-      one: '$busts craque',
+      other: '$busts pases',
+      one: '$busts pase',
     );
-    return '$_temp0 · meilleur $best · $_temp1';
+    return '$_temp0 · mejor $best · $_temp1';
   }
 
   @override
@@ -269,31 +225,31 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       games,
       locale: localeName,
-      other: '$games parties',
-      one: '$games partie',
+      other: '$games partidas',
+      one: '$games partida',
     );
     String _temp1 = intl.Intl.pluralLogic(
       won,
       locale: localeName,
-      other: '$won gagnées',
-      one: '$won gagnée',
+      other: '$won ganadas',
+      one: '$won ganada',
     );
-    return '$_temp0 · $_temp1 · meilleur $best';
+    return '$_temp0 · $_temp1 · mejor $best';
   }
 
   @override
   String get scoreChartEmpty =>
-      'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
+      'Aún no ha terminado ningún turno: no hay nada que trazar.';
 
   @override
   String get replayUnavailable =>
-      'Cette partie ne peut pas être rejouée : son journal est incomplet.';
+      'Esta partida no se puede volver a ver: su registro está incompleto.';
 
   @override
-  String get replayPlay => 'Lecture';
+  String get replayPlay => 'Reproducir';
 
   @override
-  String get replayPause => 'Pause';
+  String get replayPause => 'Pausa';
 
   @override
   String replayTurnOf(int turn, int count) {
@@ -302,20 +258,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String scoreChartTurn(int turn) {
-    return 'Tour $turn';
+    return 'Turno $turn';
   }
 
   @override
-  String get scoreChartXAxis => 'Tours joués';
+  String get scoreChartXAxis => 'Turnos jugados';
 
   @override
-  String get statsBreakdownRow => 'dont';
+  String get statsBreakdownRow => 'de ellos';
 
   @override
-  String get statsRecordsTitle => 'Records';
+  String get statsRecordsTitle => 'Récords';
 
   @override
-  String get statsNoRecordYet => 'Aucun record pour l\'instant.';
+  String get statsNoRecordYet => 'Aún no hay récords.';
 
   @override
   String statsValueWithHolder(String value, String holders) {
@@ -323,38 +279,38 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get pickPlayersTitle => 'Choisir des joueurs';
+  String get pickPlayersTitle => 'Elegir jugadores';
 
   @override
-  String get addHumanTooltip => 'Ajouter un joueur';
+  String get addHumanTooltip => 'Añadir un jugador';
 
   @override
-  String get addBotTooltip => 'Ajouter un bot';
+  String get addBotTooltip => 'Añadir un bot';
 
   @override
-  String get createPlayerButton => 'Nouveau joueur';
+  String get createPlayerButton => 'Nuevo jugador';
 
   @override
   String get noPlayersToPickMessage =>
-      'Aucun joueur en base. Créez-en un pour commencer.';
+      'No hay jugadores guardados. Crea uno para empezar.';
 
   @override
   String get botLabel => 'Bot';
 
   @override
-  String get removeSeatTooltip => 'Retirer de la partie';
+  String get removeSeatTooltip => 'Quitar de la partida';
 
   @override
-  String get notEnoughPlayersMessage => 'Il faut au moins deux joueurs.';
+  String get notEnoughPlayersMessage => 'Hacen falta al menos dos jugadores.';
 
   @override
   String playerGamesSummary(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count parties jouées',
-      one: '$count partie jouée',
-      zero: 'Aucune partie jouée',
+      other: '$count partidas jugadas',
+      one: '$count partida jugada',
+      zero: 'Ninguna partida jugada',
     );
     return '$_temp0';
   }
@@ -393,18 +349,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteButton => 'Eliminar';
 
   @override
-  String get resumeLastGameDialogTitle => 'Reprendre la partie ?';
+  String get resumeLastGameDialogTitle => '¿Reanudar la partida?';
 
   @override
   String resumeLastGameDialogMessage(String alias) {
-    return 'Une partie « $alias » est en cours. Voulez-vous la reprendre ?';
+    return 'Hay una partida «$alias» en curso. ¿Quieres reanudarla?';
   }
 
   @override
-  String get resumeGameButton => 'Reprendre';
+  String get resumeGameButton => 'Reanudar';
 
   @override
-  String get gameOverReplayButton => 'Revoir la partie';
+  String get gameOverReplayButton => 'Volver a ver la partida';
 
   @override
   String get scoreGridLabel => 'Tabla de puntuaciones';
@@ -414,62 +370,59 @@ class AppLocalizationsEs extends AppLocalizations {
       '¡Última ronda: un jugador ha alcanzado 10000!';
 
   @override
-  String get currentRollZoneLabel => 'Piste';
+  String get currentRollZoneLabel => 'Pista';
 
   @override
   String currentRollZoneLabelWithScore(int points) {
-    return 'Piste ($points)';
+    return 'Pista ($points)';
   }
 
   @override
-  String get currentHandZoneLabel => 'Main courante';
+  String get currentHandZoneLabel => 'Mano actual';
 
   @override
-  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+  String get logHotDiceMessage => '¡Dados calientes!';
 
   @override
-  String get logHotDiceMessage => 'Main pleine !';
-
-  @override
-  String get logScoreCollisionMessage => 'Score barré :';
+  String get logScoreCollisionMessage => 'Puntuación tachada:';
 
   @override
   String logRollGainMessage(String kept, int gain, int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count dados',
+      one: '$count dado',
     );
-    return '$kept : $gain, $_temp0 => $total pts';
+    return '$kept: $gain, $_temp0 => $total ptos';
   }
 
   @override
   String logRollGainHotDiceMessage(String kept, int gain, int total) {
-    return '$kept : $gain, main pleine => $total pts';
+    return '$kept: $gain, dados calientes => $total ptos';
   }
 
   @override
   String logBankedMessage(int score, int total) {
-    return '$score pts sont pris => $total pts';
+    return '$score ptos anotados => $total ptos';
   }
 
   @override
   String logResumedHandMessage(int score) {
-    return '$score pts sont repris';
+    return '$score ptos retomados';
   }
 
   @override
   String logBustTiretMessage(int score) {
-    return 'Craqué ! => $score petit trait';
+    return '¡Te has pasado! => $score guion';
   }
 
   @override
-  String get logBustBarredPrefix => 'Craqué ! =>';
+  String get logBustBarredPrefix => '¡Te has pasado! =>';
 
   @override
   String logBustBarredReturnMessage(int score) {
-    return 'retour à $score';
+    return 'vuelta a $score';
   }
 
   @override
@@ -477,17 +430,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Retomar esta mano ya superaría 10000: no se puede plantar.';
 
   @override
-  String get declineInheritedHandButton => 'Refuser';
+  String get rollButton => 'Tirar';
 
   @override
-  String get rollButton => 'Lancer';
-
-  @override
-  String get showProbabilitiesSetting => 'Afficher les probabilités';
+  String get showProbabilitiesSetting => 'Mostrar probabilidades';
 
   @override
   String get showProbabilitiesSettingSubtitle =>
-      'Affiche sur le bouton \"Lancer\" la chance de marquer au moins un point';
+      'Muestra en el botón «Tirar» la probabilidad de sumar al menos un punto';
 
   @override
   String get stopButton => 'Plantarse';
@@ -500,30 +450,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bustFullHandAtTarget =>
-      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+      'Dados calientes en 10000: no puedes plantarte y volver a tirarlo todo te pasaría.';
 
   @override
-  String get bustContinueButton => 'Continuer';
+  String get bustContinueButton => 'Continuar';
 
   @override
-  String get inheritedHandDialogTitle => 'Reprendre ?';
+  String get inheritedHandDialogTitle => '¿Retomar?';
 
   @override
   String inheritedHandDialogMessage(int score, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count dados',
+      one: '$count dado',
     );
     return '$score, $_temp0';
   }
 
   @override
-  String get resumeHandButton => 'Reprendre la main';
+  String get resumeHandButton => 'Retomar la mano';
 
   @override
-  String get newHandButton => 'Nouvelle main';
+  String get newHandButton => 'Nueva mano';
 
   @override
   String get failureBelowMinimum => 'Puntuación insuficiente para plantarse.';
@@ -582,19 +532,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Efectos de sonido';
 
   @override
-  String get settingsHandednessLabel => 'Disposition des boutons';
+  String get settingsHandednessLabel => 'Disposición de los botones';
 
   @override
-  String get settingsHandednessRight => 'Droitier';
+  String get settingsHandednessRight => 'Diestro';
 
   @override
-  String get settingsHandednessLeft => 'Gaucher';
+  String get settingsHandednessLeft => 'Zurdo';
 
   @override
-  String get settingsControlsTitle => 'Contrôles';
+  String get settingsControlsTitle => 'Controles';
 
   @override
-  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+  String get settingsShakeToRollLabel => 'Agitar para tirar los dados';
 
   @override
   String get settingsPausedGamesTitle => 'Partidas en pausa';
@@ -611,17 +561,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reorderPlayersHint =>
-      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+      'Arrastra a un jugador por su asa para cambiar el orden alrededor de la mesa.';
 
   @override
-  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+  String get reorderPlayerHandleLabel => 'Mover a este jugador';
 
   @override
   String get diceOffTitle => '¿Quién empieza?';
 
   @override
   String get diceOffInstructions =>
-      'Cada jugador lanza un dado: la puntuación más baja empieza la partida.';
+      'Todos lanzan su dado a la vez: empieza el más bajo. En caso de empate, los empatados vuelven a lanzar.';
 
   @override
   String diceOffTieBreak(String names) {
@@ -634,11 +584,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+  String get diceOffPlayOrderLabel => 'Orden de juego';
 
   @override
   String get diceOffReversedNote =>
-      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
+      'Duelo entre vecinos ganado por el segundo: la partida gira en sentido contrario.';
 
   @override
   String get gameOverTitle => 'Fin de la partida';
@@ -678,91 +628,92 @@ class AppLocalizationsEs extends AppLocalizations {
       'La puntuación anterior tenía un guion';
 
   @override
-  String get rankFirstTooltip => 'En tête';
+  String get rankFirstTooltip => 'En cabeza';
 
   @override
-  String get rankSecondTooltip => '2e au score';
+  String get rankSecondTooltip => '2.º en puntuación';
 
   @override
-  String get rankThirdTooltip => '3e au score';
+  String get rankThirdTooltip => '3.º en puntuación';
 
   @override
-  String get rulesScreenTitle => 'Règles du jeu';
+  String get rulesScreenTitle => 'Reglas del juego';
 
   @override
-  String get rulesGoalTitle => 'But du jeu';
+  String get rulesGoalTitle => 'Objetivo del juego';
 
   @override
   String get rulesGoalBody =>
-      'Le premier joueur à atteindre exactement 10 000 points gagne la partie. Il faut viser ce chiffre pile : le dépasser ne compte pas.';
+      'El primer jugador que alcanza exactamente 10 000 puntos gana la partida. Hay que llegar a esa cifra justa: pasarse no cuenta.';
 
   @override
-  String get rulesTurnTitle => 'Comment se joue un tour';
+  String get rulesTurnTitle => 'Cómo se juega un turno';
 
   @override
   String get rulesTurnBody =>
-      'À votre tour, vous lancez 5 dés. Certaines valeurs rapportent des points (voir ci-dessous), d\'autres ne servent à rien. Vous mettez de côté au moins un dé qui rapporte, puis vous choisissez : relancer les dés restants pour tenter d\'engranger plus de points, ou vous arrêter et encaisser ce que vous avez accumulé ce tour. Si un lancer ne rapporte aucun point, c\'est un craque (voir plus bas) et vous perdez tout ce que vous aviez accumulé ce tour.';
+      'En tu turno, tiras 5 dados. Algunos valores dan puntos (ver más abajo), otros no sirven de nada. Apartas al menos un dado que puntúe y luego eliges: volver a tirar los dados restantes para intentar sumar más puntos, o plantarte y anotar lo acumulado en este turno. Si una tirada no da ningún punto, es un pase (ver más abajo) y pierdes todo lo acumulado en este turno.';
 
   @override
-  String get rulesScoringTitle => 'Ce qui rapporte des points';
+  String get rulesScoringTitle => 'Qué da puntos';
 
   @override
   String get rulesScoringBody =>
-      '• Un 1 isolé : 100 points. Un 5 isolé : 50 points. Les autres valeurs isolées (2, 3, 4, 6) ne rapportent rien.\n• Trois dés identiques : 1000 points pour trois 1, sinon la valeur du dé × 100 (trois 4 valent 400, trois 6 valent 600).\n• Un quatrième dé de la même valeur ajoute 1000 points de plus.\n• Les 5 dés identiques valent la valeur du dé × 1000, sauf cinq 1 qui rapportent directement 10 000 points : la victoire immédiate.\n• Une suite de 5 dés qui se suivent (1-2-3-4-5 ou 2-3-4-5-6) vaut 500 points.';
+      '• Un 1 suelto: 100 puntos. Un 5 suelto: 50 puntos. Los demás valores sueltos (2, 3, 4, 6) no dan nada.\n• Tres dados iguales: 1000 puntos por tres 1, si no el valor del dado × 100 (tres 4 valen 400, tres 6 valen 600).\n• Un cuarto dado del mismo valor añade 1000 puntos más.\n• Cinco dados iguales valen el valor del dado × 1000, salvo cinco 1, que dan directamente 10 000 puntos: la victoria inmediata.\n• Una escalera de 5 dados consecutivos (1-2-3-4-5 o 2-3-4-5-6) vale 500 puntos.';
 
   @override
-  String get rulesHotDiceTitle => 'Dés chauds : une seconde chance forcée';
+  String get rulesHotDiceTitle =>
+      'Dados calientes: una segunda oportunidad forzada';
 
   @override
   String get rulesHotDiceBody =>
-      'Si tous les dés que vous venez de lancer rapportent des points, vous devez relancer les 5 dés en main : impossible de s\'arrêter à ce moment précis. C\'est ce qu\'on appelle des « dés chauds ».';
+      'Si todos los dados que acabas de tirar dan puntos, debes volver a tirar los 5 dados: no puedes plantarte en ese preciso momento. Es lo que se llama «dados calientes».';
 
   @override
-  String get rulesBustTitle => 'Le craque';
+  String get rulesBustTitle => 'El pase';
 
   @override
   String get rulesBustBody =>
-      'Si un lancer ne rapporte strictement aucun point, votre tour s\'arrête immédiatement et vous perdez tous les points accumulés ce tour (ce que vous aviez déjà encaissé lors des tours précédents reste acquis). Un craque marque aussi votre ligne de score actuelle d\'un tiret ; si elle en portait déjà un, elle est barrée et votre score retombe à sa valeur précédente.';
+      'Si una tirada no da ningún punto, tu turno termina en el acto y pierdes todos los puntos acumulados en este turno (lo que ya anotaste en turnos anteriores se conserva). Un pase marca además tu línea de puntuación actual con un guion; si ya tenía uno, se tacha y tu puntuación vuelve a su valor anterior.';
 
   @override
-  String get rulesEntryTitle => 'Entrer dans la partie';
+  String get rulesEntryTitle => 'Entrar en la partida';
 
   @override
   String get rulesEntryBody =>
-      'Pour commencer à marquer des points, votre tout premier tour réussi doit rapporter au moins 500 points. Une fois entré dans la partie, chaque tour suivant doit rapporter au moins 200 points pour pouvoir s\'arrêter.';
+      'Para empezar a sumar, tu primer turno con éxito debe darte al menos 500 puntos. Una vez dentro de la partida, cada turno siguiente debe darte al menos 200 puntos para poder plantarte.';
 
   @override
-  String get rulesNoFiftyTitle => 'Jamais de score finissant par 50';
+  String get rulesNoFiftyTitle => 'Nunca una puntuación que acabe en 50';
 
   @override
   String get rulesNoFiftyBody =>
-      'Vous ne pouvez jamais choisir de vous arrêter volontairement sur un total de tour qui finit par 50 (comme 250 ou 450) : il faut relancer les dés jusqu\'à obtenir un total valide.';
+      'Nunca puedes elegir plantarte con un total de turno que acabe en 50 (como 250 o 450): hay que seguir tirando hasta obtener un total válido.';
 
   @override
-  String get rulesExtensionTitle => 'La règle d\'extension';
+  String get rulesExtensionTitle => 'La regla de extensión';
 
   @override
   String get rulesExtensionBody =>
-      'Une fois que vous avez encaissé un brelan ou un carré d\'une valeur donnée (par exemple trois 4), tout dé isolé de cette même valeur obtenu plus tard dans le même tour rapporte 100 points au lieu de sa valeur habituelle — y compris un 5 isolé, qui vaut alors 100 au lieu de 50. Cet avantage disparaît dès que vous obtenez des dés chauds.';
+      'Una vez que has anotado un trío o un póquer de un valor (por ejemplo tres 4), cualquier dado suelto de ese mismo valor que salga más tarde en el mismo turno vale 100 puntos en lugar de su valor habitual — incluido un 5 suelto, que entonces vale 100 en lugar de 50. Esta ventaja desaparece en cuanto consigues dados calientes.';
 
   @override
-  String get rulesInheritTitle => 'Hériter des dés du joueur précédent';
+  String get rulesInheritTitle => 'Heredar los dados del jugador anterior';
 
   @override
   String get rulesInheritBody =>
-      'Quand un joueur s\'arrête volontairement en ayant encore des dés non lancés, le joueur suivant peut choisir de reprendre ces dés restants ainsi que le score déjà accumulé comme base de départ, ou de repartir à zéro avec 5 dés neufs. En cas de craque, en revanche, le joueur suivant repart toujours avec 5 dés neufs, sans rien hériter.';
+      'Cuando un jugador se planta con dados aún sin tirar, el siguiente jugador puede elegir retomar esos dados restantes junto con la puntuación ya acumulada como base, o empezar de cero con 5 dados nuevos. Tras un pase, en cambio, el siguiente jugador siempre empieza con 5 dados nuevos, sin heredar nada.';
 
   @override
-  String get rulesBarredTitle => 'Tiret et barré';
+  String get rulesBarredTitle => 'Guion y tachado';
 
   @override
   String get rulesBarredBody =>
-      'Un craque place un tiret d\'avertissement sur votre ligne de score actuelle si elle n\'en a pas déjà un. Si elle en a déjà un, la ligne est barrée et votre score retombe à sa valeur précédente. Si votre score atteint exactement le même total qu\'un autre joueur, ce dernier est barré de la même façon, qu\'il ait déjà un tiret ou non.';
+      'Un pase coloca un guion de aviso en tu línea de puntuación actual si aún no lo tiene. Si ya lo tiene, la línea se tacha y tu puntuación vuelve a su valor anterior. Si tu puntuación alcanza exactamente el mismo total que la de otro jugador, a este se le tacha de la misma manera, tenga ya un guion o no.';
 
   @override
-  String get rulesVictoryTitle => 'Comment gagner';
+  String get rulesVictoryTitle => 'Cómo ganar';
 
   @override
   String get rulesVictoryBody =>
-      'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.';
+      'El primer jugador que alcanza exactamente 10 000 puntos desencadena una ronda final: cada uno de los demás jugadores tiene una última oportunidad de igualarlo o superarlo en su turno. Si otro jugador alcanza también exactamente 10 000 durante esa ronda final, se queda con la corona y empieza una nueva ronda final a su alrededor.';
 }

@@ -13,15 +13,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get splashPresents => 'présente';
 
   @override
-  String get ownerNameDialogTitle => 'Votre nom ?';
-
-  @override
-  String get ownerNameFieldLabel => 'Nom du joueur principal';
-
-  @override
-  String get laterButton => 'Plus tard';
-
-  @override
   String get validateButton => 'Valider';
 
   @override
@@ -47,41 +38,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String defaultPlayerName(int number) {
-    return 'Joueur $number';
-  }
-
-  @override
-  String get unnamedPlayerFallback => 'Joueur';
-
-  @override
-  String playerNameFieldLabel(int number) {
-    return 'Nom du joueur $number';
-  }
-
-  @override
   String get autoChipLabel => 'AutoRoll';
-
-  @override
-  String get aiChipLabel => 'IA';
-
-  @override
-  String get addPlayerButton => 'Ajouter';
-
-  @override
-  String get removePlayerButton => 'Retirer';
-
-  @override
-  String get botDifficultyTitle => 'Difficulté des bots';
-
-  @override
-  String get aiDifficultyCautious => 'Prudent';
-
-  @override
-  String get aiDifficultyBalanced => 'Équilibré';
-
-  @override
-  String get aiDifficultyAggressive => 'Agressif';
 
   @override
   String get startGameButton => 'Commencer la partie';
@@ -424,9 +381,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get currentHandZoneLabel => 'Main courante';
 
   @override
-  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
-
-  @override
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
@@ -474,9 +428,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get inheritedHandExceedsWinning =>
       'Reprendre cette main atteindrait déjà 10000 : impossible de banquer.';
-
-  @override
-  String get declineInheritedHandButton => 'Refuser';
 
   @override
   String get rollButton => 'Lancer';

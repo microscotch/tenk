@@ -4,15 +4,6 @@
   "splashPresents": "présente",
   "@splashPresents": {"description": "Mot affiché sous l'avatar sur l'écran d'introduction (\"[Auteur] présente\")."},
 
-  "ownerNameDialogTitle": "Votre nom ?",
-  "@ownerNameDialogTitle": {"description": "Titre du dialogue demandant son nom au propriétaire de l'appareil."},
-
-  "ownerNameFieldLabel": "Nom du joueur principal",
-  "@ownerNameFieldLabel": {"description": "Libellé du champ de saisie dans le dialogue \"Votre nom ?\"."},
-
-  "laterButton": "Plus tard",
-  "@laterButton": {"description": "Bouton pour repousser la saisie du nom du joueur principal."},
-
   "validateButton": "Valider",
   "@validateButton": {"description": "Bouton de validation d'un dialogue."},
 
@@ -40,44 +31,8 @@
     "placeholders": {"count": {"type": "int"}}
   },
 
-  "defaultPlayerName": "Joueur {number}",
-  "@defaultPlayerName": {
-    "description": "Nom par défaut attribué à un joueur humain (ex. \"Joueur 1\").",
-    "placeholders": {"number": {"type": "int"}}
-  },
-
-  "unnamedPlayerFallback": "Joueur",
-  "@unnamedPlayerFallback": {"description": "Nom de secours si le champ de nom d'un joueur est laissé vide au démarrage de la partie."},
-
-  "playerNameFieldLabel": "Nom du joueur {number}",
-  "@playerNameFieldLabel": {
-    "description": "Libellé du champ de saisie du nom d'un joueur, sur l'écran de configuration.",
-    "placeholders": {"number": {"type": "int"}}
-  },
-
   "autoChipLabel": "AutoRoll",
   "@autoChipLabel": {"description": "Libellé du bouton à bascule activant le mode automatique d'un joueur."},
-
-  "aiChipLabel": "IA",
-  "@aiChipLabel": {"description": "Libellé du bouton à bascule désignant un joueur comme IA."},
-
-  "addPlayerButton": "Ajouter",
-  "@addPlayerButton": {"description": "Bouton pour ajouter un joueur sur l'écran de configuration."},
-
-  "removePlayerButton": "Retirer",
-  "@removePlayerButton": {"description": "Bouton pour retirer un joueur sur l'écran de configuration."},
-
-  "botDifficultyTitle": "Difficulté des bots",
-  "@botDifficultyTitle": {"description": "Titre du sélecteur de difficulté des joueurs IA."},
-
-  "aiDifficultyCautious": "Prudent",
-  "@aiDifficultyCautious": {"description": "Niveau de difficulté IA le plus prudent."},
-
-  "aiDifficultyBalanced": "Équilibré",
-  "@aiDifficultyBalanced": {"description": "Niveau de difficulté IA intermédiaire."},
-
-  "aiDifficultyAggressive": "Agressif",
-  "@aiDifficultyAggressive": {"description": "Niveau de difficulté IA le plus agressif."},
 
   "startGameButton": "Commencer la partie",
   "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},
@@ -401,9 +356,6 @@
   "currentHandZoneLabel": "Main courante",
   "@currentHandZoneLabel": {"description": "Préfixe du libellé de la zone bordurée affichant les dés gardés ce tour, suivi du score du tour et du minimum requis (colorés en Dart, voir game_screen.dart)."},
 
-  "awaitingRollPlaceholder": "En attente du prochain lancer",
-  "@awaitingRollPlaceholder": {"description": "Texte de substitution dans la zone \"Lancé\" quand aucun lancer n'est en attente de décision."},
-
   "logHotDiceMessage": "Main pleine !",
   "@logHotDiceMessage": {"description": "Entrée du journal de partie quand un lancer déclenche des dés chauds (tous les dés ont scoré)."},
 
@@ -460,9 +412,6 @@
 
   "inheritedHandExceedsWinning": "Reprendre cette main atteindrait déjà 10000 : impossible de banquer.",
   "@inheritedHandExceedsWinning": {"description": "Message expliquant pourquoi la main héritée ne peut pas être reprise."},
-
-  "declineInheritedHandButton": "Refuser",
-  "@declineInheritedHandButton": {"description": "Bouton pour refuser la main héritée et repartir avec une main pleine (joueur humain)."},
 
   "rollButton": "Lancer",
   "@rollButton": {"description": "Bouton pour lancer les dés, quand l'affichage des probabilités est désactivé (sinon le bouton porte le pourcentage)."},

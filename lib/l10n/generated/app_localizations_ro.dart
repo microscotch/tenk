@@ -13,33 +13,24 @@ class AppLocalizationsRo extends AppLocalizations {
   String get splashPresents => 'prezintă';
 
   @override
-  String get ownerNameDialogTitle => 'Cum te numești?';
-
-  @override
-  String get ownerNameFieldLabel => 'Numele jucătorului principal';
-
-  @override
-  String get laterButton => 'Mai târziu';
-
-  @override
   String get validateButton => 'Confirmă';
 
   @override
   String get settingsTooltip => 'Setări';
 
   @override
-  String get helpTooltip => 'Règles du jeu';
+  String get helpTooltip => 'Regulile jocului';
 
   @override
-  String get aboutTooltip => 'À propos';
+  String get aboutTooltip => 'Despre';
 
   @override
   String aboutVersionLabel(String version, String buildNumber) {
-    return 'Version $version ($buildNumber)';
+    return 'Versiunea $version ($buildNumber)';
   }
 
   @override
-  String get closeButton => 'Fermer';
+  String get closeButton => 'Închide';
 
   @override
   String playersCountTitle(int count) {
@@ -47,41 +38,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String defaultPlayerName(int number) {
-    return 'Jucătorul $number';
-  }
-
-  @override
-  String get unnamedPlayerFallback => 'Jucător';
-
-  @override
-  String playerNameFieldLabel(int number) {
-    return 'Numele jucătorului $number';
-  }
-
-  @override
   String get autoChipLabel => 'AutoRoll';
-
-  @override
-  String get aiChipLabel => 'IA';
-
-  @override
-  String get addPlayerButton => 'Adaugă';
-
-  @override
-  String get removePlayerButton => 'Elimină';
-
-  @override
-  String get botDifficultyTitle => 'Dificultatea boților';
-
-  @override
-  String get aiDifficultyCautious => 'Prudent';
-
-  @override
-  String get aiDifficultyBalanced => 'Echilibrat';
-
-  @override
-  String get aiDifficultyAggressive => 'Agresiv';
 
   @override
   String get startGameButton => 'Începe jocul';
@@ -90,178 +47,180 @@ class AppLocalizationsRo extends AppLocalizations {
   String get newGameSectionLabel => 'Run nou...';
 
   @override
-  String get resumeGamesButton => 'Reprise de parties';
+  String get resumeGamesButton => 'Reluare jocuri';
 
   @override
-  String get managePlayersButton => 'Gestion des joueurs';
+  String get managePlayersButton => 'Gestionare jucători';
 
   @override
-  String get finishedGamesButton => 'Dernières parties terminées';
+  String get finishedGamesButton => 'Ultimele jocuri terminate';
 
   @override
-  String get statisticsButton => 'Statistiques';
+  String get statisticsButton => 'Statistici';
 
   @override
   String playersScreenTitle(int count) {
-    return 'Joueurs ($count)';
+    return 'Jucători ($count)';
   }
 
   @override
-  String get addPlayerTooltip => 'Ajouter un joueur';
+  String get addPlayerTooltip => 'Adaugă un jucător';
 
   @override
-  String get noPlayersMessage => 'Aucun joueur enregistré pour l\'instant.';
+  String get noPlayersMessage => 'Niciun jucător salvat momentan.';
 
   @override
-  String get newPlayerTitle => 'Nouveau joueur';
+  String get newPlayerTitle => 'Jucător nou';
 
   @override
-  String get editPlayerTitle => 'Modifier le joueur';
+  String get editPlayerTitle => 'Editează jucătorul';
 
   @override
-  String get playerNameLabel => 'Nom';
+  String get playerNameLabel => 'Nume';
 
   @override
-  String get playerNicknameLabel => 'Surnom (facultatif)';
+  String get playerNicknameLabel => 'Poreclă (opțional)';
 
   @override
-  String get playerNameRequiredError => 'Le nom est obligatoire.';
+  String get playerNameRequiredError => 'Numele este obligatoriu.';
 
   @override
   String get playerNameTakenError =>
-      'Ce nom est déjà utilisé par un autre joueur.';
+      'Acest nume este deja folosit de alt jucător.';
 
   @override
-  String get deletePlayerConfirmTitle => 'Supprimer ce joueur ?';
+  String get deletePlayerConfirmTitle => 'Ștergi acest jucător?';
 
   @override
   String deletePlayerConfirmMessage(String name) {
-    return 'La fiche de « $name » et ses statistiques seront définitivement supprimées. Les parties déjà jouées, elles, sont conservées.';
+    return 'Fișa lui „$name” și statisticile sale vor fi șterse definitiv. Jocurile deja jucate se păstrează.';
   }
 
   @override
-  String get statsSectionTime => 'Temps de jeu';
+  String get statsSectionTime => 'Timp de joc';
 
   @override
-  String get statsSectionGames => 'Parties';
+  String get statsSectionGames => 'Jocuri';
 
   @override
-  String get statsSectionFigures => 'Figures';
+  String get statsSectionFigures => 'Combinații';
 
   @override
-  String get statsSectionRolls => 'Tours et lancers';
+  String get statsSectionRolls => 'Ture și aruncări';
 
   @override
-  String get statsTurns => 'Tours joués';
+  String get statsTurns => 'Ture jucate';
 
   @override
-  String get statsRolls => 'Lancers';
+  String get statsRolls => 'Aruncări';
 
   @override
-  String get statsRollsPerTurn => 'Lancers par tour';
+  String get statsRollsPerTurn => 'Aruncări pe tură';
 
   @override
-  String get statsSectionMisc => 'Faits d\'armes';
+  String get statsSectionMisc => 'Isprăvi';
 
   @override
   String get statsTotalTime => 'Total';
 
   @override
-  String get statsAverageTime => 'Moyenne par partie';
+  String get statsAverageTime => 'Medie pe joc';
 
   @override
-  String get statsShortestTime => 'La plus courte';
+  String get statsShortestTime => 'Cel mai scurt';
 
   @override
-  String get statsLongestTime => 'La plus longue';
+  String get statsLongestTime => 'Cel mai lung';
 
   @override
-  String get statsGamesPlayed => 'Jouées';
+  String get statsGamesPlayed => 'Jucate';
 
   @override
-  String get statsGamesWon => 'Gagnées';
+  String get statsGamesWon => 'Câștigate';
 
   @override
-  String get statsGamesLost => 'Perdues';
+  String get statsGamesLost => 'Pierdute';
 
   @override
-  String get statsLoneAces => 'As isolés gardés';
+  String get statsLoneAces => '1 izolați păstrați';
 
   @override
-  String get statsLoneFives => '5 isolés gardés';
+  String get statsLoneFives => '5 izolați păstrați';
 
   @override
-  String get statsBrelans => 'Brelans';
+  String get statsBrelans => 'Triplete';
 
   @override
-  String get statsCarres => 'Carrés';
+  String get statsCarres => 'Careuri';
 
   @override
-  String get statsQuintes => 'Quintes';
+  String get statsQuintes => 'Chinte';
 
   @override
-  String get statsSuites => 'Suites';
+  String get statsSuites => 'Suite';
 
   @override
-  String get statsSmallSuites => 'dont petites';
+  String get statsSmallSuites => 'dintre care mici';
 
   @override
-  String get statsBigSuites => 'dont grandes';
+  String get statsBigSuites => 'dintre care mari';
 
   @override
-  String get statsAceQuints => 'Quintes d\'as';
+  String get statsAceQuints => 'Cinci de 1';
 
   @override
-  String get statsAceQuintsWon => 'dont gagnantes';
+  String get statsAceQuintsWon => 'dintre care câștigătoare';
 
   @override
-  String get statsBestTurn => 'Meilleur tour';
+  String get statsBestTurn => 'Cea mai bună tură';
 
   @override
-  String get statsHotDiceRun => 'Mains pleines d\'affilée';
+  String get statsHotDiceRun => 'Zaruri fierbinți la rând';
 
   @override
-  String get statsBusts => 'Craquages';
+  String get statsBusts => 'Eșecuri';
 
   @override
-  String get statsLongestBustStreak => 'dont série la plus longue';
+  String get statsLongestBustStreak => 'cea mai lungă serie';
 
   @override
-  String get statsSelfBars => 'Auto-barrés';
+  String get statsSelfBars => 'Tăiați singuri';
 
   @override
-  String get statsBarsInflicted => 'Barrés infligés';
+  String get statsBarsInflicted => 'Tăiați altora';
 
   @override
-  String get scoreChartTitle => 'Évolution des scores';
+  String get scoreChartTitle => 'Evoluția scorurilor';
 
   @override
-  String get gameStatsTitle => 'Statistiques de la partie';
+  String get gameStatsTitle => 'Statisticile jocului';
 
   @override
-  String get gameStatsGameSection => 'Partie';
+  String get gameStatsGameSection => 'Joc';
 
   @override
-  String get gameStatsFiguresSection => 'Figures de la partie';
+  String get gameStatsFiguresSection => 'Combinațiile jocului';
 
   @override
-  String get gameStatsDuration => 'Durée de jeu';
+  String get gameStatsDuration => 'Timp de joc';
 
   @override
   String gameStatsPlayerSummary(int turns, int best, int busts) {
     String _temp0 = intl.Intl.pluralLogic(
       turns,
       locale: localeName,
-      other: '$turns tours',
-      one: '$turns tour',
+      other: '$turns de ture',
+      few: '$turns ture',
+      one: '$turns tură',
     );
     String _temp1 = intl.Intl.pluralLogic(
       busts,
       locale: localeName,
-      other: '$busts craques',
-      one: '$busts craque',
+      other: '$busts de eșecuri',
+      few: '$busts eșecuri',
+      one: '$busts eșec',
     );
-    return '$_temp0 · meilleur $best · $_temp1';
+    return '$_temp0 · cel mai bun $best · $_temp1';
   }
 
   @override
@@ -269,31 +228,33 @@ class AppLocalizationsRo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       games,
       locale: localeName,
-      other: '$games parties',
-      one: '$games partie',
+      other: '$games de jocuri',
+      few: '$games jocuri',
+      one: '$games joc',
     );
     String _temp1 = intl.Intl.pluralLogic(
       won,
       locale: localeName,
-      other: '$won gagnées',
-      one: '$won gagnée',
+      other: '$won câștigate',
+      few: '$won câștigate',
+      one: '$won câștigat',
     );
-    return '$_temp0 · $_temp1 · meilleur $best';
+    return '$_temp0 · $_temp1 · cel mai bun $best';
   }
 
   @override
   String get scoreChartEmpty =>
-      'Aucun tour terminé pour l\'instant : il n\'y a encore rien à tracer.';
+      'Nicio tură încheiată momentan: încă nu e nimic de trasat.';
 
   @override
   String get replayUnavailable =>
-      'Cette partie ne peut pas être rejouée : son journal est incomplet.';
+      'Acest joc nu poate fi revăzut: jurnalul său este incomplet.';
 
   @override
-  String get replayPlay => 'Lecture';
+  String get replayPlay => 'Redă';
 
   @override
-  String get replayPause => 'Pause';
+  String get replayPause => 'Pauză';
 
   @override
   String replayTurnOf(int turn, int count) {
@@ -302,20 +263,20 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String scoreChartTurn(int turn) {
-    return 'Tour $turn';
+    return 'Tura $turn';
   }
 
   @override
-  String get scoreChartXAxis => 'Tours joués';
+  String get scoreChartXAxis => 'Ture jucate';
 
   @override
-  String get statsBreakdownRow => 'dont';
+  String get statsBreakdownRow => 'dintre care';
 
   @override
-  String get statsRecordsTitle => 'Records';
+  String get statsRecordsTitle => 'Recorduri';
 
   @override
-  String get statsNoRecordYet => 'Aucun record pour l\'instant.';
+  String get statsNoRecordYet => 'Niciun record momentan.';
 
   @override
   String statsValueWithHolder(String value, String holders) {
@@ -323,38 +284,39 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get pickPlayersTitle => 'Choisir des joueurs';
+  String get pickPlayersTitle => 'Alege jucătorii';
 
   @override
-  String get addHumanTooltip => 'Ajouter un joueur';
+  String get addHumanTooltip => 'Adaugă un jucător';
 
   @override
-  String get addBotTooltip => 'Ajouter un bot';
+  String get addBotTooltip => 'Adaugă un bot';
 
   @override
-  String get createPlayerButton => 'Nouveau joueur';
+  String get createPlayerButton => 'Jucător nou';
 
   @override
   String get noPlayersToPickMessage =>
-      'Aucun joueur en base. Créez-en un pour commencer.';
+      'Niciun jucător salvat. Creează unul pentru a începe.';
 
   @override
   String get botLabel => 'Bot';
 
   @override
-  String get removeSeatTooltip => 'Retirer de la partie';
+  String get removeSeatTooltip => 'Scoate din joc';
 
   @override
-  String get notEnoughPlayersMessage => 'Il faut au moins deux joueurs.';
+  String get notEnoughPlayersMessage => 'Sunt necesari cel puțin doi jucători.';
 
   @override
   String playerGamesSummary(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count parties jouées',
-      one: '$count partie jouée',
-      zero: 'Aucune partie jouée',
+      other: '$count de jocuri jucate',
+      few: '$count jocuri jucate',
+      one: '$count joc jucat',
+      zero: 'Niciun joc jucat',
     );
     return '$_temp0';
   }
@@ -393,18 +355,18 @@ class AppLocalizationsRo extends AppLocalizations {
   String get deleteButton => 'Șterge';
 
   @override
-  String get resumeLastGameDialogTitle => 'Reprendre la partie ?';
+  String get resumeLastGameDialogTitle => 'Reiei jocul?';
 
   @override
   String resumeLastGameDialogMessage(String alias) {
-    return 'Une partie « $alias » est en cours. Voulez-vous la reprendre ?';
+    return 'Un joc „$alias” este în desfășurare. Vrei să-l reiei?';
   }
 
   @override
-  String get resumeGameButton => 'Reprendre';
+  String get resumeGameButton => 'Reia';
 
   @override
-  String get gameOverReplayButton => 'Revoir la partie';
+  String get gameOverReplayButton => 'Revezi jocul';
 
   @override
   String get scoreGridLabel => 'Grilă de scoruri';
@@ -413,62 +375,60 @@ class AppLocalizationsRo extends AppLocalizations {
   String get finalRoundBanner => 'Ultima rundă: un jucător a atins 10000!';
 
   @override
-  String get currentRollZoneLabel => 'Piste';
+  String get currentRollZoneLabel => 'Pistă';
 
   @override
   String currentRollZoneLabelWithScore(int points) {
-    return 'Piste ($points)';
+    return 'Pistă ($points)';
   }
 
   @override
-  String get currentHandZoneLabel => 'Main courante';
+  String get currentHandZoneLabel => 'Mâna curentă';
 
   @override
-  String get awaitingRollPlaceholder => 'En attente du prochain lancer';
+  String get logHotDiceMessage => 'Zaruri fierbinți!';
 
   @override
-  String get logHotDiceMessage => 'Main pleine !';
-
-  @override
-  String get logScoreCollisionMessage => 'Score barré :';
+  String get logScoreCollisionMessage => 'Scor tăiat:';
 
   @override
   String logRollGainMessage(String kept, int gain, int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count de zaruri',
+      few: '$count zaruri',
+      one: '$count zar',
     );
-    return '$kept : $gain, $_temp0 => $total pts';
+    return '$kept: $gain, $_temp0 => $total pct';
   }
 
   @override
   String logRollGainHotDiceMessage(String kept, int gain, int total) {
-    return '$kept : $gain, main pleine => $total pts';
+    return '$kept: $gain, zaruri fierbinți => $total pct';
   }
 
   @override
   String logBankedMessage(int score, int total) {
-    return '$score pts sont pris => $total pts';
+    return '$score pct încasate => $total pct';
   }
 
   @override
   String logResumedHandMessage(int score) {
-    return '$score pts sont repris';
+    return '$score pct reluate';
   }
 
   @override
   String logBustTiretMessage(int score) {
-    return 'Craqué ! => $score petit trait';
+    return 'Ai ars! => $score liniuță';
   }
 
   @override
-  String get logBustBarredPrefix => 'Craqué ! =>';
+  String get logBustBarredPrefix => 'Ai ars! =>';
 
   @override
   String logBustBarredReturnMessage(int score) {
-    return 'retour à $score';
+    return 'înapoi la $score';
   }
 
   @override
@@ -476,17 +436,14 @@ class AppLocalizationsRo extends AppLocalizations {
       'Reluarea acestei mâini ar depăși deja 10000: nu te poți opri.';
 
   @override
-  String get declineInheritedHandButton => 'Refuser';
+  String get rollButton => 'Aruncă';
 
   @override
-  String get rollButton => 'Lancer';
-
-  @override
-  String get showProbabilitiesSetting => 'Afficher les probabilités';
+  String get showProbabilitiesSetting => 'Afișează probabilitățile';
 
   @override
   String get showProbabilitiesSettingSubtitle =>
-      'Affiche sur le bouton \"Lancer\" la chance de marquer au moins un point';
+      'Afișează pe butonul „Aruncă” șansa de a marca cel puțin un punct';
 
   @override
   String get stopButton => 'Oprește-te';
@@ -499,30 +456,31 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get bustFullHandAtTarget =>
-      'Main pleine à 10000 : impossible de s\'arrêter, et tout relancer dépasserait.';
+      'Zaruri fierbinți la 10000: nu te poți opri, iar aruncarea tuturor din nou ar depăși.';
 
   @override
-  String get bustContinueButton => 'Continuer';
+  String get bustContinueButton => 'Continuă';
 
   @override
-  String get inheritedHandDialogTitle => 'Reprendre ?';
+  String get inheritedHandDialogTitle => 'Reiei?';
 
   @override
   String inheritedHandDialogMessage(int score, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dés',
-      one: '$count dé',
+      other: '$count de zaruri',
+      few: '$count zaruri',
+      one: '$count zar',
     );
     return '$score, $_temp0';
   }
 
   @override
-  String get resumeHandButton => 'Reprendre la main';
+  String get resumeHandButton => 'Reia mâna';
 
   @override
-  String get newHandButton => 'Nouvelle main';
+  String get newHandButton => 'Mână nouă';
 
   @override
   String get failureBelowMinimum => 'Scor insuficient pentru a te opri.';
@@ -582,19 +540,19 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsSoundEffectsLabel => 'Efecte sonore';
 
   @override
-  String get settingsHandednessLabel => 'Disposition des boutons';
+  String get settingsHandednessLabel => 'Dispunerea butoanelor';
 
   @override
-  String get settingsHandednessRight => 'Droitier';
+  String get settingsHandednessRight => 'Dreptaci';
 
   @override
-  String get settingsHandednessLeft => 'Gaucher';
+  String get settingsHandednessLeft => 'Stângaci';
 
   @override
-  String get settingsControlsTitle => 'Contrôles';
+  String get settingsControlsTitle => 'Comenzi';
 
   @override
-  String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
+  String get settingsShakeToRollLabel => 'Scutură pentru a arunca zarurile';
 
   @override
   String get settingsPausedGamesTitle => 'Jocuri în pauză';
@@ -611,17 +569,17 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get reorderPlayersHint =>
-      'Glissez un joueur par sa poignée pour changer l\'ordre autour de la table.';
+      'Trage un jucător de mâner pentru a schimba ordinea în jurul mesei.';
 
   @override
-  String get reorderPlayerHandleLabel => 'Déplacer ce joueur';
+  String get reorderPlayerHandleLabel => 'Mută acest jucător';
 
   @override
   String get diceOffTitle => 'Cine începe?';
 
   @override
   String get diceOffInstructions =>
-      'Fiecare aruncă un zar: cel mai mic scor începe jocul.';
+      'Toți aruncă zarul în același timp: începe cel mai mic. La egalitate, cei la egalitate aruncă din nou.';
 
   @override
   String diceOffTieBreak(String names) {
@@ -634,11 +592,11 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordre de jeu';
+  String get diceOffPlayOrderLabel => 'Ordinea de joc';
 
   @override
   String get diceOffReversedNote =>
-      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
+      'Duel între vecini câștigat de al doilea: jocul se desfășoară în sens invers.';
 
   @override
   String get gameOverTitle => 'Sfârșitul jocului';
@@ -677,91 +635,92 @@ class AppLocalizationsRo extends AppLocalizations {
   String get previousScoreHadTiretTooltip => 'Scorul anterior avea o liniuță';
 
   @override
-  String get rankFirstTooltip => 'En tête';
+  String get rankFirstTooltip => 'În frunte';
 
   @override
-  String get rankSecondTooltip => '2e au score';
+  String get rankSecondTooltip => 'Al 2-lea la scor';
 
   @override
-  String get rankThirdTooltip => '3e au score';
+  String get rankThirdTooltip => 'Al 3-lea la scor';
 
   @override
-  String get rulesScreenTitle => 'Règles du jeu';
+  String get rulesScreenTitle => 'Regulile jocului';
 
   @override
-  String get rulesGoalTitle => 'But du jeu';
+  String get rulesGoalTitle => 'Scopul jocului';
 
   @override
   String get rulesGoalBody =>
-      'Le premier joueur à atteindre exactement 10 000 points gagne la partie. Il faut viser ce chiffre pile : le dépasser ne compte pas.';
+      'Primul jucător care ajunge la exact 10.000 de puncte câștigă jocul. Trebuie să nimerești exact acest număr: depășirea nu contează.';
 
   @override
-  String get rulesTurnTitle => 'Comment se joue un tour';
+  String get rulesTurnTitle => 'Cum se joacă o tură';
 
   @override
   String get rulesTurnBody =>
-      'À votre tour, vous lancez 5 dés. Certaines valeurs rapportent des points (voir ci-dessous), d\'autres ne servent à rien. Vous mettez de côté au moins un dé qui rapporte, puis vous choisissez : relancer les dés restants pour tenter d\'engranger plus de points, ou vous arrêter et encaisser ce que vous avez accumulé ce tour. Si un lancer ne rapporte aucun point, c\'est un craque (voir plus bas) et vous perdez tout ce que vous aviez accumulé ce tour.';
+      'La tura ta, arunci 5 zaruri. Unele valori aduc puncte (vezi mai jos), altele nu valorează nimic. Pui deoparte cel puțin un zar care punctează, apoi alegi: arunci din nou zarurile rămase ca să aduni mai multe puncte, sau te oprești și încasezi ce ai acumulat în această tură. Dacă o aruncare nu aduce niciun punct, ai ars (vezi mai jos) și pierzi tot ce acumulaseși în această tură.';
 
   @override
-  String get rulesScoringTitle => 'Ce qui rapporte des points';
+  String get rulesScoringTitle => 'Ce aduce puncte';
 
   @override
   String get rulesScoringBody =>
-      '• Un 1 isolé : 100 points. Un 5 isolé : 50 points. Les autres valeurs isolées (2, 3, 4, 6) ne rapportent rien.\n• Trois dés identiques : 1000 points pour trois 1, sinon la valeur du dé × 100 (trois 4 valent 400, trois 6 valent 600).\n• Un quatrième dé de la même valeur ajoute 1000 points de plus.\n• Les 5 dés identiques valent la valeur du dé × 1000, sauf cinq 1 qui rapportent directement 10 000 points : la victoire immédiate.\n• Une suite de 5 dés qui se suivent (1-2-3-4-5 ou 2-3-4-5-6) vaut 500 points.';
+      '• Un 1 izolat: 100 de puncte. Un 5 izolat: 50 de puncte. Celelalte valori izolate (2, 3, 4, 6) nu aduc nimic.\n• Trei zaruri identice: 1000 de puncte pentru trei de 1, altfel valoarea zarului × 100 (trei de 4 valorează 400, trei de 6 valorează 600).\n• Un al patrulea zar cu aceeași valoare adaugă încă 1000 de puncte.\n• Cinci zaruri identice valorează valoarea zarului × 1000, cu excepția a cinci de 1, care aduc direct 10.000 de puncte: victoria imediată.\n• O suită de 5 zaruri consecutive (1-2-3-4-5 sau 2-3-4-5-6) valorează 500 de puncte.';
 
   @override
-  String get rulesHotDiceTitle => 'Dés chauds : une seconde chance forcée';
+  String get rulesHotDiceTitle =>
+      'Zaruri fierbinți: o a doua șansă obligatorie';
 
   @override
   String get rulesHotDiceBody =>
-      'Si tous les dés que vous venez de lancer rapportent des points, vous devez relancer les 5 dés en main : impossible de s\'arrêter à ce moment précis. C\'est ce qu\'on appelle des « dés chauds ».';
+      'Dacă toate zarurile pe care tocmai le-ai aruncat aduc puncte, trebuie să arunci din nou toate cele 5 zaruri: nu te poți opri exact în acel moment. Asta se numește „zaruri fierbinți”.';
 
   @override
-  String get rulesBustTitle => 'Le craque';
+  String get rulesBustTitle => 'Eșecul';
 
   @override
   String get rulesBustBody =>
-      'Si un lancer ne rapporte strictement aucun point, votre tour s\'arrête immédiatement et vous perdez tous les points accumulés ce tour (ce que vous aviez déjà encaissé lors des tours précédents reste acquis). Un craque marque aussi votre ligne de score actuelle d\'un tiret ; si elle en portait déjà un, elle est barrée et votre score retombe à sa valeur précédente.';
+      'Dacă o aruncare nu aduce absolut niciun punct, tura ta se încheie imediat și pierzi toate punctele acumulate în această tură (ce ai încasat în turele anterioare rămâne câștigat). Un eșec marchează totodată linia ta de scor curentă cu o liniuță; dacă avea deja una, e tăiată și scorul tău revine la valoarea anterioară.';
 
   @override
-  String get rulesEntryTitle => 'Entrer dans la partie';
+  String get rulesEntryTitle => 'Intrarea în joc';
 
   @override
   String get rulesEntryBody =>
-      'Pour commencer à marquer des points, votre tout premier tour réussi doit rapporter au moins 500 points. Une fois entré dans la partie, chaque tour suivant doit rapporter au moins 200 points pour pouvoir s\'arrêter.';
+      'Ca să începi să marchezi, prima ta tură reușită trebuie să aducă cel puțin 500 de puncte. Odată intrat în joc, fiecare tură următoare trebuie să aducă cel puțin 200 de puncte ca să te poți opri.';
 
   @override
-  String get rulesNoFiftyTitle => 'Jamais de score finissant par 50';
+  String get rulesNoFiftyTitle => 'Niciodată un scor terminat în 50';
 
   @override
   String get rulesNoFiftyBody =>
-      'Vous ne pouvez jamais choisir de vous arrêter volontairement sur un total de tour qui finit par 50 (comme 250 ou 450) : il faut relancer les dés jusqu\'à obtenir un total valide.';
+      'Nu poți alege niciodată să te oprești de bunăvoie la un total de tură terminat în 50 (de exemplu 250 sau 450): trebuie să arunci din nou până obții un total valid.';
 
   @override
-  String get rulesExtensionTitle => 'La règle d\'extension';
+  String get rulesExtensionTitle => 'Regula extensiei';
 
   @override
   String get rulesExtensionBody =>
-      'Une fois que vous avez encaissé un brelan ou un carré d\'une valeur donnée (par exemple trois 4), tout dé isolé de cette même valeur obtenu plus tard dans le même tour rapporte 100 points au lieu de sa valeur habituelle — y compris un 5 isolé, qui vaut alors 100 au lieu de 50. Cet avantage disparaît dès que vous obtenez des dés chauds.';
+      'Odată ce ai încasat o tripletă sau un careu de o anumită valoare (de exemplu trei de 4), orice zar izolat cu aceeași valoare obținut mai târziu în aceeași tură aduce 100 de puncte în loc de valoarea obișnuită — inclusiv un 5 izolat, care valorează atunci 100 în loc de 50. Acest avantaj dispare de îndată ce obții zaruri fierbinți.';
 
   @override
-  String get rulesInheritTitle => 'Hériter des dés du joueur précédent';
+  String get rulesInheritTitle => 'Moștenirea zarurilor jucătorului anterior';
 
   @override
   String get rulesInheritBody =>
-      'Quand un joueur s\'arrête volontairement en ayant encore des dés non lancés, le joueur suivant peut choisir de reprendre ces dés restants ainsi que le score déjà accumulé comme base de départ, ou de repartir à zéro avec 5 dés neufs. En cas de craque, en revanche, le joueur suivant repart toujours avec 5 dés neufs, sans rien hériter.';
+      'Când un jucător se oprește de bunăvoie având încă zaruri nearuncate, jucătorul următor poate alege să preia zarurile rămase împreună cu scorul deja acumulat ca bază de pornire, sau să reînceapă de la zero cu 5 zaruri noi. După un eșec, în schimb, jucătorul următor pornește întotdeauna cu 5 zaruri noi, fără să moștenească nimic.';
 
   @override
-  String get rulesBarredTitle => 'Tiret et barré';
+  String get rulesBarredTitle => 'Liniuță și tăiat';
 
   @override
   String get rulesBarredBody =>
-      'Un craque place un tiret d\'avertissement sur votre ligne de score actuelle si elle n\'en a pas déjà un. Si elle en a déjà un, la ligne est barrée et votre score retombe à sa valeur précédente. Si votre score atteint exactement le même total qu\'un autre joueur, ce dernier est barré de la même façon, qu\'il ait déjà un tiret ou non.';
+      'Un eșec pune o liniuță de avertizare pe linia ta de scor curentă, dacă nu are deja una. Dacă are deja una, linia e tăiată și scorul tău revine la valoarea anterioară. Dacă scorul tău ajunge exact la același total ca al altui jucător, acesta e tăiat în același fel, fie că avea deja o liniuță, fie că nu.';
 
   @override
-  String get rulesVictoryTitle => 'Comment gagner';
+  String get rulesVictoryTitle => 'Cum câștigi';
 
   @override
   String get rulesVictoryBody =>
-      'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.';
+      'Primul jucător care ajunge la exact 10.000 de puncte declanșează o rundă finală: fiecare dintre ceilalți jucători are o ultimă șansă să-l egaleze sau să-l depășească la tura sa. Dacă în această rundă finală și alt jucător ajunge la exact 10.000, el preia coroana și o nouă rundă finală începe în jurul lui.';
 }
