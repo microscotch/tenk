@@ -104,6 +104,11 @@ class DieRollMotion {
   final double firstHop;
   final double restitution;
 
+  /// Rotation verticale (radians) du dé une fois immobile, tirée parmi
+  /// [restYawChoicesDegrees] : décale l'arête verticale visible, pour que les
+  /// dés ne se présentent pas tous de la même façon.
+  final double restYaw;
+
   const DieRollMotion({
     required this.duration,
     required this.turnsX,
@@ -113,11 +118,20 @@ class DieRollMotion {
     this.bounces = 0,
     this.firstHop = 0,
     this.restitution = 0.5,
+    this.restYaw = math.pi / 4,
   });
 
-  /// Mouvement d'un dé qui n'a pas (encore) été lancé : seule son inclinaison
-  /// de repos compte, [rotationAt] étant appelé avec une progression de 1.
-  static const rest = DieRollMotion(duration: DieWidget.maxRollDuration, turnsX: 3, turnsY: 2, turnsZ: 1);
+  /// Mouvement d'un dé qui n'a pas (encore) été lancé : sans rotation ni
+  /// rebond ([anglesAt] et [hopAt] n'en montrent que la position de repos),
+  /// mais avec une orientation d'arrêt tirée au sort comme pour un lancer.
+  factory DieRollMotion.resting(math.Random random) => DieRollMotion(
+        duration: DieWidget.maxRollDuration,
+        turnsX: 0,
+        turnsY: 0,
+        turnsZ: 0,
+        quarterTurns: random.nextInt(4),
+        restYaw: _randomRestYaw(random),
+      );
 
   factory DieRollMotion.random(math.Random random) {
     int signed(int turns) => random.nextBool() ? turns : -turns;
@@ -131,15 +145,21 @@ class DieRollMotion {
       bounces: 2 + random.nextInt(3),
       firstHop: 0.7 + random.nextDouble() * 0.3,
       restitution: 0.45 + random.nextDouble() * 0.15,
+      restYaw: _randomRestYaw(random),
     );
   }
 
-  /// Inclinaison de repos (dé immobile) : vue plongeante donnant l'impression
-  /// de regarder le dé du dessus (la face "top" domine), avec juste assez
-  /// d'écart par rapport à la verticale pure pour distinguer les faces
-  /// latérales et garder un rendu clairement 3D (pas un carré plat).
-  static const restTiltX = -0.95;
-  static const restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
+  /// Rotations verticales possibles d'un dé immobile, en degrés. 45° (arête
+  /// centrée) est volontairement absent : la symétrie parfaite fait artificiel.
+  static const restYawChoicesDegrees = [15, 25, 35, 55, 65, 75];
+
+  static double _randomRestYaw(math.Random random) =>
+      restYawChoicesDegrees[random.nextInt(restYawChoicesDegrees.length)] * math.pi / 180;
+
+  /// Inclinaison de repos vers la caméra (dé immobile), 37° : la face du
+  /// dessus, qui porte la valeur, reste lisible pour les six valeurs, et les
+  /// faces latérales ont assez de place pour que le dé paraisse posé.
+  static const restTiltX = -37 * math.pi / 180;
 
   /// Part de la durée du lancer occupée par les rebonds : le dé finit posé,
   /// en achevant sa rotation.
@@ -177,7 +197,7 @@ class DieRollMotion {
     final remaining = 1 - Curves.easeOut.transform(progress.clamp(0.0, 1.0));
     return (
       x: restTiltX + remaining * turnsX * 2 * math.pi,
-      y: restTiltY + remaining * turnsY * 2 * math.pi,
+      y: restYaw + remaining * turnsY * 2 * math.pi,
       z: remaining * turnsZ * 2 * math.pi * 0.3,
     );
   }
@@ -286,7 +306,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
   late final AnimationController _controller;
   Object? _lastRollToken;
   final _random = math.Random();
-  DieRollMotion _motion = DieRollMotion.rest;
+  late DieRollMotion _motion = DieRollMotion.resting(_random);
 
   @override
   void initState() {

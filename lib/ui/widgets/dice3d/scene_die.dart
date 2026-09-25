@@ -74,7 +74,7 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   final Node _dieNode = Node();
 
   Object? _lastRollToken;
-  DieRollMotion _motion = DieRollMotion.rest;
+  late DieRollMotion _motion = DieRollMotion.resting(_random);
 
   /// Progression du lancer (0 → 1), qui pilote la rotation (lue à chaque tick
   /// de la scène) et le rebond (qui redessine le widget).

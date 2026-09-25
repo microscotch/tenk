@@ -31,7 +31,7 @@ void main() {
     for (final m in motions.take(20)) {
       final end = m.anglesAt(1);
       expect(end.x, closeTo(DieRollMotion.restTiltX, 1e-9));
-      expect(end.y, closeTo(DieRollMotion.restTiltY, 1e-9));
+      expect(end.y, closeTo(m.restYaw, 1e-9));
       expect(end.z, closeTo(0, 1e-9));
     }
   });
@@ -42,7 +42,7 @@ void main() {
     final f = forward.anglesAt(0.3);
     final b = backward.anglesAt(0.3);
     expect(f.x - DieRollMotion.restTiltX, closeTo(-(b.x - DieRollMotion.restTiltX), 1e-9));
-    expect(f.y - DieRollMotion.restTiltY, closeTo(-(b.y - DieRollMotion.restTiltY), 1e-9));
+    expect(f.y - forward.restYaw, closeTo(-(b.y - backward.restYaw), 1e-9));
     expect(f.z, closeTo(-b.z, 1e-9));
   });
 
@@ -114,12 +114,37 @@ void main() {
 
     test('un dé posé ne rebondit pas', () {
       for (var i = 0; i <= 10; i++) {
-        expect(DieRollMotion.rest.hopAt(i / 10), 0);
+        expect(DieRollMotion.resting(Random(i)).hopAt(i / 10), 0);
       }
     });
 
     test('le nombre de rebonds est tiré entre 2 et 4', () {
       expect(motions.map((m) => m.bounces).toSet(), {2, 3, 4});
+    });
+  });
+
+  group('orientation au repos', () {
+    const allowed = {15, 25, 35, 55, 65, 75};
+    int degrees(double radians) => (radians * 180 / pi).round();
+
+    test('la rotation verticale d\'un dé lancé est tirée parmi les valeurs retenues', () {
+      final seen = motions.map((m) => degrees(m.restYaw)).toSet();
+      expect(seen, allowed, reason: 'toutes les valeurs sortent, et aucune autre (pas 45°)');
+    });
+
+    test('un dé non lancé est lui aussi orienté au hasard, sans bouger', () {
+      final resting = [for (var i = 0; i < 200; i++) DieRollMotion.resting(Random(i))];
+      expect(resting.map((m) => degrees(m.restYaw)).toSet(), allowed);
+      expect(resting.map((m) => m.quarterTurns).toSet(), {0, 1, 2, 3});
+      for (final m in resting.take(20)) {
+        final a = m.anglesAt(1);
+        expect(a.y, closeTo(m.restYaw, 1e-9));
+        expect(m.anglesAt(0).y, closeTo(m.restYaw, 1e-9), reason: 'aucun tour à faire');
+      }
+    });
+
+    test('l\'angle de vue au repos est de 37°', () {
+      expect(-DieRollMotion.restTiltX * 180 / pi, closeTo(37, 1e-9));
     });
   });
 }
