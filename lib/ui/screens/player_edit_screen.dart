@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_store.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 
 /// Création ou édition d'une fiche joueur.
@@ -90,7 +91,7 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
     final l10n = AppLocalizations.of(context);
     final name = _name.text.trim();
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppTopBar(
         title: Text(widget.existing == null ? l10n.newPlayerTitle : l10n.editPlayerTitle),
       ),
       body: SafeArea(

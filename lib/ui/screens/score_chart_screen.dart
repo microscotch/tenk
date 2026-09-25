@@ -7,6 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
 import '../../state/player_providers.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/score_chart.dart';
 
@@ -66,7 +67,7 @@ class ScoreChartScreen extends ConsumerWidget {
     final hasPoints = series.any((s) => s.scores.length > 1);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.scoreChartTitle)),
+      appBar: AppTopBar(title: Text(l10n.scoreChartTitle)),
       body: SafeArea(
         child: hasPoints
             ? Padding(

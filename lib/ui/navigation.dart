@@ -1,11 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../state/dice_off_providers.dart';
 import '../state/game_providers.dart';
 import '../state/game_save_store.dart';
 import '../state/replay_pause_provider.dart';
+import 'screens/dice_off_screen.dart';
 import 'screens/game_screen.dart';
 import 'screens/setup_screen.dart';
+
+/// Reprend une partie en pause, depuis la liste des parties en pause comme
+/// depuis la proposition de l'accueil : sur son départage s'il n'était pas
+/// tranché (la partie n'existe pas encore), sinon sur la partie elle-même.
+void resumeSavedGame(BuildContext context, WidgetRef ref, SavedGame saved) {
+  if (DiceOffNotifier.isUnfinished(saved)) {
+    ref.read(diceOffProvider.notifier).resumeFromSave(saved);
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiceOffScreen()));
+    return;
+  }
+  ref.read(gameProvider.notifier).resumeFromSave(saved);
+  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GameScreen()));
+}
 
 /// Lance le rejeu spectateur de [game], droit sur sa partie : le tirage au sort
 /// qui a fixé l'ordre de jeu n'est pas remis en scène (voir

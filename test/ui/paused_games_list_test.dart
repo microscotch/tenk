@@ -1,11 +1,16 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/game_recording.dart';
+import 'package:le10000/game/game_setup.dart';
 import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/state/settings_providers.dart';
+import 'package:le10000/ui/screens/dice_off_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/widgets/paused_games_list.dart';
 
@@ -161,5 +166,47 @@ void main() {
     await tester.pumpAndSettle();
     expect(await store.exists(4), isTrue);
     expect(find.text('À Confirmer'), findsOneWidget);
+  });
+
+  group('reprise d\'une partie pas encore commencée', () {
+    SavedGame beforeFirstRoll(List<GameAction> actions) => SavedGame(
+          seed: 6,
+          setup: const GameSetup(playerNames: ['A', 'B']),
+          alias: 'Pas commencée',
+          createdAt: DateTime(2026),
+          actions: actions,
+        );
+
+    Future<void> tapSaved(WidgetTester tester, SavedGame saved) async {
+      await store.write(saved);
+      final container = ProviderContainer(overrides: [
+        gameSaveStoreProvider.overrideWithValue(store),
+        playerStoreProvider.overrideWithValue(players),
+      ]);
+      addTearDown(container.dispose);
+      await tester.pumpWidget(wrap(container));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pas commencée'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('départage interrompu : la reprise rouvre le départage, qui continue', (tester) async {
+      await tapSaved(tester, beforeFirstRoll(const []));
+
+      expect(find.byType(DiceOffScreen), findsOneWidget);
+      expect(find.byType(GameScreen), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('départage tranché, premier tour pas lancé : la partie s\'ouvre, prête à lancer', (tester) async {
+      final actions = <GameAction>[];
+      playDiceOff(2, Random(6), actions);
+      await tapSaved(tester, beforeFirstRoll(actions));
+
+      expect(find.byType(GameScreen), findsOneWidget);
+      expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget, reason: 'le bouton Lancer est là');
+      await tester.pumpWidget(const SizedBox());
+    });
   });
 }

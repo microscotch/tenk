@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
 import '../../state/settings_providers.dart';
-import '../screens/game_screen.dart';
+import '../navigation.dart';
 import 'game_run_tile.dart';
 
 /// Liste des parties en pause (voir [pausedGamesProvider]) : chaque ligne
@@ -100,10 +99,7 @@ class _PausedGameRow extends ConsumerWidget {
     return confirmed ?? false;
   }
 
-  void _resume(BuildContext context, WidgetRef ref) {
-    ref.read(gameProvider.notifier).resumeFromSave(game);
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GameScreen()));
-  }
+  void _resume(BuildContext context, WidgetRef ref) => resumeSavedGame(context, ref, game);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

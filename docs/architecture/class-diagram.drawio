@@ -113,8 +113,8 @@
           <mxGeometry x="1530" y="150" width="350" height="300" as="geometry" />
         </mxCell>
 
-        <mxCell id="DiceOffNotifier" value="&lt;b&gt;DiceOffNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;DiceOffState?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;diceOffProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ start(setup) / rollRound()&lt;br/&gt;+ buildOrderedSetup() : GameSetup&lt;br/&gt;+ handoff() : GameRecordingHandoff&lt;br/&gt;+ setup / nameOf(i) / allPlayersAreAuto" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="1930" y="150" width="320" height="130" as="geometry" />
+        <mxCell id="DiceOffNotifier" value="&lt;b&gt;DiceOffNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;DiceOffState?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;diceOffProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ start(setup) / rollRound()&lt;br/&gt;+ resumeFromSave(saved) / isUnfinished(saved)  &lt;i&gt;(static)&lt;/i&gt;&lt;br/&gt;+ buildOrderedSetup() : GameSetup&lt;br/&gt;+ handoff() : GameRecordingHandoff&lt;br/&gt;+ setup / nameOf(i) / allPlayersAreAuto" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="150" width="320" height="148" as="geometry" />
         </mxCell>
 
         <mxCell id="SettingsNotifier" value="&lt;b&gt;SettingsNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;AppSettings&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;settingsProvider — persiste via SharedPreferences&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ setPlayerName / setDiceColorMode&lt;br/&gt;+ setAiMessageDelayMs / setAutoActionDelayMs&lt;br/&gt;+ setMusicEnabled / setSoundEffectsEnabled&lt;br/&gt;+ setShakeToRollEnabled / setShowProbabilities&lt;br/&gt;+ setConfirmBeforeDeleteGame / setRightHanded&lt;br/&gt;+ setLanguageOverride" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
@@ -297,8 +297,8 @@
         <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;strokeColor=#4a7a3a;" edge="1" parent="1" source="DiceOffNotifier" target="GameNotifier">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e24l" value="passe la main (setup réordonné)" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e24">
-          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset" /></mxGeometry>
+        <mxCell id="e24l" value="passe la main (setup réordonné)" style="edgeLabel;html=1;fontSize=10;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e24">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="12" as="offset" /></mxGeometry>
         </mxCell>
 
         <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#4a7a3a;" edge="1" parent="1" source="SettingsNotifier" target="AppSettings">
@@ -326,7 +326,7 @@
           <mxGeometry x="1500" y="2000" width="780" height="170" as="geometry" />
         </mxCell>
 
-        <mxCell id="FnsJournal" value="&lt;b&gt;«fonctions pures» game_recording / game_statistics / score_series&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;replayGame(setup, seed, actions, {onGameAction}) : ReplayResult&lt;br/&gt;applyGameAction(engine, action, random) : GameEngine&lt;br/&gt;replayTurnStarts(setup, seed, actions) : List&amp;lt;int&amp;gt;   &lt;i&gt;(début de chaque tour)&lt;/i&gt;&lt;br/&gt;diceOffActionCount(actions) : int&lt;br/&gt;durationSecondsFor / activePlayingSecondsFor(actions) : int&lt;br/&gt;collectGameStatistics(setup, seed, actions) : GameStatistics&lt;br/&gt;scoreSeriesByPlayer(setup, seed, actions) : List&amp;lt;List&amp;lt;int&amp;gt;&amp;gt;&lt;br/&gt;normalizeName(name) / avatarInitialsFor(name) : String" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+        <mxCell id="FnsJournal" value="&lt;b&gt;«fonctions pures» game_recording / game_statistics / score_series&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;replayGame(setup, seed, actions, {onGameAction}) : ReplayResult&lt;br/&gt;applyGameAction(engine, action, random) : GameEngine&lt;br/&gt;replayTurnStarts(setup, seed, actions) : List&amp;lt;int&amp;gt;   &lt;i&gt;(début de chaque tour)&lt;/i&gt;&lt;br/&gt;diceOffActionCount(actions) : int&lt;br/&gt;durationSecondsFor / activePlayingSecondsFor(actions) : int&lt;br/&gt;collectGameStatistics(setup, seed, actions, {includeUnfinished}) : GameStatistics&lt;br/&gt;scoreSeriesByPlayer(setup, seed, actions) : List&amp;lt;List&amp;lt;int&amp;gt;&amp;gt;&lt;br/&gt;normalizeName(name) / avatarInitialsFor(name) : String" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
           <mxGeometry x="70" y="1340" width="385" height="190" as="geometry" />
         </mxCell>
         <mxCell id="GameStatistics" value="&lt;b&gt;GameStatistics&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;statistiques d&#x27;UNE partie, dérivées du journal&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;bySeat : List&amp;lt;PlayerStats&amp;gt;  &lt;i&gt;(ordre de la config d&#x27;origine)&lt;/i&gt;&lt;br/&gt;activeSeconds : int" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">

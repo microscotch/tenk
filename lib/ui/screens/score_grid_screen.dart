@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 
 /// Largeur minimale d'une colonne pour que le score (jusqu'à 5 chiffres,
@@ -57,7 +58,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
   Widget build(BuildContext context) {
     final avatarColors = assignAvatarColors((widget.roster ?? widget.players).map((p) => p.name));
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).scoreGridLabel)),
+      appBar: AppTopBar(title: Text(AppLocalizations.of(context).scoreGridLabel)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

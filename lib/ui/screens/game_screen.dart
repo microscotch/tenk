@@ -21,6 +21,7 @@ import '../navigation.dart';
 import '../shake_detector.dart';
 import '../sound_effects.dart';
 import '../widgets/app_title.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/dice3d/dice_face_texture.dart' show kExtensionLabelColor, pipColorFor;
 import '../widgets/die_widget.dart';
@@ -29,6 +30,7 @@ import '../widgets/replay_controls.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
+import 'game_statistics_screen.dart';
 import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
 
@@ -497,6 +499,12 @@ class GameScreen extends ConsumerStatefulWidget {
 
   const GameScreen({super.key, this.replayMode = false});
 
+  /// Le message "Craqué !" ne doit apparaître qu'une fois TOUS les dés du lancer
+  /// immobiles (résultat visible), pas dès que le craque est connu côté moteur :
+  /// sinon le suspense du lancer est gâché. Chaque dé tire sa durée (voir
+  /// [DieRollMotion]) : on attend donc la plus longue possible, plus une marge.
+  static final bustRevealDelay = DieWidget.maxRollDuration + const Duration(milliseconds: 50);
+
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
 }
@@ -549,10 +557,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   final List<_LogEntry> _log = [];
   final ScrollController _logScrollController = ScrollController();
 
-  /// Le message "Craqué !" ne doit apparaître qu'une fois que l'animation de
-  /// lancer des dés est terminée (résultat visible), pas dès que le craque
-  /// est connu côté moteur : sinon le suspense du lancer est gâché.
-  static const _bustRevealDelay = Duration(milliseconds: 700);
   Object? _bustKeyBeingRevealed;
   bool _bustRevealed = false;
   Timer? _bustRevealTimer;
@@ -685,7 +689,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         turn.busted &&
         turn.pendingRoll != null &&
         !notifier.isAiPlayer(engine.currentPlayerIndex)) {
-      delay += _bustRevealDelay;
+      delay += GameScreen.bustRevealDelay;
     }
     _pendingTimer?.cancel();
     _pendingTimer = Timer(delay, () {
@@ -965,7 +969,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       return;
     }
 
-    _bustRevealTimer = Timer(_bustRevealDelay, () {
+    _bustRevealTimer = Timer(GameScreen.bustRevealDelay, () {
       if (!mounted) return;
       SoundEffects.instance.playBust();
       _logBust(engine!, turn);
@@ -995,6 +999,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // pour la refermer.
     if (widget.replayMode && !identical(ref.read(gameProvider), engine)) return;
     final l10n = AppLocalizations.of(context);
+    final rightHanded = ref.read(currentSeatRightHandedProvider);
     final explanation = _bustReasonExplanation(l10n, turn.bustReason);
     final bustDice = [
       for (final batch in _keptDiceByRoll(turn.keptDiceThisTurn)) _PopupDiceGroup.kept(batch),
@@ -1015,9 +1020,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
           canPop: widget.replayMode,
           child: AlertDialog(
             title: Text(l10n.bustedTitle, textAlign: TextAlign.center),
-            // Le bouton est dans le contenu et non dans `actions`, qui l'aurait
-            // aligné à droite : toute la popup est centrée (même disposition
-            // que [_showInheritedHandDialog]).
+            // L'icône de validation est dans le contenu et non dans `actions`,
+            // qui l'aurait alignée à droite : toute la popup est centrée (même
+            // disposition que [_showInheritedHandDialog]).
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1035,21 +1040,32 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   const SizedBox(height: 10),
                   _bustScoreLine(bustedHandScore(turn), engine.currentPlayer),
                 ],
+                // Mêmes icônes de consultation, à la même place, que la popup
+                // de reprise de main. En rejeu, rien à consulter : la popup se
+                // referme d'elle-même, et fermerait l'écran consulté à sa place.
+                if (!widget.replayMode) ...[
+                  const SizedBox(height: 4),
+                  _popupConsultRow(dialogContext, engine, rightHanded: rightHanded),
+                ],
                 if (explanation != null) ...[
-                  if (bustDice.isNotEmpty) const SizedBox(height: 20),
+                  if (bustDice.isNotEmpty) const SizedBox(height: 12),
                   Text(explanation, textAlign: TextAlign.center),
                 ],
                 // Rien à valider pour le spectateur d'un rejeu : la popup se
                 // referme d'elle-même.
                 if (!widget.replayMode) ...[
-                  if (bustDice.isNotEmpty || explanation != null) const SizedBox(height: 20),
-                  FilledButton(
+                  const SizedBox(height: 20),
+                  _popupDecisionIcon(
+                    dialogContext,
+                    icon: Icons.check,
                     onPressed: () {
                       if (_controlsLocked) return;
                       Navigator.of(dialogContext).pop();
                       ref.read(gameProvider.notifier).endBustedTurn();
                     },
-                    child: Text(l10n.bustContinueButton),
+                    background: Theme.of(dialogContext).colorScheme.primary,
+                    foreground: Theme.of(dialogContext).colorScheme.onPrimary,
+                    tooltip: l10n.bustContinueButton,
                   ),
                 ],
               ],
@@ -1454,12 +1470,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
     }
 
     final scaffold = Scaffold(
-      appBar: AppBar(
+      appBar: AppTopBar(
         title: const AppTitle(),
         // Aucune sortie dans la barre pendant une partie : ni flèche de
         // retour, ni "quitter" — c'est le retour système qui ramène à
-        // l'accueil (voir le PopScope en fin de méthode). En rejeu, la flèche
-        // standard reste au contraire la seule sortie du mode spectateur.
+        // l'accueil (voir le PopScope en fin de méthode). En rejeu, la sortie
+        // du mode spectateur est le retour standard : le retour système, et
+        // la flèche automatique là où [AppTopBar] la garde (hors Android).
         //
         // iOS fait exception : pas de bouton retour système, et le glissement
         // depuis le bord de l'écran est justement neutralisé par ce PopScope
@@ -1594,8 +1611,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   List<Widget> _scoreGridAction(List<Player> players) {
-    // En mode rejeu, seul le retour compte (flèche standard de l'AppBar) :
-    // pas d'icône grille de score. Les commandes du rejeu (vitesse comprise)
+    // En mode rejeu, seul le retour compte (retour standard, voir
+    // [AppTopBar]) : pas d'icône grille de score. Les commandes du rejeu (vitesse comprise)
     // sont en bas de l'écran, sous le journal.
     if (widget.replayMode) return const [];
 
@@ -1615,7 +1632,33 @@ class _GameScreenState extends ConsumerState<GameScreen>
           MaterialPageRoute(builder: (_) => const ScoreChartScreen()),
         ),
       ),
+      _gameStatsButton(context),
     ];
+  }
+
+  /// Ouvre le bilan de la partie en cours ([GameStatisticsScreen]) par-dessus
+  /// le navigateur de [navigatorContext] : l'écran de jeu, ou une popup qu'on
+  /// retrouve au retour. Le bilan est calculé à l'ouverture, sur le journal du
+  /// moment.
+  Widget _gameStatsButton(BuildContext navigatorContext) {
+    return IconButton(
+      icon: const Icon(Icons.bar_chart),
+      tooltip: AppLocalizations.of(context).gameStatsTitle,
+      onPressed: () {
+        final engine = ref.read(gameProvider);
+        final record = ref.read(gameProvider.notifier).gameRecord;
+        if (engine == null || record == null) return;
+        Navigator.of(navigatorContext).push(
+          MaterialPageRoute(
+            builder: (_) => GameStatisticsScreen(
+              players: engine.players,
+              winnerIndex: engine.winnerIndex,
+              record: record,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// Ouvre la grille de score filtrée sur un seul joueur (clic sur sa ligne
@@ -1737,7 +1780,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 // et fermerait l'écran consulté à sa place.
                 if (!widget.replayMode) ...[
                   const SizedBox(height: 4),
-                  _inheritedHandConsultRow(dialogContext, engine, rightHanded: rightHanded),
+                  _popupConsultRow(dialogContext, engine, rightHanded: rightHanded),
                 ],
                 if (!canResume) ...[
                   const SizedBox(height: 8),
@@ -1762,17 +1805,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Les deux icônes de consultation de la popup de reprise de main, sous la
-  /// ligne du score : la grille des scores et l'évolution des scores. Aucune ne
-  /// tranche le choix, d'où leur place à part des deux icônes de décision.
+  /// Les trois icônes de consultation des popups de reprise de main et de
+  /// craque, sous la ligne du score : la grille des scores, l'évolution des
+  /// scores et le bilan de la partie. Aucune ne tranche la popup, d'où leur
+  /// place à part des icônes de décision.
   ///
-  /// Chacune est centrée dans une colonne large de la moitié de la popup ; la
-  /// courbe se place à droite de la grille pour un droitier, à gauche pour un
-  /// gaucher — du côté de la main libre, comme le reste des commandes. Les deux
-  /// s'empilent PAR-DESSUS la popup et on y revient — surtout pas un `pop`, qui
-  /// laisserait le tour bloqué sans `activeTurn`, ce choix n'étant proposé
-  /// nulle part ailleurs.
-  Widget _inheritedHandConsultRow(
+  /// Chacune est centrée dans un tiers de la popup, dans cet ordre pour un
+  /// droitier et dans l'ordre inverse pour un gaucher — du côté de la main
+  /// libre, comme le reste des commandes. Toutes s'empilent PAR-DESSUS la popup
+  /// et on y revient — surtout pas un `pop`, qui laisserait le tour bloqué : la
+  /// décision que porte la popup n'est proposée nulle part ailleurs.
+  Widget _popupConsultRow(
     BuildContext dialogContext,
     GameEngine engine, {
     required bool rightHanded,
@@ -1796,7 +1839,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
       width: double.infinity,
       child: Row(
         children: [
-          for (final icon in rightHanded ? [grid, chart] : [chart, grid])
+          for (final icon in rightHanded
+              ? [grid, chart, _gameStatsButton(dialogContext)]
+              : [_gameStatsButton(dialogContext), chart, grid])
             Expanded(child: Center(child: icon)),
         ],
       ),
@@ -1805,9 +1850,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   /// Les deux actions qui tranchent le choix de main héritée, en icônes :
   /// valider (reprendre la main laissée) et refuser (repartir à 5 dés neufs).
-  /// La consultation de la grille de score, elle, n'est pas ici mais en coin
-  /// de titre — elle ne tranche rien et ne dépile pas la popup (voir
-  /// [_showInheritedHandDialog]).
+  /// La consultation (grille, courbe, bilan), elle, a sa propre ligne, plus
+  /// haut : elle ne tranche rien et ne dépile pas la popup (voir
+  /// [_popupConsultRow]).
   ///
   /// Chaque icône porte dessous sa probabilité de marquer au tout premier
   /// lancer de cette option (voir [_percentCaption]) : c'est la même
@@ -1820,6 +1865,54 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// joueur a fait dans la partie (vrai : il reprend la main, faux : il repart
   /// à neuf, nul : inconnu). L'icône choisie garde ses couleurs pleines, l'autre
   /// prend l'aspect d'une option indisponible.
+  /// Une icône de décision de popup (reprendre, refuser, valider un craque) :
+  /// grosse icône sur fond plein, avec sous elle un éventuel [percent].
+  ///
+  /// [chosen] : en rejeu, où les icônes sont inertes, garde les couleurs
+  /// pleines de l'option que le joueur avait choisie.
+  Widget _popupDecisionIcon(
+    BuildContext dialogContext, {
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required Color background,
+    required Color foreground,
+    required String tooltip,
+    String percent = '',
+    bool chosen = false,
+  }) {
+    final scheme = Theme.of(dialogContext).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: onPressed,
+          tooltip: tooltip,
+          iconSize: 30,
+          // L'état désactivé garde un contour plein : sans lui, l'icône
+          // grisée sur le fond de la popup se lit comme ABSENTE plutôt que
+          // comme indisponible, ce qui rendrait la rangée fixe inutile.
+          style: IconButton.styleFrom(
+            backgroundColor: background,
+            foregroundColor: foreground,
+            disabledBackgroundColor: chosen ? background : Colors.transparent,
+            disabledForegroundColor: chosen ? foreground : scheme.outline,
+            side: onPressed == null && !chosen ? BorderSide(color: scheme.outline) : null,
+            padding: const EdgeInsets.all(12),
+          ),
+          icon: Icon(icon),
+        ),
+        if (percent.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              percent,
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _inheritedHandActions(
     BuildContext dialogContext,
     GameEngine engine, {
@@ -1831,58 +1924,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final notifier = ref.read(gameProvider.notifier);
     final scheme = Theme.of(dialogContext).colorScheme;
 
-    Widget action({
-      required IconData icon,
-      required VoidCallback? onPressed,
-      required Color background,
-      required Color foreground,
-      required String percent,
-      required String tooltip,
-      bool chosen = false,
-    }) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            onPressed: onPressed,
-            tooltip: tooltip,
-            iconSize: 30,
-            // L'état désactivé garde un contour plein : sans lui, l'icône
-            // grisée sur le fond de la popup se lit comme ABSENTE plutôt que
-            // comme indisponible, ce qui rendrait la rangée fixe inutile.
-            style: IconButton.styleFrom(
-              backgroundColor: background,
-              foregroundColor: foreground,
-              disabledBackgroundColor: chosen ? background : Colors.transparent,
-              disabledForegroundColor: chosen ? foreground : scheme.outline,
-              side: onPressed == null && !chosen ? BorderSide(color: scheme.outline) : null,
-              padding: const EdgeInsets.all(12),
-            ),
-            icon: Icon(icon),
-          ),
-          if (percent.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                percent,
-                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-              ),
-            ),
-        ],
-      );
-    }
-
-    // Deux colonnes égales, moitiés de la popup, chacune centrant son icône :
-    // la même disposition que les icônes de consultation au-dessus (voir
-    // [_inheritedHandConsultRow]), dont elles sont ainsi exactement sous les
-    // centres. Valider à gauche, refuser à droite.
+    // Deux colonnes égales, moitiés de la popup, chacune centrant son icône.
+    // Valider à gauche, refuser à droite.
     return SizedBox(
       width: double.infinity,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final decision in [
-            action(
+            _popupDecisionIcon(
+              dialogContext,
               icon: Icons.check,
               // Reprise impossible : l'icône reste visible mais inerte, plutôt
               // que de disparaître en recentrant l'autre.
@@ -1907,7 +1958,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   : '',
               tooltip: l10n.resumeHandButton,
             ),
-            action(
+            _popupDecisionIcon(
+              dialogContext,
               icon: Icons.close,
               onPressed: inert
                   ? null

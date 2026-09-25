@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_store.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 import 'player_edit_screen.dart';
 
@@ -41,7 +42,7 @@ class _PlayerPickerScreenState extends ConsumerState<PlayerPickerScreen> {
     final players = ref.watch(playersProvider).value ?? const <PlayerProfile>[];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppTopBar(
         title: Text(l10n.pickPlayersTitle),
         actions: [
           IconButton(

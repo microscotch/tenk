@@ -78,7 +78,8 @@ Le départage crée l'identité de la partie (seed, alias) et commence le journa
 
 Une sauvegarde ne contient pas l'état du jeu mais le journal et la seed : la reprise d'une partie en pause
 comme le rejeu d'une partie terminée reconstruisent tout avec `replayGame`. Le rejeu ne persiste jamais
-rien.
+rien. Une partie mise en pause avant son premier lancer reprend elle aussi : sur son départage s'il n'était
+pas tranché (`DiceOffNotifier.resumeFromSave`), sinon avec son premier tour lancé d'office.
 
 ### Fin de partie, archivage, statistiques — [`uml/seq-game-over.png`](uml/seq-game-over.png)
 

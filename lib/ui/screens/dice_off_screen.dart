@@ -12,6 +12,7 @@ import '../../state/player_store.dart';
 import '../../state/settings_providers.dart';
 import '../dice_colors.dart';
 import '../sound_effects.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/die_widget.dart';
 import 'game_screen.dart';
 
@@ -125,7 +126,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.diceOffTitle)),
+      appBar: AppTopBar(title: Text(l10n.diceOffTitle)),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _skipPendingAction,

@@ -128,19 +128,19 @@ abstract class AppLocalizations {
   /// **'Valider'**
   String get validateButton;
 
-  /// Infobulle de l'icône d'accès aux réglages.
+  /// Libellé du bouton de l'écran d'accueil qui ouvre les paramètres.
   ///
   /// In fr, this message translates to:
-  /// **'Réglages'**
+  /// **'Paramètres'**
   String get settingsTooltip;
 
-  /// Infobulle de l'icône d'accès à l'écran des règles du jeu, sur l'écran d'accueil.
+  /// Libellé du bouton de l'écran d'accueil qui ouvre les règles du jeu.
   ///
   /// In fr, this message translates to:
   /// **'Règles du jeu'**
   String get helpTooltip;
 
-  /// Infobulle de l'icône d'accès au dialogue "À propos", sur l'écran d'accueil.
+  /// Libellé du bouton de l'écran d'accueil qui ouvre le dialogue "À propos".
   ///
   /// In fr, this message translates to:
   /// **'À propos'**
@@ -464,7 +464,7 @@ abstract class AppLocalizations {
   /// **'Évolution des scores'**
   String get scoreChartTitle;
 
-  /// Titre de l'écran des statistiques d'UNE partie terminée, et libellé du bouton qui l'ouvre depuis l'écran de fin de partie.
+  /// Titre de l'écran des statistiques d'UNE partie, terminée ou en cours, et libellé des boutons qui l'ouvrent (fin de partie, barre de l'écran de jeu, popups de reprise de main et de craque).
   ///
   /// In fr, this message translates to:
   /// **'Statistiques de la partie'**

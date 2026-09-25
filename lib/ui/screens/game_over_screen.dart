@@ -6,6 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_save_store.dart';
 import '../../state/player_providers.dart';
 import '../navigation.dart';
+import '../widgets/app_top_bar.dart';
 import 'game_statistics_screen.dart';
 import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
@@ -60,7 +61,7 @@ class GameOverScreen extends ConsumerWidget {
         popToHome(context);
       },
       child: Scaffold(
-        appBar: AppBar(
+        appBar: AppTopBar(
           title: Text(l10n.gameOverTitle),
           // Aucune sortie dans la barre — et surtout pas la flèche de retour
           // automatique de Flutter, qui ferait précisément le pop() nu que le
@@ -73,7 +74,8 @@ class GameOverScreen extends ConsumerWidget {
           // Elle ramène à l'accueil, comme le retour système ailleurs.
           //
           // Archivé, c'est l'inverse : la flèche automatique de Flutter fait
-          // exactement le retour voulu.
+          // exactement le retour voulu, là où [AppTopBar] la garde (hors
+          // Android, où le retour système suffit).
           automaticallyImplyLeading: archived,
           leading: !archived && Theme.of(context).platform == TargetPlatform.iOS
               ? BackButton(onPressed: () => popToHome(context))

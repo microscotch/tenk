@@ -79,6 +79,11 @@ une partie rejouable à l'identique.
   alors à rebours (`reversesOrder`). Les anciens journaux, joués un joueur à la
   fois (`rollFor`), gardent toujours la simple rotation : `simultaneous` les
   distingue, pour qu'une partie archivée ne change jamais de sièges au rejeu.
+  Le départage sauvegarde dès son premier round : une partie peut donc être en
+  pause avant d'avoir commencé. `DiceOffNotifier.resumeFromSave` reprend un
+  départage inachevé là où il en était (même générateur, même journal) ;
+  quittée sur son résultat, la partie reprend avec son premier tour lancé
+  d'office par `GameNotifier.resumeFromSave`.
 
 Les **fonctions pures** (encarts violets) — `rollDice`, `analyzeRoll`, `rollTurn`,
 `applyKeepDecision`, `tryBank`, mais aussi celles qui lisent un journal

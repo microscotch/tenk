@@ -413,6 +413,18 @@ void main() {
       }
     });
 
+    test('une partie en cours se compte sur demande, sans victoire attribuée', () {
+      final log = buildResumableActionLog(seed: 5, playerNames: setup.playerNames, applyKeepAfterRoll: true);
+
+      final ignored = collectGameStatistics(setup: setup, seed: 5, actions: log.actions);
+      final counted = collectGameStatistics(setup: setup, seed: 5, actions: log.actions, includeUnfinished: true);
+
+      int rolls(GameStatistics s) => s.bySeat.fold(0, (sum, seat) => sum + seat.rollsTotal);
+      expect(rolls(ignored), 0, reason: 'par défaut, rien : les fiches ne doivent pas la compter');
+      expect(rolls(counted), greaterThan(0), reason: 'le bilan en cours de partie voit ses lancers');
+      expect(counted.bySeat.every((s) => s.gamesWon == 0), isTrue, reason: 'personne n\'a encore gagné');
+    });
+
     test('une partie non terminée ne compte pour rien', () {
       final log = buildResumableActionLog(seed: 5, playerNames: setup.playerNames);
 

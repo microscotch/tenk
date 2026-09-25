@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
+import '../navigation.dart';
 import '../route_observer.dart';
 import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
 import 'finished_games_screen.dart';
-import 'game_screen.dart';
 import 'new_game_screen.dart';
 import 'paused_games_screen.dart';
 import 'players_screen.dart';
@@ -67,10 +66,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
         ],
       ),
     );
-    if (resume == true && mounted) {
-      ref.read(gameProvider.notifier).resumeFromSave(mostRecent);
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GameScreen()));
-    }
+    if (resume == true && mounted) resumeSavedGame(context, ref, mostRecent);
   }
 
   @override
@@ -109,34 +105,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // Seul le compte des parties en pause sert encore ici : il décide si le
     // bouton de reprise est actif. Les deux écrans dédiés titrent avec le leur.
     final pausedCount = ref.watch(pausedGamesProvider).value?.length ?? 0;
+    // Pas de barre du haut : son titre est passé en tête de la liste, et tout
+    // ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu un
+    // bouton, sous les autres.
     return Scaffold(
-      appBar: AppBar(
-        title: const AppTitle(),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: l10n.aboutTooltip,
-            onPressed: () => showAppAboutDialog(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            tooltip: l10n.helpTooltip,
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RulesScreen())),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: l10n.settingsTooltip,
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
-        ],
-      ),
-      // Cinq boutons, et rien d'autre : les deux listes qui s'affichaient ici en
+      // Des boutons, et rien d'autre : les deux listes qui s'affichaient ici en
       // permanence vivent désormais derrière le leur (voir [PausedGamesScreen]
       // et [FinishedGamesScreen]), qui les réutilisent telles quelles.
-      //
-      // Les boutons des fonctions pas encore écrites sont rendus quand même,
-      // inertes : la disposition de l'écran est ainsi figée dès maintenant, et
-      // les activer ne coûtera qu'une ligne.
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -145,6 +120,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Center(child: AppTitle(large: true)),
+                const SizedBox(height: 32),
                 FilledButton.icon(
                   onPressed: _openNewGame,
                   icon: const Icon(Icons.add),
@@ -175,6 +152,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                   onPressed: () => _open(const StatisticsScreen()),
                   icon: const Icon(Icons.bar_chart),
                   label: Text(l10n.statisticsButton),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _open(const RulesScreen()),
+                  icon: const Icon(Icons.help_outline),
+                  label: Text(l10n.helpTooltip),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _open(const SettingsScreen()),
+                  icon: const Icon(Icons.settings),
+                  label: Text(l10n.settingsTooltip),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => showAppAboutDialog(context),
+                  icon: const Icon(Icons.info_outline),
+                  label: Text(l10n.aboutTooltip),
                 ),
               ],
             ),

@@ -6,6 +6,7 @@ import '../../game/player_stats.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_statistics.dart';
 import '../../state/player_store.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/player_stats_groups.dart';
@@ -27,7 +28,7 @@ class StatisticsScreen extends ConsumerWidget {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.statisticsButton)),
+      appBar: AppTopBar(title: Text(l10n.statisticsButton)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

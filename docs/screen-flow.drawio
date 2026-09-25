@@ -20,7 +20,7 @@
         <mxCell id="statistics" value="Statistics&#10;(records + fiches dépliables)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="760" y="190" width="200" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="settings" value="Settings&#10;(réglages)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="settings" value="Settings&#10;(paramètres)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="760" y="60" width="200" height="50" as="geometry" />
         </mxCell>
         <mxCell id="rules" value="Rules&#10;(règles du jeu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
@@ -66,7 +66,7 @@
         <mxCell id="e1" value="fin de l&#x27;animation / tap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="splash" target="setup">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2" value="Réglages" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.1;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="settings">
+        <mxCell id="e2" value="Paramètres" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.1;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="settings">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e3" value="Règles" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.35;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="rules">
@@ -111,6 +111,14 @@
         <mxCell id="e17" value="courbe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.75;entryX=1;entryY=0.5;" edge="1" parent="1" source="game" target="scorechart">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="e31" value="Reprendre&#10;(départage inachevé)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=1;exitY=0.85;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="paused" target="diceoff">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="335" y="152" />
+              <mxPoint x="335" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
         <mxCell id="e18" value="Reprendre" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="paused" target="game">
           <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="300" y="135" /><mxPoint x="300" y="530" /></Array></mxGeometry>
         </mxCell>
@@ -125,6 +133,15 @@
         </mxCell>
         <mxCell id="e22" value="courbe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="gameover" target="scorechart">
           <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="140" y="660" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e30" value="statistiques&#10;(barre, popups)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.8;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="game" target="gamestats">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="705" y="548" />
+              <mxPoint x="705" y="670" />
+              <mxPoint x="860" y="670" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="e23" value="statistiques" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="gameover" target="gamestats">
           <mxGeometry relative="1" as="geometry" />

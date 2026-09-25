@@ -136,7 +136,8 @@ void main() {
 
     expect(find.text('Temps de jeu'), findsOneWidget, reason: 'le détail est apparu');
     expect(find.byType(StatisticsScreen), findsOneWidget, reason: 'toujours sur l\'écran général');
-    expect(find.byType(BackButton), findsNothing, reason: 'aucun écran n\'a été empilé');
+    expect(ModalRoute.of(tester.element(find.byType(StatisticsScreen)))!.isCurrent, isTrue,
+        reason: 'aucun écran n\'a été empilé');
     expect(find.text('Records'), findsOneWidget, reason: 'les records restent visibles en tête');
 
     await tester.tap(find.text('Marie'));

@@ -30,13 +30,16 @@ class GameStatistics {
 /// réordonné. Le résultat est retraduit vers l'ordre d'origine avant d'être
 /// rendu.
 ///
-/// Une partie non terminée ne compte pour rien : elle n'a ni vainqueur ni
-/// durée définitive, et ses figures seraient comptées une seconde fois le jour
-/// où elle s'achève.
+/// Par défaut, une partie non terminée ne compte pour rien : elle n'a ni
+/// vainqueur ni durée définitive, et ses figures seraient comptées une seconde
+/// fois dans les fiches le jour où elle s'achève. [includeUnfinished] la
+/// compte quand même, sans victoire attribuée : c'est le bilan affiché en cours
+/// de partie, qui ne rejoint jamais les fiches.
 GameStatistics collectGameStatistics({
   required GameSetup setup,
   required int seed,
   required List<GameAction> actions,
+  bool includeUnfinished = false,
 }) {
   final playerCount = setup.playerNames.length;
   final collector = GameStatisticsCollector(playerCount);
@@ -45,7 +48,7 @@ GameStatistics collectGameStatistics({
 
   final engine = replay.engine;
   final playOrder = replay.playOrder;
-  if (engine == null || !engine.gameOver || playOrder == null) {
+  if (engine == null || playOrder == null || (!engine.gameOver && !includeUnfinished)) {
     return GameStatistics(
       bySeat: List.filled(playerCount, PlayerStats.empty),
       activeSeconds: 0,

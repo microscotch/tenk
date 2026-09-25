@@ -7,14 +7,14 @@
   "validateButton": "Valider",
   "@validateButton": {"description": "Bouton de validation d'un dialogue."},
 
-  "settingsTooltip": "Réglages",
-  "@settingsTooltip": {"description": "Infobulle de l'icône d'accès aux réglages."},
+  "settingsTooltip": "Paramètres",
+  "@settingsTooltip": {"description": "Libellé du bouton de l'écran d'accueil qui ouvre les paramètres."},
 
   "helpTooltip": "Règles du jeu",
-  "@helpTooltip": {"description": "Infobulle de l'icône d'accès à l'écran des règles du jeu, sur l'écran d'accueil."},
+  "@helpTooltip": {"description": "Libellé du bouton de l'écran d'accueil qui ouvre les règles du jeu."},
 
   "aboutTooltip": "À propos",
-  "@aboutTooltip": {"description": "Infobulle de l'icône d'accès au dialogue \"À propos\", sur l'écran d'accueil."},
+  "@aboutTooltip": {"description": "Libellé du bouton de l'écran d'accueil qui ouvre le dialogue \"À propos\"."},
 
   "aboutVersionLabel": "Version {version} ({buildNumber})",
   "@aboutVersionLabel": {
@@ -188,7 +188,7 @@
   "@scoreChartTitle": {"description": "Titre de l'écran montrant la courbe des scores de chaque joueur, et infobulle de l'icône qui l'ouvre depuis l'écran de jeu."},
 
   "gameStatsTitle": "Statistiques de la partie",
-  "@gameStatsTitle": {"description": "Titre de l'écran des statistiques d'UNE partie terminée, et libellé du bouton qui l'ouvre depuis l'écran de fin de partie."},
+  "@gameStatsTitle": {"description": "Titre de l'écran des statistiques d'UNE partie, terminée ou en cours, et libellé des boutons qui l'ouvrent (fin de partie, barre de l'écran de jeu, popups de reprise de main et de craque)."},
 
   "gameStatsGameSection": "Partie",
   "@gameStatsGameSection": {"description": "Titre de la section, en tête des statistiques d'une partie, qui donne ce qui vaut pour toute la table : durée, nombre de tours."},

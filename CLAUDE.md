@@ -154,7 +154,10 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   the engine. Pause/speed/progress providers live in `replay_*_provider.dart`.
 - `dice_off_providers.dart` — `DiceOffNotifier` drives the roll-off screen (`rollRound()` plays a
   whole round) and, once resolved, `buildOrderedSetup()` reorders players into `playOrder` for the
-  real game (winner at index 0).
+  real game (winner at index 0). The roll-off saves from its first round, so a paused game may not
+  have started: `resumeSavedGame` (`lib/ui/navigation.dart`) reopens an unresolved roll-off via
+  `DiceOffNotifier.resumeFromSave`, and `GameNotifier.resumeFromSave` starts the first turn itself
+  when the roll-off was resolved but the game never began.
 - `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
   file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
   config of the game **being shown**, linking by profile id, never by name — so an archived game
@@ -162,6 +165,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   profile's statistics from the archived journals.
 
 ### UI layer (`lib/ui/`)
+
+- **Every screen's top bar is `AppTopBar` (`lib/ui/widgets/app_top_bar.dart`), never a raw `AppBar`.**
+  It drops the automatic back arrow on Android, where the system back button/gesture does the job,
+  and keeps it where there is no system back (iOS, desktop). This applies to every new screen;
+  `test/ui/app_top_bar_test.dart` fails on any `AppBar(` written elsewhere in `lib/ui`. The home
+  screen (`SetupScreen`) has no top bar at all: rules, settings and about are buttons in its list.
 
 - `game_screen.dart` (also the spectator replay, `replayMode`, with its controls pinned in a bottom bar
   outside the inert body) is the densest file: it renders different sub-views depending on

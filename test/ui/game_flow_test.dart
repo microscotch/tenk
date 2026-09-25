@@ -50,6 +50,14 @@ bool _stopEnabled(WidgetTester tester) {
   return button.onPressed != null;
 }
 
+/// La popup de craque attend l'arrêt du plus lent des dés (voir
+/// [GameScreen.bustRevealDelay]) : un minuteur que `pumpAndSettle` seul
+/// n'atteint pas forcément, les dés pouvant s'immobiliser avant.
+Future<void> revealBust(WidgetTester tester) async {
+  await tester.pump(GameScreen.bustRevealDelay);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('le bouton retour ne referme pas la popup de craque', (tester) async {
     // Ces popups portent la seule action qui débloque le tour : les fermer
@@ -74,6 +82,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
     expect(find.byType(AlertDialog), findsOneWidget);
 
     await tester.binding.handlePopRoute();
@@ -81,7 +90,7 @@ void main() {
 
     expect(find.byType(AlertDialog), findsOneWidget,
         reason: 'la popup doit rester : son bouton porte la seule action qui passe la main');
-    expect(find.text('Continuer'), findsOneWidget);
+    expect(find.byTooltip('Continuer'), findsOneWidget);
 
     // Le cadre du titre occupe toute la largeur de la popup quel que soit
     // l'alignement : c'est l'alignement du texte lui-même qui compte.
@@ -91,9 +100,12 @@ void main() {
     expect(title.textAlign, TextAlign.center, reason: 'le titre doit être centré');
 
     final dialogRect = tester.getRect(find.byType(AlertDialog));
-    final continueRect = tester.getRect(find.widgetWithText(FilledButton, 'Continuer'));
+    final continueRect = tester.getRect(find.byTooltip('Continuer'));
     expect((continueRect.center.dx - dialogRect.center.dx).abs(), lessThan(1.0),
-        reason: 'le bouton Continuer doit être centré dans la popup');
+        reason: 'l\'icône de validation doit être centrée dans la popup');
+    expect(find.descendant(of: find.byTooltip('Continuer'), matching: find.byIcon(Icons.check)), findsOneWidget,
+        reason: 'une icône de validation remplace le bouton texte');
+    expect(find.widgetWithText(FilledButton, 'Continuer'), findsNothing);
   });
 
   testWidgets('la popup de craque montre la main perdue et le lancer qui l\'emporte', (tester) async {
@@ -132,6 +144,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     final inDialog = find.descendant(
       of: find.byType(AlertDialog),
@@ -217,6 +230,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     // Les 700 sont barrés et le joueur retombe sur sa ligne précédente (0) :
     // le score barré, ce que ça lui coûte, et où il atterrit.
@@ -272,6 +286,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     final score = find.descendant(
       of: find.byType(AlertDialog),
@@ -436,7 +451,7 @@ void main() {
 
   Finder inDialog(Finder f) => find.descendant(of: find.byType(AlertDialog), matching: f);
 
-  testWidgets('la popup de reprise offre la grille et la courbe, sous le score, pour un droitier',
+  testWidgets('la popup de reprise offre la grille, la courbe et le bilan, sous le score, pour un droitier',
       (tester) async {
     await pumpInheritedHandPopup(tester, rightHanded: true);
 
@@ -444,50 +459,54 @@ void main() {
     final dialog = tester.getRect(find.byType(AlertDialog));
     final grid = tester.getRect(inDialog(find.byTooltip('Grille des scores')));
     final chart = tester.getRect(inDialog(find.byTooltip('Évolution des scores')));
+    final stats = tester.getRect(inDialog(find.byTooltip('Statistiques de la partie')));
     final score = tester.getRect(inDialog(find.textContaining('300')));
 
     expect(grid.top, chart.top, reason: 'côte à côte, sur une même ligne');
+    expect(chart.top, stats.top);
     expect(score.bottom, lessThanOrEqualTo(grid.top), reason: 'sous la ligne annonçant le score');
-    expect(grid.right, lessThanOrEqualTo(chart.left), reason: 'droitier : la courbe à droite de la grille');
+    expect(grid.right, lessThanOrEqualTo(chart.left), reason: 'droitier : grille, courbe, bilan');
+    expect(chart.right, lessThanOrEqualTo(stats.left));
 
-    // Deux colonnes égales, moitiés de la popup : chaque icône y est centrée,
-    // donc symétriques par rapport à l'axe de la popup.
-    expect(dialog.center.dx - grid.center.dx, closeTo(chart.center.dx - dialog.center.dx, 1.0));
+    // Trois colonnes égales : la courbe au centre de la popup, les deux autres
+    // à un tiers de rangée de part et d'autre.
     final row = tester.getRect(find
         .ancestor(of: inDialog(find.byTooltip('Grille des scores')), matching: find.byType(Row))
         .first);
     expect(row.center.dx, closeTo(dialog.center.dx, 1.0), reason: 'la rangée est centrée dans la popup');
-    expect(chart.center.dx - grid.center.dx, closeTo(row.width / 2, 1.0),
-        reason: 'deux colonnes égales, chacune la moitié de la rangée : leurs centres en sont distants d\'une demi-largeur');
+    expect(chart.center.dx, closeTo(dialog.center.dx, 1.0));
+    expect(chart.center.dx - grid.center.dx, closeTo(row.width / 3, 1.0), reason: 'trois tiers égaux');
+    expect(stats.center.dx - chart.center.dx, closeTo(row.width / 3, 1.0));
 
     // Le titre ne porte plus d'icône.
     final title = tester.getRect(inDialog(find.text('Reprendre ?')));
     expect(grid.top, greaterThan(title.bottom));
 
-    // Les deux décisions sont dans les mêmes colonnes : valider (à gauche) sous
-    // la première icône de consultation, refuser sous la seconde.
+    // Les deux décisions gardent leurs deux moitiés de rangée : valider à
+    // gauche, refuser à droite, chacune centrée dans sa moitié.
     final resume = tester.getRect(inDialog(find.byTooltip('Reprendre la main')));
     final newHand = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
-    expect(resume.center.dx, closeTo(grid.center.dx, 1.0), reason: 'valider sous la grille');
-    expect(newHand.center.dx, closeTo(chart.center.dx, 1.0), reason: 'refuser sous la courbe');
+    expect(resume.center.dx, closeTo(row.left + row.width / 4, 1.0), reason: 'valider au centre de la moitié gauche');
+    expect(newHand.center.dx, closeTo(row.left + row.width * 3 / 4, 1.0), reason: 'refuser au centre de la moitié droite');
     expect(resume.top, newHand.top);
     expect(chart.bottom, lessThanOrEqualTo(resume.top), reason: 'les décisions sous les icônes de consultation');
   });
 
-  testWidgets('pour un gaucher, la courbe passe à gauche de la grille', (tester) async {
+  testWidgets('pour un gaucher, les trois icônes de consultation passent dans l\'ordre inverse', (tester) async {
     await pumpInheritedHandPopup(tester, rightHanded: false);
 
     final grid = tester.getRect(inDialog(find.byTooltip('Grille des scores')));
     final chart = tester.getRect(inDialog(find.byTooltip('Évolution des scores')));
+    final stats = tester.getRect(inDialog(find.byTooltip('Statistiques de la partie')));
 
-    expect(chart.right, lessThanOrEqualTo(grid.left), reason: 'gaucher : la courbe à gauche de la grille');
+    expect(stats.right, lessThanOrEqualTo(chart.left), reason: 'gaucher : bilan, courbe, grille');
+    expect(chart.right, lessThanOrEqualTo(grid.left));
     expect(grid.top, chart.top);
 
-    // Les décisions gardent leur ordre (valider à gauche), donc ici sous la courbe.
+    // Les décisions gardent leur ordre : valider à gauche, refuser à droite.
     final resume = tester.getRect(inDialog(find.byTooltip('Reprendre la main')));
     final newHand = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
-    expect(resume.center.dx, closeTo(chart.center.dx, 1.0));
-    expect(newHand.center.dx, closeTo(grid.center.dx, 1.0));
+    expect(resume.right, lessThanOrEqualTo(newHand.left));
   });
 
   testWidgets('la courbe de la popup s\'ouvre par-dessus, et on revient sur la popup', (tester) async {
@@ -790,7 +809,13 @@ void main() {
     // l'animation de lancer des dés n'est pas terminée.
     expect(find.textContaining('Craqué'), findsNothing);
 
+    // Ni tant que le plus lent des dés peut encore rouler : chaque dé tire sa
+    // durée, jusqu'à DieWidget.maxRollDuration.
+    await tester.pump(DieWidget.maxRollDuration - const Duration(milliseconds: 10));
+    expect(find.textContaining('Craqué'), findsNothing, reason: 'un dé peut encore rouler');
+
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     // Le message est désormais visible à deux endroits une fois révélé : le
     // journal de partie ET le bouton lui-même (voir CLAUDE.md, libellés
@@ -799,7 +824,7 @@ void main() {
     expect(find.textContaining('Craqué'), findsWidgets);
     expect(find.textContaining('Craqué ! => 700 petit trait'), findsOneWidget);
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -911,8 +936,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -965,7 +991,7 @@ void main() {
     // fenêtre anti-clic involontaire (voir _controlLockAfterTransition), comme
     // pour un vrai joueur.
     await tester.pump(_controlLockPump);
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -1105,6 +1131,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     // Avant le second craque : le score affiché est 1000, avec le tiret visible.
     expect(find.text('1000'), findsOneWidget);
@@ -1115,7 +1142,7 @@ void main() {
     expect(find.textContaining('Craqué ! =>'), findsWidgets);
     expect(find.textContaining('retour à 700'), findsOneWidget);
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;
@@ -1160,9 +1187,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
     expect(find.byIcon(Icons.priority_high), findsOneWidget, reason: '1800 porte un tiret');
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     // La main passe à B : on repasse par l'écran de transition avant de
@@ -1657,6 +1685,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     expect(
       find.descendant(of: find.byType(AlertDialog), matching: find.text('Craqué !')),
@@ -2139,6 +2168,7 @@ void main() {
         reason: 'le lancer doit d\'abord être montré, comme pour un craque classique');
 
     await tester.pumpAndSettle();
+    await revealBust(tester);
 
     expect(find.textContaining('Craqué'), findsWidgets);
     // Visible à deux endroits une fois révélé : le journal ET le contenu de
@@ -2146,7 +2176,7 @@ void main() {
     expect(find.textContaining('dépasser 10000'), findsWidgets,
         reason: 'le motif du craque est explicité, malgré un lancer en attente');
 
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     final after = container.read(gameProvider)!;

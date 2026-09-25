@@ -7,13 +7,14 @@ import '../../game/player_stats.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_save_store.dart';
 import '../../state/player_providers.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/player_stats_groups.dart';
 import '../widgets/stat_row.dart';
 
-/// Le bilan d'UNE partie terminée : ce qui vaut pour toute la table, puis, pour
-/// chaque joueur, ses tours, ses figures et ses faits d'armes.
+/// Le bilan d'UNE partie, terminée ou en cours : ce qui vaut pour toute la
+/// table, puis, pour chaque joueur, ses tours, ses figures et ses faits d'armes.
 ///
 /// Rien n'est stocké : tout se dérive du journal de la partie en la rejouant
 /// (voir [collectGameStatistics]), comme les statistiques cumulées des fiches
@@ -22,7 +23,9 @@ class GameStatisticsScreen extends ConsumerStatefulWidget {
   /// Les joueurs dans l'ordre du MOTEUR, grilles finales comprises — celui de
   /// `GameEngine.players`.
   final List<Player> players;
-  final int winnerIndex;
+
+  /// Le vainqueur, index du moteur ; nul tant que la partie n'est pas finie.
+  final int? winnerIndex;
 
   /// Le journal de la partie bilanée. Passé explicitement plutôt que lu dans le
   /// notifier de partie : un run archivé ouvert depuis la liste n'y est pas.
@@ -31,7 +34,7 @@ class GameStatisticsScreen extends ConsumerStatefulWidget {
   const GameStatisticsScreen({
     super.key,
     required this.players,
-    required this.winnerIndex,
+    this.winnerIndex,
     required this.record,
   });
 
@@ -57,7 +60,12 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
     // Calculé une fois, ici : c'est un rejeu complet de la partie, qui n'a pas
     // à être refait à chaque reconstruction de l'écran.
     final record = widget.record;
-    final stats = collectGameStatistics(setup: record.setup, seed: record.seed, actions: record.actions);
+    final stats = collectGameStatistics(
+      setup: record.setup,
+      seed: record.seed,
+      actions: record.actions,
+      includeUnfinished: true,
+    );
 
     _activeSeconds = stats.activeSeconds;
     _tableStats = stats.bySeat.fold(PlayerStats.empty, (total, seat) => total + seat);
@@ -72,11 +80,14 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
     final locale = Localizations.localeOf(context).toString();
     final displayNames = watchDisplayNames(ref, widget.record);
     final colors = assignAvatarColors(widget.players.map((p) => p.name));
-    final winnerName = widget.players[widget.winnerIndex].name;
+    final winnerName = switch (widget.winnerIndex) {
+      final index? => widget.players[index].name,
+      null => null,
+    };
     final ranking = [...widget.players]..sort((a, b) => b.totalScore.compareTo(a.totalScore));
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.gameStatsTitle)),
+      appBar: AppTopBar(title: Text(l10n.gameStatsTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

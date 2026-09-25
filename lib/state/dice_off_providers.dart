@@ -61,14 +61,56 @@ class DiceOffNotifier extends Notifier<DiceOffState?> {
     _enqueuePersist();
   }
 
+  /// Reprend un départage interrompu avant d'être tranché : son journal est
+  /// rejoué pour retrouver les rounds déjà joués et le générateur là où il
+  /// s'était arrêté, puis le départage continue. C'est la même partie : même
+  /// seed, même alias, même fichier.
+  void resumeFromSave(SavedGame saved) {
+    final replay = replayGame(saved.setup, saved.seed, saved.actions);
+    assert(!replay.diceOff.isResolved, 'départage déjà tranché : c\'est la partie qu\'il faut reprendre');
+    _setup = saved.setup;
+    _seed = saved.seed;
+    _random = replay.random;
+    _alias = saved.alias;
+    _createdAt = saved.createdAt;
+    // La reprise borne l'interruption, comme pour une partie (voir
+    // [GameActionType.resume]) : le temps passé hors de l'app ne compte pas.
+    _actions
+      ..clear()
+      ..addAll(saved.actions)
+      ..add(GameAction.resume());
+    state = replay.diceOff;
+    _enqueuePersist();
+  }
+
+  /// Vrai quand le départage de [saved] n'est pas tranché : c'est alors lui
+  /// qu'il faut reprendre ([resumeFromSave]), la partie n'existant pas encore.
+  static bool isUnfinished(SavedGame saved) =>
+      !replayGame(saved.setup, saved.seed, saved.actions.sublist(0, diceOffActionCount(saved.actions)))
+          .diceOff
+          .isResolved;
+
   /// Joue un round : tous les joueurs encore en lice lancent leur dé en même
   /// temps, puis le round est tranché (vainqueur, ou relance des ex-aequo au
   /// plus bas au prochain appel).
+  ///
+  /// Un round commencé un joueur à la fois par une version antérieure (repris
+  /// d'une vieille sauvegarde) se finit de la même façon, pour que son journal
+  /// reste rejouable à l'identique.
   void rollRound() {
-    final next = state!.rollAll(random: _random).resolveRound();
-    _actions
-      ..add(GameAction.diceOffRollAll())
-      ..add(GameAction.diceOffResolveRound());
+    var next = state!;
+    if (next.rollsThisRound.isEmpty) {
+      next = next.rollAll(random: _random);
+      _actions.add(GameAction.diceOffRollAll());
+    } else {
+      while (!next.roundComplete) {
+        final index = next.nextToRoll!;
+        next = next.rollFor(index, random: _random);
+        _actions.add(GameAction.diceOffRoll(index));
+      }
+    }
+    next = next.resolveRound();
+    _actions.add(GameAction.diceOffResolveRound());
     state = next;
     _enqueuePersist();
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
@@ -8,13 +9,15 @@ import 'package:le10000/ui/screens/finished_games_screen.dart';
 import 'package:le10000/ui/screens/new_game_screen.dart';
 import 'package:le10000/ui/screens/paused_games_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
+import 'package:le10000/ui/screens/rules_screen.dart';
+import 'package:le10000/ui/screens/settings_screen.dart';
 import 'package:le10000/ui/screens/setup_screen.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
 
-/// L'écran d'accueil, réduit à cinq boutons : les deux listes qui s'y
+/// L'écran d'accueil, réduit à une colonne de boutons : les deux listes qui s'y
 /// affichaient en permanence vivent maintenant derrière le leur.
 void main() {
   late FakeGameSaveStore paused;
@@ -74,7 +77,7 @@ void main() {
     return button.onPressed != null;
   }
 
-  testWidgets('l\'accueil affiche les cinq boutons et plus aucune liste', (tester) async {
+  testWidgets('l\'accueil affiche ses huit boutons et plus aucune liste', (tester) async {
     await pumpHome(tester);
 
     for (final label in const [
@@ -83,6 +86,9 @@ void main() {
       'Gestion des joueurs',
       'Dernières parties terminées',
       'Statistiques',
+      'Règles du jeu',
+      'Paramètres',
+      'À propos',
     ]) {
       expect(find.text(label), findsOneWidget, reason: '$label doit être proposé');
     }
@@ -128,17 +134,15 @@ void main() {
     await tester.tap(find.text('Reprise de parties'));
     await tester.pumpAndSettle();
     expect(find.byType(PausedGamesScreen), findsOneWidget);
-    // `pageBack()` cherche l'infobulle anglaise « Back » : les tests tournent
-    // en français (voir test/flutter_test_config.dart), on tape le bouton.
-    await tester.tap(find.byType(BackButton));
+    // Retour système : sur Android, la barre n'a pas de flèche (voir AppTopBar).
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Dernières parties terminées'));
     await tester.pumpAndSettle();
     expect(find.byType(FinishedGamesScreen), findsOneWidget);
-    // `pageBack()` cherche l'infobulle anglaise « Back » : les tests tournent
-    // en français (voir test/flutter_test_config.dart), on tape le bouton.
-    await tester.tap(find.byType(BackButton));
+    // Retour système : sur Android, la barre n'a pas de flèche (voir AppTopBar).
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Nouvelle partie'));
@@ -155,7 +159,7 @@ void main() {
     expect(find.byType(PlayersScreen), findsOneWidget);
   });
 
-  testWidgets('les cinq boutons sont tous actifs', (tester) async {
+  testWidgets('tous les boutons sont actifs, reprise mise à part', (tester) async {
     await pumpHome(tester);
 
     for (final label in const [
@@ -163,8 +167,61 @@ void main() {
       'Gestion des joueurs',
       'Dernières parties terminées',
       'Statistiques',
+      'Règles du jeu',
+      'Paramètres',
+      'À propos',
     ]) {
       expect(isEnabled(tester, label), isTrue, reason: '$label doit être actif');
     }
+  });
+
+  testWidgets('pas de barre du haut : règles, paramètres et à propos sont des boutons, après Statistiques',
+      (tester) async {
+    PackageInfo.setMockInitialValues(
+      appName: 'TenK',
+      packageName: 'net.microscotch.games.tenk',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+    await pumpHome(tester);
+    await dismissResumeOffer(tester);
+
+    expect(find.byType(AppBar), findsNothing);
+
+    // Dans l'ordre demandé, chacun sous le précédent, préfixé de son icône.
+    double top(String label) => tester.getTopLeft(find.text(label)).dy;
+    expect(find.text('TenK'), findsOneWidget, reason: 'le titre de l\'app, sans barre pour le porter');
+    expect(top('TenK'), lessThan(top('Nouvelle partie')), reason: 'en tête de la liste');
+    expect(top('Statistiques'), lessThan(top('Règles du jeu')));
+    expect(top('Règles du jeu'), lessThan(top('Paramètres')));
+    expect(top('Paramètres'), lessThan(top('À propos')));
+    for (final (label, icon) in [
+      ('Règles du jeu', Icons.help_outline),
+      ('Paramètres', Icons.settings),
+      ('À propos', Icons.info_outline),
+    ]) {
+      final button = find.ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton));
+      expect(find.descendant(of: button, matching: find.byIcon(icon)), findsOneWidget, reason: label);
+    }
+
+    await tester.ensureVisible(find.text('Règles du jeu'));
+    await tester.tap(find.text('Règles du jeu'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RulesScreen), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Paramètres'));
+    await tester.tap(find.text('Paramètres'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('À propos'));
+    await tester.tap(find.text('À propos'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget, reason: 'le dialogue « À propos »');
   });
 }

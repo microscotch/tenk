@@ -35,7 +35,7 @@ void main() {
   /// est pas la première route. Sans cet écran dessous, `popToHome` s'arrêterait
   /// sur la liste elle-même, et un retour « à la liste » ne se distinguerait pas
   /// d'un retour « à l'accueil ».
-  Future<void> pumpList(WidgetTester tester) async {
+  Future<void> pumpList(WidgetTester tester, {TargetPlatform? platform}) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -44,6 +44,7 @@ void main() {
           playerStoreProvider.overrideWithValue(FakePlayerStore()),
         ],
         child: MaterialApp(
+          theme: platform == null ? null : ThemeData(platform: platform),
           locale: const Locale('fr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -117,9 +118,20 @@ void main() {
     expect(find.text('Partie 13'), findsOneWidget, reason: 'la liste est bien là, intacte');
   });
 
-  testWidgets('la flèche de retour de l\'écran de fin d\'un run ramène aussi à la liste', (tester) async {
+  testWidgets('sur Android, l\'écran de fin d\'un run n\'a pas de flèche : le retour système suffit',
+      (tester) async {
     await archive.write(finishedGame(14, 'Partie 14'));
-    await pumpList(tester);
+    await pumpList(tester, platform: TargetPlatform.android);
+    await tester.tap(find.text('Partie 14'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(GameOverScreen), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+  });
+
+  testWidgets('iOS : la flèche de retour de l\'écran de fin d\'un run ramène aussi à la liste', (tester) async {
+    await archive.write(finishedGame(14, 'Partie 14'));
+    await pumpList(tester, platform: TargetPlatform.iOS);
     await tester.tap(find.text('Partie 14'));
     await tester.pumpAndSettle();
 

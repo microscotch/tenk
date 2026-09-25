@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../widgets/app_top_bar.dart';
 
 /// Écran d'aide expliquant les règles du jeu en langage clair, accessible
 /// depuis le bouton "?" de l'écran d'accueil. Contenu purement statique (pas
@@ -26,7 +27,7 @@ class RulesScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.rulesScreenTitle)),
+      appBar: AppTopBar(title: Text(l10n.rulesScreenTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

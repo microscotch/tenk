@@ -130,7 +130,10 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// pour la suite.
   void resumeFromSave(SavedGame saved) {
     final replay = replayGame(saved.setup, saved.seed, saved.actions);
-    assert(replay.engine != null, 'une sauvegarde ne devrait jamais être persistée avant la fin du départage');
+    assert(
+      replay.engine != null,
+      'départage pas encore tranché : c\'est lui qu\'il faut reprendre (DiceOffNotifier.resumeFromSave)',
+    );
 
     _setup = replay.orderedSetup;
     _isReplay = false;
@@ -149,6 +152,11 @@ class GameNotifier extends Notifier<GameEngine?> {
     // [activePlayingSecondsFor]). Posé APRÈS `_seed`, dont la persistance
     // dépend.
     _commit(replay.engine!, [GameAction.resume()]);
+    // Partie quittée sur le résultat du départage, avant « Commencer la
+    // partie » : aucun tour n'a été lancé, et rien ne le lancerait. Le premier
+    // tour démarre donc ici, comme l'aurait fait [startGame].
+    if (replay.engine!.activeTurn == null) _enteredPlayAt ??= DateTime.now();
+    _startTurnIfNoChoice();
   }
 
   // Rejeu (spectateur) d'un run archivé : lecture seule, aucune écriture —
@@ -333,20 +341,25 @@ class GameNotifier extends Notifier<GameEngine?> {
     final (engine, attempt) = state!.bank();
     if (attempt.success) {
       _commit(engine, [GameAction.bank()]);
-      if (!engine.gameOver && (engine.nextTurnDice >= 5 || engine.inheritedHandCannotBank)) {
-        // Le joueur suivant n'a aucun choix de main à faire : soit il n'hérite
-        // d'aucun dé (cas limite), soit la main héritée ne pourrait plus
-        // banquer (voir [GameEngine.inheritedHandCannotBank]) et repartir à 5
-        // dés neufs est sa seule suite jouable. Son tour démarre donc
-        // directement, sans lui poser une question à une seule réponse.
-        final useFullHand = engine.inheritedHandCannotBank;
-        _commit(engine.startTurn(useFullHand: useFullHand), [GameAction.startTurn(useFullHand: useFullHand)]);
-      }
       // Sinon : gameOver (rien de plus à faire), ou le joueur suivant hérite
       // de dés d'un tour précédent — activeTurn reste à null en attendant
       // son choix (cf. [startTurn]).
+      _startTurnIfNoChoice();
     }
     return attempt;
+  }
+
+  /// Démarre seul le tour du joueur courant quand il n'a aucun choix de main à
+  /// faire : soit il n'hérite d'aucun dé, soit la main héritée ne pourrait plus
+  /// banquer (voir [GameEngine.inheritedHandCannotBank]) et repartir à 5 dés
+  /// neufs est sa seule suite jouable. On ne lui pose jamais une question à une
+  /// seule réponse. Sans effet si un tour est déjà en cours ou la partie finie.
+  void _startTurnIfNoChoice() {
+    final engine = state!;
+    if (engine.gameOver || engine.activeTurn != null) return;
+    if (engine.nextTurnDice < 5 && !engine.inheritedHandCannotBank) return;
+    final useFullHand = engine.inheritedHandCannotBank;
+    _commit(engine.startTurn(useFullHand: useFullHand), [GameAction.startTurn(useFullHand: useFullHand)]);
   }
 
   /// À appeler quand le joueur courant doit choisir entre hériter des dés

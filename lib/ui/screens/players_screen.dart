@@ -5,6 +5,7 @@ import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_statistics.dart';
 import '../../state/player_store.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/game_run_tile.dart' show BoundedGameRunsList;
 import '../widgets/player_avatar.dart';
 import 'player_edit_screen.dart';
@@ -72,7 +73,7 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
             .toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.playersScreenTitle(players.length))),
+      appBar: AppTopBar(title: Text(l10n.playersScreenTitle(players.length))),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openEditor(),
         tooltip: l10n.addPlayerTooltip,

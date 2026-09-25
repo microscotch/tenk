@@ -11,6 +11,7 @@ import '../../state/dice_off_providers.dart';
 import '../../state/game_save_store.dart';
 import '../../state/player_store.dart';
 import '../ai_character_names.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 import 'dice_off_screen.dart';
 import 'player_picker_screen.dart';
@@ -176,7 +177,7 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppTopBar(
         title: Text(l10n.newGameSectionLabel),
         actions: [
           IconButton(

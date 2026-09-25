@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/settings_providers.dart';
 import '../widgets/app_title.dart';
+import '../widgets/app_top_bar.dart';
 
 /// Nom natif de chaque langue supportée, tel qu'un locuteur de cette langue
 /// le reconnaît — affiché tel quel dans le sélecteur, indépendamment de la
@@ -61,7 +62,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notifier = ref.read(settingsProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const AppTitle()),
+      appBar: AppTopBar(title: const AppTitle()),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

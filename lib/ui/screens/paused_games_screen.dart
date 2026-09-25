@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_save_store.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/paused_games_list.dart';
 
 /// Les parties interrompues, sorties de l'écran d'accueil pour le désencombrer.
@@ -20,7 +21,7 @@ class PausedGamesScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final count = ref.watch(pausedGamesProvider).value?.length ?? 0;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.pausedGamesSectionLabel(count))),
+      appBar: AppTopBar(title: Text(l10n.pausedGamesSectionLabel(count))),
       body: const SafeArea(
         child: Padding(padding: EdgeInsets.all(16), child: PausedGamesList()),
       ),

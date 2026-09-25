@@ -16,7 +16,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get validateButton => 'Valider';
 
   @override
-  String get settingsTooltip => 'Réglages';
+  String get settingsTooltip => 'Paramètres';
 
   @override
   String get helpTooltip => 'Règles du jeu';
