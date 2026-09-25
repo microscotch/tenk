@@ -149,7 +149,6 @@ class SoundEffects with WidgetsBindingObserver {
   Future<void> playDiceRoll() => _play('sounds/dice_roll.wav');
   Future<void> playBust() => _play('sounds/bust.wav');
   Future<void> playVictory() => _play('sounds/victory.wav');
-  Future<void> playSplash() => _play('sounds/splash.wav');
 }
 
 @visibleForTesting

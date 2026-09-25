@@ -4,23 +4,9 @@ import 'package:flutter/widgets.dart' hide Matrix4;
 import 'package:flutter_scene/scene.dart';
 import 'package:vector_math/vector_math.dart' show Matrix4, Vector3;
 
-import '../die_widget.dart' show DieRollMotion, DieVisualState, DieWidget;
+import '../die_widget.dart' show DieRollMotion, DieVisualState, DieWidget, dieFaceValues;
 import 'dice_face_texture.dart';
 
-/// Valeurs des 6 faces d'un dé standard (faces opposées = 7) pour un [top]
-/// donné ; les 4 autres faces sont réparties arbitrairement entre les deux
-/// paires restantes (uniquement pour l'aspect visuel pendant la rotation).
-/// La valeur réelle du dé doit être sur "top" : c'est la face que la caméra
-/// (vue plongeante) montre dominamment au joueur.
-Map<String, int> _faceValues(int top) {
-  final bottom = 7 - top;
-  final remaining = [1, 2, 3, 4, 5, 6].where((v) => v != top && v != bottom).toList();
-  final front = remaining[0];
-  final back = 7 - front;
-  final right = remaining.firstWhere((v) => v != front && v != back);
-  final left = 7 - right;
-  return {'front': front, 'back': back, 'top': top, 'bottom': bottom, 'left': left, 'right': right};
-}
 
 /// Placement (rotation seule, sans translation) de chaque face d'un cube
 /// construit à partir de [PlaneGeometry] (face par défaut orientée +Y).
@@ -89,6 +75,7 @@ class _Scene3DDieState extends State<Scene3DDie> {
 
   Object? _lastRollToken;
   double? _rollStartSeconds;
+  bool _rollPending = false;
   DieRollMotion _motion = DieRollMotion.rest;
   bool _facesReady = false;
   int _loadGeneration = 0;
@@ -97,20 +84,36 @@ class _Scene3DDieState extends State<Scene3DDie> {
   void initState() {
     super.initState();
     _scene.add(_dieNode);
+    if (widget.rollToken != null) _startRoll();
     _buildFaces();
   }
 
   @override
   void didUpdateWidget(covariant Scene3DDie oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.value != oldWidget.value || widget.state != oldWidget.state || widget.bodyColor != oldWidget.bodyColor) {
+    final newRoll = widget.rollToken != null && widget.rollToken != _lastRollToken;
+    if (newRoll) _startRoll();
+    // Un nouveau lancer peut changer l'orientation d'arrêt (quarterTurns),
+    // donc la répartition des faces latérales, même à valeur égale.
+    if (newRoll ||
+        widget.value != oldWidget.value ||
+        widget.state != oldWidget.state ||
+        widget.bodyColor != oldWidget.bodyColor) {
       _buildFaces();
     }
   }
 
+  /// Tire le mouvement du lancer tout de suite (les faces en dépendent) ; son
+  /// horloge ne démarre qu'au prochain tick de la scène.
+  void _startRoll() {
+    _lastRollToken = widget.rollToken;
+    _motion = DieRollMotion.random(_random);
+    _rollPending = true;
+  }
+
   Future<void> _buildFaces() async {
     final generation = ++_loadGeneration;
-    final values = _faceValues(widget.value);
+    final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
     final textures = await Future.wait(
       values.entries
           .map((e) async => MapEntry(e.key, await DiceFaceTextures.get(e.value, widget.state, widget.bodyColor))),
@@ -135,10 +138,9 @@ class _Scene3DDieState extends State<Scene3DDie> {
 
   void _onTick(Duration elapsed, double deltaSeconds) {
     final now = elapsed.inMicroseconds / 1e6;
-    if (widget.rollToken != null && widget.rollToken != _lastRollToken) {
-      _lastRollToken = widget.rollToken;
+    if (_rollPending) {
+      _rollPending = false;
       _rollStartSeconds = now;
-      _motion = DieRollMotion.random(_random);
     }
     final start = _rollStartSeconds;
     final seconds = _motion.duration.inMicroseconds / 1e6;

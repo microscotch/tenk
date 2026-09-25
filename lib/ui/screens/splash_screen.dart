@@ -1,19 +1,18 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../widgets/about_dialog.dart' show kAppTagline;
 import '../widgets/die_widget.dart';
-import '../sound_effects.dart';
 import 'setup_screen.dart';
 
 /// Écran d'introduction façon "studio" : l'avatar GitHub de l'auteur en zoom
-/// dans le haut de l'écran, puis "présente" en dessous, puis un vrai lancer
-/// VISIBLE des 5 dés (le "tumble" de [DieWidget] ne démarre qu'au moment où
-/// les dés apparaissent réellement à l'écran, jamais avant — sinon le joueur
-/// ne voit qu'un résultat déjà figé) qui tombe sur une quinte d'as (5x1 =
-/// 10000, victoire immédiate dans les règles du jeu). Une fois le lancer
+/// dans le haut de l'écran, puis "présente" en dessous, puis les 5 dés, qui
+/// apparaissent immobiles en fondu sur des faces quelconques et, une fois le
+/// fondu terminé, roulent pour tomber sur une quinte d'as (5x1 = 10000,
+/// victoire immédiate dans les règles du jeu). Une fois le lancer
 /// immobilisé, une courte pause puis "10K" zoome au centre, et enfin la
 /// mention de paternité apparaît en bas. Une fois la mise en scène terminée,
 /// reste affiché [displayDuration] de plus avant un fondu vers l'écran de
@@ -33,15 +32,15 @@ class _SplashScreenState extends State<SplashScreen> {
   // seule timeline proportionnelle : ça permet de faire correspondre le
   // déclenchement de chaque étape à un événement réel plutôt qu'à une
   // fraction arbitraire d'une durée totale — en particulier, les dés ne
-  // doivent devenir visibles ET commencer à tourner qu'au même instant (sinon
-  // le lancer est déjà terminé quand on peut enfin le voir), et "10K" ne
-  // doit apparaître qu'après la fin RÉELLE du lancer
+  // ne doivent commencer à rouler qu'une fois leur fondu d'apparition
+  // terminé (on les voit d'abord posés, puis lancés), et "10K" ne doit
+  // apparaître qu'après la fin RÉELLE du lancer
   // ([DieWidget.maxRollDuration]) plus une pause fixe de 250 ms.
   static const _avatarFadeIn = Duration(milliseconds: 500);
   static const _gapBeforePresente = Duration(milliseconds: 200);
   static const _presenteFadeIn = Duration(milliseconds: 350);
   static const _gapBeforeDice = Duration(milliseconds: 200);
-  static const _diceFadeIn = Duration(milliseconds: 150);
+  static const _diceFadeIn = Duration(milliseconds: 400);
   static const _pauseAfterRoll = Duration(milliseconds: 250);
   static const _resultFadeIn = Duration(milliseconds: 400);
   static const _gapBeforeFooter = Duration(milliseconds: 200);
@@ -52,12 +51,17 @@ class _SplashScreenState extends State<SplashScreen> {
   // ci-dessus (pas `const` : l'opérateur `+` de Duration n'est pas évaluable
   // à la compilation).
   static final _diceStart = _avatarFadeIn + _gapBeforePresente + _presenteFadeIn + _gapBeforeDice;
-  static final _resultStart = _diceStart + _diceFadeIn + DieWidget.maxRollDuration + _pauseAfterRoll;
+  static final _rollStart = _diceStart + _diceFadeIn;
+  static final _resultStart = _rollStart + DieWidget.maxRollDuration + _pauseAfterRoll;
   static final _footerStart = _resultStart + _resultFadeIn + _gapBeforeFooter;
   static final _choreographyDuration = _footerStart + _footerFadeIn;
 
   final List<Timer> _timers = [];
   Object? _diceRollToken;
+
+  /// Faces des dés avant le lancer : tirées au hasard, jamais l'as, pour que
+  /// le lancer vers la quinte d'as se voie.
+  List<int> _diceValues = [for (var i = 0; i < 5; i++) 2 + Random().nextInt(5)];
   bool _avatarVisible = false;
   bool _presenteVisible = false;
   bool _diceVisible = false;
@@ -68,8 +72,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    SoundEffects.instance.playSplash();
-
     // Un délai nul déclencherait le fondu avant même le premier frame rendu
     // (donc sans transition visible) : on attend explicitement ce frame pour
     // l'étape initiale, comme pour n'importe quel autre déclenchement basé
@@ -79,15 +81,15 @@ class _SplashScreenState extends State<SplashScreen> {
       setState(() => _avatarVisible = true);
     });
     _schedule(_avatarFadeIn + _gapBeforePresente, () => setState(() => _presenteVisible = true));
+    _schedule(_diceStart, () => setState(() => _diceVisible = true));
     _schedule(
-      _diceStart,
+      _rollStart,
       () => setState(() {
-        // Le token n'est créé qu'ici, au même instant que la mise à 1 de
-        // l'opacité : DieWidget ne commence son animation de lancer que
-        // lorsque ce token change, donc le lancer et son apparition à
-        // l'écran sont désormais strictement simultanés.
+        // DieWidget ne lance son animation qu'au changement de token : le
+        // lancer part donc exactement à la fin du fondu, et chaque dé
+        // s'immobilise sur l'as.
         _diceRollToken = Object();
-        _diceVisible = true;
+        _diceValues = List.filled(5, 1);
       }),
     );
     _schedule(_resultStart, () => setState(() => _resultVisible = true));
@@ -185,8 +187,8 @@ class _SplashScreenState extends State<SplashScreen> {
                         child: Wrap(
                           alignment: WrapAlignment.center,
                           children: [
-                            for (var i = 0; i < 5; i++)
-                              DieWidget(value: 1, state: DieVisualState.kept, rollToken: _diceRollToken),
+                            for (final value in _diceValues)
+                              DieWidget(value: value, state: DieVisualState.kept, rollToken: _diceRollToken),
                           ],
                         ),
                       ),

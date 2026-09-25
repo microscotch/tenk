@@ -45,4 +45,36 @@ void main() {
     expect(f.y - DieRollMotion.restTiltY, closeTo(-(b.y - DieRollMotion.restTiltY), 1e-9));
     expect(f.z, closeTo(-b.z, 1e-9));
   });
+
+  group('faces latérales à l\'arrêt', () {
+    test('chaque quart de tour garde la face du dessus et les faces opposées à 7', () {
+      for (var top = 1; top <= 6; top++) {
+        for (var q = 0; q < 4; q++) {
+          final f = dieFaceValues(top, quarterTurns: q);
+          expect(f['top'], top);
+          expect(f['top']! + f['bottom']!, 7);
+          expect(f['front']! + f['back']!, 7);
+          expect(f['left']! + f['right']!, 7);
+          expect(f.values.toSet(), {1, 2, 3, 4, 5, 6});
+        }
+      }
+    });
+
+    test('les quatre quarts de tour montrent quatre paires de faces latérales différentes', () {
+      for (var top = 1; top <= 6; top++) {
+        final pairs = {
+          for (var q = 0; q < 4; q++)
+            () {
+              final f = dieFaceValues(top, quarterTurns: q);
+              return '${f['front']}-${f['right']}';
+            }(),
+        };
+        expect(pairs, hasLength(4), reason: 'top = $top');
+      }
+    });
+
+    test('l\'orientation d\'arrêt est tirée au sort parmi les quatre', () {
+      expect(motions.map((m) => m.quarterTurns).toSet(), {0, 1, 2, 3});
+    });
+  });
 }

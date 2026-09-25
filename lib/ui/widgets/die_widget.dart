@@ -91,7 +91,18 @@ class DieRollMotion {
   final int turnsY;
   final int turnsZ;
 
-  const DieRollMotion({required this.duration, required this.turnsX, required this.turnsY, required this.turnsZ});
+  /// Orientation d'arrêt autour de l'axe vertical, en quarts de tour (0 à 3) :
+  /// décide quelles faces latérales se retrouvent visibles une fois le dé
+  /// immobile (voir [dieFaceValues]).
+  final int quarterTurns;
+
+  const DieRollMotion({
+    required this.duration,
+    required this.turnsX,
+    required this.turnsY,
+    required this.turnsZ,
+    this.quarterTurns = 0,
+  });
 
   /// Mouvement d'un dé qui n'a pas (encore) été lancé : seule son inclinaison
   /// de repos compte, [rotationAt] étant appelé avec une progression de 1.
@@ -105,6 +116,7 @@ class DieRollMotion {
       turnsX: signed(2 + random.nextInt(3)),
       turnsY: signed(2 + random.nextInt(3)),
       turnsZ: signed(1 + random.nextInt(2)),
+      quarterTurns: random.nextInt(4),
     );
   }
 
@@ -163,18 +175,23 @@ class _Face {
 }
 
 /// Valeurs des 6 faces d'un dé standard (faces opposées = 7) pour un [top]
-/// donné ; les 4 autres faces sont réparties arbitrairement entre les deux
-/// paires restantes (uniquement pour l'aspect visuel pendant la rotation).
-/// La valeur réelle du dé doit être sur "top" : c'est la face que la caméra
+/// donné. La valeur réelle du dé est sur "top" : c'est la face que la caméra
 /// (vue plongeante) montre dominamment au joueur.
-Map<String, int> _faceValues(int top) {
+///
+/// Les 4 faces latérales forment un anneau (avant, droite, arrière, gauche)
+/// que [quarterTurns] fait tourner d'autant de quarts de tour autour de l'axe
+/// vertical : comme un vrai dé, un même résultat peut ainsi s'arrêter avec
+/// quatre paires de faces latérales différentes visibles. Une rotation ne
+/// change pas la disposition relative des faces : le dé reste le même dé.
+Map<String, int> dieFaceValues(int top, {int quarterTurns = 0}) {
   final bottom = 7 - top;
   final remaining = [1, 2, 3, 4, 5, 6].where((v) => v != top && v != bottom).toList();
   final front = remaining[0];
-  final back = 7 - front;
-  final right = remaining.firstWhere((v) => v != front && v != back);
-  final left = 7 - right;
-  return {'front': front, 'back': back, 'top': top, 'bottom': bottom, 'left': left, 'right': right};
+  final right = remaining.firstWhere((v) => v != front && v != 7 - front);
+  final ring = [front, right, 7 - front, 7 - right];
+  final shift = quarterTurns % 4;
+  int at(int i) => ring[(i + shift) % 4];
+  return {'front': at(0), 'right': at(1), 'back': at(2), 'left': at(3), 'top': top, 'bottom': bottom};
 }
 
 class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerProviderStateMixin {
@@ -230,7 +247,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
       ..rotateY(angles.y)
       ..rotateZ(angles.z);
 
-    final values = _faceValues(widget.value);
+    final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
     final faces = [
       _Face(values['front']!, Matrix4.identity()),
       _Face(values['back']!, Matrix4.identity()..rotateY(math.pi)),
