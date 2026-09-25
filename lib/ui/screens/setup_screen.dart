@@ -105,75 +105,86 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // Seul le compte des parties en pause sert encore ici : il décide si le
     // bouton de reprise est actif. Les deux écrans dédiés titrent avec le leur.
     final pausedCount = ref.watch(pausedGamesProvider).value?.length ?? 0;
-    // Pas de barre du haut : son titre est passé en tête de la liste, et tout
-    // ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu un
-    // bouton, sous les autres.
+    // Pas de barre du haut : son titre a sa propre zone en haut de l'écran, et
+    // tout ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu
+    // un bouton, sous les autres.
     return Scaffold(
       // Des boutons, et rien d'autre : les deux listes qui s'affichaient ici en
       // permanence vivent désormais derrière le leur (voir [PausedGamesScreen]
       // et [FinishedGamesScreen]), qui les réutilisent telles quelles.
+      // Deux zones : le titre, calé en haut de l'écran, puis tout le reste de
+      // la hauteur pour les boutons, centrés dans cette zone (et défilants si
+      // l'écran est trop bas pour les contenir tous).
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Center(child: AppTitle(large: true)),
-                const SizedBox(height: 32),
-                FilledButton.icon(
-                  onPressed: _openNewGame,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.newGameSectionLabel),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  // Inerte tant qu'il n'y a rien à reprendre : ouvrir un écran
-                  // sur une liste vide n'apprendrait rien au joueur.
-                  onPressed: pausedCount == 0 ? null : () => _open(const PausedGamesScreen()),
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(l10n.resumeGamesButton),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _open(const PlayersScreen()),
-                  icon: const Icon(Icons.group),
-                  label: Text(l10n.managePlayersButton),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _open(const FinishedGamesScreen()),
-                  icon: const Icon(Icons.history),
-                  label: Text(l10n.finishedGamesButton),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _open(const StatisticsScreen()),
-                  icon: const Icon(Icons.bar_chart),
-                  label: Text(l10n.statisticsButton),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _open(const RulesScreen()),
-                  icon: const Icon(Icons.help_outline),
-                  label: Text(l10n.helpTooltip),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _open(const SettingsScreen()),
-                  icon: const Icon(Icons.settings),
-                  label: Text(l10n.settingsTooltip),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => showAppAboutDialog(context),
-                  icon: const Icon(Icons.info_outline),
-                  label: Text(l10n.aboutTooltip),
-                ),
-              ],
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 24, 16, 0),
+              child: Center(child: AppTitle(large: true)),
             ),
-          ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: _openNewGame,
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.newGameSectionLabel),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        // Inerte tant qu'il n'y a rien à reprendre : ouvrir un écran
+                        // sur une liste vide n'apprendrait rien au joueur.
+                        onPressed: pausedCount == 0 ? null : () => _open(const PausedGamesScreen()),
+                        icon: const Icon(Icons.play_arrow),
+                        label: Text(l10n.resumeGamesButton),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _open(const PlayersScreen()),
+                        icon: const Icon(Icons.group),
+                        label: Text(l10n.managePlayersButton),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _open(const FinishedGamesScreen()),
+                        icon: const Icon(Icons.history),
+                        label: Text(l10n.finishedGamesButton),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _open(const StatisticsScreen()),
+                        icon: const Icon(Icons.bar_chart),
+                        label: Text(l10n.statisticsButton),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _open(const RulesScreen()),
+                        icon: const Icon(Icons.help_outline),
+                        label: Text(l10n.helpTooltip),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _open(const SettingsScreen()),
+                        icon: const Icon(Icons.settings),
+                        label: Text(l10n.settingsTooltip),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => showAppAboutDialog(context),
+                        icon: const Icon(Icons.info_outline),
+                        label: Text(l10n.aboutTooltip),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

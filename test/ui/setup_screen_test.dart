@@ -12,6 +12,7 @@ import 'package:le10000/ui/screens/players_screen.dart';
 import 'package:le10000/ui/screens/rules_screen.dart';
 import 'package:le10000/ui/screens/settings_screen.dart';
 import 'package:le10000/ui/screens/setup_screen.dart';
+import 'package:le10000/ui/widgets/app_title.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
@@ -223,5 +224,28 @@ void main() {
     await tester.tap(find.text('À propos'));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsOneWidget, reason: 'le dialogue « À propos »');
+  });
+
+  testWidgets('deux zones : le titre calé en haut, les boutons centrés dans le reste de l\'écran', (tester) async {
+    // Un téléphone en portrait.
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await pumpHome(tester);
+    await dismissResumeOffer(tester);
+
+    // La zone du titre, et non son texte, plus petit que l'icône du dé.
+    final title = tester.getRect(find.byType(AppTitle));
+    expect(title.top, lessThan(60), reason: 'le titre est en haut de l\'écran, pas au milieu');
+
+    Rect button(String label) => tester.getRect(find
+        .ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton))
+        .first);
+    final first = button('Nouvelle partie');
+    final last = button('À propos');
+    // La zone des boutons va du bas du titre au bas de l'écran : centrés, ils
+    // laissent autant de place au-dessus qu'en dessous.
+    expect(first.top - title.bottom, closeTo(915 - last.bottom, 2));
+    expect(first.top - title.bottom, greaterThan(100), reason: 'l\'écran est assez haut pour les aérer');
   });
 }

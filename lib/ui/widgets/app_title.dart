@@ -18,9 +18,13 @@ class AppTitle extends StatelessWidget {
         SizedBox(width: large ? 14 : 10),
         Text(
           'TenK',
-          // En grand, le style de titre de la barre (voir le thème), agrandi ;
-          // dans la barre, celle-ci l'applique déjà.
-          style: large ? theme.appBarTheme.titleTextStyle?.copyWith(fontSize: 44) : null,
+          // En grand, le style de titre de la barre (voir le thème), agrandi —
+          // avec un repli équivalent si le thème n'en définit pas ; dans la
+          // barre, celle-ci l'applique déjà.
+          style: large
+              ? (theme.appBarTheme.titleTextStyle ?? const TextStyle(fontWeight: FontWeight.w900))
+                  .copyWith(fontSize: 44, color: theme.colorScheme.primary)
+              : null,
         ),
       ],
     );
