@@ -77,4 +77,49 @@ void main() {
       expect(motions.map((m) => m.quarterTurns).toSet(), {0, 1, 2, 3});
     });
   });
+
+  group('rebonds', () {
+    /// Les sommets successifs de la trajectoire, échantillonnée finement.
+    List<double> peaks(DieRollMotion m) {
+      const steps = 4000;
+      final h = [for (var i = 0; i <= steps; i++) m.hopAt(i / steps)];
+      return [
+        for (var i = 1; i < steps; i++)
+          if (h[i] > h[i - 1] && h[i] >= h[i + 1] && h[i] > 1e-6) h[i],
+      ];
+    }
+
+    test('le dé part de la table et y finit posé, sans jamais dépasser son premier rebond', () {
+      for (final m in motions.take(50)) {
+        expect(m.hopAt(0), 0);
+        expect(m.hopAt(0.9), 0, reason: 'les rebonds sont finis avant la fin du lancer');
+        expect(m.hopAt(1), 0);
+        for (var i = 0; i <= 200; i++) {
+          final h = m.hopAt(i / 200);
+          expect(h, inInclusiveRange(0, m.firstHop + 1e-9));
+        }
+      }
+    });
+
+    test('autant de sommets que de rebonds, chacun plus bas que le précédent', () {
+      for (final m in motions.take(50)) {
+        final p = peaks(m);
+        expect(p, hasLength(m.bounces));
+        expect(p.first, closeTo(m.firstHop, 1e-3));
+        for (var k = 1; k < p.length; k++) {
+          expect(p[k], closeTo(p[k - 1] * m.restitution * m.restitution, 1e-3));
+        }
+      }
+    });
+
+    test('un dé posé ne rebondit pas', () {
+      for (var i = 0; i <= 10; i++) {
+        expect(DieRollMotion.rest.hopAt(i / 10), 0);
+      }
+    });
+
+    test('le nombre de rebonds est tiré entre 2 et 4', () {
+      expect(motions.map((m) => m.bounces).toSet(), {2, 3, 4});
+    });
+  });
 }

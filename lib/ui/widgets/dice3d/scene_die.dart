@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart' hide Matrix4;
 import 'package:flutter_scene/scene.dart';
 import 'package:vector_math/vector_math.dart' show Matrix4, Vector3;
 
-import '../die_widget.dart' show DieRollMotion, DieVisualState, DieWidget, dieFaceValues;
+import '../die_widget.dart' show DieBounce, DieRollMotion, DieVisualState, DieWidget, dieFaceValues;
 import 'dice_face_texture.dart';
 
 
@@ -65,7 +65,7 @@ class Scene3DDie extends StatefulWidget {
   State<Scene3DDie> createState() => _Scene3DDieState();
 }
 
-class _Scene3DDieState extends State<Scene3DDie> {
+class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateMixin {
   double get _size => widget.size;
   static const _half = 0.5;
 
@@ -74,9 +74,11 @@ class _Scene3DDieState extends State<Scene3DDie> {
   final Node _dieNode = Node();
 
   Object? _lastRollToken;
-  double? _rollStartSeconds;
-  bool _rollPending = false;
   DieRollMotion _motion = DieRollMotion.rest;
+
+  /// Progression du lancer (0 → 1), qui pilote la rotation (lue à chaque tick
+  /// de la scène) et le rebond (qui redessine le widget).
+  late final AnimationController _controller = AnimationController(vsync: this, value: 1);
   bool _facesReady = false;
   int _loadGeneration = 0;
 
@@ -103,12 +105,19 @@ class _Scene3DDieState extends State<Scene3DDie> {
     }
   }
 
-  /// Tire le mouvement du lancer tout de suite (les faces en dépendent) ; son
-  /// horloge ne démarre qu'au prochain tick de la scène.
+  /// Tire le mouvement du lancer (les faces en dépendent) et le lance.
   void _startRoll() {
     _lastRollToken = widget.rollToken;
     _motion = DieRollMotion.random(_random);
-    _rollPending = true;
+    _controller
+      ..duration = _motion.duration
+      ..forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _buildFaces() async {
@@ -137,14 +146,7 @@ class _Scene3DDieState extends State<Scene3DDie> {
   }
 
   void _onTick(Duration elapsed, double deltaSeconds) {
-    final now = elapsed.inMicroseconds / 1e6;
-    if (_rollPending) {
-      _rollPending = false;
-      _rollStartSeconds = now;
-    }
-    final start = _rollStartSeconds;
-    final seconds = _motion.duration.inMicroseconds / 1e6;
-    final angles = _motion.anglesAt(start == null ? 1.0 : (now - start) / seconds);
+    final angles = _motion.anglesAt(_controller.value);
     _dieNode.localTransform = Matrix4.identity()
       ..rotateX(angles.x)
       ..rotateY(angles.y)
@@ -163,10 +165,14 @@ class _Scene3DDieState extends State<Scene3DDie> {
         width: _size,
         height: _size,
         child: _facesReady
-            ? SceneView(
-                _scene,
-                camera: PerspectiveCamera(position: Vector3(0, 0, -3.2)),
-                onTick: _onTick,
+            ? AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) => DieBounce(hop: _motion.hopAt(_controller.value), size: _size, child: child!),
+                child: SceneView(
+                  _scene,
+                  camera: PerspectiveCamera(position: Vector3(0, 0, -3.2)),
+                  onTick: _onTick,
+                ),
               )
             : const SizedBox.shrink(),
       ),

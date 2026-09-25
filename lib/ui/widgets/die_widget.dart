@@ -96,12 +96,23 @@ class DieRollMotion {
   /// immobile (voir [dieFaceValues]).
   final int quarterTurns;
 
+  /// Rebonds sur la table pendant le lancer : leur nombre (0 pour un dé posé),
+  /// la hauteur du premier (fraction de la hauteur maximale, voir [hopAt]) et
+  /// le coefficient de restitution, part de la vitesse conservée à chaque
+  /// contact.
+  final int bounces;
+  final double firstHop;
+  final double restitution;
+
   const DieRollMotion({
     required this.duration,
     required this.turnsX,
     required this.turnsY,
     required this.turnsZ,
     this.quarterTurns = 0,
+    this.bounces = 0,
+    this.firstHop = 0,
+    this.restitution = 0.5,
   });
 
   /// Mouvement d'un dé qui n'a pas (encore) été lancé : seule son inclinaison
@@ -117,6 +128,9 @@ class DieRollMotion {
       turnsY: signed(2 + random.nextInt(3)),
       turnsZ: signed(1 + random.nextInt(2)),
       quarterTurns: random.nextInt(4),
+      bounces: 2 + random.nextInt(3),
+      firstHop: 0.7 + random.nextDouble() * 0.3,
+      restitution: 0.45 + random.nextDouble() * 0.15,
     );
   }
 
@@ -126,6 +140,34 @@ class DieRollMotion {
   /// latérales et garder un rendu clairement 3D (pas un carré plat).
   static const restTiltX = -0.95;
   static const restTiltY = 0.785; // pi/4 : deux faces latérales adjacentes visibles à parts égales
+
+  /// Part de la durée du lancer occupée par les rebonds : le dé finit posé,
+  /// en achevant sa rotation.
+  static const _bouncingPart = 0.85;
+
+  /// Hauteur du dé au-dessus de la table (0 = posé, 1 = hauteur maximale) à la
+  /// [progress] du lancer. Chaque rebond est une parabole ; comme en vrai, la
+  /// vitesse au contact est multipliée par [restitution], donc la hauteur par
+  /// son carré et la durée du rebond par [restitution] elle-même.
+  double hopAt(double progress) {
+    if (bounces == 0) return 0;
+    var t = progress.clamp(0.0, 1.0) / _bouncingPart;
+    if (t >= 1) return 0;
+    // Durées des arcs : d, d·r, d·r², … dont la somme vaut 1.
+    final r = restitution;
+    var arc = (1 - r) / (1 - math.pow(r, bounces));
+    var height = firstHop;
+    for (var k = 0; k < bounces; k++) {
+      if (t < arc) {
+        final u = t / arc;
+        return height * 4 * u * (1 - u);
+      }
+      t -= arc;
+      arc *= r;
+      height *= r * r;
+    }
+    return 0;
+  }
 
   /// Angles (radians) du dé sur chaque axe à la [progress] du lancer
   /// (0 = départ, 1 = immobile) : les tours restants décroissent (easeOut)
@@ -137,6 +179,50 @@ class DieRollMotion {
       x: restTiltX + remaining * turnsX * 2 * math.pi,
       y: restTiltY + remaining * turnsY * 2 * math.pi,
       z: remaining * turnsZ * 2 * math.pi * 0.3,
+    );
+  }
+}
+
+/// Élève le dé de sa table selon [hop] (0 = posé, 1 = au plus haut, voir
+/// [DieRollMotion.hopAt]) : il monte et grossit un peu, comme s'il se
+/// rapprochait de la caméra, au-dessus d'une ombre qui s'éclaircit et
+/// rétrécit avec l'altitude. L'ombre n'apparaît qu'en vol (opacité nulle une
+/// fois posé). N'occupe pas plus de place que [child] (le vol déborde sans
+/// rien décaler), d'où les dimensions [size] imposées.
+class DieBounce extends StatelessWidget {
+  final double hop;
+  final double size;
+  final Widget child;
+
+  const DieBounce({super.key, required this.hop, required this.size, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    // Toujours la même structure, même posé (hop = 0) : alterner entre [child]
+    // seul et cette pile à chaque contact avec la table ferait remonter le
+    // widget du dé, et sa vue 3D avec.
+    final shadowWidth = size * 0.8 * (1 - 0.35 * hop);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: (size - shadowWidth) / 2,
+          top: size * 0.8,
+          width: shadowWidth,
+          height: size * 0.18,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.all(Radius.elliptical(shadowWidth / 2, size * 0.09)),
+              color: Colors.black.withValues(alpha: 0.35 * (hop * 4).clamp(0.0, 1.0) * (1 - 0.5 * hop)),
+            ),
+          ),
+        ),
+        Transform.translate(
+          offset: Offset(0, -hop * size * 0.3),
+          child: Transform.scale(scale: 1 + 0.15 * hop, child: child),
+        ),
+      ],
     );
   }
 }
@@ -271,20 +357,24 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
         margin: const EdgeInsets.all(DieWidget.margin),
         width: _size,
         height: _size,
-        child: Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.0022)
-            ..multiply(spin),
-          child: Stack(
-            children: [
-              for (final face in faces)
-                Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.copy(face.placement)..translateByDouble(0.0, 0.0, _half, 1.0),
-                  child: _DieFace(value: face.value, state: widget.state, bodyColor: widget.bodyColor, size: _size),
-                ),
-            ],
+        child: DieBounce(
+          hop: _motion.hopAt(_controller.value),
+          size: _size,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0022)
+              ..multiply(spin),
+            child: Stack(
+              children: [
+                for (final face in faces)
+                  Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.copy(face.placement)..translateByDouble(0.0, 0.0, _half, 1.0),
+                    child: _DieFace(value: face.value, state: widget.state, bodyColor: widget.bodyColor, size: _size),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
