@@ -1,0 +1,67 @@
+name: Docs
+
+# Publie sur GitHub Pages (https://microscotch.github.io/tenk/) le dossier docs/
+# — politique de confidentialité, documents de conception, diagrammes UML — et,
+# sous /api/, la documentation Dart du code générée par dartdoc, à jour à chaque
+# push sur main.
+#
+# Remplace la publication « legacy » de docs/ par GitHub (réglage Pages du
+# dépôt : source « GitHub Actions ») : docs/ passe par le même Jekyll qu'avant,
+# donc chaque page existante garde son adresse — privacy-policy.html compris,
+# vers lequel pointent les fiches des stores.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une publication à la fois ; celle en cours va à son terme.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      # Le site tel que la publication legacy le produisait.
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      # dartdoc 9.0.9 plutôt que celui du SDK : la version embarquée (9.0.6)
+      # plante sur les directives @docImport de la documentation de Flutter.
+      - run: dart pub global activate dartdoc 9.0.9
+      - run: dart pub global run dartdoc --output "$RUNNER_TEMP/api"
+
+      # _site appartient à root (Jekyll tourne dans un conteneur) : copie par sudo.
+      - run: sudo cp -r "$RUNNER_TEMP/api" _site/api
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
