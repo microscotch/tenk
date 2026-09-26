@@ -18,14 +18,14 @@ flutter test test/game/combination_test.dart   # run a single test file
 flutter test --plain-name "un craque affiche"  # run tests matching a name
 flutter run -d linux         # run the app locally (see below — this is the only viable local target)
 (cd server && dart pub get && dart analyze && dart test)   # the online-game server: analysis + tests
-dart run server/bin/server.dart                            # a local server on ws://localhost:8080/ws
+dart run server/bin/server.dart                            # a local server: run the app with --dart-define=TENK_SERVER_URL=ws://localhost:8080/ws
 ```
 
 CI (`.github/workflows/build_apk.yaml`) has four jobs, on every push to `main` (plus
 `pull_request` and `workflow_dispatch`, where `bump-build-number` is skipped):
 - `bump-build-number` (`ubuntu-latest`) — CI-side safety net for the local `.githooks/pre-push` hook
   (see Git hooks below). The other two jobs depend on it and check out the commit it resolves, so
-  both build the same, possibly corrected, tree.
+  both build the same, possibly corrected, tree. Skipped when publishing is disabled (below).
 - `test-server` (`ubuntu-latest`) — `dart analyze` + `dart test` in `server/` (see Online games below); it
   also runs on pull requests, and is independent of the two build jobs.
 - `build-android` (`ubuntu-latest`) — `pub get`, `analyze`, `test`, then `build apk --release` and
@@ -53,6 +53,12 @@ request it builds and smoke-tests the image (`/healthz`) without publishing. Its
 by commit SHA because the job holds a registry-write token. A package published from this public repo
 should be public (check its visibility once in the repo's Packages settings); otherwise the host must
 `docker login ghcr.io`.
+
+**Publishing can be turned off**: the Google Play and TestFlight uploads are then skipped *and* the build
+number isn't bumped (the builds and their artifacts are still produced). Untick `publish` on a manual
+`workflow_dispatch` run, or put `[no-publish]` in the message of a push's tip commit (only the tip is
+looked at, by the workflow and by the pre-push hook alike). Pull requests behave as before. The condition
+is `env.PUBLISH` at the top of the workflow, repeated in `bump-build-number`'s `if:` (no `env` context there).
 
 Both store-upload steps are deliberately `continue-on-error: true`, so **a green run does not mean
 the build reached Google Play or TestFlight** — a failed upload still shows as a green step. The
@@ -95,7 +101,8 @@ it hasn't already increased past what's on the remote — CI attempts a Google P
 a commit into the push already in flight (git resolves which refs to push before invoking
 `pre-push` — verified empirically, not just per docs), so instead it commits the bump locally and
 **blocks that push** (exit 1) with a message asking to run `git push` again; the retry then goes
-through cleanly since the local build number is now ahead of the remote's.
+through cleanly since the local build number is now ahead of the remote's. It does nothing when the tip
+commit's message contains `[no-publish]` (CI won't publish that push, so no build number is consumed).
 
 This hook is tracked in the repo but, like all git hooks, never activates on its own — after a
 fresh clone, run once:
@@ -252,8 +259,10 @@ sweep of expired rooms).
   recorded. Hosting must keep to it: **no access logs** on the reverse proxy that terminates TLS.
 - Run it behind a TLS reverse proxy (`wss://`) with `TRUST_PROXY=1` so `X-Forwarded-For` gives the client
   address. Build the image from the repo root: `docker build -f server/Dockerfile -t tenk-server .` — or pull the
-  one CI publishes (`docker pull ghcr.io/microscotch/tenk-server:latest`). The app
-  reads its address from `--dart-define=TENK_SERVER_URL=wss://…/ws` (`defaultServerUrl`).
+  one CI publishes (`docker pull ghcr.io/microscotch/tenk-server:latest`) — `server/docker-compose.yml` runs
+  that image, publishing no port: the proxy container reaches it over a shared Docker network. The app
+  reaches `wss://tenk.microscotch.net/ws` by default (`defaultServerUrl`; the Apache vhost of that name proxies
+  `/ws` to the container). For a local server: `--dart-define=TENK_SERVER_URL=ws://localhost:8080/ws`.
 - Limits are per connection **and** per address (messages, connections open, connections per minute, room
   creations, failed joins): a new connection must not hand back a fresh burst. A pseudo is trimmed and
   refuses control, zero-width and bidi characters (spoofing another player). A release build only talks to a

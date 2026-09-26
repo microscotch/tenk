@@ -28,6 +28,13 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     continue
   fi
 
+  # Un commit de tête marqué `[no-publish]` demande à la CI de ne rien envoyer
+  # aux stores : pas de build number à consommer (même règle que le workflow).
+  if git log -1 --format=%B "$local_sha" | grep -qF '[no-publish]'; then
+    echo "pre-push: [no-publish] dans le commit de tête, build number laissé tel quel." >&2
+    continue
+  fi
+
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
     # Rien sur le remote pour comparer (première création de la branche).
     continue
