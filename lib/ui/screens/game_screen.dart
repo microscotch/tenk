@@ -12,6 +12,7 @@ import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
+import '../../state/online_providers.dart';
 import '../../state/player_providers.dart';
 import '../../state/replay_pause_provider.dart';
 import '../../state/replay_speed_provider.dart';
@@ -688,7 +689,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (turn != null &&
         turn.busted &&
         turn.pendingRoll != null &&
-        !notifier.isAiPlayer(engine.currentPlayerIndex)) {
+        !notifier.isObservedTurn(engine.currentPlayerIndex)) {
       delay += GameScreen.bustRevealDelay;
     }
     _pendingTimer?.cancel();
@@ -990,7 +991,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// spectateur peut aussi la refermer lui-même (retour, tap à côté).
   void _showBustDialog(GameEngine engine, TurnState turn) {
     if (!mounted || _coveredByReplay) return;
-    if (ref.read(gameProvider.notifier).isAiPlayer(engine.currentPlayerIndex)) {
+    if (ref.read(gameProvider.notifier).isObservedTurn(engine.currentPlayerIndex)) {
       return;
     }
     // Le craque a pu être acquitté avant que la popup ne s'ouvre : le rejeu
@@ -1216,8 +1217,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
-    if (notifier.isAiPlayer(engine.currentPlayerIndex)) {
-      return; // géré par _scheduleAiIfNeeded
+    if (notifier.isObservedTurn(engine.currentPlayerIndex)) {
+      return; // géré par _scheduleAiIfNeeded (bot), ou par le serveur (en ligne)
     }
     final turn = engine.activeTurn;
     if (turn == null || turn.busted) {
@@ -1377,7 +1378,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     }
 
     final notifier = ref.read(gameProvider.notifier);
-    final isAiTurn = notifier.isAiPlayer(engine.currentPlayerIndex);
+    // Un tour qui se joue sans moi : un bot, ou un autre joueur en ligne.
+    final isAiTurn = notifier.isObservedTurn(engine.currentPlayerIndex);
+    final isRemoteTurn = notifier.isRemotePlayer(engine.currentPlayerIndex);
 
     // Dés hérités d'un tour précédent, en attente du choix du joueur (les
     // garder ou repartir avec une main pleine) : pas encore de vrai
@@ -1520,6 +1523,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (ref.watch(gameProvider.notifier).isOnline) _onlineBanner(),
                     ScoreSheet(
                       players: engine.players,
                       currentPlayerIndex: engine.currentPlayerIndex,
@@ -1565,8 +1569,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     const SizedBox(height: 12),
                     Center(
                       child: turn.busted
-                          ? _buildBustedView(turn, isAiTurn: isAiTurn)
-                          : (isAiTurn
+                          ? _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn)
+                          : (isRemoteTurn
+                              ? _buildRemoteTurnView(engine)
+                              : isAiTurn
                                 ? _buildAiTurnView(engine)
                                 : (isInheritedChoice
                                       // Popup dédiée (voir
@@ -1607,6 +1613,32 @@ class _GameScreenState extends ConsumerState<GameScreen>
         popToHome(context);
       },
       child: scaffold,
+    );
+  }
+
+  /// Le bandeau d'état d'une partie en ligne : connexion perdue, ou partie
+  /// suspendue parce qu'un joueur manque depuis trop longtemps. Rien quand tout va bien.
+  Widget _onlineBanner() {
+    final l10n = AppLocalizations.of(context);
+    final online = ref.watch(onlineSessionProvider);
+    final text = online.status != OnlineStatus.online
+        ? l10n.onlineReconnecting
+        : (online.phase == RoomPhase.suspended ? l10n.onlineSuspended : null);
+    if (text == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Theme.of(context).colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1702,7 +1734,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // encore lancé (`activeTurn` nul, 5 dés, rien d'hérité) : il n'y a aucune
     // main à reprendre. En jeu réel, un choix n'existe qu'avec moins de 5 dés.
     if (engine.nextTurnDice >= 5) return;
-    if (ref.read(gameProvider.notifier).isAiPlayer(engine.currentPlayerIndex)) {
+    if (ref.read(gameProvider.notifier).isObservedTurn(engine.currentPlayerIndex)) {
       return;
     }
     if (_inheritedHandDialogShownFor == engine) return;
@@ -2393,6 +2425,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Tour d'un autre joueur en ligne : aucune commande, juste qui joue. Ses
+  /// lancers et ses gardes arrivent du serveur et se voient dans les zones du
+  /// dessus, comme ceux d'un bot.
+  Widget _buildRemoteTurnView(GameEngine engine) {
+    final l10n = AppLocalizations.of(context);
+    return _controlRow(
+      primary: FilledButton(
+        onPressed: null,
+        child: Text(l10n.onlineWaitingFor(engine.currentPlayer.name)),
+      ),
+    );
+  }
+
   /// Tour de l'IA en cours : un unique bouton explicite reflétant l'action
   /// qu'elle va effectuer, qui déclenche cette même action (les deux
   /// s'appuient sur la même logique de décision, voir [GameNotifier]). Gère
@@ -2488,7 +2533,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// humain, c'est [_showBustDialog] (une popup dédiée, en rejeu aussi) qui
   /// porte le craque : cette zone ne montre alors plus rien une fois le craque
   /// révélé, pour ne pas dupliquer le bouton.
-  Widget _buildBustedView(TurnState turn, {required bool isAiTurn}) {
+  ///
+  /// [isRemoteTurn] : le craque d'un autre joueur en ligne se montre, mais c'est
+  /// à lui de l'acquitter — ici le libellé reste, sans aucune action.
+  Widget _buildBustedView(TurnState turn, {required bool isAiTurn, bool isRemoteTurn = false}) {
     // Le résultat n'est révélé qu'une fois l'animation de lancer des dés
     // terminée (cf. _scheduleBustRevealIfNeeded) : le suspense du lancer ne
     // doit pas être gâché par un message qui s'affiche trop tôt.
@@ -2507,6 +2555,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
           onPressed: null,
           label: _rollLabel(turn.diceToRoll, turn.extendedValues),
         ),
+      );
+    }
+    if (isRemoteTurn) {
+      return _controlRow(
+        primary: FilledButton(onPressed: null, child: Text(AppLocalizations.of(context).bustedTitle)),
       );
     }
 
@@ -2560,7 +2613,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (ModalRoute.of(context)?.isCurrent != true) return;
     final engine = ref.read(gameProvider);
     if (engine == null || engine.gameOver || engine.activeTurn == null) return;
-    if (ref.read(gameProvider.notifier).isAiPlayer(engine.currentPlayerIndex)) return;
+    if (ref.read(gameProvider.notifier).isObservedTurn(engine.currentPlayerIndex)) return;
     final turn = engine.activeTurn!;
     if (turn.busted) return;
     _rollForHumanTurn(engine, turn);

@@ -7,6 +7,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/finished_games_screen.dart';
 import 'package:le10000/ui/screens/new_game_screen.dart';
+import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/paused_games_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
 import 'package:le10000/ui/screens/rules_screen.dart';
@@ -151,6 +152,19 @@ void main() {
     expect(find.byType(NewGameScreen), findsOneWidget);
   });
 
+  testWidgets('les parties en ligne s\'ouvrent depuis l\'accueil, sous « Nouvelle partie »', (tester) async {
+    await pumpHome(tester);
+    await dismissResumeOffer(tester);
+
+    double top(String label) => tester.getTopLeft(find.text(label)).dy;
+    expect(top('Nouvelle partie'), lessThan(top('Jouer en ligne')));
+    expect(top('Jouer en ligne'), lessThan(top('Gestion des joueurs')));
+
+    await tester.tap(find.text('Jouer en ligne'));
+    await tester.pumpAndSettle();
+    expect(find.byType(OnlineEntryScreen), findsOneWidget);
+  });
+
   testWidgets('la gestion des joueurs s\'ouvre depuis l\'accueil', (tester) async {
     await pumpHome(tester);
 
@@ -165,6 +179,7 @@ void main() {
 
     for (final label in const [
       'Nouvelle partie',
+      'Jouer en ligne',
       'Gestion des joueurs',
       'Dernières parties terminées',
       'Statistiques',

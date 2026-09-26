@@ -714,4 +714,104 @@ class AppLocalizationsFi extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'Ensimmäinen pelaaja, joka saavuttaa tasan 10 000 pistettä, käynnistää loppukierroksen: jokaisella muulla pelaajalla on vuorollaan viimeinen mahdollisuus tasoittaa tai ohittaa hänet. Jos toinenkin pelaaja saavuttaa loppukierroksen aikana tasan 10 000, hän ottaa kruunun ja hänen ympärillään alkaa uusi loppukierros.';
+
+  @override
+  String get onlinePlayButton => 'Pelaa verkossa';
+
+  @override
+  String get onlineResumeButton => 'Jatka verkkopeliä';
+
+  @override
+  String get onlineTitle => 'Verkkopeli';
+
+  @override
+  String get onlineNameLabel => 'Lempinimesi';
+
+  @override
+  String get onlineCreateButton => 'Luo huone';
+
+  @override
+  String get onlineJoinButton => 'Liity';
+
+  @override
+  String get onlineCodeLabel => 'Huoneen koodi';
+
+  @override
+  String get onlineOrDivider => 'tai';
+
+  @override
+  String get onlineShareHint =>
+      'Anna tämä koodi muille pelaajille, niin he voivat liittyä.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Pelaajat ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Isäntä';
+
+  @override
+  String get onlineDisconnectedBadge => 'Yhteys katkennut';
+
+  @override
+  String get onlineNeedTwoPlayers =>
+      'Tarvitaan vähintään 2 pelaajaa, kaikki yhteydessä.';
+
+  @override
+  String get onlineWaitingForHost => 'Odotetaan, että isäntä aloittaa…';
+
+  @override
+  String get onlineLeaveButton => 'Poistu';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Poistutaanko verkkopelistä?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'Aloitetussa pelissä paikkasi jää tyhjäksi ja peli odottaa paluutasi.';
+
+  @override
+  String get onlineConnecting => 'Yhdistetään palvelimeen…';
+
+  @override
+  String get onlineReconnecting => 'Yhteys katkesi, yhdistetään uudelleen…';
+
+  @override
+  String get onlineSuspended =>
+      'Peli keskeytetty: pelaaja on ollut poissa liian kauan.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName pelaa…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Pelaa';
+
+  @override
+  String get onlineErrorUnreachable => 'Palvelimeen ei saada yhteyttä.';
+
+  @override
+  String get onlineErrorRoomNotFound => 'Tällä koodilla ei ole huonetta.';
+
+  @override
+  String get onlineErrorRoomFull => 'Tämä huone on täynnä.';
+
+  @override
+  String get onlineErrorGameStarted => 'Tämä peli on jo alkanut.';
+
+  @override
+  String get onlineErrorRateLimited =>
+      'Liian monta yritystä: yritä hetken päästä uudelleen.';
+
+  @override
+  String get onlineErrorBadToken => 'Paikkaasi tässä huoneessa ei enää ole.';
+
+  @override
+  String get onlineErrorUnsupportedVersion =>
+      'Päivitä sovellus pelataksesi verkossa.';
+
+  @override
+  String get onlineErrorGeneric => 'Tapahtui virhe.';
 }

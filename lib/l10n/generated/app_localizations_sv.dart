@@ -714,4 +714,104 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'Den första spelaren som når exakt 10 000 poäng utlöser en slutrunda: varje annan spelare får en sista chans på sin tur att komma ikapp eller gå förbi. Om en annan spelare också når exakt 10 000 under slutrundan tar hen över kronan och en ny slutrunda börjar runt hen.';
+
+  @override
+  String get onlinePlayButton => 'Spela online';
+
+  @override
+  String get onlineResumeButton => 'Återuppta onlinespelet';
+
+  @override
+  String get onlineTitle => 'Onlinespel';
+
+  @override
+  String get onlineNameLabel => 'Ditt smeknamn';
+
+  @override
+  String get onlineCreateButton => 'Skapa ett rum';
+
+  @override
+  String get onlineJoinButton => 'Gå med';
+
+  @override
+  String get onlineCodeLabel => 'Rumskod';
+
+  @override
+  String get onlineOrDivider => 'eller';
+
+  @override
+  String get onlineShareHint =>
+      'Ge den här koden till de andra spelarna så att de kan gå med.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Spelare ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Värd';
+
+  @override
+  String get onlineDisconnectedBadge => 'Frånkopplad';
+
+  @override
+  String get onlineNeedTwoPlayers => 'Minst 2 spelare krävs, alla anslutna.';
+
+  @override
+  String get onlineWaitingForHost => 'Väntar på att värden ska starta…';
+
+  @override
+  String get onlineLeaveButton => 'Lämna';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Lämna onlinespelet?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'I ett påbörjat spel förblir din plats tom och spelet väntar på att du kommer tillbaka.';
+
+  @override
+  String get onlineConnecting => 'Ansluter till servern…';
+
+  @override
+  String get onlineReconnecting => 'Anslutningen bröts, återansluter…';
+
+  @override
+  String get onlineSuspended =>
+      'Spelet pausat: en spelare har varit borta för länge.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName spelar…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Spela';
+
+  @override
+  String get onlineErrorUnreachable => 'Servern går inte att nå.';
+
+  @override
+  String get onlineErrorRoomNotFound => 'Inget rum med den här koden.';
+
+  @override
+  String get onlineErrorRoomFull => 'Det här rummet är fullt.';
+
+  @override
+  String get onlineErrorGameStarted => 'Det här spelet har redan börjat.';
+
+  @override
+  String get onlineErrorRateLimited =>
+      'För många försök: försök igen om en stund.';
+
+  @override
+  String get onlineErrorBadToken =>
+      'Din plats i det här rummet finns inte längre.';
+
+  @override
+  String get onlineErrorUnsupportedVersion =>
+      'Uppdatera appen för att spela online.';
+
+  @override
+  String get onlineErrorGeneric => 'Något gick fel.';
 }

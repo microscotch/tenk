@@ -716,4 +716,105 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'O primeiro jogador a atingir exatamente 10 000 pontos desencadeia uma ronda final: cada um dos outros jogadores tem uma última oportunidade de o igualar ou ultrapassar na sua vez. Se outro jogador também atingir exatamente 10 000 durante essa ronda final, fica ele com a coroa e começa uma nova ronda final à sua volta.';
+
+  @override
+  String get onlinePlayButton => 'Jogar online';
+
+  @override
+  String get onlineResumeButton => 'Retomar o jogo online';
+
+  @override
+  String get onlineTitle => 'Jogo online';
+
+  @override
+  String get onlineNameLabel => 'A sua alcunha';
+
+  @override
+  String get onlineCreateButton => 'Criar uma sala';
+
+  @override
+  String get onlineJoinButton => 'Entrar';
+
+  @override
+  String get onlineCodeLabel => 'Código da sala';
+
+  @override
+  String get onlineOrDivider => 'ou';
+
+  @override
+  String get onlineShareHint =>
+      'Dê este código aos outros jogadores para que se juntem a si.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Jogadores ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Anfitrião';
+
+  @override
+  String get onlineDisconnectedBadge => 'Desligado';
+
+  @override
+  String get onlineNeedTwoPlayers =>
+      'São precisos pelo menos 2 jogadores, todos ligados.';
+
+  @override
+  String get onlineWaitingForHost => 'A aguardar que o anfitrião comece…';
+
+  @override
+  String get onlineLeaveButton => 'Sair';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Sair do jogo online?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'Num jogo já começado, o seu lugar ficará vazio e o jogo aguardará o seu regresso.';
+
+  @override
+  String get onlineConnecting => 'A ligar ao servidor…';
+
+  @override
+  String get onlineReconnecting => 'Ligação perdida, a religar…';
+
+  @override
+  String get onlineSuspended =>
+      'Jogo suspenso: um jogador está ausente há demasiado tempo.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName está a jogar…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Jogar';
+
+  @override
+  String get onlineErrorUnreachable => 'Servidor inacessível.';
+
+  @override
+  String get onlineErrorRoomNotFound =>
+      'Não existe nenhuma sala com este código.';
+
+  @override
+  String get onlineErrorRoomFull => 'Esta sala está cheia.';
+
+  @override
+  String get onlineErrorGameStarted => 'Este jogo já começou.';
+
+  @override
+  String get onlineErrorRateLimited =>
+      'Demasiadas tentativas: tente novamente dentro de instantes.';
+
+  @override
+  String get onlineErrorBadToken => 'O seu lugar nesta sala já não existe.';
+
+  @override
+  String get onlineErrorUnsupportedVersion =>
+      'Atualize a aplicação para jogar online.';
+
+  @override
+  String get onlineErrorGeneric => 'Ocorreu um erro.';
 }

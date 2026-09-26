@@ -713,4 +713,103 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'Първият играч, достигнал точно 10 000 точки, задейства финален кръг: всеки от останалите играчи има последен шанс да го изравни или надмине на своя ход. Ако по време на финалния кръг друг играч също достигне точно 10 000, той поема короната и около него започва нов финален кръг.';
+
+  @override
+  String get onlinePlayButton => 'Игра онлайн';
+
+  @override
+  String get onlineResumeButton => 'Продължаване на онлайн играта';
+
+  @override
+  String get onlineTitle => 'Онлайн игра';
+
+  @override
+  String get onlineNameLabel => 'Вашият прякор';
+
+  @override
+  String get onlineCreateButton => 'Създаване на стая';
+
+  @override
+  String get onlineJoinButton => 'Присъединяване';
+
+  @override
+  String get onlineCodeLabel => 'Код на стаята';
+
+  @override
+  String get onlineOrDivider => 'или';
+
+  @override
+  String get onlineShareHint =>
+      'Дайте този код на другите играчи, за да се присъединят към вас.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Играчи ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Домакин';
+
+  @override
+  String get onlineDisconnectedBadge => 'Изключен';
+
+  @override
+  String get onlineNeedTwoPlayers => 'Трябват поне 2 играчи, всички свързани.';
+
+  @override
+  String get onlineWaitingForHost => 'Изчакване домакинът да започне…';
+
+  @override
+  String get onlineLeaveButton => 'Напускане';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Напускане на онлайн играта?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'В започната игра мястото ви остава празно и играта чака да се върнете.';
+
+  @override
+  String get onlineConnecting => 'Свързване със сървъра…';
+
+  @override
+  String get onlineReconnecting => 'Връзката е прекъсната, свързване отново…';
+
+  @override
+  String get onlineSuspended => 'Играта е спряна: играч отсъства твърде дълго.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName играе…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Играй';
+
+  @override
+  String get onlineErrorUnreachable => 'Сървърът не е достъпен.';
+
+  @override
+  String get onlineErrorRoomNotFound => 'Няма стая с този код.';
+
+  @override
+  String get onlineErrorRoomFull => 'Тази стая е пълна.';
+
+  @override
+  String get onlineErrorGameStarted => 'Тази игра вече е започнала.';
+
+  @override
+  String get onlineErrorRateLimited =>
+      'Твърде много опити: опитайте отново след малко.';
+
+  @override
+  String get onlineErrorBadToken =>
+      'Мястото ви в тази стая вече не съществува.';
+
+  @override
+  String get onlineErrorUnsupportedVersion =>
+      'Обновете приложението, за да играете онлайн.';
+
+  @override
+  String get onlineErrorGeneric => 'Възникна грешка.';
 }

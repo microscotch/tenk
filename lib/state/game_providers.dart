@@ -136,6 +136,14 @@ class GameNotifier extends Notifier<GameEngine?> {
 
   bool isAiPlayer(int index) => _setup?.isAi(index) ?? false;
 
+  /// Vrai quand, en ligne, le joueur [index] est quelqu'un d'autre que moi : je
+  /// regarde son tour sans pouvoir y toucher.
+  bool isRemotePlayer(int index) => _online != null && index != _online!.myEngineIndex;
+
+  /// Vrai quand le tour du joueur [index] se joue sans moi : un bot, ou un
+  /// autre joueur en ligne. L'écran n'y propose aucune commande ni popup.
+  bool isObservedTurn(int index) => isAiPlayer(index) || isRemotePlayer(index);
+
   /// Vrai si les actions du joueur [index] doivent se valider seules après
   /// le délai réglé dans les préférences (sinon elles attendent toujours un
   /// clic manuel sur le bouton, quel que soit ce délai).
