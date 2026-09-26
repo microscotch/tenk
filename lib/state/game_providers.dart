@@ -8,6 +8,7 @@ import '../game/ai/ai_profiles.dart';
 import '../game/ai/ai_strategy.dart';
 import '../game/game_engine.dart';
 import '../game/game_recording.dart';
+import '../game/dice_roll.dart';
 import '../game/game_setup.dart';
 import '../game/turn_result.dart';
 import '../game/turn_state.dart';
@@ -17,6 +18,26 @@ import 'player_statistics.dart';
 export '../game/game_setup.dart' show GameSetup;
 
 final gameProvider = NotifierProvider<GameNotifier, GameEngine?>(GameNotifier.new);
+
+/// Ce qui relie la partie à l'écran à un serveur, quand elle se joue en ligne
+/// (voir `online_providers.dart`) : qui je suis dans le salon, l'ordre de jeu
+/// que le départage a fixé, et où envoyer mes coups. Un joueur en ligne ne joue
+/// jamais lui-même : il DEMANDE un coup, et le serveur, qui tire les dés et
+/// arbitre, le renvoie à tous.
+class OnlineGameLink {
+  /// Mon siège dans le salon (avant départage).
+  final int mySeat;
+
+  /// Le siège d'origine de chaque joueur, dans l'ordre de jeu.
+  final List<int> playOrder;
+
+  final void Function(GameActionType intent, Map<String, dynamic> params) sendIntent;
+
+  const OnlineGameLink({required this.mySeat, required this.playOrder, required this.sendIntent});
+
+  /// Mon index de joueur dans le moteur.
+  int get myEngineIndex => playOrder.indexOf(mySeat);
+}
 
 /// Où en est le rejeu : [turn] tours de joueur déjà joués, sur [count] que
 /// compte la partie. Sert de valeur et de borne au curseur du rejeu.
@@ -45,8 +66,28 @@ class GameNotifier extends Notifier<GameEngine?> {
   DateTime? _enteredPlayAt;
   final List<GameAction> _actions = [];
 
+  /// Non nul quand la partie se joue en ligne ([startOnlineGame]).
+  OnlineGameLink? _online;
+
   @override
   GameEngine? build() => null;
+
+  bool get isOnline => _online != null;
+  OnlineGameLink? get onlineLink => _online;
+
+  /// Vrai quand c'est à moi de jouer en ligne (toujours vrai hors ligne : le
+  /// tour de l'appareil est alors celui de qui le tient). Faux une fois la
+  /// partie finie.
+  bool get isMyOnlineTurn {
+    final link = _online;
+    final engine = state;
+    if (link == null) return true;
+    return engine != null && !engine.gameOver && engine.currentPlayerIndex == link.myEngineIndex;
+  }
+
+  /// Nombre d'actions du journal en ligne déjà appliquées : le rang attendu de
+  /// la prochaine action du serveur.
+  int get onlineActionCount => _actions.length;
 
   /// Seed/config d'origine/journal d'actions de la partie en cours, pour
   /// dériver le journal de partie affiché à l'écran (voir
@@ -68,6 +109,17 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// tracer la courbe d'une autre partie.
   SavedGame? get gameRecord {
     if (_replaySource != null) return _replaySource;
+    // En ligne il n'y a pas de seed (le serveur seul la connaît) : le journal
+    // porte les faces de chaque lancer, ce qui suffit à le rejouer.
+    if (_online != null) {
+      return SavedGame(
+        seed: 0,
+        setup: _originalSetup!,
+        alias: '',
+        createdAt: _createdAt ?? DateTime.now(),
+        actions: List.unmodifiable(_actions),
+      );
+    }
     if (_seed == null || _originalSetup == null) return null;
     return _currentSavedGame();
   }
@@ -95,7 +147,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// Vrai si passer la main au joueur [index] doit afficher l'écran "passez
   /// l'appareil" : c'est un humain, et il y a plus d'un joueur humain dans la
   /// partie (sinon l'appareil est déjà devant la bonne personne).
-  bool shouldShowPassDevice(int index) => !isAiPlayer(index) && humanPlayerCount > 1;
+  bool shouldShowPassDevice(int index) => _online == null && !isAiPlayer(index) && humanPlayerCount > 1;
 
   /// Démarre la partie principale une fois le départage résolu. [handoff],
   /// quand fourni (partie réellement jouée, pas un test), transmet la
@@ -107,6 +159,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     _setup = setup;
     _isReplay = false;
     _replaySource = null;
+    _online = null;
     if (handoff != null) {
       _originalSetup = handoff.originalSetup;
       _seed = handoff.seed;
@@ -138,6 +191,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     _setup = replay.orderedSetup;
     _isReplay = false;
     _replaySource = null;
+    _online = null;
     _originalSetup = saved.setup;
     _seed = saved.seed;
     _random = replay.random;
@@ -247,6 +301,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   void startGameReplay(GameSetup orderedSetup, GameRecordingHandoff handoff, {SavedGame? source}) {
     _setup = orderedSetup;
     _isReplay = true;
+    _online = null;
     _replaySource = source;
     _seed = null;
     _originalSetup = null;
@@ -308,6 +363,52 @@ class GameNotifier extends Notifier<GameEngine?> {
     state = applyGameAction(state!, action, _replayRandom!);
   }
 
+  /// Ouvre une partie en ligne à partir du journal que le serveur vient
+  /// d'envoyer (`snapshot`) : [names] dans l'ordre des sièges du salon,
+  /// [actions] le départage puis les coups, faces comprises. L'état se
+  /// reconstruit avec `replayGame`, sans seed — [mySeat] dit lequel des joueurs
+  /// est moi. Rien n'est jamais persisté (pas de seed, voir [_commit]).
+  void startOnlineGame({
+    required List<String> names,
+    required List<GameAction> actions,
+    required int mySeat,
+    required void Function(GameActionType intent, Map<String, dynamic> params) sendIntent,
+  }) {
+    final original = GameSetup(playerNames: names);
+    final replay = replayGame(original, 0, actions);
+    final engine = replay.engine;
+    if (engine == null) throw StateError('le serveur n\'a pas envoyé de partie commencée');
+    _online = OnlineGameLink(mySeat: mySeat, playOrder: replay.playOrder!, sendIntent: sendIntent);
+    _setup = replay.orderedSetup;
+    _originalSetup = original;
+    _isReplay = false;
+    _replaySource = null;
+    _seed = null;
+    _random = null;
+    _createdAt ??= DateTime.now();
+    _actions
+      ..clear()
+      ..addAll(actions);
+    state = engine;
+  }
+
+  /// Applique une action décidée par le serveur. Les lancers portent leurs
+  /// faces : un générateur vide fait échouer bruyamment un lancer qui n'en
+  /// aurait pas, plutôt que de tirer des dés que le serveur n'a pas vus.
+  void applyOnlineAction(GameAction action) {
+    assert(_online != null, 'aucune partie en ligne en cours');
+    _commit(applyGameAction(state!, action, ScriptedRandom(const [])), [action]);
+  }
+
+  /// Quitte la partie en ligne : l'écran de jeu n'a plus rien à afficher.
+  void endOnlineGame() {
+    _online = null;
+    _setup = null;
+    _originalSetup = null;
+    _actions.clear();
+    state = null;
+  }
+
   /// Charge un état de partie déjà construit, sans passer par [startGame].
   /// Réservé aux tests, pour vérifier des scénarios (craque, victoire...)
   /// sans dépendre de vrais lancers de dés aléatoires. N'active aucune
@@ -318,14 +419,23 @@ class GameNotifier extends Notifier<GameEngine?> {
     state = engine;
   }
 
-  void roll() => _commit(state!.roll(random: _random), [GameAction.roll()]);
+  void roll() {
+    if (_online != null) return _online!.sendIntent(GameActionType.roll, const {});
+    _commit(state!.roll(random: _random), [GameAction.roll()]);
+  }
 
-  void applyKeep({int declineFivesCount = 0}) => _commit(
-        state!.applyKeep(declineFivesCount: declineFivesCount),
-        [GameAction.applyKeep(declineFivesCount: declineFivesCount)],
-      );
+  void applyKeep({int declineFivesCount = 0}) {
+    if (_online != null) {
+      return _online!.sendIntent(GameActionType.applyKeep, {'declineFivesCount': declineFivesCount});
+    }
+    _commit(
+      state!.applyKeep(declineFivesCount: declineFivesCount),
+      [GameAction.applyKeep(declineFivesCount: declineFivesCount)],
+    );
+  }
 
   void endBustedTurn() {
+    if (_online != null) return _online!.sendIntent(GameActionType.endBustedTurn, const {});
     // Un craque remet toujours à 5 dés neufs : aucun choix de main possible.
     final ended = state!.endBustedTurn();
     _commit(
@@ -339,6 +449,12 @@ class GameNotifier extends Notifier<GameEngine?> {
 
   BankAttempt bank() {
     final (engine, attempt) = state!.bank();
+    if (_online != null) {
+      // Le verdict se lit sur l'état local (mêmes règles) ; c'est le serveur
+      // qui banque vraiment, et rediffuse.
+      if (attempt.success) _online!.sendIntent(GameActionType.bank, const {});
+      return attempt;
+    }
     if (attempt.success) {
       _commit(engine, [GameAction.bank()]);
       // Sinon : gameOver (rien de plus à faire), ou le joueur suivant hérite
@@ -365,10 +481,13 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// À appeler quand le joueur courant doit choisir entre hériter des dés
   /// du tour précédent ou repartir avec une main pleine de 5 dés neufs
   /// (state.activeTurn est alors null, cf. [bank]).
-  void startTurn({required bool useFullHand}) => _commit(
-        state!.startTurn(useFullHand: useFullHand),
-        [GameAction.startTurn(useFullHand: useFullHand)],
-      );
+  void startTurn({required bool useFullHand}) {
+    if (_online != null) return _online!.sendIntent(GameActionType.startTurn, {'useFullHand': useFullHand});
+    _commit(
+      state!.startTurn(useFullHand: useFullHand),
+      [GameAction.startTurn(useFullHand: useFullHand)],
+    );
+  }
 
   /// Joue une unique action du tour du joueur IA courant (un lancer, une
   /// décision de garde, ou un banquage/craque). L'appelant (UI) répète les
