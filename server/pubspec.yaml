@@ -1,0 +1,15 @@
+name: tenk_server
+description: Serveur des parties en ligne de Le 10000 (arbitre les dés et les tours).
+publish_to: 'none'
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  shelf: ^1.4.2
+  shelf_web_socket: ^3.0.0
+  web_socket_channel: ^3.0.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

@@ -1,0 +1,8 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  errors:
+    # Le serveur réutilise le moteur de l'app (lib/game, Dart pur) par chemin
+    # relatif : le package de l'app dépend du SDK Flutter, il ne peut pas être
+    # une dépendance d'un serveur Dart seul.
+    avoid_relative_lib_imports: ignore
