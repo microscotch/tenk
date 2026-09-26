@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Les parties en ligne (WebSocket vers le serveur de jeu). Flutter ne l'ajoute
+         qu'aux builds debug/profile : une release sans cette ligne ne pourrait pas
+         se connecter. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="TenK"
         android:name="${applicationName}"
