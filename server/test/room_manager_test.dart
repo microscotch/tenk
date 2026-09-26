@@ -139,6 +139,30 @@ void main() {
       expect([players[0].$1.seat, players[1].$1.seat, players[2].$1.seat], [1, 2, 0]);
     });
 
+    test('l\'hôte reste l\'hôte même en se glissant en bas de la table', () {
+      final (_, players) = lobby(3);
+      send(players[0].$2, ClientMessage.reorder([1, 2, 0]));
+
+      // Anna est maintenant au siège 2, et c'est toujours elle qui a la main sur le salon.
+      expect(players[0].$1.seat, 2);
+      expect(players[0].$1.lastRoom.hostSeat, 2);
+      expect(players[1].$1.lastRoom.hostSeat, 2, reason: 'tous voient le même hôte');
+      send(players[1].$2, ClientMessage.start());
+      expect(players[1].$1.lastError, ErrorCode.notHost, reason: 'le joueur passé en tête n\'est pas devenu hôte');
+      send(players[0].$2, ClientMessage.start());
+      expect(players[0].$1.lastRoom.phase, RoomPhase.playing);
+    });
+
+    test('si l\'hôte part avant le départ, le premier joueur restant le devient', () {
+      final (_, players) = lobby(3);
+      send(players[0].$2, ClientMessage.leave());
+
+      expect(players[1].$1.lastRoom.seats.map((s) => s.name), ['J2', 'J3']);
+      expect(players[1].$1.lastRoom.hostSeat, 0);
+      send(players[1].$2, ClientMessage.start());
+      expect(players[1].$1.lastRoom.phase, RoomPhase.playing);
+    });
+
     test('un ordre qui n\'est pas une permutation est refusé', () {
       final (_, players) = lobby(3);
       for (final bad in [
