@@ -23,7 +23,7 @@ stockages de l'appareil (fichiers JSON et SharedPreferences).
 
 Du Raspberry Pi, qui développe mais ne peut construire ni Android ni iOS, aux téléphones — et à l'hôte du
 serveur de jeu (conteneur derrière un reverse proxy TLS) : le hook
-`pre-push` qui incrémente le numéro de build, les jobs de la CI (dont `test-server`), les artefacts, Google Play (piste
+`pre-push` qui incrémente le numéro de build, les jobs de la CI (dont `test-server`), le workflow qui publie l'image Docker du serveur sur ghcr.io, les artefacts, Google Play (piste
 internal), TestFlight et l'installation USB de l'IPA de développement. Il rappelle qu'un run vert ne prouve
 pas l'envoi aux stores. Un second workflow publie sur GitHub Pages ce dossier `docs/` et la documentation
 Dart du code, générée par dartdoc, sous
