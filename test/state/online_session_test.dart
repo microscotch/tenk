@@ -256,6 +256,30 @@ void main() {
       expect(transport.current.sent.where((m) => m.params['intent'] == 'bank'), isEmpty);
     });
 
+    test('s\'arrêter sur un lancer en attente envoie la garde puis la banque', () async {
+      // Régression : l'état local ne bouge qu'à la réponse du serveur, et banquer
+      // sur un lancer encore en attente levait — la banque ne partait jamais.
+      final full = fullJournal();
+      var keepIndex = -1;
+      for (var i = 0; i < full.length - 1; i++) {
+        if (full[i].type == GameActionType.applyKeep && full[i + 1].type == GameActionType.bank) {
+          keepIndex = i;
+          break;
+        }
+      }
+      expect(keepIndex, greaterThan(0), reason: 'le script doit banquer au moins une fois juste après une garde');
+
+      // Le journal s'arrête sur le lancer : la décision de garde est en attente.
+      await joinedAndStarted(0, full.sublist(0, keepIndex));
+      expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull);
+
+      final attempt = game().stopTurn(declineFivesCount: full[keepIndex].params['declineFivesCount'] as int);
+
+      expect(attempt.success, isTrue);
+      final sent = transport.current.sent.where((m) => m.type == ClientMessageType.play).map((m) => m.params['intent']);
+      expect(sent, ['applyKeep', 'bank']);
+    });
+
     test('le journal en ligne alimente les statistiques et la courbe (rejouable sans seed)', () async {
       await joinedAndStarted(0, serverJournal());
       final record = game().gameRecord!;

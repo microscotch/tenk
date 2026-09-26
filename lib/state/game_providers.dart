@@ -481,6 +481,34 @@ class GameNotifier extends Notifier<GameEngine?> {
     return attempt;
   }
 
+  /// « S'arrêter » sur le tour courant, y compris quand un lancer attend
+  /// encore sa décision de garde : la garde est appliquée d'abord, puis on
+  /// banque. En ligne l'état local ne bouge qu'à la réponse du serveur, donc
+  /// [bank] ne pourrait pas juger un lancer encore en attente (il lèverait) :
+  /// le verdict se lit ici sur l'état où la garde est appliquée, puis les deux
+  /// demandes partent dans l'ordre — le serveur les traite dans cet ordre.
+  BankAttempt stopTurn({int declineFivesCount = 0}) {
+    final engine = state!;
+    final pending = engine.activeTurn?.pendingRoll;
+    if (_online == null) {
+      if (pending != null) applyKeep(declineFivesCount: declineFivesCount);
+      return bank();
+    }
+    final afterKeep = pending != null ? engine.applyKeep(declineFivesCount: declineFivesCount) : engine;
+    // La quinte d'as banque dans la garde même : le tour est déjà fini.
+    final turn = afterKeep.activeTurn;
+    if (turn == null || afterKeep.gameOver) {
+      if (pending != null) _online!.sendIntent(GameActionType.applyKeep, {'declineFivesCount': declineFivesCount});
+      final me = engine.currentPlayerIndex;
+      return BankAttempt.success(afterKeep.players[me].totalScore - engine.players[me].totalScore);
+    }
+    final (_, attempt) = afterKeep.bank();
+    if (!attempt.success) return attempt;
+    if (pending != null) _online!.sendIntent(GameActionType.applyKeep, {'declineFivesCount': declineFivesCount});
+    _online!.sendIntent(GameActionType.bank, const {});
+    return attempt;
+  }
+
   /// Démarre seul le tour du joueur courant quand il n'a aucun choix de main à
   /// faire : soit il n'hérite d'aucun dé, soit la main héritée ne pourrait plus
   /// banquer (voir [GameEngine.inheritedHandCannotBank]) et repartir à 5 dés

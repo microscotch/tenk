@@ -2668,11 +2668,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     void onRoll() => _rollForHumanTurn(engine, turn);
 
-    void onStop() {
-      final notifier = ref.read(gameProvider.notifier);
-      if (pending != null) notifier.applyKeep(declineFivesCount: declineCount);
-      notifier.bank();
-    }
+    void onStop() => ref.read(gameProvider.notifier).stopTurn(declineFivesCount: declineCount);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
