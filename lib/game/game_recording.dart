@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'dice_off.dart';
+import 'dice_roll.dart';
 import 'game_engine.dart';
 import 'game_setup.dart';
 
@@ -76,8 +77,14 @@ class GameAction {
   factory GameAction.diceOffRoll(int index, {DateTime? at}) =>
       GameAction(type: GameActionType.diceOffRoll, at: at ?? DateTime.now(), params: {'index': index});
 
-  factory GameAction.diceOffRollAll({DateTime? at}) =>
-      GameAction(type: GameActionType.diceOffRollAll, at: at ?? DateTime.now());
+  /// [faces], quand fourni, est le tirage déjà décidé (une face par joueur en
+  /// lice) : le rejeu l'utilise au lieu de consommer le générateur. C'est le
+  /// cas d'une partie en ligne, dont les clients n'ont jamais la seed.
+  factory GameAction.diceOffRollAll({List<int>? faces, DateTime? at}) => GameAction(
+        type: GameActionType.diceOffRollAll,
+        at: at ?? DateTime.now(),
+        params: {'faces': ?faces},
+      );
 
   factory GameAction.diceOffResolveRound({DateTime? at}) =>
       GameAction(type: GameActionType.diceOffResolveRound, at: at ?? DateTime.now());
@@ -88,7 +95,16 @@ class GameAction {
         params: {'useFullHand': useFullHand},
       );
 
-  factory GameAction.roll({DateTime? at}) => GameAction(type: GameActionType.roll, at: at ?? DateTime.now());
+  /// [faces], quand fourni, est le lancer déjà décidé (voir [diceOffRollAll]).
+  factory GameAction.roll({List<int>? faces, DateTime? at}) => GameAction(
+        type: GameActionType.roll,
+        at: at ?? DateTime.now(),
+        params: {'faces': ?faces},
+      );
+
+  /// Le tirage porté par cette action, ou null quand il vient du générateur
+  /// (parties locales et journaux d'avant le mode en ligne).
+  List<int>? get faces => (params['faces'] as List?)?.cast<int>();
 
   factory GameAction.applyKeep({required int declineFivesCount, DateTime? at}) => GameAction(
         type: GameActionType.applyKeep,
@@ -176,7 +192,7 @@ ReplayResult replayGame(
       case GameActionType.diceOffRoll:
         diceOff = diceOff.rollFor(action.params['index'] as int, random: random);
       case GameActionType.diceOffRollAll:
-        diceOff = diceOff.rollAll(random: random);
+        diceOff = rollAllFor(diceOff, action, random);
       case GameActionType.diceOffResolveRound:
         diceOff = diceOff.resolveRound();
         if (diceOff.isResolved) {
@@ -265,7 +281,7 @@ GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) 
     case GameActionType.startTurn:
       return engine.startTurn(useFullHand: action.params['useFullHand'] as bool? ?? false);
     case GameActionType.roll:
-      return engine.roll(random: random);
+      return rollFor(engine, action, random);
     case GameActionType.applyKeep:
       return engine.applyKeep(declineFivesCount: action.params['declineFivesCount'] as int? ?? 0);
     case GameActionType.endBustedTurn:
@@ -280,6 +296,27 @@ GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) 
     case GameActionType.diceOffResolveRound:
       throw ArgumentError('${action.type} concerne le départage, pas la partie principale');
   }
+}
+
+/// Joue un `roll` : avec les faces que porte [action] s'il y en a (partie en
+/// ligne : le générateur n'est alors pas consommé), sinon avec [random].
+GameEngine rollFor(GameEngine engine, GameAction action, Random random) {
+  final faces = action.faces;
+  if (faces == null) return engine.roll(random: random);
+  final scripted = ScriptedRandom(faces);
+  final next = engine.roll(random: scripted);
+  scripted.assertConsumed();
+  return next;
+}
+
+/// Joue un `diceOffRollAll`, avec les faces de [action] s'il y en a.
+DiceOffState rollAllFor(DiceOffState diceOff, GameAction action, Random random) {
+  final faces = action.faces;
+  if (faces == null) return diceOff.rollAll(random: random);
+  final scripted = ScriptedRandom(faces);
+  final next = diceOff.rollAll(random: scripted);
+  scripted.assertConsumed();
+  return next;
 }
 
 /// Somme des écarts entre actions consécutives : la durée d'une partie,
