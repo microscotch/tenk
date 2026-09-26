@@ -149,7 +149,15 @@
         <mxCell id="e24" value="Revoir la partie (rejeu)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;dashed=1;exitX=1;exitY=0.25;entryX=1;entryY=0.75;" edge="1" parent="1" source="gameover" target="game">
           <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="700" /><mxPoint x="650" y="545" /></Array></mxGeometry>
         </mxCell>
-      </root>
+      <mxCell id="onlineentry" value="OnlineEntry&#xa;(créer / rejoindre un salon,&#xa;retrouver ou quitter sa partie)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0f0ee;strokeColor=#3a9d97;fontSize=13;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1290" y="110" width="250" height="60" as="geometry"/></mxCell>
+<mxCell id="onlineroom" value="OnlineRoom&#xa;(salon : code, joueurs,&#xa;ordre glissé par l&apos;hôte)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0f0ee;strokeColor=#3a9d97;fontSize=13;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1290" y="230" width="250" height="60" as="geometry"/></mxCell>
+<mxCell id="onlinediceoff" value="OnlineDiceOff&#xa;(tirage raconté depuis&#xa;le journal du serveur)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0f0ee;strokeColor=#3a9d97;fontSize=13;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1290" y="350" width="250" height="60" as="geometry"/></mxCell>
+<mxCell id="e40" value="Jouer en ligne" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.2;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="setup" target="onlineentry"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="700" y="122"/><mxPoint x="1040" y="122"/><mxPoint x="1040" y="140"/></Array></mxGeometry></mxCell>
+<mxCell id="e41" value="salon créé / rejoint" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlineentry" target="onlineroom"><mxGeometry relative="1" as="geometry"></mxGeometry></mxCell>
+<mxCell id="e42" value="l&apos;hôte lance la partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlineroom" target="onlinediceoff"><mxGeometry relative="1" as="geometry"></mxGeometry></mxCell>
+<mxCell id="e43" value="Jouer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlinediceoff" target="game"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1415" y="530"/></Array></mxGeometry></mxCell>
+<mxCell id="e44" value="reprise" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlineentry" target="onlinediceoff"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1580" y="140"/><mxPoint x="1580" y="380"/></Array></mxGeometry></mxCell>
+</root>
     </mxGraphModel>
   </diagram>
 </mxfile>

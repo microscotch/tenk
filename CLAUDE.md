@@ -17,13 +17,17 @@ flutter test                 # run the full test suite
 flutter test test/game/combination_test.dart   # run a single test file
 flutter test --plain-name "un craque affiche"  # run tests matching a name
 flutter run -d linux         # run the app locally (see below — this is the only viable local target)
+(cd server && dart pub get && dart analyze && dart test)   # the online-game server: analysis + tests
+dart run server/bin/server.dart                            # a local server on ws://localhost:8080/ws
 ```
 
-CI (`.github/workflows/build_apk.yaml`) has three jobs, on every push to `main` (plus
+CI (`.github/workflows/build_apk.yaml`) has four jobs, on every push to `main` (plus
 `pull_request` and `workflow_dispatch`, where `bump-build-number` is skipped):
 - `bump-build-number` (`ubuntu-latest`) — CI-side safety net for the local `.githooks/pre-push` hook
   (see Git hooks below). The other two jobs depend on it and check out the commit it resolves, so
   both build the same, possibly corrected, tree.
+- `test-server` (`ubuntu-latest`) — `dart analyze` + `dart test` in `server/` (see Online games below); it
+  also runs on pull requests, and is independent of the two build jobs.
 - `build-android` (`ubuntu-latest`) — `pub get`, `analyze`, `test`, then `build apk --release` and
   `build appbundle --release`, signed with the release keystore restored from a repo secret. Both are
   uploaded as artifacts, and the AAB is sent to the Google Play `internal` track.
@@ -128,6 +132,15 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   only themselves; `playOrder` gives the seats in play order (see the order rule below). Old journals
   used per-player `rollFor` and always plain rotation — `simultaneous` tells the two apart, and must
   keep doing so, or archived games would silently replay with players on the wrong seats.
+- `game/dice_roll.dart` also holds `RecordingRandom` (wraps a `Random`, remembers the faces it rolled — the
+  server's side) and `ScriptedRandom` (hands back faces rolled elsewhere — the client's side, and it throws
+  if the engine asks for more or fewer than it was given). `GameAction.roll` / `diceOffRollAll` can carry
+  those `faces`; `applyGameAction` / `replayGame` use them instead of the generator, so a journal *with
+  faces* replays with **no seed** (`replayGame(setup, 0, actions)`). Online games rely on this; local
+  journals never carry faces and replay exactly as before.
+- `game/online/protocol.dart` — the wire messages of online games (`ClientMessage`, `ServerMessage`, the
+  enums, the limits), shared by the app and `server/`. `ClientMessage.fromJson` validates every field and
+  never lets a client ask for anything but a turn move (no roll-off, no roll, no faces).
 - `game/game_recording.dart` — the action journal (`GameAction`, `GameActionType`) and everything
   read from it: `replayGame` (rebuilds the exact engine state *and* the dice generator where the
   journal left it), `applyGameAction`, `replayTurnStarts` (where each turn begins — bounds the
@@ -165,6 +178,13 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   have started: `resumeSavedGame` (`lib/ui/navigation.dart`) reopens an unresolved roll-off via
   `DiceOffNotifier.resumeFromSave`, and `GameNotifier.resumeFromSave` starts the first turn itself
   when the roll-off was resolved but the game never began.
+- `online_providers.dart`, `online_transport.dart` — `OnlineSession` owns the connection to the game server
+  (`OnlineTransport` is the seam tests fake), the room, and the reconnect token kept in
+  `OnlineCredentialsStore`. It numbers what it receives: a duplicate is ignored, a gap or a disagreement
+  re-syncs from the server's full journal. `GameNotifier` has an **online mode** (`startOnlineGame`,
+  `OnlineGameLink`): its action methods then only *request* the move (`sendIntent`), and the state changes
+  when the server's action comes back (`applyOnlineAction`). `isObservedTurn(i)` = a turn played without
+  me (bot **or** another online player): the game screen shows no controls and no popup for it.
 - `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
   file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
   config of the game **being shown**, linking by profile id, never by name — so an archived game
@@ -197,6 +217,31 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.
 
+### Online games (`server/`)
+
+A separate pure-Dart package (shelf + WebSocket). It is **authoritative**: `GameAuthority` owns the dice
+generator (clients never learn the seed — they would predict the dice), runs the roll-off, validates every
+move against the real `GameEngine` and returns the actions to broadcast, each `roll` with its faces.
+`Room` holds the seats, the phase (lobby / playing / suspended / over) and the connections; `RoomManager`
+is the front door (per-address connection, room-creation and failed-join limits, message rate and size,
+sweep of expired rooms).
+
+- **The engine is shared by relative path, not as a package**: the app package depends on the Flutter SDK,
+  so a Dart-only server cannot depend on it. Code that imports `../../lib/game/**` therefore lives in
+  `server/src/` (not `server/lib/`: a file under a package's `lib/` is `package:` and cannot import out of
+  it). `lib/game` must keep importing nothing from Flutter, or the server stops compiling.
+- **The server never plays for anyone.** A disconnected player keeps their seat (reconnect token); past 2
+  minutes the room is *suspended* and waits. Rooms expire after 24 h idle (30 min in the lobby).
+- **No persistent state**: games live in memory. The privacy policy (`docs/privacy-policy.html`) states
+  exactly that — pseudo, random token and moves, in memory only, IP used in memory for limits and not
+  recorded. Hosting must keep to it: **no access logs** on the reverse proxy that terminates TLS.
+- Run it behind a TLS reverse proxy (`wss://`) with `TRUST_PROXY=1` so `X-Forwarded-For` gives the client
+  address. Build the image from the repo root: `docker build -f server/Dockerfile -t tenk-server .`. The app
+  reads its address from `--dart-define=TENK_SERVER_URL=wss://…/ws` (`defaultServerUrl`).
+- Known limit: the WebSocket layer buffers a frame before the size check; put a proxy limit in front.
+- Not in v1: bots and mixed local players in online games; archiving/replaying finished online games (a
+  `SavedGame` needs a seed — the with-faces journal would allow it).
+
 ## Design documents — keep them current
 
 `docs/architecture.md` and its class diagram (`docs/architecture/class-diagram.drawio` + `.png`)
@@ -207,7 +252,7 @@ exported PNG, and update the prose. `docs/screen-flow.drawio` does the same for 
 that is a few batches late is how the documents ended up three weeks behind the code once already.
 
 The rest of the UML set lives in `docs/uml/` and is indexed by `docs/uml.md` (use cases, components,
-deployment, the game-lifecycle and roll-off state machines, five sequence diagrams). The same rule
+deployment, the game-lifecycle and roll-off state machines, six sequence diagrams — the online one included). The same rule
 applies: a change to a call chain, a state transition, a storage location or the CI pipeline updates the
 matching diagram in the same batch. Export each one with
 `.claude/skills/architecture-diagram/export.sh <file.drawio>` and look at the PNG.
