@@ -6,6 +6,7 @@ import '../../game/online/protocol.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/online_providers.dart';
 import '../online_messages.dart';
+import '../share.dart';
 import '../widgets/app_top_bar.dart';
 import 'online_dice_off_screen.dart';
 
@@ -66,6 +67,8 @@ class OnlineRoomScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(l10n.onlineShareHint, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                Center(child: _shareButton(context, ref, l10n, online.roomCode ?? '')),
                 const SizedBox(height: 16),
                 Text(
                   l10n.onlinePlayersHeader(online.seats.length, maxOnlinePlayers),
@@ -89,6 +92,29 @@ class OnlineRoomScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Envoie le code par une application du téléphone. Sans feuille de partage
+  /// disponible (bureau), le message est copié : le code reste transmissible.
+  Widget _shareButton(BuildContext context, WidgetRef ref, AppLocalizations l10n, String code) {
+    return Builder(
+      builder: (buttonContext) => OutlinedButton.icon(
+        icon: const Icon(Icons.share),
+        label: Text(l10n.onlineShareButton),
+        onPressed: code.isEmpty
+            ? null
+            : () async {
+                final message = l10n.onlineShareMessage(code);
+                final box = buttonContext.findRenderObject() as RenderBox?;
+                final origin = box != null && box.hasSize ? box.localToGlobal(Offset.zero) & box.size : null;
+                try {
+                  await ref.read(shareTextProvider)(message, origin: origin);
+                } catch (_) {
+                  await Clipboard.setData(ClipboardData(text: message));
+                }
+              },
       ),
     );
   }

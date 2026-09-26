@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Código de la sala",
   "onlineOrDivider": "o",
   "onlineShareHint": "Da este código a los demás jugadores para que se unan.",
+  "onlineShareButton": "Compartir el código",
+  "onlineShareMessage": "¡Únete a mi partida en línea de Le 10000! Código de la sala: {code}",
   "onlinePlayersHeader": "Jugadores ({count}/{max})",
   "onlineHostBadge": "Anfitrión",
   "onlineDisconnectedBadge": "Desconectado",

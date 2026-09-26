@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Код на стаята",
   "onlineOrDivider": "или",
   "onlineShareHint": "Дайте този код на другите играчи, за да се присъединят към вас.",
+  "onlineShareButton": "Споделяне на кода",
+  "onlineShareMessage": "Присъедини се към моята онлайн игра на Le 10000! Код на стаята: {code}",
   "onlinePlayersHeader": "Играчи ({count}/{max})",
   "onlineHostBadge": "Домакин",
   "onlineDisconnectedBadge": "Изключен",

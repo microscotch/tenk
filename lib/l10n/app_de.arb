@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Raumcode",
   "onlineOrDivider": "oder",
   "onlineShareHint": "Gib diesen Code an die anderen Spieler weiter, damit sie beitreten können.",
+  "onlineShareButton": "Code teilen",
+  "onlineShareMessage": "Tritt meiner Online-Partie von Le 10000 bei! Raumcode: {code}",
   "onlinePlayersHeader": "Spieler ({count}/{max})",
   "onlineHostBadge": "Gastgeber",
   "onlineDisconnectedBadge": "Getrennt",

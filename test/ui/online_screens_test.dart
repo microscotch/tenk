@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_recording.dart';
@@ -14,6 +15,7 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/online_dice_off_screen.dart';
 import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/online_room_screen.dart';
+import 'package:le10000/ui/share.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
@@ -33,8 +35,12 @@ void main() {
   late FakeTransport transport;
   late FakeCredentialsStore credentials;
   late ProviderContainer container;
+  late List<String> shared;
+  late bool shareFails;
 
   setUp(() {
+    shared = [];
+    shareFails = false;
     transport = FakeTransport();
     credentials = FakeCredentialsStore();
     container = ProviderContainer(overrides: [
@@ -44,6 +50,10 @@ void main() {
       gameSaveStoreProvider.overrideWithValue(FakeGameSaveStore()),
       archivedGameSaveStoreProvider.overrideWithValue(FakeGameSaveStore()),
       playerStoreProvider.overrideWithValue(FakePlayerStore()),
+      shareTextProvider.overrideWithValue((text, {origin}) async {
+        if (shareFails) throw StateError('pas de feuille de partage');
+        shared.add(text);
+      }),
     ]);
     addTearDown(container.dispose);
   });
@@ -245,6 +255,32 @@ void main() {
       await tester.tap(find.text('Commencer la partie'));
       await tester.pumpAndSettle();
       expect(transport.current.lastSent!.type, ClientMessageType.start);
+    });
+
+    testWidgets('le code se partage par la feuille de partage du système', (tester) async {
+      await inRoom(tester, seat: 0, names: ['Anna']);
+
+      await tester.tap(find.text('Partager le code'));
+      await tester.pumpAndSettle();
+
+      expect(shared, ['Rejoins ma partie de Le 10000 en ligne ! Code du salon : ABCDE']);
+    });
+
+    testWidgets('sans feuille de partage, le message est copié dans le presse-papiers', (tester) async {
+      await inRoom(tester, seat: 0, names: ['Anna']);
+      shareFails = true;
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') copied = (call.arguments as Map)['text'] as String?;
+        return null;
+      });
+      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+
+      await tester.tap(find.text('Partager le code'));
+      await tester.pumpAndSettle();
+
+      expect(shared, isEmpty);
+      expect(copied, 'Rejoins ma partie de Le 10000 en ligne ! Code du salon : ABCDE');
     });
 
     testWidgets('un joueur déconnecté empêche le lancement et se signale', (tester) async {

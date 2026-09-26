@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Room code",
   "onlineOrDivider": "or",
   "onlineShareHint": "Give this code to the other players so they can join you.",
+  "onlineShareButton": "Share the code",
+  "onlineShareMessage": "Join my online game of Le 10000! Room code: {code}",
   "onlinePlayersHeader": "Players ({count}/{max})",
   "onlineHostBadge": "Host",
   "onlineDisconnectedBadge": "Disconnected",

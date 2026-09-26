@@ -743,6 +743,14 @@ class AppLocalizationsNb extends AppLocalizations {
       'Gi denne koden til de andre spillerne, så kan de bli med.';
 
   @override
+  String get onlineShareButton => 'Del koden';
+
+  @override
+  String onlineShareMessage(String code) {
+    return 'Bli med i nettspillet mitt av Le 10000! Romkode: $code';
+  }
+
+  @override
   String onlinePlayersHeader(int count, int max) {
     return 'Spillere ($count/$max)';
   }

@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Rumskod",
   "onlineOrDivider": "eller",
   "onlineShareHint": "Ge den här koden till de andra spelarna så att de kan gå med.",
+  "onlineShareButton": "Dela koden",
+  "onlineShareMessage": "Häng med i mitt onlinespel av Le 10000! Rumskod: {code}",
   "onlinePlayersHeader": "Spelare ({count}/{max})",
   "onlineHostBadge": "Värd",
   "onlineDisconnectedBadge": "Frånkopplad",

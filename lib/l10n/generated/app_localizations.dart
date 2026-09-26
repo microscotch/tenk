@@ -1334,6 +1334,18 @@ abstract class AppLocalizations {
   /// **'Donnez ce code aux autres joueurs pour qu\'ils vous rejoignent.'**
   String get onlineShareHint;
 
+  /// Bouton du salon qui ouvre la feuille de partage du système pour envoyer le code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager le code'**
+  String get onlineShareButton;
+
+  /// Texte envoyé par la feuille de partage (WhatsApp, SMS...) ; code = code du salon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoins ma partie de Le 10000 en ligne ! Code du salon : {code}'**
+  String onlineShareMessage(String code);
+
   /// Titre de la liste des joueurs d'un salon ; count = présents, max = places.
   ///
   /// In fr, this message translates to:
