@@ -46,3 +46,21 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Secrets de signature/publication : ne doivent JAMAIS être versionnés — la
+# CI les reçoit exclusivement via les secrets du repo (voir
+# .github/workflows/build_apk.yaml), jamais via un fichier du dépôt. Filet de
+# sécurité : ces fichiers (téléchargés depuis Apple Developer/App Store
+# Connect/Google Play Console pour préparer ces secrets) finissent
+# régulièrement dans le dossier de travail et n'ont jamais besoin d'y rester
+# trackés.
+*.p8
+*.p12
+*.cer
+*.csr
+*.key
+*.mobileprovision
+*.mobileprovision.old
+*.jks
+*.keystore
+key.properties
