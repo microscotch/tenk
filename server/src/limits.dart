@@ -37,6 +37,16 @@ class ServerConfig {
   final double messagesPerSecond;
   final int messageBurst;
 
+  /// Le même plafond, mais pour TOUTES les connexions d'une adresse ensemble :
+  /// sans lui, rouvrir une connexion redonnerait une rafale entière. Large, car
+  /// une famille peut partager une seule adresse.
+  final double ipMessagesPerSecond;
+  final int ipMessageBurst;
+
+  /// Connexions ouvertes par minute et par adresse (les rouvrir en boucle est le
+  /// moyen de contourner le débit d'une connexion).
+  final int connectionsPerMinutePerIp;
+
   /// Taille maximale d'un message reçu, en octets.
   final int maxMessageBytes;
 
@@ -62,6 +72,9 @@ class ServerConfig {
     this.maxConnectionsPerIp = 12,
     this.messagesPerSecond = 10,
     this.messageBurst = 20,
+    this.ipMessagesPerSecond = 40,
+    this.ipMessageBurst = 80,
+    this.connectionsPerMinutePerIp = 60,
     this.maxMessageBytes = 4096,
     this.joinFailuresPerMinute = 10,
     this.roomsCreatedPerMinute = 5,

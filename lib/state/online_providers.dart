@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/dice_off.dart';
@@ -15,6 +16,14 @@ export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo;
 /// `flutter build ... --dart-define=TENK_SERVER_URL=wss://…/ws`. Toujours
 /// `wss://` en production (le TLS se termine sur le reverse proxy du serveur).
 const String defaultServerUrl = String.fromEnvironment('TENK_SERVER_URL', defaultValue: 'ws://localhost:8080/ws');
+
+/// Une build de release ne parle qu'à un serveur chiffré (`wss://`) : un `ws://`
+/// oublié dans `--dart-define` enverrait pseudo, jeton et coups en clair. En
+/// développement (debug, profile), un serveur local en `ws://` reste permis.
+bool isAcceptableServerUrl(Uri url, {required bool release}) {
+  if (url.host.isEmpty) return false;
+  return release ? url.scheme == 'wss' : (url.scheme == 'wss' || url.scheme == 'ws');
+}
 
 final onlineServerUrlProvider = Provider<String>((ref) => defaultServerUrl);
 final onlineTransportProvider = Provider<OnlineTransport>((ref) => const WebSocketTransport());
@@ -168,7 +177,9 @@ class OnlineSession extends Notifier<OnlineState> {
     state = state.copyWith(status: OnlineStatus.connecting);
     final OnlineChannel channel;
     try {
-      channel = await ref.read(onlineTransportProvider).connect(Uri.parse(target));
+      final uri = Uri.parse(target);
+      if (!isAcceptableServerUrl(uri, release: kReleaseMode)) throw StateError('adresse de serveur refusée : $target');
+      channel = await ref.read(onlineTransportProvider).connect(uri);
     } catch (_) {
       _fail(ErrorCode.roomNotFound, unreachable: true);
       _scheduleReconnect();

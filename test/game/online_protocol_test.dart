@@ -25,6 +25,18 @@ void main() {
       }
     });
 
+    test('un pseudo ne peut pas se cacher derrière des caractères invisibles ou un sens d\'écriture renversé', () {
+      for (final bad in ['An\u200Bna', '\u202EAnna', 'Anna\u2066', 'An\uFEFFna', 'A\u2028nna', 'An\u200Fna']) {
+        expect(() => roundTrip(ClientMessage.create(name: bad)), throwsFormatException, reason: bad.runes.toList().toString());
+      }
+      // Un BOM en bordure part avec les espaces : le pseudo gardé est le pseudo propre.
+      expect(roundTrip(ClientMessage.create(name: '\uFEFFAnna')).params['name'], 'Anna');
+      // Les lettres accentuées, les émojis et d'autres écritures restent permis.
+      for (final ok in ['Chloé', 'Zoë', 'Åse', 'Мария', 'こんにちは', 'Bob 🎲']) {
+        expect(roundTrip(ClientMessage.create(name: ok)).params['name'], ok);
+      }
+    });
+
     test('un code de salon mal formé est refusé', () {
       for (final bad in ['ABCD', 'ABCDEF', 'ABC0D', 'ABCIO', 'ab cd', '']) {
         expect(() => roundTrip(ClientMessage.join(code: bad, name: 'Bob')), throwsFormatException, reason: bad);

@@ -238,6 +238,13 @@ sweep of expired rooms).
 - Run it behind a TLS reverse proxy (`wss://`) with `TRUST_PROXY=1` so `X-Forwarded-For` gives the client
   address. Build the image from the repo root: `docker build -f server/Dockerfile -t tenk-server .`. The app
   reads its address from `--dart-define=TENK_SERVER_URL=wss://…/ws` (`defaultServerUrl`).
+- Limits are per connection **and** per address (messages, connections open, connections per minute, room
+  creations, failed joins): a new connection must not hand back a fresh burst. A pseudo is trimmed and
+  refuses control, zero-width and bidi characters (spoofing another player). A release build only talks to a
+  `wss://` server (`isAcceptableServerUrl`).
+- `test/state/online_e2e_test.dart` starts the real server (`dart run server/bin/server.dart`, after a
+  `dart pub get` in `server/`) and drives two real `OnlineSession`s through a game and a reconnect: it is what
+  proves the two engines agree.
 - Known limit: the WebSocket layer buffers a frame before the size check; put a proxy limit in front.
 - Not in v1: bots and mixed local players in online games; archiving/replaying finished online games (a
   `SavedGame` needs a seed — the with-faces journal would allow it).

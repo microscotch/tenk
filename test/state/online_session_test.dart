@@ -61,6 +61,16 @@ void main() {
     await settle();
   }
 
+  group('adresse du serveur', () {
+    test('une release n\'accepte que wss://, le développement accepte aussi ws://', () {
+      expect(isAcceptableServerUrl(Uri.parse('wss://jeu.example/ws'), release: true), isTrue);
+      expect(isAcceptableServerUrl(Uri.parse('ws://jeu.example/ws'), release: true), isFalse);
+      expect(isAcceptableServerUrl(Uri.parse('ws://localhost:8080/ws'), release: false), isTrue);
+      expect(isAcceptableServerUrl(Uri.parse('http://jeu.example/ws'), release: false), isFalse);
+      expect(isAcceptableServerUrl(Uri.parse('wss:///ws'), release: true), isFalse, reason: 'pas d\'hôte');
+    });
+  });
+
   group('salon', () {
     test('créer envoie la demande, puis le serveur donne siège et jeton, qui sont gardés', () async {
       await session().create('Anna');
