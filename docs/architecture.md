@@ -186,7 +186,9 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   ignoré, un trou ou un désaccord repart du journal complet du serveur. `GameNotifier` a un **mode en ligne**
   (`startOnlineGame`) : ses méthodes d'action ne changent rien en local, elles *demandent* le coup
   (`OnlineGameLink.sendIntent`) et l'état ne bouge que quand le serveur renvoie l'action
-  (`applyOnlineAction`). `isObservedTurn` regroupe les tours qui se jouent sans moi (bot ou autre joueur) :
+  (`applyOnlineAction`). `stopTurn` (le bouton « S'arrêter ») enchaîne garde puis banque : en ligne l'état
+  local est en retard sur le serveur, il juge donc la banque sur l'état où la garde est appliquée et envoie
+  les deux demandes dans l'ordre. `isObservedTurn` regroupe les tours qui se jouent sans moi (bot ou autre joueur) :
   l'écran n'y propose ni commande ni popup.
 - **Le serveur ne joue jamais à la place de quelqu'un.** Un joueur déconnecté garde son siège ; au-delà de
   deux minutes la partie est *suspendue* et attend son retour. Le salon disparaît après 24 h d'inactivité
