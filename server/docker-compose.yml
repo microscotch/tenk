@@ -1,0 +1,37 @@
+# Le serveur des parties en ligne, à partir de l'image publiée par la CI.
+#   docker compose -f server/docker-compose.yml up -d
+#   docker compose -f server/docker-compose.yml pull && docker compose -f server/docker-compose.yml up -d   # mise à jour
+#
+# Pour construire l'image ici plutôt que la tirer (contexte = RACINE du dépôt,
+# le serveur réutilise le moteur de lib/game) :
+#   build: { context: .., dockerfile: server/Dockerfile }
+services:
+  tenk-server:
+    image: ghcr.io/microscotch/tenk-server:latest
+    container_name: tenk-server
+    restart: unless-stopped
+    environment:
+      TRUST_PROXY: "1"   # lit X-Forwarded-For : le proxy TLS est devant
+      # PORT: "8080"     # défaut
+      # HOST: "0.0.0.0"  # défaut
+    # Aucun port publié : le reverse proxy (Apache, lui aussi un conteneur) joint
+    # tenk-server:8080 par le réseau partagé ci-dessous et expose wss://…/ws.
+    # TRUST_PROXY=1 n'est sûr que si le proxy est le seul à pouvoir joindre ce
+    # port : ne rattache à ce réseau que des conteneurs de confiance.
+    expose:
+      - "8080"
+    networks:
+      - backend
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: none   # pas de journaux (voir la politique de confidentialité) ; json-file le temps d'un dépannage
+
+# Le réseau du conteneur Apache, créé ailleurs.
+# Dans le vhost : ProxyPass "/ws" "ws://tenk-server:8080/ws".
+networks:
+  backend:
+    external: true
+    name: backend

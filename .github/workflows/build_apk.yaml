@@ -12,6 +12,22 @@ on:
         default: all
         type: choice
         options: [all, android, ios]
+      publish:
+        description: "Publier vers Google Play et TestFlight (et incrémenter le build number)"
+        required: false
+        default: true
+        type: boolean
+
+# Publier = envoyer vers Google Play / TestFlight, ce qui consomme un build
+# number. Désactivé (les builds et leurs artefacts restent produits) :
+#  - à la main, en décochant « publish » sur un workflow_dispatch ;
+#  - sur un push, par la balise `[no-publish]` dans le message du commit de
+#    tête (seul celui-ci est regardé, comme le hook .githooks/pre-push).
+# Sur une pull request, rien ne change. La même condition est répétée dans le
+# `if:` de bump-build-number : le contexte `env` n'est pas disponible à ce
+# niveau.
+env:
+  PUBLISH: ${{ (github.event_name != 'workflow_dispatch' || inputs.publish) && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[no-publish]')) }}
 
 jobs:
   # Filet de sécurité côté CI pour le hook local .githooks/pre-push : celui-ci
@@ -24,8 +40,11 @@ jobs:
   # build-android/build-ios ne démarrent — les deux dépendent de ce job pour
   # utiliser le commit potentiellement corrigé, sinon iOS et Android
   # partiraient chacun d'un état différent.
+  #
+  # Sauté quand la publication est désactivée (voir `env.PUBLISH` en tête de
+  # fichier) : sans envoi vers les stores, on ne consomme pas de build number.
   bump-build-number:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.publish) && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[no-publish]')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -187,6 +206,7 @@ jobs:
       # toute première release manuelle depuis la console (prérequis Google
       # avant tout envoi via l'API).
       - name: Envoie vers Google Play (internal)
+        if: env.PUBLISH == 'true'
         continue-on-error: true
         uses: r0adkll/upload-google-play@v1
         with:
@@ -269,6 +289,7 @@ jobs:
       # Store Connect.
       - name: Envoie vers TestFlight
         id: testflight
+        if: env.PUBLISH == 'true'
         # Ne bloque pas le reste du job (notamment le build de l'IPA de dev
         # ci-dessous) si l'envoi échoue, par exemple à cause d'un numéro de
         # build déjà utilisé — ce n'est pas la seule chose qui compte dans ce

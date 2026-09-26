@@ -74,6 +74,14 @@ void main() {
   }
 
   group('adresse du serveur', () {
+    test('l\'adresse par défaut est celle de production, chiffrée : une release peut s\'en servir', () {
+      final url = Uri.parse(defaultServerUrl);
+      expect(url.scheme, 'wss');
+      expect(url.host, 'tenk.microscotch.net');
+      expect(url.path, '/ws');
+      expect(isAcceptableServerUrl(url, release: true), isTrue);
+    });
+
     test('une release n\'accepte que wss://, le développement accepte aussi ws://', () {
       expect(isAcceptableServerUrl(Uri.parse('wss://jeu.example/ws'), release: true), isTrue);
       expect(isAcceptableServerUrl(Uri.parse('ws://jeu.example/ws'), release: true), isFalse);

@@ -12,10 +12,11 @@ import 'online_transport.dart';
 
 export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo;
 
-/// L'adresse du serveur des parties en ligne, fixée à la compilation :
-/// `flutter build ... --dart-define=TENK_SERVER_URL=wss://…/ws`. Toujours
-/// `wss://` en production (le TLS se termine sur le reverse proxy du serveur).
-const String defaultServerUrl = String.fromEnvironment('TENK_SERVER_URL', defaultValue: 'ws://localhost:8080/ws');
+/// L'adresse du serveur des parties en ligne. Celle de production par défaut
+/// (chiffrée : le TLS se termine sur le reverse proxy du serveur) ; pour jouer
+/// contre un serveur local pendant le développement :
+/// `flutter run -d linux --dart-define=TENK_SERVER_URL=ws://localhost:8080/ws`.
+const String defaultServerUrl = String.fromEnvironment('TENK_SERVER_URL', defaultValue: 'wss://tenk.microscotch.net/ws');
 
 /// Une build de release ne parle qu'à un serveur chiffré (`wss://`) : un `ws://`
 /// oublié dans `--dart-define` enverrait pseudo, jeton et coups en clair. En
