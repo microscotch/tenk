@@ -8,6 +8,7 @@ import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/online_providers.dart';
+import 'package:le10000/state/online_transport.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/online_dice_off_screen.dart';
@@ -20,6 +21,13 @@ import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
 
 const _token = 'abcdef0123456789abcdef0123456789';
+
+/// Le journal de départ d'une partie à deux (départage et premier tour).
+List<GameAction> _startedJournal() {
+  const setup = GameSetup(playerNames: ['Anna', 'Bob']);
+  final full = journalWithFaces(setup, 5, playScriptedGame(setup, 5).actions);
+  return full.sublist(0, full.indexWhere((a) => a.type == GameActionType.startTurn) + 1);
+}
 
 void main() {
   late FakeTransport transport;
@@ -139,6 +147,55 @@ void main() {
 
       expect(find.byType(OnlineRoomScreen), findsOneWidget);
       expect(find.text('ABCDE'), findsOneWidget);
+    });
+
+    testWidgets('ouvrir l\'entrée ne se connecte à rien : rien à faire tant qu\'on n\'a rien demandé', (tester) async {
+      credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: _token);
+      await pump(tester, const OnlineEntryScreen());
+      expect(transport.channels, isEmpty);
+    });
+
+    testWidgets('une place gardée se propose, et se retrouve d\'un tap', (tester) async {
+      credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: _token);
+      await pump(tester, const OnlineEntryScreen());
+
+      expect(find.text('Reprendre la partie en ligne'), findsOneWidget);
+      await tester.tap(find.text('Reprendre la partie en ligne'));
+      await tester.pumpAndSettle();
+
+      expect(transport.current.lastSent!.type, ClientMessageType.rejoin);
+      expect(transport.current.lastSent!.params['token'], _token);
+    });
+
+    testWidgets('sans place gardée, rien à reprendre', (tester) async {
+      await pump(tester, const OnlineEntryScreen());
+      expect(find.text('Reprendre la partie en ligne'), findsNothing);
+    });
+
+    testWidgets('quitter une partie commencée garde sa place, comme le dit la fenêtre', (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await pump(tester, const OnlineEntryScreen());
+
+      await tester.tap(find.text('Quitter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Quitter'));
+      await tester.pumpAndSettle();
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pumpAndSettle();
+
+      expect(credentials.saved, isNotNull, reason: 'le jeton reste : la partie attend son retour');
+      expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isFalse);
+      expect(container.read(onlineSessionProvider).inRoom, isFalse);
+      expect(find.text('Reprendre la partie en ligne'), findsOneWidget, reason: 'et on peut la retrouver');
     });
 
     testWidgets('une partie en cours se retrouve ou se quitte, sans en ouvrir une seconde', (tester) async {

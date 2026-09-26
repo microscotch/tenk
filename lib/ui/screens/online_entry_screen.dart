@@ -27,11 +27,6 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
   void initState() {
     super.initState();
     _name = TextEditingController(text: ref.read(settingsProvider).playerName);
-    // Une partie interrompue (app fermée, coupure) se reprend d'elle-même.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || ref.read(onlineSessionProvider).inRoom) return;
-      ref.read(onlineSessionProvider.notifier).tryResume();
-    });
   }
 
   @override
@@ -44,11 +39,16 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
   bool get _nameOk => _name.text.trim().isNotEmpty;
 
   /// Ouvre l'écran qui correspond à l'état de la session : le salon, ou la
-  /// partie déjà commencée.
-  void _openCurrent() {
-    final online = ref.read(onlineSessionProvider);
-    final Widget screen = online.gameStarted ? const OnlineDiceOffScreen() : const OnlineRoomScreen();
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  /// partie déjà commencée. Si le [GameNotifier] a servi à autre chose depuis
+  /// (une partie locale, un rejeu), la partie en ligne y est d'abord remise en
+  /// place à partir du journal du serveur.
+  Future<void> _openCurrent() async {
+    final session = ref.read(onlineSessionProvider.notifier);
+    final started = ref.read(onlineSessionProvider).gameStarted;
+    if (started && !await session.reopenGame()) return;
+    if (!mounted) return;
+    final Widget screen = started ? const OnlineDiceOffScreen() : const OnlineRoomScreen();
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
   Future<void> _confirmLeave() async {
@@ -64,7 +64,16 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
         ],
       ),
     );
-    if (leave == true) await ref.read(onlineSessionProvider.notifier).leave();
+    if (leave != true) return;
+    final online = ref.read(onlineSessionProvider);
+    final session = ref.read(onlineSessionProvider.notifier);
+    // Une partie commencée garde la place du joueur (elle l'attend, comme le dit
+    // la fenêtre) ; un salon qui n'a pas commencé, ou une partie finie, se quitte.
+    if (online.gameStarted && online.phase != RoomPhase.over) {
+      await session.disconnect();
+    } else {
+      await session.leave();
+    }
   }
 
   @override
@@ -121,10 +130,21 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
 
   Widget _entry(AppLocalizations l10n, bool connecting) {
     final session = ref.read(onlineSessionProvider.notifier);
+    final saved = ref.watch(onlineSavedGameProvider).value;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Une place gardée dans une partie en ligne (déconnexion volontaire,
+        // app fermée) : la retrouver passe avant d'en ouvrir une autre.
+        if (saved != null) ...[
+          FilledButton.icon(
+            onPressed: connecting ? null : session.tryResume,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(l10n.onlineResumeButton),
+          ),
+          const SizedBox(height: 24),
+        ],
         TextField(
           controller: _name,
           maxLength: 20,

@@ -38,7 +38,16 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
   @override
   void initState() {
     super.initState();
-    final actions = ref.read(gameProvider.notifier).actions;
+    final game = ref.read(gameProvider.notifier);
+    // Le notifier a servi à autre chose depuis (partie locale, rejeu) : il n'y a
+    // pas de partie en ligne à raconter.
+    if (!game.isOnline || game.originalSetup == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).maybePop();
+      });
+      return;
+    }
+    final actions = game.actions;
     final diceOffCount = diceOffActionCount(actions);
     // Un journal qui va déjà bien au-delà du premier tour : la partie est en
     // cours, le tirage n'a plus rien à raconter.

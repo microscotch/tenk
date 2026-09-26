@@ -75,6 +75,11 @@ class GameNotifier extends Notifier<GameEngine?> {
   bool get isOnline => _online != null;
   OnlineGameLink? get onlineLink => _online;
 
+  /// Vrai quand une partie locale est à l'écran et pas finie : la session en
+  /// ligne ne doit alors ni y écrire ni la remplacer de sa propre initiative
+  /// (le moteur, le journal et la sauvegarde de cette partie sont les siens).
+  bool get hasLiveLocalGame => _online == null && !_isReplay && state != null && !state!.gameOver;
+
   /// Vrai quand c'est à moi de jouer en ligne (toujours vrai hors ligne : le
   /// tour de l'appareil est alors celui de qui le tient). Faux une fois la
   /// partie finie.
@@ -404,12 +409,15 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// faces : un générateur vide fait échouer bruyamment un lancer qui n'en
   /// aurait pas, plutôt que de tirer des dés que le serveur n'a pas vus.
   void applyOnlineAction(GameAction action) {
-    assert(_online != null, 'aucune partie en ligne en cours');
+    // Jamais sur une partie locale : elle a sa seed, donc `_commit` la persisterait.
+    if (_online == null) return;
     _commit(applyGameAction(state!, action, ScriptedRandom(const [])), [action]);
   }
 
   /// Quitte la partie en ligne : l'écran de jeu n'a plus rien à afficher.
   void endOnlineGame() {
+    // Sans effet hors partie en ligne : ne jamais vider une partie locale.
+    if (_online == null) return;
     _online = null;
     _setup = null;
     _originalSetup = null;
