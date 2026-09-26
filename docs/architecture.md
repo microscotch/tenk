@@ -162,6 +162,39 @@ pas.
   latéralité d'un joueur, elle, vient de sa fiche (`currentSeatRightHandedProvider`),
   le réglage d'appareil n'étant qu'un repli.
 
+## Les parties en ligne (turquoise, zone de droite)
+
+Une partie en ligne se joue à 2 à 6, chacun sur son téléphone, contre un **serveur Dart auto-hébergé**
+(`server/`). Le serveur est autoritaire : il détient le générateur aléatoire, joue le départage, valide chaque
+coup contre le vrai moteur et diffuse le résultat. Rien n'est réécrit : `GameAuthority` appelle
+`GameEngine`, `DiceOffState` et `applyGameAction` de `lib/game`, par import relatif (le package de l'app
+dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart seul ; les fichiers de
+`lib/game` n'important rien de Flutter, ils se compilent tels quels côté serveur).
+
+- **Les clients ne connaissent jamais la seed.** Sinon ils prédiraient les dés. `RecordingRandom` note les
+  faces que le serveur tire, `GameAction.roll(faces)` et `diceOffRollAll(faces)` les portent dans le
+  journal, et `ScriptedRandom` les rend au client, qui rejoue avec le même `applyGameAction` que le jeu
+  local. Un journal avec faces se rejoue **sans seed** (`replayGame(setup, 0, actions)`) : c'est aussi ce
+  qui fait marcher, tels quels, la grille, la courbe et les statistiques d'une partie en ligne
+  (`gameRecord` en rend un). `ScriptedRandom` refuse les faces en trop ou en moins : un désaccord entre
+  serveur et client est signalé, pas absorbé.
+- **Le protocole** (`lib/game/online/protocol.dart`, partagé par les deux côtés) est du JSON versionné.
+  `ClientMessage.fromJson` valide chaque champ et ne laisse jamais un client demander autre chose qu'un coup
+  de tour : ni départage, ni lancer, ni faces (elles sont ignorées).
+- **`OnlineSession`** (`lib/state`) tient la connexion, le salon et le jeton de reprise (gardé dans
+  `SharedPreferences`) ; elle reconnecte avec attente croissante. Elle numérote les actions : un doublon est
+  ignoré, un trou ou un désaccord repart du journal complet du serveur. `GameNotifier` a un **mode en ligne**
+  (`startOnlineGame`) : ses méthodes d'action ne changent rien en local, elles *demandent* le coup
+  (`OnlineGameLink.sendIntent`) et l'état ne bouge que quand le serveur renvoie l'action
+  (`applyOnlineAction`). `isObservedTurn` regroupe les tours qui se jouent sans moi (bot ou autre joueur) :
+  l'écran n'y propose ni commande ni popup.
+- **Le serveur ne joue jamais à la place de quelqu'un.** Un joueur déconnecté garde son siège ; au-delà de
+  deux minutes la partie est *suspendue* et attend son retour. Le salon disparaît après 24 h d'inactivité
+  (30 min avant le départ).
+- **Limites** : connexions et créations de salon par adresse, essais de code infructueux (un code de salon ne
+  se devine pas), débit et taille des messages. Le serveur n'a aucun état persistant : les parties vivent en
+  mémoire.
+
 ## L'interface (orange)
 
 Représentée volontairement en couche grossière : les widgets Flutter sont
@@ -183,6 +216,8 @@ séquences) est présenté dans [`uml.md`](uml.md).
   (source : [`screen-flow.drawio`](screen-flow.drawio)). Le retour à l'accueil
   dépile jusqu'à `Setup` (`popToHome`) ; le rejeu spectateur est `Game` en
   `replayMode`, pas un écran à part.
+- [`uml/seq-online-game.png`](uml/seq-online-game.png) — du salon au coup joué en ligne (source :
+  [`uml/seq-online-game.drawio`](uml/seq-online-game.drawio)).
 - [`uml/state-game.png`](uml/state-game.png) — le cycle de vie d'une partie :
   choix de la main héritée, tour final et couronne qui change de main, pause,
   fin de partie et archivage (source : [`uml/state-game.drawio`](uml/state-game.drawio)).

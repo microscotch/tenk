@@ -8,20 +8,22 @@ d'architecture ; les autres sont dans `docs/uml/`.
 
 ### Classes — [`architecture/class-diagram.png`](architecture/class-diagram.png)
 
-Les classes de `lib/game` et `lib/state`, champ par champ, et les grandes familles de `lib/ui`. Commenté en
+Les classes de `lib/game` et `lib/state`, champ par champ, les grandes familles de `lib/ui`, et la zone des
+parties en ligne (protocole partagé, session client, serveur `server/`). Commenté en
 détail dans [`architecture.md`](architecture.md).
 
 ### Paquets et composants — [`uml/components.png`](uml/components.png)
 
-Les trois couches et le sens autorisé des dépendances : l'interface dépend de l'état, l'état orchestre le
+Les trois couches (plus le serveur des parties en ligne, qui réutilise `lib/game`) et le sens autorisé des dépendances : l'interface dépend de l'état, l'état orchestre le
 moteur, et le moteur (`lib/game`) n'importe ni Flutter ni aucun paquet, ce qui permet de le tester en
 isolation. Chaque bibliothèque externe est rattachée à la couche qui l'utilise, ainsi que les deux
 stockages de l'appareil (fichiers JSON et SharedPreferences).
 
 ### Déploiement — [`uml/deployment.png`](uml/deployment.png)
 
-Du Raspberry Pi, qui développe mais ne peut construire ni Android ni iOS, aux téléphones : le hook
-`pre-push` qui incrémente le numéro de build, les trois jobs de la CI, les artefacts, Google Play (piste
+Du Raspberry Pi, qui développe mais ne peut construire ni Android ni iOS, aux téléphones — et à l'hôte du
+serveur de jeu (conteneur derrière un reverse proxy TLS) : le hook
+`pre-push` qui incrémente le numéro de build, les jobs de la CI (dont `test-server`), les artefacts, Google Play (piste
 internal), TestFlight et l'installation USB de l'IPA de développement. Il rappelle qu'un run vert ne prouve
 pas l'envoi aux stores. Un second workflow publie sur GitHub Pages ce dossier `docs/` et la documentation
 Dart du code, générée par dartdoc, sous
@@ -32,12 +34,12 @@ Dart du code, générée par dartdoc, sous
 ### Cas d'utilisation — [`uml/use-cases.png`](uml/use-cases.png)
 
 Ce que la personne qui tient le téléphone peut faire. Un seul acteur : plusieurs joueurs humains se passent
-le même appareil, et les bots font partie du système (ils jouent avec la même règle et les mêmes bornes
+le même appareil ou jouent en ligne chacun sur le leur, et les bots font partie du système (ils jouent avec la même règle et les mêmes bornes
 qu'un humain).
 
 ### Navigation entre écrans — [`screen-flow.png`](screen-flow.png)
 
-Les 18 écrans et ce qui fait passer de l'un à l'autre.
+Les 21 écrans et ce qui fait passer de l'un à l'autre, dont les trois des parties en ligne.
 
 ## Machines à états
 
@@ -82,6 +84,12 @@ Une sauvegarde ne contient pas l'état du jeu mais le journal et la seed : la re
 comme le rejeu d'une partie terminée reconstruisent tout avec `replayGame`. Le rejeu ne persiste jamais
 rien. Une partie mise en pause avant son premier lancer reprend elle aussi : sur son départage s'il n'était
 pas tranché (`DiceOffNotifier.resumeFromSave`), sinon avec son premier tour lancé d'office.
+
+### Partie en ligne — [`uml/seq-online-game.png`](uml/seq-online-game.png)
+
+Du salon au coup joué : le serveur tire les dés (les clients n'ont jamais la seed) et diffuse chaque lancer
+avec ses faces, que les clients rejouent avec le même moteur. Une intention refusée (pas son tour, coup
+illégal) ne change rien ; une connexion coupée se rétablit avec le jeton et un journal complet.
 
 ### Fin de partie, archivage, statistiques — [`uml/seq-game-over.png`](uml/seq-game-over.png)
 
