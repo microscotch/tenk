@@ -1,0 +1,110 @@
+name: Server image
+
+# Construit l'image Docker du serveur des parties en ligne (server/Dockerfile) et,
+# sur main, la publie sur GitHub Container Registry :
+#
+#   ghcr.io/microscotch/tenk-server:latest        la dernière version de main
+#   ghcr.io/microscotch/tenk-server:sha-<commit>  une version précise (retour arrière)
+#
+# Image amd64 ET arm64, sans émulation (le Dockerfile cross-compile). Sur une pull
+# request l'image est construite et essayée, jamais publiée.
+#
+# Ne se lance que si le serveur, le moteur qu'il réutilise (lib/game) ou ce
+# fichier changent : les autres pushs n'ont pas d'image à refaire.
+on:
+  push:
+    branches: [main]
+    paths: ['server/**', 'lib/game/**', '.github/workflows/server-image.yaml']
+  pull_request:
+    paths: ['server/**', 'lib/game/**', '.github/workflows/server-image.yaml']
+  workflow_dispatch:
+
+concurrency:
+  group: server-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Écrire l'image : seulement ce job, et jamais utilisé sur une pull request.
+      packages: write
+    env:
+      PUBLISH: ${{ github.event_name != 'pull_request' }}
+    steps:
+      # Les actions Docker sont épinglées par empreinte de commit, pas par tag :
+      # ce job reçoit un jeton capable d'écrire dans le registre (voir l'audit de
+      # sécurité : un tag peut être repointé). À remettre à jour à la main quand une
+      # nouvelle version compte : `gh api repos/<action>/git/ref/tags/<tag>`.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      # Essai avant tout : l'image de la machine (amd64) démarre-t-elle et
+      # répond-elle sur /healthz ?
+      - name: Construit l'image pour l'essai
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: server/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: tenk-server:test
+          cache-from: type=gha
+
+      - name: Essaie l'image
+        run: |
+          docker run -d --name smoke -p 8080:8080 tenk-server:test
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8080/healthz; then echo; break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/healthz >/dev/null || { docker logs smoke; exit 1; }
+          docker rm -f smoke
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        if: env.PUBLISH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Le nom de l'image est mis en minuscules par l'action (exigé par le registre) ;
+      # les étiquettes OCI qu'elle pose (dont `source`) rattachent le paquet au dépôt.
+      - id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/tenk-server
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+
+      - name: Construit l'image multi-architecture (et la publie sur main)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: ${{ env.PUBLISH == 'true' && 'type=gha,mode=max' || '' }}
+
+      - name: Récapitule la publication
+        if: env.PUBLISH == 'true'
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            echo "### Image publiée"
+            echo
+            echo '```'
+            echo "$TAGS"
+            echo '```'
+            echo "amd64 + arm64. Sur l'hôte : \`docker pull $(echo "$TAGS" | grep ':latest')\`"
+          } >> "$GITHUB_STEP_SUMMARY"
