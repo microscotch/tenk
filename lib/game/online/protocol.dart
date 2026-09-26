@@ -262,11 +262,24 @@ bool _bool(Map<String, dynamic> map, String key) {
 /// s'affiche chez les autres joueurs), rogné.
 String _name(Map<String, dynamic> map) {
   final name = _string(map, 'name', min: 1, max: maxPlayerNameLength * 2).trim();
-  if (name.isEmpty || name.length > maxPlayerNameLength || name.runes.any((r) => r < 0x20 || (r >= 0x7f && r < 0xa0))) {
+  if (name.isEmpty || name.length > maxPlayerNameLength || name.runes.any(_isForbiddenInName)) {
     throw const FormatException('name: pseudo invalide');
   }
   return name;
 }
+
+/// Ce qui n'a rien à faire dans un pseudo : les caractères de contrôle, et ceux
+/// qui ne se voient pas ou renversent le sens de l'écriture — de quoi faire
+/// passer un joueur pour un autre (« Anna » et « An\u200Bna »), ou brouiller
+/// la liste des joueurs de tout le salon.
+bool _isForbiddenInName(int r) =>
+    r < 0x20 ||
+    (r >= 0x7f && r < 0xa0) ||
+    (r >= 0x200b && r <= 0x200f) || // largeur nulle, marques de sens
+    (r >= 0x202a && r <= 0x202e) || // enchâssements et forçage du sens
+    (r >= 0x2060 && r <= 0x206f) || // joncteurs, isolats, formes invisibles
+    r == 0xfeff || // BOM / espace insécable de largeur nulle
+    r == 0x2028 || r == 0x2029; // séparateurs de ligne et de paragraphe
 
 String _code(Map<String, dynamic> map) {
   final code = _string(map, 'code', min: roomCodeLength, max: roomCodeLength).toUpperCase();

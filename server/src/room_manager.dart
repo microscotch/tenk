@@ -17,6 +17,8 @@ class RoomManager {
   final Map<String, Room> _roomByToken = {};
   final Map<String, int> _connectionsByIp = {};
   final Map<String, TokenBucket> _failuresByIp = {};
+  final Map<String, TokenBucket> _messagesByIp = {};
+  final Map<String, TokenBucket> _connectsByIp = {};
   final Map<String, TokenBucket> _createsByIp = {};
 
   RoomManager({
@@ -35,6 +37,15 @@ class RoomManager {
   Session? connect(Connection connection, String ip) {
     final open = _connectionsByIp[ip] ?? 0;
     if (open >= config.maxConnectionsPerIp) return null;
+    final connects = _connectsByIp.putIfAbsent(
+      ip,
+      () => TokenBucket(
+        ratePerSecond: config.connectionsPerMinutePerIp / 60,
+        burst: config.connectionsPerMinutePerIp,
+        now: now,
+      ),
+    );
+    if (!connects.tryTake()) return null;
     _connectionsByIp[ip] = open + 1;
     return Session(
       connection,
@@ -62,7 +73,12 @@ class RoomManager {
       session.connection.close();
       return;
     }
-    if (!session.bucket.tryTake()) {
+    final perIp = _messagesByIp.putIfAbsent(
+      session.ip,
+      () => TokenBucket(ratePerSecond: config.ipMessagesPerSecond, burst: config.ipMessageBurst, now: now),
+    );
+    // Les deux seaux se vident ensemble : une connexion bavarde n'épuise pas que la sienne.
+    if (!session.bucket.tryTake() || !perIp.tryTake()) {
       session.connection.send(ServerMessage.error(ErrorCode.rateLimited));
       return;
     }
@@ -157,6 +173,8 @@ class RoomManager {
     // Les seaux d'adresses inactives ne servent plus à rien.
     if (_failuresByIp.length > 10000) _failuresByIp.clear();
     if (_createsByIp.length > 10000) _createsByIp.clear();
+    if (_messagesByIp.length > 10000) _messagesByIp.clear();
+    if (_connectsByIp.length > 10000) _connectsByIp.clear();
   }
 
   String _newCode() {

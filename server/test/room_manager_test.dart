@@ -383,6 +383,39 @@ void main() {
       expect(limited.connect(FakeConnection(), '1.1.1.1'), isNotNull);
     });
 
+    test('rouvrir des connexions en boucle ne redonne pas une rafale de messages', () {
+      // Chaque connexion a son propre seau (rafale de 20) : sans seau commun à
+      // l'adresse, dix connexions tour à tour enverraient 200 messages d'un coup.
+      var limited = 0;
+      for (var i = 0; i < 10; i++) {
+        final c = open(ip: '9.9.9.9');
+        for (var m = 0; m < 20; m++) {
+          manager.onMessage(c.$2, '{"v":1,"type":"leave"}');
+        }
+        limited += c.$1.of(ServerMessageType.error).where((e) => e.errorCode == ErrorCode.rateLimited).length;
+        manager.disconnect(c.$2);
+      }
+      expect(limited, greaterThan(0), reason: 'le seau de l\'adresse finit par se vider');
+    });
+
+    test('le rythme d\'ouverture des connexions d\'une adresse est limité, pas celui des autres', () {
+      var refused = 0;
+      for (var i = 0; i < 70; i++) {
+        final connection = FakeConnection();
+        final session = manager.connect(connection, '8.8.8.8');
+        if (session == null) {
+          refused++;
+        } else {
+          manager.disconnect(session);
+        }
+      }
+      expect(refused, greaterThan(0));
+      expect(manager.connect(FakeConnection(), '7.7.7.7'), isNotNull);
+
+      clock = clock.add(const Duration(minutes: 1));
+      expect(manager.connect(FakeConnection(), '8.8.8.8'), isNotNull, reason: 'le seau se remplit avec le temps');
+    });
+
     test('le nombre total de salons est plafonné', () {
       final capped = newManager(const ServerConfig(maxRooms: 1, roomsCreatedPerMinute: 100));
       final a = FakeConnection();

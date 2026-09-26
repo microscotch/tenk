@@ -23,7 +23,13 @@ class SocketConnection implements Connection {
   @override
   void send(ServerMessage message) {
     if (_closed) return;
-    _channel.sink.add(jsonEncode(message.toJson()));
+    try {
+      _channel.sink.add(jsonEncode(message.toJson()));
+    } catch (_) {
+      // Socket déjà fermée par l'autre bout : la déconnexion arrive par onDone.
+      // Lever ici interromprait la diffusion aux autres joueurs du salon.
+      _closed = true;
+    }
   }
 
   @override
