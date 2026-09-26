@@ -42,6 +42,11 @@ class Room {
   final ServerConfig config;
 
   final List<_Seat> _seats = [];
+
+  /// L'hôte : celui qui a créé le salon (ou, s'il part avant le départ, le
+  /// premier des joueurs restants). Son rôle ne tient PAS à sa place autour de
+  /// la table : il peut se glisser où il veut sans cesser d'être l'hôte.
+  _Seat? _host;
   RoomPhase _phase = RoomPhase.lobby;
   GameAuthority? _authority;
   DateTime _lastActivity;
@@ -66,8 +71,8 @@ class Room {
   GameAuthority? get authority => _authority;
   List<String> get names => [for (final s in _seats) s.name];
 
-  /// Le premier siège reste l'hôte : c'est lui qui règle l'ordre et lance la partie.
-  int get hostSeat => 0;
+  /// Le siège de l'hôte : c'est lui qui règle l'ordre et lance la partie.
+  int get hostSeat => _host == null ? 0 : _seats.indexOf(_host!);
 
   int? seatOf(String token) {
     for (var i = 0; i < _seats.length; i++) {
@@ -83,7 +88,9 @@ class Room {
     if (_phase != RoomPhase.lobby) throw const RoomRejected(ErrorCode.gameStarted);
     if (_seats.length >= maxOnlinePlayers) throw const RoomRejected(ErrorCode.roomFull);
     final token = _newToken();
-    _seats.add(_Seat(_uniqueName(name), token, session));
+    final seat = _Seat(_uniqueName(name), token, session);
+    _seats.add(seat);
+    _host ??= seat;
     session.room = this;
     _touch();
     _send(session, ServerMessage.joined(code: code, token: token, seat: _seats.length - 1));
@@ -126,7 +133,8 @@ class Room {
     final seat = _seatOfSession(session);
     if (seat < 0) return;
     if (_phase == RoomPhase.lobby) {
-      _seats.removeAt(seat);
+      final left = _seats.removeAt(seat);
+      if (identical(left, _host)) _host = _seats.isEmpty ? null : _seats.first;
       session.room = null;
       _touch();
       _renumber();
@@ -215,6 +223,7 @@ class Room {
     final t = now();
     if (_phase == RoomPhase.lobby) {
       _seats.removeWhere((s) => s.disconnectedAt != null && t.difference(s.disconnectedAt!) > config.reconnectGrace);
+      if (_host != null && !_seats.contains(_host)) _host = _seats.isEmpty ? null : _seats.first;
       _renumber();
     }
     final before = _phase;

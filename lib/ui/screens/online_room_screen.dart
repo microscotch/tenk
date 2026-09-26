@@ -28,8 +28,6 @@ class OnlineRoomScreen extends ConsumerWidget {
       if (!(previous?.gameStarted ?? false) && next.gameStarted) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const OnlineDiceOffScreen()));
       }
-      // Quitté depuis un autre écran, ou salon disparu : rien à faire ici.
-      if (previous?.inRoom == true && !next.inRoom && context.mounted) Navigator.of(context).maybePop();
     });
 
     final everyoneHere = online.seats.length >= minOnlinePlayers && online.seats.every((s) => s.connected);
