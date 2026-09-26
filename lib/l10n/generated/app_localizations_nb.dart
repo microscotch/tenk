@@ -713,4 +713,105 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'Den første spilleren som når nøyaktig 10 000 poeng, utløser en siste runde: hver av de andre spillerne får en siste sjanse på sin tur til å ta igjen eller slå vedkommende. Hvis en annen spiller også når nøyaktig 10 000 i løpet av denne siste runden, tar han eller hun over kronen, og en ny siste runde starter rundt dem.';
+
+  @override
+  String get onlinePlayButton => 'Spill på nett';
+
+  @override
+  String get onlineResumeButton => 'Gjenoppta nettspillet';
+
+  @override
+  String get onlineTitle => 'Nettspill';
+
+  @override
+  String get onlineNameLabel => 'Kallenavnet ditt';
+
+  @override
+  String get onlineCreateButton => 'Opprett et rom';
+
+  @override
+  String get onlineJoinButton => 'Bli med';
+
+  @override
+  String get onlineCodeLabel => 'Romkode';
+
+  @override
+  String get onlineOrDivider => 'eller';
+
+  @override
+  String get onlineShareHint =>
+      'Gi denne koden til de andre spillerne, så kan de bli med.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Spillere ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Vert';
+
+  @override
+  String get onlineDisconnectedBadge => 'Frakoblet';
+
+  @override
+  String get onlineNeedTwoPlayers =>
+      'Det trengs minst 2 spillere, alle tilkoblet.';
+
+  @override
+  String get onlineWaitingForHost => 'Venter på at verten starter…';
+
+  @override
+  String get onlineLeaveButton => 'Forlat';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Forlate nettspillet?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'I et spill som har startet, blir plassen din stående tom, og spillet venter på at du kommer tilbake.';
+
+  @override
+  String get onlineConnecting => 'Kobler til serveren…';
+
+  @override
+  String get onlineReconnecting =>
+      'Tilkoblingen ble brutt, kobler til på nytt…';
+
+  @override
+  String get onlineSuspended =>
+      'Spillet er satt på pause: en spiller har vært borte for lenge.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName spiller…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Spill';
+
+  @override
+  String get onlineErrorUnreachable => 'Får ikke kontakt med serveren.';
+
+  @override
+  String get onlineErrorRoomNotFound => 'Ingen rom med denne koden.';
+
+  @override
+  String get onlineErrorRoomFull => 'Dette rommet er fullt.';
+
+  @override
+  String get onlineErrorGameStarted => 'Dette spillet har allerede startet.';
+
+  @override
+  String get onlineErrorRateLimited => 'For mange forsøk: prøv igjen om litt.';
+
+  @override
+  String get onlineErrorBadToken =>
+      'Plassen din i dette rommet finnes ikke lenger.';
+
+  @override
+  String get onlineErrorUnsupportedVersion =>
+      'Oppdater appen for å spille på nett.';
+
+  @override
+  String get onlineErrorGeneric => 'Noe gikk galt.';
 }

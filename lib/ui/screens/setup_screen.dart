@@ -9,6 +9,7 @@ import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
 import 'finished_games_screen.dart';
 import 'new_game_screen.dart';
+import 'online_entry_screen.dart';
 import 'paused_games_screen.dart';
 import 'players_screen.dart';
 import 'rules_screen.dart';
@@ -134,6 +135,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                         onPressed: _openNewGame,
                         icon: const Icon(Icons.add),
                         label: Text(l10n.newGameSectionLabel),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.tonalIcon(
+                        onPressed: () => _open(const OnlineEntryScreen()),
+                        icon: const Icon(Icons.public),
+                        label: Text(l10n.onlinePlayButton),
                       ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(

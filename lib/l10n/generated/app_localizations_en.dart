@@ -713,4 +713,103 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'The first player to reach exactly 10,000 points triggers a final round: every other player gets one last chance to match or beat them on their turn. If another player also reaches exactly 10,000 during that final round, they take the crown instead and a new final round starts around them.';
+
+  @override
+  String get onlinePlayButton => 'Play online';
+
+  @override
+  String get onlineResumeButton => 'Resume the online game';
+
+  @override
+  String get onlineTitle => 'Online game';
+
+  @override
+  String get onlineNameLabel => 'Your nickname';
+
+  @override
+  String get onlineCreateButton => 'Create a room';
+
+  @override
+  String get onlineJoinButton => 'Join';
+
+  @override
+  String get onlineCodeLabel => 'Room code';
+
+  @override
+  String get onlineOrDivider => 'or';
+
+  @override
+  String get onlineShareHint =>
+      'Give this code to the other players so they can join you.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Players ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Host';
+
+  @override
+  String get onlineDisconnectedBadge => 'Disconnected';
+
+  @override
+  String get onlineNeedTwoPlayers =>
+      'At least 2 players are needed, all connected.';
+
+  @override
+  String get onlineWaitingForHost => 'Waiting for the host to start…';
+
+  @override
+  String get onlineLeaveButton => 'Leave';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Leave the online game?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'In a game that has started, your seat stays empty and the game waits for you to come back.';
+
+  @override
+  String get onlineConnecting => 'Connecting to the server…';
+
+  @override
+  String get onlineReconnecting => 'Connection lost, reconnecting…';
+
+  @override
+  String get onlineSuspended =>
+      'Game suspended: a player has been away for too long.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName is playing…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Play';
+
+  @override
+  String get onlineErrorUnreachable => 'Server unreachable.';
+
+  @override
+  String get onlineErrorRoomNotFound => 'No room with this code.';
+
+  @override
+  String get onlineErrorRoomFull => 'This room is full.';
+
+  @override
+  String get onlineErrorGameStarted => 'This game has already started.';
+
+  @override
+  String get onlineErrorRateLimited =>
+      'Too many attempts: try again in a moment.';
+
+  @override
+  String get onlineErrorBadToken => 'Your seat in this room no longer exists.';
+
+  @override
+  String get onlineErrorUnsupportedVersion => 'Update the app to play online.';
+
+  @override
+  String get onlineErrorGeneric => 'Something went wrong.';
 }

@@ -51,6 +51,9 @@ class OnlineState {
   final ErrorCode? error;
   final int errorSerial;
 
+  /// Vrai quand [error] vient de ce que le serveur n'a pas pu être joint.
+  final bool unreachable;
+
   const OnlineState({
     this.status = OnlineStatus.offline,
     this.roomCode,
@@ -62,6 +65,7 @@ class OnlineState {
     this.diceOff,
     this.error,
     this.errorSerial = 0,
+    this.unreachable = false,
   });
 
   bool get inRoom => roomCode != null;
@@ -78,6 +82,7 @@ class OnlineState {
     DiceOffState? diceOff,
     ErrorCode? error,
     int? errorSerial,
+    bool? unreachable,
   }) {
     return OnlineState(
       status: status ?? this.status,
@@ -90,6 +95,7 @@ class OnlineState {
       diceOff: diceOff ?? this.diceOff,
       error: error ?? this.error,
       errorSerial: errorSerial ?? this.errorSerial,
+      unreachable: unreachable ?? this.unreachable,
     );
   }
 }
@@ -249,6 +255,7 @@ class OnlineSession extends Notifier<OnlineState> {
       status: unreachable ? OnlineStatus.offline : null,
       error: code,
       errorSerial: state.errorSerial + 1,
+      unreachable: unreachable,
     );
   }
 

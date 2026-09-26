@@ -723,4 +723,105 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get rulesVictoryBody =>
       'Primul jucător care ajunge la exact 10.000 de puncte declanșează o rundă finală: fiecare dintre ceilalți jucători are o ultimă șansă să-l egaleze sau să-l depășească la tura sa. Dacă în această rundă finală și alt jucător ajunge la exact 10.000, el preia coroana și o nouă rundă finală începe în jurul lui.';
+
+  @override
+  String get onlinePlayButton => 'Joacă online';
+
+  @override
+  String get onlineResumeButton => 'Reia jocul online';
+
+  @override
+  String get onlineTitle => 'Joc online';
+
+  @override
+  String get onlineNameLabel => 'Porecla ta';
+
+  @override
+  String get onlineCreateButton => 'Creează o cameră';
+
+  @override
+  String get onlineJoinButton => 'Intră';
+
+  @override
+  String get onlineCodeLabel => 'Codul camerei';
+
+  @override
+  String get onlineOrDivider => 'sau';
+
+  @override
+  String get onlineShareHint =>
+      'Dă acest cod celorlalți jucători ca să se alăture ție.';
+
+  @override
+  String onlinePlayersHeader(int count, int max) {
+    return 'Jucători ($count/$max)';
+  }
+
+  @override
+  String get onlineHostBadge => 'Gazdă';
+
+  @override
+  String get onlineDisconnectedBadge => 'Deconectat';
+
+  @override
+  String get onlineNeedTwoPlayers =>
+      'Sunt necesari cel puțin 2 jucători, toți conectați.';
+
+  @override
+  String get onlineWaitingForHost => 'Se așteaptă ca gazda să înceapă…';
+
+  @override
+  String get onlineLeaveButton => 'Ieși';
+
+  @override
+  String get onlineLeaveConfirmTitle => 'Ieși din jocul online?';
+
+  @override
+  String get onlineLeaveConfirmBody =>
+      'Într-un joc început, locul tău rămâne gol, iar jocul așteaptă întoarcerea ta.';
+
+  @override
+  String get onlineConnecting => 'Conectare la server…';
+
+  @override
+  String get onlineReconnecting => 'Conexiune pierdută, se reconectează…';
+
+  @override
+  String get onlineSuspended =>
+      'Joc suspendat: un jucător lipsește de prea mult timp.';
+
+  @override
+  String onlineWaitingFor(String playerName) {
+    return '$playerName joacă…';
+  }
+
+  @override
+  String get onlineDiceOffContinue => 'Joacă';
+
+  @override
+  String get onlineErrorUnreachable => 'Serverul nu poate fi contactat.';
+
+  @override
+  String get onlineErrorRoomNotFound => 'Nicio cameră cu acest cod.';
+
+  @override
+  String get onlineErrorRoomFull => 'Această cameră este plină.';
+
+  @override
+  String get onlineErrorGameStarted => 'Acest joc a început deja.';
+
+  @override
+  String get onlineErrorRateLimited =>
+      'Prea multe încercări: încearcă din nou peste puțin timp.';
+
+  @override
+  String get onlineErrorBadToken =>
+      'Locul tău în această cameră nu mai există.';
+
+  @override
+  String get onlineErrorUnsupportedVersion =>
+      'Actualizează aplicația pentru a juca online.';
+
+  @override
+  String get onlineErrorGeneric => 'A apărut o eroare.';
 }

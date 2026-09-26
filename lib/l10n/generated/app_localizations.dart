@@ -1279,6 +1279,186 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.'**
   String get rulesVictoryBody;
+
+  /// Bouton de l'accueil qui ouvre les parties en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jouer en ligne'**
+  String get onlinePlayButton;
+
+  /// Bouton de l'accueil, affiché quand une partie en ligne est en cours : on y retrouve sa place.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la partie en ligne'**
+  String get onlineResumeButton;
+
+  /// Titre de l'écran d'entrée des parties en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partie en ligne'**
+  String get onlineTitle;
+
+  /// Champ du pseudo, tel que les autres joueurs le verront.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre pseudo'**
+  String get onlineNameLabel;
+
+  /// Bouton qui crée un salon de partie en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un salon'**
+  String get onlineCreateButton;
+
+  /// Bouton qui rejoint le salon dont on a saisi le code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoindre'**
+  String get onlineJoinButton;
+
+  /// Champ où l'on saisit le code d'un salon, et titre du code affiché dans le salon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code du salon'**
+  String get onlineCodeLabel;
+
+  /// Séparateur entre « créer un salon » et « rejoindre un salon ».
+  ///
+  /// In fr, this message translates to:
+  /// **'ou'**
+  String get onlineOrDivider;
+
+  /// Aide sous le code du salon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez ce code aux autres joueurs pour qu\'ils vous rejoignent.'**
+  String get onlineShareHint;
+
+  /// Titre de la liste des joueurs d'un salon ; count = présents, max = places.
+  ///
+  /// In fr, this message translates to:
+  /// **'Joueurs ({count}/{max})'**
+  String onlinePlayersHeader(int count, int max);
+
+  /// Étiquette du joueur qui a créé le salon : lui seul règle l'ordre et lance la partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hôte'**
+  String get onlineHostBadge;
+
+  /// Étiquette d'un joueur dont la connexion est coupée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déconnecté'**
+  String get onlineDisconnectedBadge;
+
+  /// Explication sous le bouton de lancement désactivé, dans un salon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il faut au moins 2 joueurs, tous connectés.'**
+  String get onlineNeedTwoPlayers;
+
+  /// Message d'un joueur qui n'est pas l'hôte, dans un salon.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du lancement par l\'hôte…'**
+  String get onlineWaitingForHost;
+
+  /// Bouton qui quitte le salon ou la partie en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter'**
+  String get onlineLeaveButton;
+
+  /// Titre de la confirmation avant de quitter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter la partie en ligne ?'**
+  String get onlineLeaveConfirmTitle;
+
+  /// Corps de la confirmation avant de quitter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans une partie commencée, votre place restera vide et la partie attendra votre retour.'**
+  String get onlineLeaveConfirmBody;
+
+  /// Affiché pendant l'ouverture de la connexion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion au serveur…'**
+  String get onlineConnecting;
+
+  /// Bandeau affiché quand la connexion au serveur est coupée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion perdue, reconnexion…'**
+  String get onlineReconnecting;
+
+  /// Bandeau affiché quand un joueur n'est pas revenu à temps.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partie suspendue : un joueur est absent depuis trop longtemps.'**
+  String get onlineSuspended;
+
+  /// Affiché à la place des commandes pendant le tour d'un autre joueur, en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'{playerName} joue…'**
+  String onlineWaitingFor(String playerName);
+
+  /// Bouton qui passe du résultat du tirage au sort à la partie en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jouer'**
+  String get onlineDiceOffContinue;
+
+  /// Erreur : la connexion n'a pas pu s'ouvrir.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur injoignable.'**
+  String get onlineErrorUnreachable;
+
+  /// Erreur : code de salon inconnu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun salon avec ce code.'**
+  String get onlineErrorRoomNotFound;
+
+  /// Erreur : plus de place dans le salon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce salon est complet.'**
+  String get onlineErrorRoomFull;
+
+  /// Erreur : on ne rejoint pas une partie commencée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette partie a déjà commencé.'**
+  String get onlineErrorGameStarted;
+
+  /// Erreur : le serveur limite le rythme des demandes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de tentatives : réessayez dans un instant.'**
+  String get onlineErrorRateLimited;
+
+  /// Erreur : le jeton de reprise n'est plus valable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre place dans ce salon n\'existe plus.'**
+  String get onlineErrorBadToken;
+
+  /// Erreur : version du protocole incompatible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettez l\'application à jour pour jouer en ligne.'**
+  String get onlineErrorUnsupportedVersion;
+
+  /// Erreur de repli des parties en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue.'**
+  String get onlineErrorGeneric;
 }
 
 class _AppLocalizationsDelegate
