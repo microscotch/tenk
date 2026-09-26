@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_recording.dart';
@@ -8,6 +10,16 @@ import 'package:le10000/state/online_transport.dart';
 
 import '../test_helpers/fake_online.dart';
 import '../test_helpers/scripted_game.dart';
+
+/// Le passage de témoin d'un rejeu, sur les actions de la partie principale de [full].
+GameRecordingHandoff _handoffOf(List<GameAction> full) => GameRecordingHandoff(
+      seed: 0,
+      random: Random(0),
+      originalSetup: const GameSetup(playerNames: ['Anna', 'Bob']),
+      alias: '',
+      createdAt: DateTime(2026),
+      actions: full.sublist(diceOffActionCount(full)),
+    );
 
 void main() {
   const names = ['Anna', 'Bob'];
@@ -247,6 +259,148 @@ void main() {
       await joinedAndStarted(0, serverJournal());
       expect(game().shouldShowPassDevice(0), isFalse);
       expect(game().shouldShowPassDevice(1), isFalse);
+    });
+  });
+
+  group('une partie locale n\'est jamais touchée par la session en ligne', () {
+    const local = GameSetup(playerNames: ['Local1', 'Local2']);
+
+    /// Une partie en ligne à l'écran, puis le joueur lance une partie locale.
+    Future<List<GameAction>> onlineThenLocal() async {
+      final full = fullJournal();
+      final rollIndex = full.indexWhere((a) => a.type == GameActionType.roll);
+      await joinedAndStarted(0, full.sublist(0, rollIndex));
+      game().startGame(local);
+      expect(game().isOnline, isFalse);
+      return full;
+    }
+
+    test('une action du serveur ne s\'applique pas à la partie locale', () async {
+      final full = await onlineThenLocal();
+      final rollIndex = full.indexWhere((a) => a.type == GameActionType.roll);
+      final engine = container.read(gameProvider);
+      final journal = game().actions.length;
+
+      // Même rang que le journal local : sans garde, l'action serait appliquée.
+      transport.current.serverSends(ServerMessage.action(seq: game().onlineActionCount, action: full[rollIndex]));
+      transport.current.serverSends(ServerMessage.action(seq: rollIndex + 5, action: full[rollIndex]));
+      await settle();
+
+      expect(identical(container.read(gameProvider), engine), isTrue);
+      expect(game().actions.length, journal);
+      expect(game().isOnline, isFalse);
+      expect(transport.channels.length, 1, reason: 'aucune resynchronisation non demandée');
+    });
+
+    test('une reconnexion ne remplace pas la partie locale par le journal du serveur', () async {
+      await onlineThenLocal();
+      final engine = container.read(gameProvider);
+
+      await transport.current.serverDrops();
+      await settle();
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: serverJournal()));
+      await settle();
+
+      expect(identical(container.read(gameProvider), engine), isTrue);
+      expect(game().isOnline, isFalse);
+      expect([for (final p in container.read(gameProvider)!.players) p.name], local.playerNames);
+    });
+
+    test('quitter le salon ne vide pas la partie locale', () async {
+      await onlineThenLocal();
+      final engine = container.read(gameProvider);
+
+      await session().leave();
+
+      expect(identical(container.read(gameProvider), engine), isTrue);
+      expect(game().hasLiveLocalGame, isTrue);
+    });
+
+    test('attendre dans le salon puis être lancé par l\'hôte prend bien la place : le joueur l\'a voulu', () async {
+      game().startGame(local);
+      await session().join('abcde', 'Bob');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: 1));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.lobby,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: serverJournal()));
+      await settle();
+
+      expect(game().isOnline, isTrue);
+    });
+
+    test('retrouver sa partie en ligne après une partie locale, à la demande', () async {
+      final full = await onlineThenLocal();
+      final rollIndex = full.indexWhere((a) => a.type == GameActionType.roll);
+
+      final reopened = session().reopenGame();
+      await settle();
+      expect(transport.current.sent.single.type, ClientMessageType.rejoin);
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: full.sublist(0, rollIndex + 1)));
+
+      expect(await reopened, isTrue);
+      expect(game().isOnline, isTrue);
+      expect(game().onlineActionCount, rollIndex + 1);
+      expect(await session().reopenGame(), isTrue, reason: 'déjà en place : rien à refaire');
+    });
+
+    test('retrouver sa partie après un rejeu, dont le journal vide l\'ancien état', () async {
+      final full = fullJournal();
+      await joinedAndStarted(0, serverJournal());
+      game().startGameReplay(setup, _handoffOf(full), source: null);
+      expect(game().isReplay, isTrue);
+
+      final reopened = session().reopenGame();
+      await settle();
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: serverJournal()));
+
+      expect(await reopened, isTrue);
+      expect(game().isOnline, isTrue);
+      expect(game().originalSetup, isNotNull);
+    });
+  });
+
+  group('quitter, ou se déconnecter en gardant sa place', () {
+    test('se déconnecter garde le jeton, vide la partie en ligne et ne cherche pas à se reconnecter', () async {
+      await joinedAndStarted(0, serverJournal());
+
+      await session().disconnect();
+      await settle();
+
+      expect(credentials.saved!.token, token, reason: 'la place est gardée');
+      expect(game().isOnline, isFalse);
+      expect(online().inRoom, isFalse);
+      expect(transport.channels.length, 1, reason: 'aucune reconnexion');
+      expect(transport.current.sent.any((m) => m.type == ClientMessageType.leave), isFalse, reason: 'le serveur garde le siège');
+    });
+
+    test('la place gardée se retrouve avec tryResume', () async {
+      await joinedAndStarted(0, serverJournal());
+      await session().disconnect();
+
+      expect(await session().tryResume(), isTrue);
+      expect(transport.channels.length, 2);
+      expect(transport.current.sent.single.type, ClientMessageType.rejoin);
+    });
+
+    test('une partie finie efface le jeton : il n\'y a plus rien à retrouver', () async {
+      await joinedAndStarted(0, serverJournal());
+      expect(credentials.saved, isNotNull);
+
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.over,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await settle();
+
+      expect(credentials.saved, isNull);
     });
   });
 

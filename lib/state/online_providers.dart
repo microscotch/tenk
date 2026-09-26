@@ -111,6 +111,14 @@ class OnlineState {
 
 final onlineSessionProvider = NotifierProvider<OnlineSession, OnlineState>(OnlineSession.new);
 
+/// La place gardée dans une partie en ligne (jeton d'une session précédente ou
+/// d'une déconnexion volontaire), pour proposer de la retrouver. Se relit dès
+/// que la session entre dans un salon ou en sort.
+final onlineSavedGameProvider = FutureProvider<OnlineCredentials?>((ref) {
+  ref.watch(onlineSessionProvider.select((s) => s.roomCode));
+  return ref.watch(onlineCredentialsStoreProvider).load();
+});
+
 /// La session en ligne : la connexion au serveur, le salon, et le pont vers
 /// [GameNotifier] une fois la partie commencée.
 class OnlineSession extends Notifier<OnlineState> {
@@ -126,6 +134,12 @@ class OnlineSession extends Notifier<OnlineState> {
 
   /// Un jeton reçu du serveur, en attente d'être associé à l'adresse utilisée.
   String? _pendingUrl;
+
+  /// Vrai quand le joueur vient de demander lui-même à retrouver sa partie en
+  /// ligne : le journal qui arrive peut alors prendre la place d'une partie
+  /// locale restée en mémoire. Sans cette demande, il ne la remplace jamais.
+  var _takeover = false;
+  Completer<bool>? _reopening;
 
   @override
   OnlineState build() {
@@ -146,6 +160,7 @@ class OnlineSession extends Notifier<OnlineState> {
   Future<bool> tryResume() async {
     final saved = await ref.read(onlineCredentialsStoreProvider).load();
     if (saved == null) return false;
+    _takeover = true;
     _credentials = saved;
     await _open(ClientMessage.rejoin(token: saved.token), url: saved.url);
     return true;
@@ -153,19 +168,47 @@ class OnlineSession extends Notifier<OnlineState> {
 
   void reorder(List<int> order) => _send(ClientMessage.reorder(order));
 
-  void start() => _send(ClientMessage.start());
+  void start() {
+    _takeover = true;
+    _send(ClientMessage.start());
+  }
 
   void play(GameActionType intent, Map<String, dynamic> params) => _send(ClientMessage.play(intent, params: params));
 
   /// Quitte le salon pour de bon : le siège est libéré (ou, en partie, laissé
-  /// vide) et le jeton oublié.
+  /// vide) et le jeton oublié. Pour partir d'une partie commencée en gardant sa
+  /// place, c'est [disconnect].
   Future<void> leave() async {
     _send(ClientMessage.leave());
     _credentials = null;
     await ref.read(onlineCredentialsStoreProvider).clear();
     await _close();
-    _game.endOnlineGame();
+    // Seulement la partie en ligne : une partie locale n'est pas la nôtre.
+    if (_game.isOnline) _game.endOnlineGame();
     state = const OnlineState();
+  }
+
+  /// Se déconnecte en GARDANT sa place : le jeton reste, la partie attend le
+  /// retour du joueur (elle se suspend au bout de deux minutes) et il la
+  /// retrouve depuis l'écran d'entrée.
+  Future<void> disconnect() async {
+    _reconnectTimer?.cancel();
+    await _close();
+    if (_game.isOnline) _game.endOnlineGame();
+    state = const OnlineState();
+  }
+
+  /// Rouvre la partie en ligne dans le [GameNotifier] quand celui-ci a servi à
+  /// autre chose depuis (une partie locale, un rejeu) : redemande le journal au
+  /// serveur et rend vrai quand il est en place. Vrai tout de suite si la partie
+  /// en ligne y est déjà.
+  Future<bool> reopenGame() async {
+    if (_game.isOnline) return true;
+    if (_credentials == null) return false;
+    _takeover = true;
+    final done = _reopening = Completer<bool>();
+    _resync();
+    return done.future.timeout(const Duration(seconds: 10), onTimeout: () => false);
   }
 
   Future<void> _open(ClientMessage first, {String? url}) async {
@@ -205,6 +248,11 @@ class OnlineSession extends Notifier<OnlineState> {
         case ServerMessageType.joined:
           _onJoined(message);
         case ServerMessageType.room:
+          // Partie finie : rien à retrouver, le jeton ne sert plus.
+          if (message.phase == RoomPhase.over) {
+            _credentials = null;
+            unawaited(ref.read(onlineCredentialsStoreProvider).clear());
+          }
           state = state.copyWith(
             roomCode: message.roomCode,
             phase: message.phase,
@@ -234,15 +282,26 @@ class OnlineSession extends Notifier<OnlineState> {
   void _onSnapshot(ServerMessage message) {
     final seat = state.mySeat;
     if (seat == null) return;
+    // Une partie locale est en cours : le journal du serveur ne la remplace pas
+    // de lui-même. Il le peut si le joueur attendait dans le salon (le départ
+    // arrive alors que le salon est encore au repos), s'il l'a demandé, ou si
+    // la partie en ligne est déjà celle de l'écran (reconnexion).
+    final invited = state.phase == RoomPhase.lobby || _takeover;
+    if (!_game.isOnline && _game.hasLiveLocalGame && !invited) return;
+    _takeover = false;
     final names = message.names;
     final actions = message.actions;
     _game.startOnlineGame(names: names, actions: actions, mySeat: seat, sendIntent: play);
     final diceOff = replayGame(GameSetup(playerNames: names), 0, actions.sublist(0, diceOffActionCount(actions))).diceOff;
     state = state.copyWith(gameStarted: true, diceOff: diceOff);
+    _reopening?.complete(true);
+    _reopening = null;
   }
 
   void _onAction(ServerMessage message) {
-    if (!state.gameStarted) return;
+    // Seulement pour la partie en ligne de l'écran : jamais sur une partie
+    // locale, dont le journal n'a rien à voir avec celui du serveur.
+    if (!state.gameStarted || !_game.isOnline) return;
     final expected = _game.onlineActionCount;
     if (message.seq < expected) return; // déjà appliquée (doublon après reconnexion)
     if (message.seq > expected) return _resync(); // un trou : on redemande tout

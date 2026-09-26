@@ -185,6 +185,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `OnlineGameLink`): its action methods then only *request* the move (`sendIntent`), and the state changes
   when the server's action comes back (`applyOnlineAction`). `isObservedTurn(i)` = a turn played without
   me (bot **or** another online player): the game screen shows no controls and no popup for it.
+  **`GameNotifier` is one singleton shared with local play, so `OnlineSession` must never write into a local
+  game**: it applies actions and ends the game only when `isOnline`, and a snapshot replaces a live local
+  game (`hasLiveLocalGame`) only if the player asked (`tryResume`, `reopenGame`, `start`) or was waiting in
+  the lobby. `leave()` frees the seat and forgets the token (lobby, finished game); `disconnect()` keeps
+  the token and the seat — what "Quitter" does in a started game, since the game then waits for the player.
+  There is no way to *forfeit* a started game in v1 (it needs server-side semantics or bots).
 - `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
   file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
   config of the game **being shown**, linking by profile id, never by name — so an archived game
