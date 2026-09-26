@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:le10000/game/dice_off.dart';
+import 'package:le10000/game/dice_roll.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/game_setup.dart';
@@ -141,4 +142,34 @@ SavedGame buildResumableSavedGame({
   }
 
   return (engine: engine, actions: actions);
+}
+
+/// Ce que fait un serveur en ligne : rejoue le journal d'une partie contre le
+/// vrai générateur (seed) mais y écrit, sur chaque lancer, les faces obtenues.
+List<GameAction> journalWithFaces(GameSetup setup, int seed, List<GameAction> actions) {
+  final recorder = RecordingRandom(Random(seed));
+  var diceOff = DiceOffState.start(setup.playerNames.length);
+  GameEngine? engine;
+  final out = <GameAction>[];
+  for (final action in actions) {
+    recorder.clear();
+    switch (action.type) {
+      case GameActionType.diceOffRollAll:
+        diceOff = diceOff.rollAll(random: recorder);
+        out.add(GameAction.diceOffRollAll(faces: recorder.faces, at: action.at));
+      case GameActionType.diceOffResolveRound:
+        diceOff = diceOff.resolveRound();
+        if (diceOff.isResolved) {
+          engine = GameEngine.newGame(setup.reordered(diceOff.playOrder).playerNames);
+        }
+        out.add(action);
+      case GameActionType.roll:
+        engine = engine!.roll(random: recorder);
+        out.add(GameAction.roll(faces: recorder.faces, at: action.at));
+      default:
+        engine = applyGameAction(engine!, action, recorder);
+        out.add(action);
+    }
+  }
+  return out;
 }
