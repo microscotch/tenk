@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_save_store.dart';
+import '../../state/room_link_providers.dart';
 import '../navigation.dart';
 import '../route_observer.dart';
 import '../widgets/about_dialog.dart';
@@ -47,13 +48,30 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // jamais re-poussé (voir didPopNext ci-dessous), initState ne se
     // déclenche qu'une fois par session — pas de popup répétée à chaque
     // retour au menu principal après une partie.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeOfferResume());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Un lien d'invitation qui a lancé l'application passe avant la reprise.
+      if (_openPendingRoomCode()) return;
+      _maybeOfferResume();
+    });
+  }
+
+  /// Ouvre l'entrée en ligne sur le code qu'un lien d'invitation vient de
+  /// proposer. Attend que l'accueil soit l'écran affiché : un lien reçu en pleine
+  /// partie ne doit pas la recouvrir, il s'ouvre au retour ([didPopNext]).
+  bool _openPendingRoomCode() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return false;
+    final code = ref.read(pendingRoomCodeProvider.notifier).take();
+    if (code == null) return false;
+    _open(OnlineEntryScreen(initialCode: code));
+    return true;
   }
 
   Future<void> _maybeOfferResume() async {
     if (!mounted) return;
     final games = await ref.read(pausedGamesProvider.future);
     if (!mounted || games.isEmpty) return;
+    // Un lien arrivé pendant le chargement de la liste passe avant la reprise.
+    if (_openPendingRoomCode()) return;
     final l10n = AppLocalizations.of(context);
     final mostRecent = games.first; // trié par date de modif décroissante
     final resume = await showDialog<bool>(
@@ -67,7 +85,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
         ],
       ),
     );
-    if (resume == true && mounted) resumeSavedGame(context, ref, mostRecent);
+    if (resume == true && mounted) {
+      resumeSavedGame(context, ref, mostRecent);
+    } else {
+      // Un lien reçu pendant que la fenêtre était ouverte attendait sa fermeture.
+      _openPendingRoomCode();
+    }
   }
 
   @override
@@ -86,6 +109,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
   void didPopNext() {
     ref.invalidate(pausedGamesProvider);
     ref.invalidate(finishedGamesProvider);
+    // Après la frame : pousser une route pendant que le navigateur met sa pile à
+    // jour (c'est le cas ici) est interdit.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openPendingRoomCode());
   }
 
   @override
@@ -106,6 +132,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // Seul le compte des parties en pause sert encore ici : il décide si le
     // bouton de reprise est actif. Les deux écrans dédiés titrent avec le leur.
     final pausedCount = ref.watch(pausedGamesProvider).value?.length ?? 0;
+    // Un lien qui arrive pendant que l'accueil est affiché (application déjà
+    // ouverte). Ailleurs ou sous une fenêtre, il reste en attente.
+    ref.listen(pendingRoomCodeProvider, (_, code) {
+      if (code != null) _openPendingRoomCode();
+    });
     // Pas de barre du haut : son titre a sa propre zone en haut de l'écran, et
     // tout ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu
     // un bouton, sous les autres.

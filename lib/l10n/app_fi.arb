@@ -214,7 +214,7 @@
   "onlineOrDivider": "tai",
   "onlineShareHint": "Anna tämä koodi muille pelaajille, niin he voivat liittyä.",
   "onlineShareButton": "Jaa koodi",
-  "onlineShareMessage": "Liity verkkopeliini Le 10000! Huoneen koodi: {code}",
+  "onlineShareMessage": "Liity verkkopeliini Le 10000! Huoneen koodi: {code}\n{link}",
   "onlinePlayersHeader": "Pelaajat ({count}/{max})",
   "onlineHostBadge": "Isäntä",
   "onlineDisconnectedBadge": "Yhteys katkennut",

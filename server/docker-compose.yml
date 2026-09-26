@@ -12,6 +12,11 @@ services:
     restart: unless-stopped
     environment:
       TRUST_PROXY: "1"   # lit X-Forwarded-For : le proxy TLS est devant
+      # Certificats de l'application Android, pour que les liens d'invitation l'ouvrent
+      # (/.well-known/assetlinks.json). Séparés par des virgules : la clé d'envoi (les APK
+      # de la CI, ci-dessous) ET la clé de signature de Google Play (console Play →
+      # Intégrité de l'application → Signature d'application), à ajouter à la suite.
+      TENK_ANDROID_CERT_SHA256: "77:08:53:43:37:59:37:34:41:E3:E4:41:45:0B:9E:19:69:B0:24:85:93:37:84:29:56:CC:3E:92:66:80:79:EC"
       # PORT: "8080"     # défaut
       # HOST: "0.0.0.0"  # défaut
     # Aucun port publié : le reverse proxy (Apache, lui aussi un conteneur) joint
@@ -30,7 +35,10 @@ services:
       driver: none   # pas de journaux (voir la politique de confidentialité) ; json-file le temps d'un dépannage
 
 # Le réseau du conteneur Apache, créé ailleurs.
-# Dans le vhost : ProxyPass "/ws" "ws://tenk-server:8080/ws".
+# Dans le vhost : ProxyPass "/ws" "ws://tenk-server:8080/ws", et pour les liens
+# d'invitation ProxyPass "/.well-known/" "http://tenk-server:8080/.well-known/" et
+# ProxyPass "/j/" "http://tenk-server:8080/j/" (sans redirection : iOS refuse d'en
+# suivre une pour apple-app-site-association).
 networks:
   backend:
     external: true

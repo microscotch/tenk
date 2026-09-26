@@ -748,8 +748,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onlineShareButton => 'Partager le code';
 
   @override
-  String onlineShareMessage(String code) {
-    return 'Rejoins ma partie de Le 10000 en ligne ! Code du salon : $code';
+  String onlineShareMessage(String code, String link) {
+    return 'Rejoins ma partie de Le 10000 en ligne ! Code du salon : $code\n$link';
   }
 
   @override

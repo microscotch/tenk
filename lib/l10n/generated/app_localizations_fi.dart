@@ -747,8 +747,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String get onlineShareButton => 'Jaa koodi';
 
   @override
-  String onlineShareMessage(String code) {
-    return 'Liity verkkopeliini Le 10000! Huoneen koodi: $code';
+  String onlineShareMessage(String code, String link) {
+    return 'Liity verkkopeliini Le 10000! Huoneen koodi: $code\n$link';
   }
 
   @override

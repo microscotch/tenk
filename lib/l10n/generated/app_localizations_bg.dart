@@ -746,8 +746,8 @@ class AppLocalizationsBg extends AppLocalizations {
   String get onlineShareButton => 'Споделяне на кода';
 
   @override
-  String onlineShareMessage(String code) {
-    return 'Присъедини се към моята онлайн игра на Le 10000! Код на стаята: $code';
+  String onlineShareMessage(String code, String link) {
+    return 'Присъедини се към моята онлайн игра на Le 10000! Код на стаята: $code\n$link';
   }
 
   @override

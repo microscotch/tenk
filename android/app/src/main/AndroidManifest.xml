@@ -24,9 +24,22 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Les liens d'invitation sont lus par le paquet app_links : sans
+                 cette ligne Flutter les traiterait aussi, comme un chemin de
+                 navigation. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Liens d'invitation https://tenk.microscotch.net/j/<code>. Android
+                 ne les ouvre dans l'application qu'une fois le domaine vérifié :
+                 il doit servir /.well-known/assetlinks.json (server/src/server.dart). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="tenk.microscotch.net" android:pathPrefix="/j/"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

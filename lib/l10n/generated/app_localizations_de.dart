@@ -751,8 +751,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onlineShareButton => 'Code teilen';
 
   @override
-  String onlineShareMessage(String code) {
-    return 'Tritt meiner Online-Partie von Le 10000 bei! Raumcode: $code';
+  String onlineShareMessage(String code, String link) {
+    return 'Tritt meiner Online-Partie von Le 10000 bei! Raumcode: $code\n$link';
   }
 
   @override

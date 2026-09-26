@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/online/protocol.dart';
+import '../../game/online/room_link.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/online_providers.dart';
 import '../online_messages.dart';
@@ -106,7 +107,7 @@ class OnlineRoomScreen extends ConsumerWidget {
         onPressed: code.isEmpty
             ? null
             : () async {
-                final message = l10n.onlineShareMessage(code);
+                final message = l10n.onlineShareMessage(code, roomLinkFor(code).toString());
                 final box = buttonContext.findRenderObject() as RenderBox?;
                 final origin = box != null && box.hasSize ? box.localToGlobal(Offset.zero) & box.size : null;
                 try {

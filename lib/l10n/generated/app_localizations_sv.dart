@@ -747,8 +747,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get onlineShareButton => 'Dela koden';
 
   @override
-  String onlineShareMessage(String code) {
-    return 'Häng med i mitt onlinespel av Le 10000! Rumskod: $code';
+  String onlineShareMessage(String code, String link) {
+    return 'Häng med i mitt onlinespel av Le 10000! Rumskod: $code\n$link';
   }
 
   @override

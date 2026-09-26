@@ -214,7 +214,7 @@
   "onlineOrDivider": "sau",
   "onlineShareHint": "Dă acest cod celorlalți jucători ca să se alăture ție.",
   "onlineShareButton": "Distribuie codul",
-  "onlineShareMessage": "Alătură-te partidei mele online de Le 10000! Codul camerei: {code}",
+  "onlineShareMessage": "Alătură-te partidei mele online de Le 10000! Codul camerei: {code}\n{link}",
   "onlinePlayersHeader": "Jucători ({count}/{max})",
   "onlineHostBadge": "Gazdă",
   "onlineDisconnectedBadge": "Deconectat",

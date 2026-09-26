@@ -746,8 +746,8 @@ class AppLocalizationsNb extends AppLocalizations {
   String get onlineShareButton => 'Del koden';
 
   @override
-  String onlineShareMessage(String code) {
-    return 'Bli med i nettspillet mitt av Le 10000! Romkode: $code';
+  String onlineShareMessage(String code, String link) {
+    return 'Bli med i nettspillet mitt av Le 10000! Romkode: $code\n$link';
   }
 
   @override

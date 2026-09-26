@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'l10n/generated/app_localizations.dart';
+import 'state/room_link_providers.dart';
 import 'state/settings_providers.dart';
 import 'ui/route_observer.dart';
 import 'ui/screens/splash_screen.dart';
@@ -35,6 +36,9 @@ class Le10000App extends ConsumerWidget {
       (previous, next) => SoundEffects.instance.applySettings(next),
     );
     SoundEffects.instance.applySettings(ref.watch(settingsProvider));
+    // Écoute les liens d'invitation dès le premier build : c'est ce qui attrape
+    // celui qui lance l'application.
+    ref.watch(roomLinkListenerProvider);
 
     final languageOverride = ref.watch(settingsProvider).languageOverride;
 
