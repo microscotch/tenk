@@ -78,6 +78,25 @@ jobs:
           echo "Build number corrigé automatiquement : ${semver}+${new_build}."
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+  # Le serveur des parties en ligne (server/) : analyse et tests, sur chaque push
+  # comme sur chaque pull request. Il réutilise le moteur de lib/game par chemin
+  # relatif, donc un changement du moteur est aussi testé ici.
+  test-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
+
   build-android:
     needs: bump-build-number
     if: ${{ !failure() && !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android') }}
