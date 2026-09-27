@@ -89,7 +89,9 @@ pas tranché (`DiceOffNotifier.resumeFromSave`), sinon avec son premier tour lan
 
 Du salon au coup joué : le serveur tire les dés (les clients n'ont jamais la seed) et diffuse chaque lancer
 avec ses faces, que les clients rejouent avec le même moteur. Une intention refusée (pas son tour, coup
-illégal) ne change rien ; une connexion coupée se rétablit avec le jeton et un journal complet.
+illégal) ne change rien ; une connexion coupée se rétablit avec le jeton et un journal complet. La partie
+finie est archivée sur l'appareil, dans `over/` comme une partie locale, et ne compte que pour mon siège dans
+les statistiques.
 
 ### Fin de partie, archivage, statistiques — [`uml/seq-game-over.png`](uml/seq-game-over.png)
 

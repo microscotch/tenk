@@ -29,6 +29,10 @@ class GameAuthority {
   final List<String> names;
 
   final RecordingRandom _random;
+
+  /// L'horloge des actions, en UTC : leur `at` voyage alors avec son `Z`, et
+  /// chaque client le lit à la bonne heure quel que soit son fuseau (une heure
+  /// locale du serveur, sans décalage, serait prise pour la sienne).
   final DateTime Function() _now;
 
   DiceOffState _diceOff;
@@ -39,7 +43,7 @@ class GameAuthority {
   GameAuthority({required this.names, Random? random, DateTime Function()? now})
       : assert(names.length >= minOnlinePlayers && names.length <= maxOnlinePlayers),
         _random = RecordingRandom(random ?? Random.secure()),
-        _now = now ?? DateTime.now,
+        _now = now ?? (() => DateTime.now().toUtc()),
         _diceOff = DiceOffState.start(names.length);
 
   List<GameAction> get actions => List.unmodifiable(_actions);

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -7,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../game/ai/ai_profiles.dart';
 import '../game/game_recording.dart';
 import '../game/game_setup.dart';
+import '../ui/alias_words.dart';
 
 /// Le [GameSaveStore] partagé par l'app — surchargeable en test via
 /// `ProviderContainer(overrides: [gameSaveStoreProvider.overrideWithValue(...)])`
@@ -60,6 +62,16 @@ class SavedGame {
 
   final List<GameAction> actions;
 
+  /// Mon siège dans le salon, pour une partie jouée en ligne ; nul pour une
+  /// partie locale. Seul ce siège compte dans les statistiques des fiches (voir
+  /// `syncPlayerStatistics`) : les autres sont des inconnus, qui ne doivent ni
+  /// créer de fiche ni être rattachés par leur pseudo à un joueur local.
+  ///
+  /// Le journal d'une partie en ligne porte les faces de chaque lancer : il se
+  /// rejoue sans seed, et [seed] n'y sert que d'identifiant (voir
+  /// [SavedGame.online]).
+  final int? onlineSeat;
+
   const SavedGame({
     required this.seed,
     required this.setup,
@@ -68,7 +80,35 @@ class SavedGame {
     this.enteredPlayAt,
     this.durationSeconds = 0,
     this.actions = const [],
+    this.onlineSeat,
   });
+
+  /// Le run d'une partie en ligne, tel que l'archive le garde : les joueurs
+  /// [names] dans l'ordre des sièges du salon, le journal [actions] du serveur
+  /// (départage compris, faces comprises) et [mySeat].
+  ///
+  /// Tout en est tiré du journal, jamais de l'horloge de l'appareil : la même
+  /// partie donne donc le même run, qu'elle soit archivée sur son dernier coup
+  /// ou plus tard depuis le journal complet renvoyé par le serveur — même
+  /// fichier, réécrit à l'identique, jamais un doublon.
+  factory SavedGame.online({required List<String> names, required List<GameAction> actions, required int mySeat}) {
+    final id = onlineGameId(names, actions);
+    final firstTurn = actions.where((a) => a.type == GameActionType.startTurn).firstOrNull;
+    return SavedGame(
+      seed: id,
+      setup: GameSetup(playerNames: names),
+      alias: randomGameAlias(Random(id)),
+      // Le serveur horodate en UTC : ramenées à l'heure locale, ces dates
+      // s'affichent et s'enregistrent comme celles d'une partie locale.
+      createdAt: actions.isEmpty ? DateTime.fromMillisecondsSinceEpoch(0) : actions.first.at.toLocal(),
+      enteredPlayAt: firstTurn?.at.toLocal(),
+      durationSeconds: durationSecondsFor(actions),
+      actions: List.unmodifiable(actions),
+      onlineSeat: mySeat,
+    );
+  }
+
+  bool get isOnline => onlineSeat != null;
 
   SavedGame copyWith({DateTime? enteredPlayAt, int? durationSeconds, List<GameAction>? actions}) {
     return SavedGame(
@@ -79,6 +119,7 @@ class SavedGame {
       enteredPlayAt: enteredPlayAt ?? this.enteredPlayAt,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       actions: actions ?? this.actions,
+      onlineSeat: onlineSeat,
     );
   }
 
@@ -95,6 +136,7 @@ class SavedGame {
         'enteredPlayAt': enteredPlayAt?.toIso8601String(),
         'durationSeconds': durationSeconds,
         'actions': actions.map((a) => a.toJson()).toList(),
+        'onlineSeat': ?onlineSeat,
       };
 
   factory SavedGame.fromJson(Map<String, dynamic> json) {
@@ -123,8 +165,29 @@ class SavedGame {
       enteredPlayAt: enteredPlayAtRaw != null ? DateTime.parse(enteredPlayAtRaw) : null,
       durationSeconds: json['durationSeconds'] as int? ?? 0,
       actions: (json['actions'] as List).map((a) => GameAction.fromJson(a as Map<String, dynamic>)).toList(),
+      // Absent de tout run local, et de tout run écrit avant l'archivage des
+      // parties en ligne : même lecture tolérante que `playerIds`.
+      onlineSeat: json['onlineSeat'] as int?,
     );
   }
+}
+
+/// Identifiant stable d'une partie en ligne, tenant lieu de seed pour nommer
+/// son fichier (voir [SavedGame.online]) : un condensé FNV-1a des joueurs et de
+/// l'instant, horodaté par le serveur, de la première action du journal.
+///
+/// Toujours au-dessus de 2^52, donc jamais égal à une seed locale (tirée sous
+/// 2^32, voir `DiceOffNotifier`), et sous 2^53 pour rester un entier exact une
+/// fois en JSON, quel que soit le lecteur.
+int onlineGameId(List<String> names, List<GameAction> actions) {
+  final key = jsonEncode([names, if (actions.isNotEmpty) actions.first.at.toIso8601String()]);
+  var hash = 0xcbf29ce484222325;
+  for (final byte in utf8.encode(key)) {
+    hash ^= byte;
+    hash *= 0x100000001b3;
+  }
+  const low52 = (1 << 52) - 1;
+  return (hash & low52) | (1 << 52);
 }
 
 /// Lit/écrit les parties en pause sur disque, un fichier JSON par partie

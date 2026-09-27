@@ -117,13 +117,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     // En ligne il n'y a pas de seed (le serveur seul la connaît) : le journal
     // porte les faces de chaque lancer, ce qui suffit à le rejouer.
     if (_online != null) {
-      return SavedGame(
-        seed: 0,
-        setup: _originalSetup!,
-        alias: '',
-        createdAt: _createdAt ?? DateTime.now(),
-        actions: List.unmodifiable(_actions),
-      );
+      return SavedGame.online(names: _originalSetup!.playerNames, actions: _actions, mySeat: _online!.mySeat);
     }
     if (_seed == null || _originalSetup == null) return null;
     return _currentSavedGame();
@@ -380,7 +374,9 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// d'envoyer (`snapshot`) : [names] dans l'ordre des sièges du salon,
   /// [actions] le départage puis les coups, faces comprises. L'état se
   /// reconstruit avec `replayGame`, sans seed — [mySeat] dit lequel des joueurs
-  /// est moi. Rien n'est jamais persisté (pas de seed, voir [_commit]).
+  /// est moi. Rien n'est persisté en cours de partie (le serveur la garde, pas
+  /// `in-progress/`) ; une partie finie est archivée (voir [_archiveOnline]),
+  /// y compris quand c'est ce journal-ci qui en apporte la fin (reconnexion).
   void startOnlineGame({
     required List<String> names,
     required List<GameAction> actions,
@@ -398,11 +394,11 @@ class GameNotifier extends Notifier<GameEngine?> {
     _replaySource = null;
     _seed = null;
     _random = null;
-    _createdAt ??= DateTime.now();
     _actions
       ..clear()
       ..addAll(actions);
     state = engine;
+    if (engine.gameOver) _archiveOnline();
   }
 
   /// Applique une action décidée par le serveur. Les lancers portent leurs
@@ -646,8 +642,10 @@ class GameNotifier extends Notifier<GameEngine?> {
 
   /// Passe la partie à l'état [next] : journalise [actions] puis persiste (ou
   /// archive dans `over/` et retire de `in-progress/`, si la partie vient de se
-  /// terminer) la sauvegarde correspondante. Sans seed (ex: [debugLoadState]
-  /// en test), ne persiste rien : il n'y a pas de partie à persister.
+  /// terminer) la sauvegarde correspondante. En ligne, n'écrit qu'à la fin de la
+  /// partie, dans `over/` seulement (voir [_archiveOnline]). Sans seed ni lien
+  /// en ligne (ex: [debugLoadState] en test), ne persiste rien : il n'y a pas
+  /// de partie à persister.
   ///
   /// Le journal est complété AVANT d'assigner `state` : tout ce qui écoute le
   /// moteur (l'écran de jeu, qui lit le journal pour l'écran de fin dès que la
@@ -659,6 +657,10 @@ class GameNotifier extends Notifier<GameEngine?> {
   void _commit(GameEngine next, List<GameAction> actions) {
     _actions.addAll(actions);
     state = next;
+    if (_online != null) {
+      if (state!.gameOver) _archiveOnline();
+      return;
+    }
     if (_seed == null) return;
     // .catchError avale l'échec d'UNE persistance (ex: disque plein) sans
     // jamais laisser la chaîne elle-même rejetée — sinon, plus aucune
@@ -697,5 +699,23 @@ class GameNotifier extends Notifier<GameEngine?> {
     await ref.read(archivedGameSaveStoreProvider).write(_currentSavedGame());
     ref.invalidate(playerStatisticsSyncProvider);
     await ref.read(gameSaveStoreProvider).delete(_seed!);
+  }
+
+  /// Archive la partie en ligne qui vient de se terminer, pour la zone « Runs
+  /// terminés » et les statistiques, comme [_archiveAndRemove] le fait d'une
+  /// partie locale — sans rien à retirer de `in-progress/`, où elle n'a jamais
+  /// été.
+  ///
+  /// Le run est construit TOUT DE SUITE, pas quand la chaîne l'écrit : quitter
+  /// l'écran de fin ([endOnlineGame]) vide le journal et la config, et une
+  /// écriture encore en attente archiverait sinon une partie vide. Archivée
+  /// deux fois (sur son dernier coup, puis depuis un journal renvoyé par le
+  /// serveur), elle réécrit le même fichier (voir [SavedGame.online]).
+  void _archiveOnline() {
+    final record = gameRecord!;
+    _persistChain = _persistChain.then((_) async {
+      await ref.read(archivedGameSaveStoreProvider).write(record);
+      ref.invalidate(playerStatisticsSyncProvider);
+    }).catchError((_) {});
   }
 }

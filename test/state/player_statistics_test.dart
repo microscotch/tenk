@@ -36,6 +36,35 @@ void main() {
     return game;
   }
 
+  group('parties en ligne', () {
+    /// Une partie en ligne terminée, archivée comme le fait `GameNotifier`.
+    Future<void> archiveOnlineGame({required List<String> names, required int mySeat}) async {
+      final setup = GameSetup(playerNames: names);
+      final actions = journalWithFaces(setup, 11, playScriptedGame(setup, 11).actions);
+      await archive.write(SavedGame.online(names: names, actions: actions, mySeat: mySeat));
+    }
+
+    test('seul mon siège compte : un adversaire ne crée aucune fiche', () async {
+      await archiveOnlineGame(names: ['Moi', 'Inconnu'], mySeat: 0);
+
+      await syncPlayerStatistics(archive: archive, players: players);
+
+      final list = await players.list();
+      expect(list.map((p) => p.name), ['Moi']);
+      expect(list.single.stats.gamesPlayed, 1);
+    });
+
+    test('un adversaire homonyme d\'un joueur local ne lui verse rien', () async {
+      await players.write(PlayerProfile.create(name: 'Paul'));
+      await archiveOnlineGame(names: ['Paul', 'Moi'], mySeat: 1);
+
+      await syncPlayerStatistics(archive: archive, players: players);
+
+      final byName = {for (final p in await players.list()) p.name: p.stats.gamesPlayed};
+      expect(byName, {'Paul': 0, 'Moi': 1});
+    });
+  });
+
   group('amorçage', () {
     test('crée une fiche par nom humain distinct trouvé dans les archives', () async {
       const setup = GameSetup(playerNames: ['Alice', 'Bruno']);

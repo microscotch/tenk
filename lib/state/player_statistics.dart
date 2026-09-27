@@ -39,7 +39,7 @@ Future<int> syncPlayerStatistics({
   // et c'est aussi par eux qu'on rattachera, faute de mieux.
   for (final game in games) {
     for (var seat = 0; seat < game.setup.playerNames.length; seat++) {
-      if (game.setup.isAi(seat)) continue;
+      if (!_countsForProfiles(game, seat)) continue;
       final name = game.setup.playerNames[seat];
       if (name.trim().isEmpty) continue;
       if (idByName.containsKey(normalizeName(name))) continue;
@@ -67,7 +67,7 @@ Future<int> syncPlayerStatistics({
     }
 
     for (var seat = 0; seat < stats.bySeat.length; seat++) {
-      if (game.setup.isAi(seat)) continue;
+      if (!_countsForProfiles(game, seat)) continue;
       // L'identifiant d'abord, le nom ensuite : le lien explicite survit à un
       // renommage, le nom n'est qu'un repli pour les parties antérieures.
       final id = game.setup.playerIdAt(seat) ??
@@ -85,6 +85,15 @@ Future<int> syncPlayerStatistics({
   }
 
   return created;
+}
+
+/// Vrai si le siège [seat] de [game] a sa place dans les fiches : pas un bot,
+/// et, en ligne, seulement le mien. Les autres joueurs d'une partie en ligne
+/// sont des inconnus : leur pseudo ne doit ni créer de fiche, ni verser leurs
+/// points à un joueur local qui porterait le même nom.
+bool _countsForProfiles(SavedGame game, int seat) {
+  if (game.setup.isAi(seat)) return false;
+  return !game.isOnline || seat == game.onlineSeat;
 }
 
 /// Amorçage + recalcul, déclenché par le premier écran qui a besoin de

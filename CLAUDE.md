@@ -285,8 +285,12 @@ sweep of expired rooms).
   `Runner-Dev.entitlements` for Debug and Profile, whose `?mode=developer` makes iOS read the file straight from
   our server. A USB-installed dev build therefore needs Settings > Developer > Associated Domains Development
   switched on, on the device; without `?mode=developer` its links open in Safari (the CDN answers 404).
-- Not in v1: bots and mixed local players in online games; archiving/replaying finished online games (a
-  `SavedGame` needs a seed — the with-faces journal would allow it).
+- **Finished online games are archived** in `over/` like local ones (`GameNotifier._archiveOnline`, from the
+  final action or from a snapshot that brings the end). `SavedGame.online` builds the run from the journal
+  alone: `seed` is only a file id (`onlineGameId`, ≥ 2^52, never a local seed: the with-faces journal replays
+  without one) and `onlineSeat` is my seat — **only that seat counts in player statistics**; opponents' pseudos
+  never create a profile nor match a local one by name.
+- Not in v1: bots and mixed local players in online games; forfeiting a started game.
 
 ## Design documents — keep them current
 

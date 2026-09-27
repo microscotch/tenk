@@ -5,9 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/online/protocol.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/online_providers.dart';
 import 'package:le10000/state/online_transport.dart';
 
+import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
 import '../test_helpers/scripted_game.dart';
 
@@ -27,6 +29,8 @@ void main() {
 
   late FakeTransport transport;
   late FakeCredentialsStore credentials;
+  late FakeGameSaveStore inProgress;
+  late FakeGameSaveStore archive;
   late ProviderContainer container;
 
   ProviderContainer newContainer() {
@@ -35,6 +39,8 @@ void main() {
       onlineCredentialsStoreProvider.overrideWithValue(credentials),
       onlineServerUrlProvider.overrideWithValue('ws://test/ws'),
       onlineReconnectDelayProvider.overrideWithValue((_) => const Duration(milliseconds: 5)),
+      gameSaveStoreProvider.overrideWithValue(inProgress),
+      archivedGameSaveStoreProvider.overrideWithValue(archive),
     ]);
     addTearDown(c.dispose);
     return c;
@@ -43,6 +49,8 @@ void main() {
   setUp(() {
     transport = FakeTransport();
     credentials = FakeCredentialsStore();
+    inProgress = FakeGameSaveStore();
+    archive = FakeGameSaveStore();
     container = newContainer();
   });
 
@@ -283,14 +291,101 @@ void main() {
     test('le journal en ligne alimente les statistiques et la courbe (rejouable sans seed)', () async {
       await joinedAndStarted(0, serverJournal());
       final record = game().gameRecord!;
-      expect(record.seed, 0);
-      expect(replayGame(record.setup, record.seed, record.actions).engine, isNotNull);
+      expect(record.isOnline, isTrue);
+      expect(replayGame(record.setup, 0, record.actions).engine, isNotNull);
+      expect(replayGame(record.setup, record.seed, record.actions).engine, isNotNull,
+          reason: 'la « seed » d\'un run en ligne n\'est qu\'un identifiant : elle ne change aucun dé');
     });
 
     test('en ligne, on ne passe jamais l\'appareil', () async {
       await joinedAndStarted(0, serverJournal());
       expect(game().shouldShowPassDevice(0), isFalse);
       expect(game().shouldShowPassDevice(1), isFalse);
+    });
+  });
+
+  group('archivage d\'une partie en ligne terminée', () {
+    /// La partie jouée jusqu'à son avant-dernière action, la dernière arrivant
+    /// en direct du serveur.
+    Future<List<GameAction>> playUntilLastAction(int seat) async {
+      final full = fullJournal();
+      await joinedAndStarted(seat, full.sublist(0, full.length - 1));
+      expect(container.read(gameProvider)!.gameOver, isFalse);
+      return full;
+    }
+
+    test('le dernier coup archive la partie, une seule fois, sans rien laisser en cours', () async {
+      final full = await playUntilLastAction(1);
+      expect(await archive.list(), isEmpty, reason: 'rien n\'est écrit avant la fin');
+
+      transport.current.serverSends(ServerMessage.action(seq: full.length - 1, action: full.last));
+      await settle();
+
+      expect(container.read(gameProvider)!.gameOver, isTrue);
+      final archived = (await archive.list()).single;
+      expect(archived.isOnline, isTrue);
+      expect(archived.onlineSeat, 1);
+      expect(archived.setup.playerNames, names);
+      expect(archived.actions, hasLength(full.length));
+      expect(archived.alias, isNotEmpty);
+      expect(archived.createdAt, full.first.at);
+      expect(await inProgress.list(), isEmpty, reason: 'une partie en ligne n\'est jamais « en pause » sur l\'appareil');
+    });
+
+    test('le journal complet renvoyé ensuite par le serveur réécrit le même run, sans doublon', () async {
+      final full = await playUntilLastAction(0);
+      transport.current.serverSends(ServerMessage.action(seq: full.length - 1, action: full.last));
+      await settle();
+      final first = (await archive.list()).single;
+
+      await transport.current.serverDrops();
+      await settle();
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: full));
+      await settle();
+
+      final after = await archive.list();
+      expect(after, hasLength(1));
+      expect(after.single.seed, first.seed);
+      expect(after.single.actions, hasLength(full.length));
+    });
+
+    test('une partie dont la fin n\'arrive qu\'avec le journal complet est archivée aussi', () async {
+      await joinedAndStarted(0, fullJournal());
+
+      expect(container.read(gameProvider)!.gameOver, isTrue);
+      expect((await archive.list()).single.onlineSeat, 0);
+    });
+
+    test('quitter aussitôt la partie finie archive quand même tout le journal', () async {
+      final full = await playUntilLastAction(0);
+
+      // Le coup final, puis la sortie dans la foulée : l'écriture est encore en
+      // attente quand le journal et la config sont vidés.
+      game().applyOnlineAction(full.last);
+      game().endOnlineGame();
+      await settle();
+
+      expect((await archive.list()).single.actions, hasLength(full.length));
+    });
+
+    test('le run archivé se rejoue jusqu\'au même classement final', () async {
+      final full = await playUntilLastAction(0);
+      transport.current.serverSends(ServerMessage.action(seq: full.length - 1, action: full.last));
+      await settle();
+      final played = container.read(gameProvider)!;
+      final archived = (await archive.list()).single;
+
+      game().startReplay(archived);
+      expect(game().replayProgress.count, greaterThan(1), reason: 'le curseur de tours est disponible');
+      while (game().hasNextReplayAction) {
+        game().applyNextReplayAction();
+      }
+
+      final replayed = container.read(gameProvider)!;
+      expect(replayed.gameOver, isTrue);
+      expect(replayed.winnerIndex, played.winnerIndex);
+      expect([for (final p in replayed.players) p.totalScore], [for (final p in played.players) p.totalScore]);
     });
   });
 

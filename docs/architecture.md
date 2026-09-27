@@ -142,7 +142,9 @@ pas.
   d'entrée qui dit quelle partie est à l'écran, jouée ou rejouée.
 - **`SavedGame` ne stocke pas l'état, mais le journal d'actions** (`GameAction`)
   et la seed. Une partie se reconstruit en rejouant ce journal
-  (`replayGame` → `ReplayResult`).
+  (`replayGame` → `ReplayResult`). Le run d'une partie en ligne (`SavedGame.online`,
+  `onlineSeat` non nul) n'a pas de seed : son journal porte les faces, et le champ `seed`
+  n'y est qu'un identifiant de fichier (`onlineGameId`, voir plus bas).
 - **Le rejeu spectateur** (`startReplay`) démarre directement sur la partie : le
   tirage au sort qui a fixé l'ordre de jeu n'est pas remis en scène, on n'en garde
   que le résultat. `seekReplay(tour)` reconstruit l'état exact au début d'un tour
@@ -190,6 +192,14 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   local est en retard sur le serveur, il juge donc la banque sur l'état où la garde est appliquée et envoie
   les deux demandes dans l'ordre. `isObservedTurn` regroupe les tours qui se jouent sans moi (bot ou autre joueur) :
   l'écran n'y propose ni commande ni popup.
+- **Une partie en ligne terminée est archivée** dans `over/`, comme une partie locale (`_archiveOnline`, depuis
+  `_commit` sur le coup final, ou depuis `startOnlineGame` quand c'est le journal complet du serveur qui apporte la
+  fin). Rien n'est écrit en cours de partie : c'est le serveur qui la garde. Le run est tiré du seul journal
+  (`SavedGame.online`) : son identifiant condense les joueurs et l'instant de la première action, horodatée par le
+  serveur, et sa date aussi en vient. Archivée deux fois, la même partie réécrit donc le même fichier. Le run est
+  construit dès la fin, pas à l'écriture : quitter l'écran de fin vide aussitôt le journal. Dans les statistiques,
+  **seul mon siège compte** (`onlineSeat`) : les pseudos des adversaires ne créent pas de fiche et ne sont jamais
+  rattachés par leur nom à un joueur local.
 - **Les liens d'invitation** (`https://tenk.microscotch.net/j/<code>`, joints au message du bouton
   « Partager le code ») ouvrent l'application sur le salon. `roomLinkFor` / `parseRoomLink`
   (`lib/game/online/room_link.dart`) fabriquent et relisent le lien ; `roomLinkListenerProvider`

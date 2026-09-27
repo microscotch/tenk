@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -112,6 +113,70 @@ void main() {
       expect(games.single.alias, 'Ancien Tapis');
       expect(games.single.setup.playerIds, isEmpty);
       expect(games.single.setup.playerIdAt(0), isNull);
+      expect(games.single.isOnline, isFalse, reason: 'un run sans onlineSeat est une partie locale');
+    });
+
+    test('le run d\'une partie en ligne fait l\'aller-retour, siège compris', () async {
+      final actions = [
+        GameAction.diceOffRollAll(faces: const [3, 5], at: DateTime(2026, 9, 1, 20)),
+        GameAction.diceOffResolveRound(at: DateTime(2026, 9, 1, 20, 0, 1)),
+        GameAction.startTurn(useFullHand: false, at: DateTime(2026, 9, 1, 20, 0, 5)),
+      ];
+      final game = SavedGame.online(names: const ['A', 'B'], actions: actions, mySeat: 1);
+      await store.write(game);
+
+      final read = (await store.list()).single;
+
+      expect(read.seed, game.seed);
+      expect(read.onlineSeat, 1);
+      expect(read.isOnline, isTrue);
+      expect(read.alias, game.alias);
+      expect(read.createdAt, DateTime(2026, 9, 1, 20), reason: 'la date vient du journal, pas de l\'appareil');
+      expect(read.enteredPlayAt, DateTime(2026, 9, 1, 20, 0, 5));
+      expect(read.actions.first.faces, [3, 5]);
+    });
+  });
+
+  group('identifiant d\'une partie en ligne', () {
+    final start = [GameAction.diceOffRollAll(faces: const [3, 5], at: DateTime(2026, 9, 1, 20))];
+
+    test('le même journal donne le même identifiant et le même alias, quel que soit le moment', () {
+      final atEnd = SavedGame.online(names: const ['A', 'B'], actions: start, mySeat: 0);
+      final longer = [...start, GameAction.diceOffResolveRound(at: DateTime(2026, 9, 1, 21))];
+      final fromSnapshot = SavedGame.online(names: const ['A', 'B'], actions: longer, mySeat: 0);
+
+      expect(fromSnapshot.seed, atEnd.seed);
+      expect(fromSnapshot.alias, atEnd.alias);
+    });
+
+    test('un journal horodaté en UTC par le serveur donne des dates à l\'heure locale, qui survivent au fichier', () async {
+      final utc = [
+        GameAction.diceOffRollAll(faces: const [3, 5], at: DateTime.utc(2026, 9, 1, 18)),
+        GameAction.startTurn(useFullHand: false, at: DateTime.utc(2026, 9, 1, 18, 0, 5)),
+      ];
+      // Tel qu'il arrive : relu depuis le JSON du serveur.
+      final received = [for (final a in utc) GameAction.fromJson(jsonDecode(jsonEncode(a.toJson())) as Map<String, dynamic>)];
+      final game = SavedGame.online(names: const ['A', 'B'], actions: received, mySeat: 0);
+
+      expect(game.createdAt.isUtc, isFalse);
+      expect(game.createdAt.isAtSameMomentAs(DateTime.utc(2026, 9, 1, 18)), isTrue);
+
+      await store.write(game);
+      final read = (await store.list()).single;
+      expect(read.createdAt.isAtSameMomentAs(DateTime.utc(2026, 9, 1, 18)), isTrue);
+      expect(read.enteredPlayAt!.isAtSameMomentAs(DateTime.utc(2026, 9, 1, 18, 0, 5)), isTrue);
+    });
+
+    test('deux parties différentes ne partagent pas de fichier', () {
+      final other = [GameAction.diceOffRollAll(faces: const [3, 5], at: DateTime(2026, 9, 1, 20, 0, 0, 1))];
+      expect(onlineGameId(const ['A', 'B'], other), isNot(onlineGameId(const ['A', 'B'], start)));
+      expect(onlineGameId(const ['A', 'C'], start), isNot(onlineGameId(const ['A', 'B'], start)));
+    });
+
+    test('jamais dans la plage des seeds locales, et exact en JSON', () {
+      final id = onlineGameId(const ['A', 'B'], start);
+      expect(id, greaterThanOrEqualTo(1 << 52));
+      expect(id, lessThan(1 << 53));
     });
 
     test('les identifiants de fiche font l\'aller-retour', () async {
