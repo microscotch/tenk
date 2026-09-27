@@ -76,7 +76,8 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
     if (_shown >= _steps.length - 1) return;
     _timer = Timer(delay, () {
       if (!mounted) return;
-      SoundEffects.instance.playDiceRoll();
+      // Le round qu'on va montrer : un dé par joueur qui y a lancé.
+      SoundEffects.instance.playDiceRoll(_steps[_shown + 1].roundHistory.last.length);
       setState(() => _shown++);
       _scheduleNext(OnlineDiceOffScreen.roundDelay);
     });

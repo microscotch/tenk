@@ -1349,7 +1349,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       if (gainAlreadyLogged) _gainLoggedForRoll = null;
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
-        if (newPendingRoll != null) SoundEffects.instance.playDiceRoll();
+        if (newPendingRoll != null) SoundEffects.instance.playDiceRoll(newPendingRoll.faces.length);
         // Par défaut, on tend vers le score optimal (voir _defaultKeepCount).
         _selectedKeep = newPendingRoll != null
             ? _defaultKeepCount(

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/widgets.dart';
 
@@ -146,9 +148,37 @@ class SoundEffects with WidgetsBindingObserver {
     }
   }
 
-  Future<void> playDiceRoll() => _play('sounds/dice_roll.wav');
+  String? _lastDiceRoll;
+
+  /// Le bruit d'un lancer de [diceCount] dés : une prise au hasard parmi les
+  /// vrais lancers enregistrés pour ce nombre de dés (voir [diceRollAsset]).
+  Future<void> playDiceRoll(int diceCount) {
+    final asset = diceRollAsset(diceCount, _random, avoid: _lastDiceRoll);
+    _lastDiceRoll = asset;
+    return _play(asset);
+  }
+
+  final _random = Random();
   Future<void> playBust() => _play('sounds/bust.wav');
   Future<void> playVictory() => _play('sounds/victory.wav');
+}
+
+/// Nombre de prises enregistrées pour chaque nombre de dés : de vrais lancers
+/// sur une table, `assets/sounds/dice_roll_<dés>_<prise>.wav`. Un lancer de plus
+/// de 5 dés (le tirage au sort à 6 joueurs) prend une prise de 5.
+const Map<int, int> diceRollTakes = {1: 10, 2: 7, 3: 7, 4: 5, 5: 5};
+
+/// Une prise au hasard pour [diceCount] dés, jamais [avoid] (la précédente) :
+/// deux lancers de suite ne sonnent jamais pareil.
+String diceRollAsset(int diceCount, Random random, {String? avoid}) {
+  final dice = diceCount.clamp(1, 5);
+  final takes = diceRollTakes[dice]!;
+  String pick() => 'sounds/dice_roll_${dice}_${(random.nextInt(takes) + 1).toString().padLeft(2, '0')}.wav';
+  var asset = pick();
+  while (asset == avoid && takes > 1) {
+    asset = pick();
+  }
+  return asset;
 }
 
 @visibleForTesting

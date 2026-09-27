@@ -218,7 +218,10 @@ structurellement uniformes, et les détailler noierait le modèle. À retenir :
 selon l'état du tour, pilote l'avancement automatique et sert aussi de rejeu
 spectateur, avec ses commandes fixées en bas), et deux services
 vivent à part — `SoundEffects` (singleton observant le cycle de vie) et
-`ShakeDetector` (accéléromètre → lancer de dés).
+`ShakeDetector` (accéléromètre → lancer de dés). Le bruit d'un lancer vient de
+vrais lancers enregistrés, plusieurs prises par nombre de dés
+(`assets/sounds/dice_roll_<dés>_<prise>.wav`, décompte dans `diceRollTakes`) :
+`playDiceRoll(diceCount)` en tire une au hasard, jamais la même deux fois de suite.
 
 ## Les autres schémas
 
