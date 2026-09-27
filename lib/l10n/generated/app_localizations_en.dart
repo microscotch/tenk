@@ -743,6 +743,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Give this code to the other players so they can join you.';
 
   @override
+  String get onlineShareButton => 'Share the code';
+
+  @override
+  String onlineShareMessage(String code, String link) {
+    return 'Join my online game of Le 10000! Room code: $code\n$link';
+  }
+
+  @override
   String onlinePlayersHeader(int count, int max) {
     return 'Players ($count/$max)';
   }

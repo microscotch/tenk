@@ -190,6 +190,19 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   local est en retard sur le serveur, il juge donc la banque sur l'état où la garde est appliquée et envoie
   les deux demandes dans l'ordre. `isObservedTurn` regroupe les tours qui se jouent sans moi (bot ou autre joueur) :
   l'écran n'y propose ni commande ni popup.
+- **Les liens d'invitation** (`https://tenk.microscotch.net/j/<code>`, joints au message du bouton
+  « Partager le code ») ouvrent l'application sur le salon. `roomLinkFor` / `parseRoomLink`
+  (`lib/game/online/room_link.dart`) fabriquent et relisent le lien ; `roomLinkListenerProvider`
+  (`room_link_providers.dart`, regardé par la racine de l'app pour attraper le lien de démarrage) écoute le
+  paquet `app_links` derrière `RoomLinkSource` et dépose le code dans `PendingRoomCode`. L'accueil
+  (`SetupScreen`) le prend quand il est l'écran affiché — jamais par-dessus une partie — et ouvre
+  `OnlineEntryScreen(initialCode:)` : **un lien ne rejoint jamais seul**, le joueur choisit son pseudo et touche
+  « Rejoindre ». Pour que le système ouvre l'app plutôt que le navigateur, le serveur sert les fichiers de
+  vérification (`/.well-known/apple-app-site-association`, `assetlinks.json`, à partir de `LinkConfig`) et une
+  page statique `/j/<code>` pour qui n'a pas l'app. Cette page n'interroge aucun salon : sinon on pourrait
+  sonder les codes en contournant les limites d'essais infructueux. Côté natif : `Runner.entitlements`
+  (`applinks:`) et un `intent-filter` `autoVerify` ; la prise en charge des liens de Flutter est coupée
+  (`FlutterDeepLinkingEnabled`, `flutter_deeplinking_enabled`), `app_links` s'en charge seul.
 - **Le serveur ne joue jamais à la place de quelqu'un.** Un joueur déconnecté garde son siège ; au-delà de
   deux minutes la partie est *suspendue* et attend son retour. Le salon disparaît après 24 h d'inactivité
   (30 min avant le départ).

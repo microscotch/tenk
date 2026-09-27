@@ -744,6 +744,14 @@ class AppLocalizationsFi extends AppLocalizations {
       'Anna tämä koodi muille pelaajille, niin he voivat liittyä.';
 
   @override
+  String get onlineShareButton => 'Jaa koodi';
+
+  @override
+  String onlineShareMessage(String code, String link) {
+    return 'Liity verkkopeliini Le 10000! Huoneen koodi: $code\n$link';
+  }
+
+  @override
   String onlinePlayersHeader(int count, int max) {
     return 'Pelaajat ($count/$max)';
   }

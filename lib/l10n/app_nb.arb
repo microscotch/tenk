@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Romkode",
   "onlineOrDivider": "eller",
   "onlineShareHint": "Gi denne koden til de andre spillerne, så kan de bli med.",
+  "onlineShareButton": "Del koden",
+  "onlineShareMessage": "Bli med i nettspillet mitt av Le 10000! Romkode: {code}\n{link}",
   "onlinePlayersHeader": "Spillere ({count}/{max})",
   "onlineHostBadge": "Vert",
   "onlineDisconnectedBadge": "Frakoblet",

@@ -13,7 +13,11 @@ import 'online_room_screen.dart';
 /// le code. Quand une partie en ligne est déjà en cours, on la retrouve (ou on
 /// la quitte) ici plutôt que d'en ouvrir une seconde.
 class OnlineEntryScreen extends ConsumerStatefulWidget {
-  const OnlineEntryScreen({super.key});
+  /// Le code d'un lien d'invitation, déjà saisi : il reste au joueur à choisir
+  /// son pseudo et à toucher « Rejoindre » (un lien ne rejoint jamais seul).
+  final String? initialCode;
+
+  const OnlineEntryScreen({super.key, this.initialCode});
 
   @override
   ConsumerState<OnlineEntryScreen> createState() => _OnlineEntryScreenState();
@@ -21,12 +25,13 @@ class OnlineEntryScreen extends ConsumerStatefulWidget {
 
 class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
   late final TextEditingController _name;
-  final _code = TextEditingController();
+  late final TextEditingController _code;
 
   @override
   void initState() {
     super.initState();
     _name = TextEditingController(text: ref.read(settingsProvider).playerName);
+    _code = TextEditingController(text: widget.initialCode);
   }
 
   @override

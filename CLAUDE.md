@@ -271,6 +271,17 @@ sweep of expired rooms).
   `dart pub get` in `server/`) and drives two real `OnlineSession`s through a game and a reconnect: it is what
   proves the two engines agree.
 - Known limit: the WebSocket layer buffers a frame before the size check; put a proxy limit in front.
+- **Invitation links** `https://tenk.microscotch.net/j/<code>` open the app on the shared room
+  (`lib/game/online/room_link.dart`, `lib/state/room_link_providers.dart`, the `app_links` package). A link
+  **never joins by itself**: `SetupScreen` (only when it is the visible route) opens `OnlineEntryScreen` with the
+  code pre-filled. Flutter's own deep-link handling is switched off on both platforms (`FlutterDeepLinkingEnabled`,
+  `flutter_deeplinking_enabled`) — leave it off, or every link is also pushed as a named route. The server serves
+  `/.well-known/apple-app-site-association`, `/.well-known/assetlinks.json` (fingerprints from
+  `TENK_ANDROID_CERT_SHA256`: the upload key **and** the Google Play signing key) and a static `/j/<code>` page
+  that must never look a room up (it would let anyone probe codes around the failed-join limits). The reverse
+  proxy must forward `/.well-known/` and `/j/` as well as `/ws`. iOS needs `ios/Runner/Runner.entitlements`
+  (Associated Domains, present in both provisioning profiles) and can only be checked on a real device with the
+  AASA file live (Apple fetches it through its CDN).
 - Not in v1: bots and mixed local players in online games; archiving/replaying finished online games (a
   `SavedGame` needs a seed — the with-faces journal would allow it).
 

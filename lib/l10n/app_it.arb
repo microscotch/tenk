@@ -213,6 +213,8 @@
   "onlineCodeLabel": "Codice della stanza",
   "onlineOrDivider": "o",
   "onlineShareHint": "Dai questo codice agli altri giocatori perché ti raggiungano.",
+  "onlineShareButton": "Condividi il codice",
+  "onlineShareMessage": "Unisciti alla mia partita online di Le 10000! Codice della stanza: {code}\n{link}",
   "onlinePlayersHeader": "Giocatori ({count}/{max})",
   "onlineHostBadge": "Ospitante",
   "onlineDisconnectedBadge": "Disconnesso",

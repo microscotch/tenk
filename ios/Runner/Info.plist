@@ -28,6 +28,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Les liens d'invitation sont lus par le paquet app_links : sans cette
+	     clé Flutter les traiterait aussi, comme un chemin de navigation. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- Jeu de dés local sans réseau ni chiffrement personnalisé : évite la

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Les liens d'invitation https://tenk.microscotch.net/j/<code> ouvrent
+	     l'application (Universal Links). Le domaine doit servir
+	     /.well-known/apple-app-site-association : voir server/src/server.dart. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:tenk.microscotch.net</string>
+	</array>
+</dict>
+</plist>

@@ -753,6 +753,14 @@ class AppLocalizationsRo extends AppLocalizations {
       'Dă acest cod celorlalți jucători ca să se alăture ție.';
 
   @override
+  String get onlineShareButton => 'Distribuie codul';
+
+  @override
+  String onlineShareMessage(String code, String link) {
+    return 'Alătură-te partidei mele online de Le 10000! Codul camerei: $code\n$link';
+  }
+
+  @override
   String onlinePlayersHeader(int count, int max) {
     return 'Jucători ($count/$max)';
   }

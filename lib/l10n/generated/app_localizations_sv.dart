@@ -744,6 +744,14 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ge den här koden till de andra spelarna så att de kan gå med.';
 
   @override
+  String get onlineShareButton => 'Dela koden';
+
+  @override
+  String onlineShareMessage(String code, String link) {
+    return 'Häng med i mitt onlinespel av Le 10000! Rumskod: $code\n$link';
+  }
+
+  @override
   String onlinePlayersHeader(int count, int max) {
     return 'Spelare ($count/$max)';
   }

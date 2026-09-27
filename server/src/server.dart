@@ -6,6 +6,7 @@ import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../lib/game/online/protocol.dart';
+import 'links.dart';
 import 'room.dart';
 import 'room_manager.dart';
 
@@ -40,14 +41,18 @@ class SocketConnection implements Connection {
   }
 }
 
-/// Les routes du serveur : `/ws` (les parties) et `/healthz` (supervision).
+/// Les routes du serveur : `/ws` (les parties), `/healthz` (supervision), et ce
+/// qui fait ouvrir l'application par les liens d'invitation : `/.well-known/…` et
+/// `/j/<code>` (voir [linkResponse]).
 ///
 /// [trustProxy] : derrière un reverse proxy (TLS), l'adresse du client est la
 /// dernière de `X-Forwarded-For`, celle que le proxy a lui-même constatée.
 /// Ne l'activer que si le serveur n'est joignable QUE par ce proxy — sinon
 /// n'importe qui pourrait choisir l'adresse qu'on lui attribue.
-Handler buildHandler(RoomManager manager, {bool trustProxy = false}) {
+Handler buildHandler(RoomManager manager, {bool trustProxy = false, LinkConfig links = const LinkConfig()}) {
   return (Request request) {
+    final link = linkResponse(request, links);
+    if (link != null) return link;
     switch (request.url.path) {
       case 'healthz':
         return Response.ok('ok');
