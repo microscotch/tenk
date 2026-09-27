@@ -76,7 +76,8 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
   }
 
   void _rollRound() {
-    SoundEffects.instance.playDiceRoll();
+    // Chaque joueur encore en lice lance son dé, tous en même temps.
+    SoundEffects.instance.playDiceRoll(ref.read(diceOffProvider)!.activeIndices.length);
     ref.read(diceOffProvider.notifier).rollRound();
     if (ref.read(diceOffProvider)!.isResolved) {
       _scheduleAutoStartIfNeeded();
