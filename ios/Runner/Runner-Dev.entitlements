@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Builds signés « Development » (configurations Debug et Profile, installés
+	     par USB) : `?mode=developer` fait lire apple-app-site-association
+	     directement sur le serveur. Sans lui iOS passe par le CDN d'Apple, qui ne
+	     charge un domaine qu'à l'installation depuis l'App Store ou TestFlight :
+	     les liens s'ouvriraient dans Safari. Demande aussi, sur l'appareil,
+	     Réglages > Développeur > Associated Domains Development.
+	     La configuration Release (TestFlight) garde Runner.entitlements, sans ce
+	     suffixe. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:tenk.microscotch.net?mode=developer</string>
+	</array>
+</dict>
+</plist>
