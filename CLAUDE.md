@@ -279,9 +279,12 @@ sweep of expired rooms).
   `/.well-known/apple-app-site-association`, `/.well-known/assetlinks.json` (fingerprints from
   `TENK_ANDROID_CERT_SHA256`: the upload key **and** the Google Play signing key) and a static `/j/<code>` page
   that must never look a room up (it would let anyone probe codes around the failed-join limits). The reverse
-  proxy must forward `/.well-known/` and `/j/` as well as `/ws`. iOS needs `ios/Runner/Runner.entitlements`
-  (Associated Domains, present in both provisioning profiles) and can only be checked on a real device with the
-  AASA file live (Apple fetches it through its CDN).
+  proxy must forward `/.well-known/` and `/j/` as well as `/ws`. iOS needs Associated Domains (present in both
+  provisioning profiles): `ios/Runner/Runner.entitlements` for Release (TestFlight — iOS reads the AASA file
+  through Apple's CDN, which only loads a domain when the app is installed from the App Store/TestFlight) and
+  `Runner-Dev.entitlements` for Debug and Profile, whose `?mode=developer` makes iOS read the file straight from
+  our server. A USB-installed dev build therefore needs Settings > Developer > Associated Domains Development
+  switched on, on the device; without `?mode=developer` its links open in Safari (the CDN answers 404).
 - Not in v1: bots and mixed local players in online games; archiving/replaying finished online games (a
   `SavedGame` needs a seed — the with-faces journal would allow it).
 
