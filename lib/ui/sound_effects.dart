@@ -31,6 +31,7 @@ class SoundEffects with WidgetsBindingObserver {
   static final SoundEffects instance = SoundEffects._();
 
   bool _effectsEnabled = true;
+  DiceSoundMode _diceSoundMode = DiceSoundMode.realistic;
   bool _musicWanted = true;
   bool _musicPlaying = false;
   bool _testDisabled = false;
@@ -52,6 +53,7 @@ class SoundEffects with WidgetsBindingObserver {
       WidgetsBinding.instance.addObserver(this);
     }
     _effectsEnabled = settings.soundEffectsEnabled;
+    _diceSoundMode = settings.diceSoundMode;
     _musicWanted = settings.musicEnabled;
     if (_inBackground) return; // repris/coupé au retour, voir didChangeAppLifecycleState
     if (_musicWanted && !_musicPlaying) {
@@ -150,10 +152,11 @@ class SoundEffects with WidgetsBindingObserver {
 
   String? _lastDiceRoll;
 
-  /// Le bruit d'un lancer de [diceCount] dés : une prise au hasard parmi les
-  /// vrais lancers enregistrés pour ce nombre de dés (voir [diceRollAsset]).
+  /// Le bruit d'un lancer de [diceCount] dés, selon le réglage : une prise au
+  /// hasard parmi les vrais lancers enregistrés pour ce nombre de dés, ou le son
+  /// synthétique d'origine (voir [diceRollAsset]).
   Future<void> playDiceRoll(int diceCount) {
-    final asset = diceRollAsset(diceCount, _random, avoid: _lastDiceRoll);
+    final asset = diceRollAsset(diceCount, _random, avoid: _lastDiceRoll, mode: _diceSoundMode);
     _lastDiceRoll = asset;
     return _play(asset);
   }
@@ -168,9 +171,15 @@ class SoundEffects with WidgetsBindingObserver {
 /// de 5 dés (le tirage au sort à 6 joueurs) prend une prise de 5.
 const Map<int, int> diceRollTakes = {1: 10, 2: 7, 3: 7, 4: 5, 5: 5};
 
-/// Une prise au hasard pour [diceCount] dés, jamais [avoid] (la précédente) :
-/// deux lancers de suite ne sonnent jamais pareil.
-String diceRollAsset(int diceCount, Random random, {String? avoid}) {
+/// Le son synthétique d'origine, le même pour tous les lancers.
+const String syntheticDiceRollAsset = 'sounds/synthetic_dice_roll.wav';
+
+/// Le son d'un lancer de [diceCount] dés. En mode réaliste (défaut), une prise
+/// au hasard pour ce nombre de dés, jamais [avoid] (la précédente) : deux
+/// lancers de suite ne sonnent jamais pareil. En mode synthétique, toujours
+/// [syntheticDiceRollAsset].
+String diceRollAsset(int diceCount, Random random, {String? avoid, DiceSoundMode mode = DiceSoundMode.realistic}) {
+  if (mode == DiceSoundMode.synthetic) return syntheticDiceRollAsset;
   final dice = diceCount.clamp(1, 5);
   final takes = diceRollTakes[dice]!;
   String pick() => 'sounds/dice_roll_${dice}_${(random.nextInt(takes) + 1).toString().padLeft(2, '0')}.wav';

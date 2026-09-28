@@ -845,4 +845,13 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'På nett kan kallenavnet ditt (eller navnet ditt) ha høyst 20 tegn, uten usynlige tegn.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Terningslyd';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realistisk';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Syntetisk';
 }

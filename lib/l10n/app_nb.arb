@@ -241,5 +241,8 @@
   "myProfileEditButton": "Rediger profilen min",
   "myProfileBadge": "Meg",
   "onlinePlayingAs": "Du spiller som «{name}»",
-  "onlineNameInvalidError": "På nett kan kallenavnet ditt (eller navnet ditt) ha høyst 20 tegn, uten usynlige tegn."
+  "onlineNameInvalidError": "På nett kan kallenavnet ditt (eller navnet ditt) ha høyst 20 tegn, uten usynlige tegn.",
+  "settingsDiceSoundLabel": "Terningslyd",
+  "settingsDiceSoundRealistic": "Realistisk",
+  "settingsDiceSoundSynthetic": "Syntetisk"
 }

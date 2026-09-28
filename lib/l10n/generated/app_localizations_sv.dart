@@ -845,4 +845,13 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Online får ditt smeknamn (eller ditt namn) vara högst 20 tecken, utan osynliga tecken.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Tärningsljud';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realistiskt';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Syntetiskt';
 }

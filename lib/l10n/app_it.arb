@@ -241,5 +241,8 @@
   "myProfileEditButton": "Modifica il mio profilo",
   "myProfileBadge": "Io",
   "onlinePlayingAs": "Giochi come «{name}»",
-  "onlineNameInvalidError": "Online il tuo soprannome (o il tuo nome) deve avere al massimo 20 caratteri, senza caratteri invisibili."
+  "onlineNameInvalidError": "Online il tuo soprannome (o il tuo nome) deve avere al massimo 20 caratteri, senza caratteri invisibili.",
+  "settingsDiceSoundLabel": "Suono dei dadi",
+  "settingsDiceSoundRealistic": "Realistico",
+  "settingsDiceSoundSynthetic": "Sintetico"
 }

@@ -1507,6 +1507,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'En ligne, votre surnom (ou votre nom) doit faire 20 caractères au plus, sans caractère invisible.'**
   String get onlineNameInvalidError;
+
+  /// Réglage choisissant le bruit d'un lancer de dés (section Sons).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bruit des dés'**
+  String get settingsDiceSoundLabel;
+
+  /// Bruit des dés : de vrais lancers enregistrés, selon le nombre de dés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réaliste'**
+  String get settingsDiceSoundRealistic;
+
+  /// Bruit des dés : le son synthétique d'origine, le même pour tous les lancers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synthétique'**
+  String get settingsDiceSoundSynthetic;
 }
 
 class _AppLocalizationsDelegate

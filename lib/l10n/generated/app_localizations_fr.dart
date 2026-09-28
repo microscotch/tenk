@@ -846,4 +846,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'En ligne, votre surnom (ou votre nom) doit faire 20 caractères au plus, sans caractère invisible.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Bruit des dés';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Réaliste';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Synthétique';
 }

@@ -854,4 +854,13 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Online, porecla (sau numele) ta trebuie să aibă cel mult 20 de caractere, fără caractere invizibile.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Sunetul zarurilor';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realist';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Sintetic';
 }

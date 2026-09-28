@@ -748,5 +748,14 @@
   "@onlinePlayingAs": {"description": "Nom sous lequel l'utilisateur apparaît en ligne (surnom de son profil, sinon son nom).", "placeholders": {"name": {"type": "String"}}},
 
   "onlineNameInvalidError": "En ligne, votre surnom (ou votre nom) doit faire 20 caractères au plus, sans caractère invisible.",
-  "@onlineNameInvalidError": {"description": "Erreur : le nom du profil ne passe pas les règles du serveur pour un pseudo en ligne."}
+  "@onlineNameInvalidError": {"description": "Erreur : le nom du profil ne passe pas les règles du serveur pour un pseudo en ligne."},
+
+  "settingsDiceSoundLabel": "Bruit des dés",
+  "@settingsDiceSoundLabel": {"description": "Réglage choisissant le bruit d'un lancer de dés (section Sons)."},
+
+  "settingsDiceSoundRealistic": "Réaliste",
+  "@settingsDiceSoundRealistic": {"description": "Bruit des dés : de vrais lancers enregistrés, selon le nombre de dés."},
+
+  "settingsDiceSoundSynthetic": "Synthétique",
+  "@settingsDiceSoundSynthetic": {"description": "Bruit des dés : le son synthétique d'origine, le même pour tous les lancers."}
 }

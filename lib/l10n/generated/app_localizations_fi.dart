@@ -845,4 +845,13 @@ class AppLocalizationsFi extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Verkossa lempinimesi (tai nimesi) saa olla enintään 20 merkkiä, ilman näkymättömiä merkkejä.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Noppien ääni';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realistinen';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Synteettinen';
 }

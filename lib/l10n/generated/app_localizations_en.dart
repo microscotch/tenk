@@ -843,4 +843,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Online, your nickname (or your name) must be at most 20 characters, with no invisible character.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Dice sound';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realistic';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Synthetic';
 }

@@ -843,4 +843,13 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Онлайн прякорът ви (или името ви) трябва да е най-много 20 знака, без невидими знаци.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Звук на заровете';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Реалистичен';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Синтетичен';
 }

@@ -149,6 +149,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 value: settings.soundEffectsEnabled,
                 onChanged: notifier.setSoundEffectsEnabled,
               ),
+              const SizedBox(height: 4),
+              Text(l10n.settingsDiceSoundLabel, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 6),
+              SegmentedButton<DiceSoundMode>(
+                segments: [
+                  ButtonSegment(value: DiceSoundMode.realistic, label: Text(l10n.settingsDiceSoundRealistic)),
+                  ButtonSegment(value: DiceSoundMode.synthetic, label: Text(l10n.settingsDiceSoundSynthetic)),
+                ],
+                selected: {settings.diceSoundMode},
+                // Sans effets sonores, le choix n'a rien à faire entendre : grisé.
+                onSelectionChanged: settings.soundEffectsEnabled ? (s) => notifier.setDiceSoundMode(s.first) : null,
+              ),
               const SizedBox(height: 28),
               Text(l10n.settingsControlsTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),

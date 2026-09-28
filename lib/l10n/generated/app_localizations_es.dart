@@ -847,4 +847,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'En línea, tu apodo (o tu nombre) debe tener como máximo 20 caracteres, sin caracteres invisibles.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Sonido de los dados';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realista';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Sintético';
 }

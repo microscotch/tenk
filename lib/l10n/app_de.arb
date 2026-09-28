@@ -241,5 +241,8 @@
   "myProfileEditButton": "Mein Profil bearbeiten",
   "myProfileBadge": "Ich",
   "onlinePlayingAs": "Du spielst als „{name}“",
-  "onlineNameInvalidError": "Online darf dein Spitzname (oder dein Name) höchstens 20 Zeichen lang sein, ohne unsichtbare Zeichen."
+  "onlineNameInvalidError": "Online darf dein Spitzname (oder dein Name) höchstens 20 Zeichen lang sein, ohne unsichtbare Zeichen.",
+  "settingsDiceSoundLabel": "Würfelgeräusch",
+  "settingsDiceSoundRealistic": "Realistisch",
+  "settingsDiceSoundSynthetic": "Synthetisch"
 }

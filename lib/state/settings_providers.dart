@@ -6,6 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// par dé (façon set de dés de casino).
 enum DiceColorMode { uniform, varied }
 
+/// Bruit d'un lancer de dés : de vrais lancers enregistrés sur une table,
+/// choisis selon le nombre de dés (défaut), ou le son synthétique d'origine,
+/// le même pour tous les lancers.
+enum DiceSoundMode { realistic, synthetic }
+
 /// Préférences utilisateur persistées localement (indépendantes de toute
 /// partie en cours). Chargées de façon best-effort au démarrage : en cas
 /// d'échec (plateforme sans backend, tests) on reste sur les valeurs par
@@ -25,6 +30,7 @@ class AppSettings {
   final int aiMessageDelayMs;
   final int autoActionDelayMs;
   final DiceColorMode diceColorMode;
+  final DiceSoundMode diceSoundMode;
   final bool musicEnabled;
   final bool soundEffectsEnabled;
 
@@ -67,6 +73,7 @@ class AppSettings {
     this.aiMessageDelayMs = 1000,
     this.autoActionDelayMs = 2000,
     this.diceColorMode = DiceColorMode.uniform,
+    this.diceSoundMode = DiceSoundMode.realistic,
     this.musicEnabled = true,
     this.soundEffectsEnabled = true,
     this.confirmBeforeDeleteGame = true,
@@ -86,6 +93,7 @@ class AppSettings {
     int? aiMessageDelayMs,
     int? autoActionDelayMs,
     DiceColorMode? diceColorMode,
+    DiceSoundMode? diceSoundMode,
     bool? musicEnabled,
     bool? soundEffectsEnabled,
     bool? confirmBeforeDeleteGame,
@@ -101,6 +109,7 @@ class AppSettings {
       aiMessageDelayMs: aiMessageDelayMs ?? this.aiMessageDelayMs,
       autoActionDelayMs: autoActionDelayMs ?? this.autoActionDelayMs,
       diceColorMode: diceColorMode ?? this.diceColorMode,
+      diceSoundMode: diceSoundMode ?? this.diceSoundMode,
       musicEnabled: musicEnabled ?? this.musicEnabled,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
@@ -123,6 +132,7 @@ const _keyMyProfileId = 'settings.myProfileId';
 const _keyAiMessageDelayMs = 'settings.aiMessageDelayMs';
 const _keyAutoActionDelayMs = 'settings.autoActionDelayMs';
 const _keyDiceColorMode = 'settings.diceColorMode';
+const _keyDiceSoundMode = 'settings.diceSoundMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
@@ -157,6 +167,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         aiMessageDelayMs: prefs.getInt(_keyAiMessageDelayMs) ?? 1000,
         autoActionDelayMs: prefs.getInt(_keyAutoActionDelayMs) ?? 2000,
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
+        diceSoundMode: prefs.getString(_keyDiceSoundMode) == 'synthetic' ? DiceSoundMode.synthetic : DiceSoundMode.realistic,
         musicEnabled: prefs.getBool(_keyMusicEnabled) ?? true,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
@@ -216,6 +227,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setDiceColorMode(DiceColorMode mode) {
     state = state.copyWith(diceColorMode: mode);
     _save(_keyDiceColorMode, mode == DiceColorMode.varied ? 'varied' : 'uniform');
+  }
+
+  void setDiceSoundMode(DiceSoundMode mode) {
+    state = state.copyWith(diceSoundMode: mode);
+    _save(_keyDiceSoundMode, mode.name);
   }
 
   void setMusicEnabled(bool enabled) {

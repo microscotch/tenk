@@ -241,5 +241,8 @@
   "myProfileEditButton": "Modifică-mi profilul",
   "myProfileBadge": "Eu",
   "onlinePlayingAs": "Joci ca „{name}”",
-  "onlineNameInvalidError": "Online, porecla (sau numele) ta trebuie să aibă cel mult 20 de caractere, fără caractere invizibile."
+  "onlineNameInvalidError": "Online, porecla (sau numele) ta trebuie să aibă cel mult 20 de caractere, fără caractere invizibile.",
+  "settingsDiceSoundLabel": "Sunetul zarurilor",
+  "settingsDiceSoundRealistic": "Realist",
+  "settingsDiceSoundSynthetic": "Sintetic"
 }

@@ -241,5 +241,8 @@
   "myProfileEditButton": "Editar o meu perfil",
   "myProfileBadge": "Eu",
   "onlinePlayingAs": "Joga como «{name}»",
-  "onlineNameInvalidError": "Online, a sua alcunha (ou o seu nome) deve ter no máximo 20 caracteres, sem caracteres invisíveis."
+  "onlineNameInvalidError": "Online, a sua alcunha (ou o seu nome) deve ter no máximo 20 caracteres, sem caracteres invisíveis.",
+  "settingsDiceSoundLabel": "Som dos dados",
+  "settingsDiceSoundRealistic": "Realista",
+  "settingsDiceSoundSynthetic": "Sintético"
 }

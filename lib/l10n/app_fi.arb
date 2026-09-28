@@ -241,5 +241,8 @@
   "myProfileEditButton": "Muokkaa omaa profiilia",
   "myProfileBadge": "Minä",
   "onlinePlayingAs": "Pelaat nimellä ”{name}”",
-  "onlineNameInvalidError": "Verkossa lempinimesi (tai nimesi) saa olla enintään 20 merkkiä, ilman näkymättömiä merkkejä."
+  "onlineNameInvalidError": "Verkossa lempinimesi (tai nimesi) saa olla enintään 20 merkkiä, ilman näkymättömiä merkkejä.",
+  "settingsDiceSoundLabel": "Noppien ääni",
+  "settingsDiceSoundRealistic": "Realistinen",
+  "settingsDiceSoundSynthetic": "Synteettinen"
 }

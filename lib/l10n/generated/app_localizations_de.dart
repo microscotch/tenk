@@ -850,4 +850,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Online darf dein Spitzname (oder dein Name) höchstens 20 Zeichen lang sein, ohne unsichtbare Zeichen.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Würfelgeräusch';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realistisch';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Synthetisch';
 }

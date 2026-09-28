@@ -848,4 +848,13 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Online, a sua alcunha (ou o seu nome) deve ter no máximo 20 caracteres, sem caracteres invisíveis.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Som dos dados';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realista';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Sintético';
 }

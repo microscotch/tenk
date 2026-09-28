@@ -851,4 +851,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get onlineNameInvalidError =>
       'Online il tuo soprannome (o il tuo nome) deve avere al massimo 20 caratteri, senza caratteri invisibili.';
+
+  @override
+  String get settingsDiceSoundLabel => 'Suono dei dadi';
+
+  @override
+  String get settingsDiceSoundRealistic => 'Realistico';
+
+  @override
+  String get settingsDiceSoundSynthetic => 'Sintetico';
 }

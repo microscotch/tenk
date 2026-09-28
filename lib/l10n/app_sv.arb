@@ -241,5 +241,8 @@
   "myProfileEditButton": "Redigera min profil",
   "myProfileBadge": "Jag",
   "onlinePlayingAs": "Du spelar som ”{name}”",
-  "onlineNameInvalidError": "Online får ditt smeknamn (eller ditt namn) vara högst 20 tecken, utan osynliga tecken."
+  "onlineNameInvalidError": "Online får ditt smeknamn (eller ditt namn) vara högst 20 tecken, utan osynliga tecken.",
+  "settingsDiceSoundLabel": "Tärningsljud",
+  "settingsDiceSoundRealistic": "Realistiskt",
+  "settingsDiceSoundSynthetic": "Syntetiskt"
 }

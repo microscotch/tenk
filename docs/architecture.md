@@ -245,6 +245,9 @@ vivent à part — `SoundEffects` (singleton observant le cycle de vie) et
 vrais lancers enregistrés, plusieurs prises par nombre de dés
 (`assets/sounds/dice_roll_<dés>_<prise>.wav`, décompte dans `diceRollTakes`) :
 `playDiceRoll(diceCount)` en tire une au hasard, jamais la même deux fois de suite.
+C'est le réglage par défaut : `AppSettings.diceSoundMode` (`DiceSoundMode.realistic` /
+`synthetic`, section Sons des réglages) peut lui préférer le son synthétique d'origine
+(`assets/sounds/synthetic_dice_roll.wav`), le même pour tous les lancers.
 
 ## Les autres schémas
 

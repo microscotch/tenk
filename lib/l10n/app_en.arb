@@ -241,5 +241,8 @@
   "myProfileEditButton": "Edit my profile",
   "myProfileBadge": "Me",
   "onlinePlayingAs": "You are playing as “{name}”",
-  "onlineNameInvalidError": "Online, your nickname (or your name) must be at most 20 characters, with no invisible character."
+  "onlineNameInvalidError": "Online, your nickname (or your name) must be at most 20 characters, with no invisible character.",
+  "settingsDiceSoundLabel": "Dice sound",
+  "settingsDiceSoundRealistic": "Realistic",
+  "settingsDiceSoundSynthetic": "Synthetic"
 }
