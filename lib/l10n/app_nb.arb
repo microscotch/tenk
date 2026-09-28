@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Du må kaste på nytt.",
   "failureNotRolledYet": "Du må kaste terningene før du kan stoppe.",
   "failureWouldMakeWinningImpossible": "Å stoppe nå ville gjort det umulig å nå nøyaktig 10000.",
-  "settingsMainPlayerTitle": "Hovedspiller",
-  "settingsYourNameLabel": "Ditt navn (eier av enheten)",
   "settingsDelaysTitle": "Forsinkelser",
   "settingsDelaysDescription": "Forsinkelse før en automatisk handling utløses av seg selv. 0 for å deaktivere.",
   "settingsAiDelayLabel": "KI-meldinger (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Spill på nett",
   "onlineResumeButton": "Gjenoppta nettspillet",
   "onlineTitle": "Nettspill",
-  "onlineNameLabel": "Kallenavnet ditt",
   "onlineCreateButton": "Opprett et rom",
   "onlineJoinButton": "Bli med",
   "onlineCodeLabel": "Romkode",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "For mange forsøk: prøv igjen om litt.",
   "onlineErrorBadToken": "Plassen din i dette rommet finnes ikke lenger.",
   "onlineErrorUnsupportedVersion": "Oppdater appen for å spille på nett.",
-  "onlineErrorGeneric": "Noe gikk galt."
+  "onlineErrorGeneric": "Noe gikk galt.",
+  "myProfileTitle": "Min profil",
+  "myProfileWelcomeTitle": "Velkommen!",
+  "myProfileWelcomeMessage": "Lag profilen din: navnet ditt, et kallenavn om du vil, og hånden du spiller med. På nett ser de andre spillerne kallenavnet ditt, eller navnet ditt hvis du ikke har noe.",
+  "myProfileExistingPrompt": "Står du allerede i spillerlisten? Trykk på navnet ditt.",
+  "myProfileCreateButton": "Lag profilen min",
+  "myProfileEditButton": "Rediger profilen min",
+  "myProfileBadge": "Meg",
+  "onlinePlayingAs": "Du spiller som «{name}»",
+  "onlineNameInvalidError": "På nett kan kallenavnet ditt (eller navnet ditt) ha høyst 20 tegn, uten usynlige tegn."
 }

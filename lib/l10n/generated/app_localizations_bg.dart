@@ -493,12 +493,6 @@ class AppLocalizationsBg extends AppLocalizations {
       'Ако спреш сега, ще стане невъзможно да достигнеш точно 10000.';
 
   @override
-  String get settingsMainPlayerTitle => 'Основен играч';
-
-  @override
-  String get settingsYourNameLabel => 'Твоето име (собственик на устройството)';
-
-  @override
   String get settingsDelaysTitle => 'Забавяния';
 
   @override
@@ -724,9 +718,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get onlineTitle => 'Онлайн игра';
 
   @override
-  String get onlineNameLabel => 'Вашият прякор';
-
-  @override
   String get onlineCreateButton => 'Създаване на стая';
 
   @override
@@ -820,4 +811,36 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Възникна грешка.';
+
+  @override
+  String get myProfileTitle => 'Моят профил';
+
+  @override
+  String get myProfileWelcomeTitle => 'Добре дошли!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Създайте профила си: вашето име, прякор, ако желаете, и ръката, с която играете. Онлайн другите играчи ще виждат прякора ви или името ви, ако нямате прякор.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Вече сте в списъка с играчи? Докоснете името си.';
+
+  @override
+  String get myProfileCreateButton => 'Създай моя профил';
+
+  @override
+  String get myProfileEditButton => 'Редактирай моя профил';
+
+  @override
+  String get myProfileBadge => 'Аз';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Играете като „$name“';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Онлайн прякорът ви (или името ви) трябва да е най-много 20 знака, без невидими знаци.';
 }

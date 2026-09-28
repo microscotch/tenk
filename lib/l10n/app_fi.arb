@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Sinun täytyy heittää uudelleen.",
   "failureNotRolledYet": "Sinun täytyy heittää nopat ennen kuin voit lopettaa.",
   "failureWouldMakeWinningImpossible": "Lopettaminen nyt tekisi tarkalleen 10000 pisteen saavuttamisesta mahdotonta.",
-  "settingsMainPlayerTitle": "Pääpelaaja",
-  "settingsYourNameLabel": "Nimesi (laitteen omistaja)",
   "settingsDelaysTitle": "Viiveet",
   "settingsDelaysDescription": "Viive ennen kuin automaattinen toiminto laukeaa itsestään. 0 poistaa käytöstä.",
   "settingsAiDelayLabel": "Tekoälyn viestit (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Pelaa verkossa",
   "onlineResumeButton": "Jatka verkkopeliä",
   "onlineTitle": "Verkkopeli",
-  "onlineNameLabel": "Lempinimesi",
   "onlineCreateButton": "Luo huone",
   "onlineJoinButton": "Liity",
   "onlineCodeLabel": "Huoneen koodi",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Liian monta yritystä: yritä hetken päästä uudelleen.",
   "onlineErrorBadToken": "Paikkaasi tässä huoneessa ei enää ole.",
   "onlineErrorUnsupportedVersion": "Päivitä sovellus pelataksesi verkossa.",
-  "onlineErrorGeneric": "Tapahtui virhe."
+  "onlineErrorGeneric": "Tapahtui virhe.",
+  "myProfileTitle": "Oma profiili",
+  "myProfileWelcomeTitle": "Tervetuloa!",
+  "myProfileWelcomeMessage": "Luo profiilisi: nimesi, halutessasi lempinimi ja käsi, jolla pelaat. Verkossa muut pelaajat näkevät lempinimesi tai nimesi, jos sinulla ei ole lempinimeä.",
+  "myProfileExistingPrompt": "Oletko jo pelaajaluettelossa? Napauta nimeäsi.",
+  "myProfileCreateButton": "Luo oma profiili",
+  "myProfileEditButton": "Muokkaa omaa profiilia",
+  "myProfileBadge": "Minä",
+  "onlinePlayingAs": "Pelaat nimellä ”{name}”",
+  "onlineNameInvalidError": "Verkossa lempinimesi (tai nimesi) saa olla enintään 20 merkkiä, ilman näkymättömiä merkkejä."
 }

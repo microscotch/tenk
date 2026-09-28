@@ -54,6 +54,21 @@ void main() {
       expect(list.single.stats.gamesPlayed, 1);
     });
 
+    test('joué sous mon surnom, la partie compte pour ma fiche, sans en créer une seconde', () async {
+      final me = PlayerProfile.create(name: 'Laurent', nickname: 'Lolo');
+      await players.write(me);
+      final setup = const GameSetup(playerNames: ['Lolo', 'Inconnu']);
+      final actions = journalWithFaces(setup, 11, playScriptedGame(setup, 11).actions);
+      await archive.write(SavedGame.online(names: setup.playerNames, actions: actions, mySeat: 0, myProfileId: me.id));
+
+      final created = await syncPlayerStatistics(archive: archive, players: players);
+
+      expect(created, 0, reason: 'pas de fiche « Lolo » à côté de Laurent');
+      final list = await players.list();
+      expect(list.map((p) => p.name), ['Laurent']);
+      expect(list.single.stats.gamesPlayed, 1);
+    });
+
     test('un adversaire homonyme d\'un joueur local ne lui verse rien', () async {
       await players.write(PlayerProfile.create(name: 'Paul'));
       await archiveOnlineGame(names: ['Paul', 'Moi'], mySeat: 1);

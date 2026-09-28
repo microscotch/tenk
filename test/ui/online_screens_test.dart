@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/game_setup.dart';
 import 'package:le10000/game/online/protocol.dart';
+import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
@@ -20,6 +21,7 @@ import 'package:le10000/ui/share.dart';
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
 import '../test_helpers/fake_player_store.dart';
+import '../test_helpers/my_profile.dart';
 import '../test_helpers/scripted_game.dart';
 
 const _token = 'abcdef0123456789abcdef0123456789';
@@ -37,8 +39,11 @@ void main() {
   late ProviderContainer container;
   late List<String> shared;
   late bool shareFails;
+  late FakePlayerStore players;
 
-  setUp(() {
+  setUp(() async {
+    players = FakePlayerStore();
+    await seedMyProfile(players, PlayerProfile.create(name: 'Anna'));
     shared = [];
     shareFails = false;
     transport = FakeTransport();
@@ -49,7 +54,7 @@ void main() {
       onlineServerUrlProvider.overrideWithValue('ws://test/ws'),
       gameSaveStoreProvider.overrideWithValue(FakeGameSaveStore()),
       archivedGameSaveStoreProvider.overrideWithValue(FakeGameSaveStore()),
-      playerStoreProvider.overrideWithValue(FakePlayerStore()),
+      playerStoreProvider.overrideWithValue(players),
       shareTextProvider.overrideWithValue((text, {origin}) async {
         if (shareFails) throw StateError('pas de feuille de partage');
         shared.add(text);
@@ -87,12 +92,10 @@ void main() {
   }
 
   group('entrée', () {
-    testWidgets('créer un salon demande un pseudo, puis envoie la demande', (tester) async {
+    testWidgets('créer un salon envoie le nom du profil, sans rien saisir', (tester) async {
       await pump(tester, const OnlineEntryScreen());
-      expect(enabled(tester, 'Créer un salon'), isFalse);
-
-      await tester.enterText(find.widgetWithText(TextField, 'Votre pseudo'), 'Anna');
-      await tester.pump();
+      expect(find.text('Vous jouez sous le nom « Anna »'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Votre pseudo'), findsNothing);
       expect(enabled(tester, 'Créer un salon'), isTrue);
 
       await tester.tap(find.text('Créer un salon'));
@@ -102,9 +105,31 @@ void main() {
       expect(transport.current.lastSent!.params['name'], 'Anna');
     });
 
+    testWidgets('le surnom du profil passe avant son nom', (tester) async {
+      final me = (await players.list()).single;
+      await players.write(me.copyWith(nickname: 'Nana'));
+      await pump(tester, const OnlineEntryScreen());
+
+      await tester.enterText(find.widgetWithText(TextField, 'Code du salon'), 'abcde');
+      await tester.pump();
+      await tester.tap(find.text('Rejoindre'));
+      await tester.pumpAndSettle();
+
+      expect(transport.current.lastSent!.params['name'], 'Nana');
+    });
+
+    testWidgets('un nom de profil que le serveur refuserait bloque, avec de quoi le corriger', (tester) async {
+      final me = (await players.list()).single;
+      await players.write(me.copyWith(nickname: 'Un surnom beaucoup trop long'));
+      await pump(tester, const OnlineEntryScreen());
+
+      expect(find.textContaining('20 caractères au plus'), findsOneWidget);
+      expect(enabled(tester, 'Créer un salon'), isFalse);
+      expect(enabled(tester, 'Modifier mon profil'), isTrue);
+    });
+
     testWidgets('rejoindre demande un code complet, envoyé en majuscules', (tester) async {
       await pump(tester, const OnlineEntryScreen());
-      await tester.enterText(find.widgetWithText(TextField, 'Votre pseudo'), 'Bob');
       await tester.enterText(find.widgetWithText(TextField, 'Code du salon'), 'abc');
       await tester.pump();
       expect(enabled(tester, 'Rejoindre'), isFalse);
@@ -120,7 +145,6 @@ void main() {
 
     testWidgets('une erreur du serveur s\'affiche ; un coup refusé ne dit rien', (tester) async {
       await pump(tester, const OnlineEntryScreen());
-      await tester.enterText(find.widgetWithText(TextField, 'Votre pseudo'), 'Bob');
       await tester.enterText(find.widgetWithText(TextField, 'Code du salon'), 'ZZZZZ');
       await tester.pump();
       await tester.tap(find.text('Rejoindre'));
@@ -138,8 +162,6 @@ void main() {
     testWidgets('un serveur injoignable le dit', (tester) async {
       transport.unreachable = true;
       await pump(tester, const OnlineEntryScreen());
-      await tester.enterText(find.widgetWithText(TextField, 'Votre pseudo'), 'Anna');
-      await tester.pump();
       await tester.tap(find.text('Créer un salon'));
       await tester.pumpAndSettle();
 
@@ -148,8 +170,6 @@ void main() {
 
     testWidgets('le salon s\'ouvre dès que le serveur l\'a créé', (tester) async {
       await pump(tester, const OnlineEntryScreen());
-      await tester.enterText(find.widgetWithText(TextField, 'Votre pseudo'), 'Anna');
-      await tester.pump();
       await tester.tap(find.text('Créer un salon'));
       await tester.pumpAndSettle();
 

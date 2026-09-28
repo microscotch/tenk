@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Debes volver a tirar.",
   "failureNotRolledYet": "Debes lanzar los dados antes de poder plantarte.",
   "failureWouldMakeWinningImpossible": "Plantarte ahora haría imposible llegar exactamente a 10000.",
-  "settingsMainPlayerTitle": "Jugador principal",
-  "settingsYourNameLabel": "Tu nombre (propietario del dispositivo)",
   "settingsDelaysTitle": "Temporizaciones",
   "settingsDelaysDescription": "Retraso antes de que una acción automática se active sola. 0 para desactivar.",
   "settingsAiDelayLabel": "Mensajes de la IA (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Jugar en línea",
   "onlineResumeButton": "Reanudar la partida en línea",
   "onlineTitle": "Partida en línea",
-  "onlineNameLabel": "Tu apodo",
   "onlineCreateButton": "Crear una sala",
   "onlineJoinButton": "Unirse",
   "onlineCodeLabel": "Código de la sala",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Demasiados intentos: vuelve a probar en un momento.",
   "onlineErrorBadToken": "Tu sitio en esta sala ya no existe.",
   "onlineErrorUnsupportedVersion": "Actualiza la aplicación para jugar en línea.",
-  "onlineErrorGeneric": "Se ha producido un error."
+  "onlineErrorGeneric": "Se ha producido un error.",
+  "myProfileTitle": "Mi perfil",
+  "myProfileWelcomeTitle": "¡Bienvenido!",
+  "myProfileWelcomeMessage": "Crea tu perfil: tu nombre, un apodo si quieres y la mano con la que juegas. En línea, los demás jugadores verán tu apodo, o tu nombre si no tienes.",
+  "myProfileExistingPrompt": "¿Ya estás en la lista de jugadores? Toca tu nombre.",
+  "myProfileCreateButton": "Crear mi perfil",
+  "myProfileEditButton": "Editar mi perfil",
+  "myProfileBadge": "Yo",
+  "onlinePlayingAs": "Juegas como «{name}»",
+  "onlineNameInvalidError": "En línea, tu apodo (o tu nombre) debe tener como máximo 20 caracteres, sin caracteres invisibles."
 }

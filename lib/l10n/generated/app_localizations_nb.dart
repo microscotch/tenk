@@ -493,12 +493,6 @@ class AppLocalizationsNb extends AppLocalizations {
       'Å stoppe nå ville gjort det umulig å nå nøyaktig 10000.';
 
   @override
-  String get settingsMainPlayerTitle => 'Hovedspiller';
-
-  @override
-  String get settingsYourNameLabel => 'Ditt navn (eier av enheten)';
-
-  @override
   String get settingsDelaysTitle => 'Forsinkelser';
 
   @override
@@ -724,9 +718,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get onlineTitle => 'Nettspill';
 
   @override
-  String get onlineNameLabel => 'Kallenavnet ditt';
-
-  @override
   String get onlineCreateButton => 'Opprett et rom';
 
   @override
@@ -822,4 +813,36 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Noe gikk galt.';
+
+  @override
+  String get myProfileTitle => 'Min profil';
+
+  @override
+  String get myProfileWelcomeTitle => 'Velkommen!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Lag profilen din: navnet ditt, et kallenavn om du vil, og hånden du spiller med. På nett ser de andre spillerne kallenavnet ditt, eller navnet ditt hvis du ikke har noe.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Står du allerede i spillerlisten? Trykk på navnet ditt.';
+
+  @override
+  String get myProfileCreateButton => 'Lag profilen min';
+
+  @override
+  String get myProfileEditButton => 'Rediger profilen min';
+
+  @override
+  String get myProfileBadge => 'Meg';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Du spiller som «$name»';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'På nett kan kallenavnet ditt (eller navnet ditt) ha høyst 20 tegn, uten usynlige tegn.';
 }

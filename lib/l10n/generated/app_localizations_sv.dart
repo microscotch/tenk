@@ -494,12 +494,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Att stanna nu skulle göra det omöjligt att nå exakt 10000.';
 
   @override
-  String get settingsMainPlayerTitle => 'Huvudspelare';
-
-  @override
-  String get settingsYourNameLabel => 'Ditt namn (enhetens ägare)';
-
-  @override
   String get settingsDelaysTitle => 'Fördröjningar';
 
   @override
@@ -725,9 +719,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get onlineTitle => 'Onlinespel';
 
   @override
-  String get onlineNameLabel => 'Ditt smeknamn';
-
-  @override
   String get onlineCreateButton => 'Skapa ett rum';
 
   @override
@@ -822,4 +813,36 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Något gick fel.';
+
+  @override
+  String get myProfileTitle => 'Min profil';
+
+  @override
+  String get myProfileWelcomeTitle => 'Välkommen!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Skapa din profil: ditt namn, ett smeknamn om du vill och handen du spelar med. Online ser de andra spelarna ditt smeknamn, eller ditt namn om du inte har något.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Finns du redan i spelarlistan? Tryck på ditt namn.';
+
+  @override
+  String get myProfileCreateButton => 'Skapa min profil';
+
+  @override
+  String get myProfileEditButton => 'Redigera min profil';
+
+  @override
+  String get myProfileBadge => 'Jag';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Du spelar som ”$name”';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Online får ditt smeknamn (eller ditt namn) vara högst 20 tecken, utan osynliga tecken.';
 }

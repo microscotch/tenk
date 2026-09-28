@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/player_profile.dart';
@@ -15,7 +17,10 @@ import 'settings_providers.dart';
 /// peut donc basculer d'un côté à l'autre en cours de partie, ce qui est le
 /// comportement voulu : elle suit la main de qui joue.
 final currentSeatRightHandedProvider = Provider<bool>((ref) {
-  final deviceDefault = ref.watch(settingsProvider).rightHanded;
+  // Le réglage par défaut est la latéralité de l'utilisateur de l'appareil
+  // (son profil) ; l'ancien réglage d'appareil ne sert plus que tant que le
+  // profil n'est pas là (fiches pas encore relues, profil pas encore créé).
+  final deviceDefault = ref.watch(myProfileProvider)?.rightHanded ?? ref.watch(settingsProvider).rightHanded;
   final engine = ref.watch(gameProvider);
   if (engine == null) return deviceDefault;
 
@@ -86,6 +91,59 @@ final displayNamesProvider = Provider<Map<String, String>>((ref) {
 Map<String, String> watchDisplayNames(WidgetRef ref, SavedGame? record) {
   if (record == null) return ref.watch(displayNamesProvider);
   return displayNamesFor(record.setup, ref.watch(playersProvider).value);
+}
+
+/// Le profil de l'utilisateur de l'appareil : sa fiche dans la base des
+/// joueurs, désignée par `AppSettings.myProfileId`. Nul tant que les réglages
+/// ou les fiches ne sont pas relus, que le profil n'a pas été choisi, ou si sa
+/// fiche a disparu — c'est [isMyProfileMissing] qui tranche au lancement.
+///
+/// Une fiche comme les autres (statistiques, surnom, latéralité), et non une
+/// donnée à part : ses parties, locales comme en ligne, s'y cumulent.
+final myProfileProvider = Provider<PlayerProfile?>((ref) {
+  final id = ref.watch(settingsProvider.select((s) => s.myProfileId));
+  if (id == null) return null;
+  final players = ref.watch(playersProvider).value;
+  return players?.where((p) => p.id == id).firstOrNull;
+});
+
+/// Vrai s'il faut demander son profil à l'utilisateur : aucun n'a été choisi,
+/// ou sa fiche n'existe plus. Attend que réglages ET fiches soient réellement
+/// relus — décider sur les valeurs par défaut enverrait un utilisateur qui a
+/// déjà un profil vers l'écran de création.
+///
+/// Faux si les fiches ne peuvent pas être lues : mieux vaut laisser entrer dans
+/// le jeu que bloquer sur un écran dont l'enregistrement échouerait aussi.
+Future<bool> isMyProfileMissing(ProviderContainer container) async {
+  if (!container.read(settingsProvider).loaded) {
+    final loaded = Completer<void>();
+    final subscription = container.listen(settingsProvider, (_, next) {
+      if (next.loaded && !loaded.isCompleted) loaded.complete();
+    });
+    if (container.read(settingsProvider).loaded && !loaded.isCompleted) loaded.complete();
+    await loaded.future;
+    subscription.close();
+  }
+  final List<PlayerProfile> players;
+  try {
+    // Le store lui-même, pas `playersProvider.future` : Riverpod réessaie de
+    // lui-même un provider en échec, et cette attente ne finirait jamais.
+    players = await container.read(playerStoreProvider).list();
+  } catch (_) {
+    return false;
+  }
+  final id = container.read(settingsProvider).myProfileId;
+  return id == null || !players.any((p) => p.id == id);
+}
+
+/// La fiche dont le nom est l'ancien « nom du joueur principal » des réglages,
+/// s'il y en a une : l'utilisateur d'avant la notion de profil y est sans doute
+/// déjà, avec ses statistiques — on la lui propose d'abord plutôt que de lui
+/// en faire créer une seconde, refusée d'ailleurs pour nom déjà pris.
+PlayerProfile? profileMatchingLegacyName(Iterable<PlayerProfile> players, String legacyName) {
+  if (legacyName.trim().isEmpty) return null;
+  final key = normalizeName(legacyName);
+  return players.where((p) => p.allNames.any((n) => normalizeName(n) == key)).firstOrNull;
 }
 
 /// Nom à afficher pour [name], ou [name] lui-même faute de mieux.

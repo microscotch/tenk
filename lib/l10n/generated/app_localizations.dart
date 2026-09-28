@@ -890,18 +890,6 @@ abstract class AppLocalizations {
   /// **'S\'arrêter rendrait la victoire à 10000 inatteignable.'**
   String get failureWouldMakeWinningImpossible;
 
-  /// Titre de la section réglages consacrée au joueur principal.
-  ///
-  /// In fr, this message translates to:
-  /// **'Joueur principal'**
-  String get settingsMainPlayerTitle;
-
-  /// Libellé du champ de saisie du nom du propriétaire de l'appareil, dans les réglages.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre nom (propriétaire de l\'appareil)'**
-  String get settingsYourNameLabel;
-
   /// Titre de la section réglages consacrée aux délais d'auto-validation.
   ///
   /// In fr, this message translates to:
@@ -1298,12 +1286,6 @@ abstract class AppLocalizations {
   /// **'Partie en ligne'**
   String get onlineTitle;
 
-  /// Champ du pseudo, tel que les autres joueurs le verront.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre pseudo'**
-  String get onlineNameLabel;
-
   /// Bouton qui crée un salon de partie en ligne.
   ///
   /// In fr, this message translates to:
@@ -1471,6 +1453,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une erreur est survenue.'**
   String get onlineErrorGeneric;
+
+  /// Titre de l'écran et de la section du profil de l'utilisateur de l'appareil (sa fiche joueur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon profil'**
+  String get myProfileTitle;
+
+  /// Titre de l'écran de création du profil, au premier lancement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bienvenue !'**
+  String get myProfileWelcomeTitle;
+
+  /// Explication de l'écran de création du profil, au premier lancement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez votre profil : votre nom, un surnom si vous voulez, et la main avec laquelle vous jouez. En ligne, les autres joueurs verront votre surnom, ou votre nom si vous n\'en avez pas.'**
+  String get myProfileWelcomeMessage;
+
+  /// Invite à choisir sa fiche parmi les joueurs existants, sur l'écran de création du profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes déjà dans la liste des joueurs ? Touchez votre nom.'**
+  String get myProfileExistingPrompt;
+
+  /// Bouton qui ouvre la création de la fiche de l'utilisateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer mon profil'**
+  String get myProfileCreateButton;
+
+  /// Bouton qui ouvre l'édition du profil de l'utilisateur (réglages, jeu en ligne).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier mon profil'**
+  String get myProfileEditButton;
+
+  /// Marque posée sur la fiche de l'utilisateur dans la liste des joueurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moi'**
+  String get myProfileBadge;
+
+  /// Nom sous lequel l'utilisateur apparaît en ligne (surnom de son profil, sinon son nom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous jouez sous le nom « {name} »'**
+  String onlinePlayingAs(String name);
+
+  /// Erreur : le nom du profil ne passe pas les règles du serveur pour un pseudo en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne, votre surnom (ou votre nom) doit faire 20 caractères au plus, sans caractère invisible.'**
+  String get onlineNameInvalidError;
 }
 
 class _AppLocalizationsDelegate

@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Tens de relançar.",
   "failureNotRolledYet": "Tens de lançar os dados antes de poderes parar.",
   "failureWouldMakeWinningImpossible": "Parar agora tornaria impossível chegar exatamente a 10000.",
-  "settingsMainPlayerTitle": "Jogador principal",
-  "settingsYourNameLabel": "O teu nome (dono do aparelho)",
   "settingsDelaysTitle": "Temporizações",
   "settingsDelaysDescription": "Atraso antes de uma ação automática se ativar sozinha. 0 para desativar.",
   "settingsAiDelayLabel": "Mensagens da IA (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Jogar online",
   "onlineResumeButton": "Retomar o jogo online",
   "onlineTitle": "Jogo online",
-  "onlineNameLabel": "A sua alcunha",
   "onlineCreateButton": "Criar uma sala",
   "onlineJoinButton": "Entrar",
   "onlineCodeLabel": "Código da sala",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Demasiadas tentativas: tente novamente dentro de instantes.",
   "onlineErrorBadToken": "O seu lugar nesta sala já não existe.",
   "onlineErrorUnsupportedVersion": "Atualize a aplicação para jogar online.",
-  "onlineErrorGeneric": "Ocorreu um erro."
+  "onlineErrorGeneric": "Ocorreu um erro.",
+  "myProfileTitle": "O meu perfil",
+  "myProfileWelcomeTitle": "Bem-vindo!",
+  "myProfileWelcomeMessage": "Crie o seu perfil: o seu nome, uma alcunha se quiser, e a mão com que joga. Online, os outros jogadores verão a sua alcunha, ou o seu nome se não tiver alcunha.",
+  "myProfileExistingPrompt": "Já está na lista de jogadores? Toque no seu nome.",
+  "myProfileCreateButton": "Criar o meu perfil",
+  "myProfileEditButton": "Editar o meu perfil",
+  "myProfileBadge": "Eu",
+  "onlinePlayingAs": "Joga como «{name}»",
+  "onlineNameInvalidError": "Online, a sua alcunha (ou o seu nome) deve ter no máximo 20 caracteres, sem caracteres invisíveis."
 }

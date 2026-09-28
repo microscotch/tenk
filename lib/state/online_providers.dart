@@ -9,6 +9,7 @@ import '../game/game_recording.dart';
 import '../game/online/protocol.dart';
 import 'game_providers.dart';
 import 'online_transport.dart';
+import 'settings_providers.dart';
 
 export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo;
 
@@ -292,7 +293,13 @@ class OnlineSession extends Notifier<OnlineState> {
     _takeover = false;
     final names = message.names;
     final actions = message.actions;
-    _game.startOnlineGame(names: names, actions: actions, mySeat: seat, sendIntent: play);
+    _game.startOnlineGame(
+      names: names,
+      actions: actions,
+      mySeat: seat,
+      sendIntent: play,
+      myProfileId: ref.read(settingsProvider).myProfileId,
+    );
     final diceOff = replayGame(GameSetup(playerNames: names), 0, actions.sublist(0, diceOffActionCount(actions))).diceOff;
     state = state.copyWith(gameStarted: true, diceOff: diceOff);
     _reopening?.complete(true);

@@ -5,6 +5,7 @@ import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_statistics.dart';
 import '../../state/player_store.dart';
+import '../../state/settings_providers.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/game_run_tile.dart' show BoundedGameRunsList;
 import '../widgets/player_avatar.dart';
@@ -27,7 +28,12 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
 
   Future<void> _openEditor([PlayerProfile? existing]) async {
     await Navigator.of(context).push<PlayerProfile>(
-      MaterialPageRoute(builder: (_) => PlayerEditScreen(existing: existing)),
+      MaterialPageRoute(
+        builder: (_) => PlayerEditScreen(
+          existing: existing,
+          isMyProfile: existing != null && existing.id == ref.read(settingsProvider).myProfileId,
+        ),
+      ),
     );
     if (mounted) ref.invalidate(playersProvider);
   }
@@ -71,6 +77,7 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
         (ref.watch(playersProvider).value ?? const <PlayerProfile>[])
             .where((p) => !_hidden.contains(p.id))
             .toList();
+    final myId = ref.watch(settingsProvider.select((s) => s.myProfileId));
 
     return Scaffold(
       appBar: AppTopBar(title: Text(l10n.playersScreenTitle(players.length))),
@@ -87,6 +94,17 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
               : BoundedGameRunsList(
                   children: [
                     for (final player in players)
+                      if (player.id == myId)
+                        // Le profil de l'utilisateur ne se supprime pas : il porte
+                        // son pseudo en ligne et ses statistiques.
+                        ListTile(
+                          leading: PlayerAvatarWidget(name: player.name, size: 40),
+                          title: Text(player.displayName),
+                          subtitle: Text(l10n.playerGamesSummary(player.stats.gamesPlayed)),
+                          trailing: Chip(label: Text(l10n.myProfileBadge)),
+                          onTap: () => _openEditor(player),
+                        )
+                      else
                       Dismissible(
                         key: ValueKey(player.id),
                         direction: DismissDirection.endToStart,

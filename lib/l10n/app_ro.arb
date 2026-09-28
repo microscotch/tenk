@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Trebuie să arunci din nou.",
   "failureNotRolledYet": "Trebuie să arunci zarurile înainte de a te putea opri.",
   "failureWouldMakeWinningImpossible": "Oprirea acum ar face imposibilă atingerea exactă a 10000.",
-  "settingsMainPlayerTitle": "Jucătorul principal",
-  "settingsYourNameLabel": "Numele tău (proprietarul dispozitivului)",
   "settingsDelaysTitle": "Temporizări",
   "settingsDelaysDescription": "Întârziere înainte ca o acțiune automată să se declanșeze singură. 0 pentru a dezactiva.",
   "settingsAiDelayLabel": "Mesaje IA (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Joacă online",
   "onlineResumeButton": "Reia jocul online",
   "onlineTitle": "Joc online",
-  "onlineNameLabel": "Porecla ta",
   "onlineCreateButton": "Creează o cameră",
   "onlineJoinButton": "Intră",
   "onlineCodeLabel": "Codul camerei",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Prea multe încercări: încearcă din nou peste puțin timp.",
   "onlineErrorBadToken": "Locul tău în această cameră nu mai există.",
   "onlineErrorUnsupportedVersion": "Actualizează aplicația pentru a juca online.",
-  "onlineErrorGeneric": "A apărut o eroare."
+  "onlineErrorGeneric": "A apărut o eroare.",
+  "myProfileTitle": "Profilul meu",
+  "myProfileWelcomeTitle": "Bine ai venit!",
+  "myProfileWelcomeMessage": "Creează-ți profilul: numele tău, o poreclă dacă vrei și mâna cu care joci. Online, ceilalți jucători îți vor vedea porecla sau numele, dacă nu ai poreclă.",
+  "myProfileExistingPrompt": "Ești deja în lista de jucători? Atinge-ți numele.",
+  "myProfileCreateButton": "Creează-mi profilul",
+  "myProfileEditButton": "Modifică-mi profilul",
+  "myProfileBadge": "Eu",
+  "onlinePlayingAs": "Joci ca „{name}”",
+  "onlineNameInvalidError": "Online, porecla (sau numele) ta trebuie să aibă cel mult 20 de caractere, fără caractere invizibile."
 }

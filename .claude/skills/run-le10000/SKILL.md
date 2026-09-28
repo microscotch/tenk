@@ -111,6 +111,11 @@ Neither of these launches the actual app — they don't substitute for
   R=110 (measured), so a stricter threshold would never fire on a device
   that has a saved game. If you're driving the app some other way than
   this script, replicate that check rather than a fixed sleep.
+- **Without a user profile, the splash leads to the profile screen**
+  (`MyProfileSetupScreen`, "Bienvenue !"), not the home screen: `start` then
+  prints the "home screen not detected" warning after 90s, but the app is up.
+  Choosing or creating a profile there writes to the device's real data
+  (`settings.myProfileId`, the players folder) — only do it if that is the point.
 - **A combined `xdotool mousemove X Y click 1` is silently swallowed.**
   There's no window manager in this bare Xvfb session, so nothing
   sends the app an `XEnterNotify` before an immediate click. Use

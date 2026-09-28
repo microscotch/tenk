@@ -494,12 +494,6 @@ class AppLocalizationsFi extends AppLocalizations {
       'Lopettaminen nyt tekisi tarkalleen 10000 pisteen saavuttamisesta mahdotonta.';
 
   @override
-  String get settingsMainPlayerTitle => 'Pääpelaaja';
-
-  @override
-  String get settingsYourNameLabel => 'Nimesi (laitteen omistaja)';
-
-  @override
   String get settingsDelaysTitle => 'Viiveet';
 
   @override
@@ -725,9 +719,6 @@ class AppLocalizationsFi extends AppLocalizations {
   String get onlineTitle => 'Verkkopeli';
 
   @override
-  String get onlineNameLabel => 'Lempinimesi';
-
-  @override
   String get onlineCreateButton => 'Luo huone';
 
   @override
@@ -822,4 +813,36 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Tapahtui virhe.';
+
+  @override
+  String get myProfileTitle => 'Oma profiili';
+
+  @override
+  String get myProfileWelcomeTitle => 'Tervetuloa!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Luo profiilisi: nimesi, halutessasi lempinimi ja käsi, jolla pelaat. Verkossa muut pelaajat näkevät lempinimesi tai nimesi, jos sinulla ei ole lempinimeä.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Oletko jo pelaajaluettelossa? Napauta nimeäsi.';
+
+  @override
+  String get myProfileCreateButton => 'Luo oma profiili';
+
+  @override
+  String get myProfileEditButton => 'Muokkaa omaa profiilia';
+
+  @override
+  String get myProfileBadge => 'Minä';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Pelaat nimellä ”$name”';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Verkossa lempinimesi (tai nimesi) saa olla enintään 20 merkkiä, ilman näkymättömiä merkkejä.';
 }

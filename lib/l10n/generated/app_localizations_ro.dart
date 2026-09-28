@@ -501,13 +501,6 @@ class AppLocalizationsRo extends AppLocalizations {
       'Oprirea acum ar face imposibilă atingerea exactă a 10000.';
 
   @override
-  String get settingsMainPlayerTitle => 'Jucătorul principal';
-
-  @override
-  String get settingsYourNameLabel =>
-      'Numele tău (proprietarul dispozitivului)';
-
-  @override
   String get settingsDelaysTitle => 'Temporizări';
 
   @override
@@ -734,9 +727,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get onlineTitle => 'Joc online';
 
   @override
-  String get onlineNameLabel => 'Porecla ta';
-
-  @override
   String get onlineCreateButton => 'Creează o cameră';
 
   @override
@@ -832,4 +822,36 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'A apărut o eroare.';
+
+  @override
+  String get myProfileTitle => 'Profilul meu';
+
+  @override
+  String get myProfileWelcomeTitle => 'Bine ai venit!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Creează-ți profilul: numele tău, o poreclă dacă vrei și mâna cu care joci. Online, ceilalți jucători îți vor vedea porecla sau numele, dacă nu ai poreclă.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Ești deja în lista de jucători? Atinge-ți numele.';
+
+  @override
+  String get myProfileCreateButton => 'Creează-mi profilul';
+
+  @override
+  String get myProfileEditButton => 'Modifică-mi profilul';
+
+  @override
+  String get myProfileBadge => 'Eu';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Joci ca „$name”';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Online, porecla (sau numele) ta trebuie să aibă cel mult 20 de caractere, fără caractere invizibile.';
 }

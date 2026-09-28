@@ -493,12 +493,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stopping now would make reaching exactly 10000 impossible.';
 
   @override
-  String get settingsMainPlayerTitle => 'Main player';
-
-  @override
-  String get settingsYourNameLabel => 'Your name (device owner)';
-
-  @override
   String get settingsDelaysTitle => 'Delays';
 
   @override
@@ -724,9 +718,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onlineTitle => 'Online game';
 
   @override
-  String get onlineNameLabel => 'Your nickname';
-
-  @override
   String get onlineCreateButton => 'Create a room';
 
   @override
@@ -820,4 +811,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Something went wrong.';
+
+  @override
+  String get myProfileTitle => 'My profile';
+
+  @override
+  String get myProfileWelcomeTitle => 'Welcome!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Create your profile: your name, a nickname if you like, and the hand you play with. Online, other players will see your nickname, or your name if you have none.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Already in the players list? Tap your name.';
+
+  @override
+  String get myProfileCreateButton => 'Create my profile';
+
+  @override
+  String get myProfileEditButton => 'Edit my profile';
+
+  @override
+  String get myProfileBadge => 'Me';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'You are playing as “$name”';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Online, your nickname (or your name) must be at most 20 characters, with no invisible character.';
 }

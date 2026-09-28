@@ -5,11 +5,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/online/protocol.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/state/game_save_store.dart';
+import 'package:le10000/state/player_providers.dart';
+import 'package:le10000/state/player_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:le10000/state/online_providers.dart';
 import 'package:le10000/state/online_transport.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
+import '../test_helpers/fake_player_store.dart';
+import '../test_helpers/my_profile.dart';
 import '../test_helpers/fake_online.dart';
 import '../test_helpers/scripted_game.dart';
 
@@ -31,6 +37,7 @@ void main() {
   late FakeCredentialsStore credentials;
   late FakeGameSaveStore inProgress;
   late FakeGameSaveStore archive;
+  late FakePlayerStore players;
   late ProviderContainer container;
 
   ProviderContainer newContainer() {
@@ -41,6 +48,7 @@ void main() {
       onlineReconnectDelayProvider.overrideWithValue((_) => const Duration(milliseconds: 5)),
       gameSaveStoreProvider.overrideWithValue(inProgress),
       archivedGameSaveStoreProvider.overrideWithValue(archive),
+      playerStoreProvider.overrideWithValue(players),
     ]);
     addTearDown(c.dispose);
     return c;
@@ -51,6 +59,8 @@ void main() {
     credentials = FakeCredentialsStore();
     inProgress = FakeGameSaveStore();
     archive = FakeGameSaveStore();
+    players = FakePlayerStore();
+    SharedPreferences.setMockInitialValues({});
     container = newContainer();
   });
 
@@ -386,6 +396,41 @@ void main() {
       expect(replayed.gameOver, isTrue);
       expect(replayed.winnerIndex, played.winnerIndex);
       expect([for (final p in replayed.players) p.totalScore], [for (final p in played.players) p.totalScore]);
+    });
+  });
+
+  group('mon profil dans une partie en ligne', () {
+    late PlayerProfile me;
+
+    /// Mon profil (gaucher, surnommé), puis une session neuve qui le relit.
+    Future<void> withMyProfile() async {
+      me = PlayerProfile.create(name: 'Bob', nickname: 'Bobby', rightHanded: false);
+      await seedMyProfile(players, me);
+      container = newContainer();
+      // Comme au lancement : la garde attend réglages et fiches relus.
+      expect(await isMyProfileMissing(container), isFalse);
+      await container.read(playersProvider.future);
+    }
+
+    test('ma fiche est rattachée à mon siège, jusque dans l\'archive', () async {
+      await withMyProfile();
+      final full = fullJournal();
+      await joinedAndStarted(1, full);
+
+      expect(game().originalSetup!.playerIdAt(1), me.id);
+      expect(game().originalSetup!.playerIdAt(0), isNull, reason: 'l\'adversaire n\'est lié à aucune fiche');
+      expect((await archive.list()).single.setup.playerIdAt(1), me.id);
+    });
+
+    test('à mon tour, les commandes suivent ma main', () async {
+      await withMyProfile();
+      await joinedAndStarted(1, serverJournal());
+      final link = game().onlineLink!;
+      final mine = container.read(gameProvider)!.currentPlayerIndex == link.myEngineIndex;
+
+      // Ancien réglage d'appareil : droitier. Mon profil : gaucher. L'adversaire
+      // n'a pas de fiche : il retombe sur le réglage par défaut, qui est le mien.
+      expect(container.read(currentSeatRightHandedProvider), isFalse, reason: mine ? 'mon tour' : 'repli sur mon profil');
     });
   });
 

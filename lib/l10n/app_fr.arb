@@ -467,12 +467,6 @@
   "failureWouldMakeWinningImpossible": "S'arrêter rendrait la victoire à 10000 inatteignable.",
   "@failureWouldMakeWinningImpossible": {"description": "Raison pour laquelle le joueur ne peut pas s'arrêter : le score obtenu serait trop proche de 10000 pour qu'un futur tour (minimum 200) puisse encore l'atteindre exactement."},
 
-  "settingsMainPlayerTitle": "Joueur principal",
-  "@settingsMainPlayerTitle": {"description": "Titre de la section réglages consacrée au joueur principal."},
-
-  "settingsYourNameLabel": "Votre nom (propriétaire de l'appareil)",
-  "@settingsYourNameLabel": {"description": "Libellé du champ de saisie du nom du propriétaire de l'appareil, dans les réglages."},
-
   "settingsDelaysTitle": "Temporisations",
   "@settingsDelaysTitle": {"description": "Titre de la section réglages consacrée aux délais d'auto-validation."},
 
@@ -672,8 +666,6 @@
   "@onlineResumeButton": {"description": "Bouton de l'accueil, affiché quand une partie en ligne est en cours : on y retrouve sa place."},
   "onlineTitle": "Partie en ligne",
   "@onlineTitle": {"description": "Titre de l'écran d'entrée des parties en ligne."},
-  "onlineNameLabel": "Votre pseudo",
-  "@onlineNameLabel": {"description": "Champ du pseudo, tel que les autres joueurs le verront."},
   "onlineCreateButton": "Créer un salon",
   "@onlineCreateButton": {"description": "Bouton qui crée un salon de partie en ligne."},
   "onlineJoinButton": "Rejoindre",
@@ -729,5 +721,32 @@
   "onlineErrorUnsupportedVersion": "Mettez l'application à jour pour jouer en ligne.",
   "@onlineErrorUnsupportedVersion": {"description": "Erreur : version du protocole incompatible."},
   "onlineErrorGeneric": "Une erreur est survenue.",
-  "@onlineErrorGeneric": {"description": "Erreur de repli des parties en ligne."}
+  "@onlineErrorGeneric": {"description": "Erreur de repli des parties en ligne."},
+
+  "myProfileTitle": "Mon profil",
+  "@myProfileTitle": {"description": "Titre de l'écran et de la section du profil de l'utilisateur de l'appareil (sa fiche joueur)."},
+
+  "myProfileWelcomeTitle": "Bienvenue !",
+  "@myProfileWelcomeTitle": {"description": "Titre de l'écran de création du profil, au premier lancement."},
+
+  "myProfileWelcomeMessage": "Créez votre profil : votre nom, un surnom si vous voulez, et la main avec laquelle vous jouez. En ligne, les autres joueurs verront votre surnom, ou votre nom si vous n'en avez pas.",
+  "@myProfileWelcomeMessage": {"description": "Explication de l'écran de création du profil, au premier lancement."},
+
+  "myProfileExistingPrompt": "Vous êtes déjà dans la liste des joueurs ? Touchez votre nom.",
+  "@myProfileExistingPrompt": {"description": "Invite à choisir sa fiche parmi les joueurs existants, sur l'écran de création du profil."},
+
+  "myProfileCreateButton": "Créer mon profil",
+  "@myProfileCreateButton": {"description": "Bouton qui ouvre la création de la fiche de l'utilisateur."},
+
+  "myProfileEditButton": "Modifier mon profil",
+  "@myProfileEditButton": {"description": "Bouton qui ouvre l'édition du profil de l'utilisateur (réglages, jeu en ligne)."},
+
+  "myProfileBadge": "Moi",
+  "@myProfileBadge": {"description": "Marque posée sur la fiche de l'utilisateur dans la liste des joueurs."},
+
+  "onlinePlayingAs": "Vous jouez sous le nom « {name} »",
+  "@onlinePlayingAs": {"description": "Nom sous lequel l'utilisateur apparaît en ligne (surnom de son profil, sinon son nom).", "placeholders": {"name": {"type": "String"}}},
+
+  "onlineNameInvalidError": "En ligne, votre surnom (ou votre nom) doit faire 20 caractères au plus, sans caractère invisible.",
+  "@onlineNameInvalidError": {"description": "Erreur : le nom du profil ne passe pas les règles du serveur pour un pseudo en ligne."}
 }

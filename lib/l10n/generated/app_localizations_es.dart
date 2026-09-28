@@ -494,12 +494,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Plantarte ahora haría imposible llegar exactamente a 10000.';
 
   @override
-  String get settingsMainPlayerTitle => 'Jugador principal';
-
-  @override
-  String get settingsYourNameLabel => 'Tu nombre (propietario del dispositivo)';
-
-  @override
   String get settingsDelaysTitle => 'Temporizaciones';
 
   @override
@@ -727,9 +721,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onlineTitle => 'Partida en línea';
 
   @override
-  String get onlineNameLabel => 'Tu apodo';
-
-  @override
   String get onlineCreateButton => 'Crear una sala';
 
   @override
@@ -824,4 +815,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Se ha producido un error.';
+
+  @override
+  String get myProfileTitle => 'Mi perfil';
+
+  @override
+  String get myProfileWelcomeTitle => '¡Bienvenido!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Crea tu perfil: tu nombre, un apodo si quieres y la mano con la que juegas. En línea, los demás jugadores verán tu apodo, o tu nombre si no tienes.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      '¿Ya estás en la lista de jugadores? Toca tu nombre.';
+
+  @override
+  String get myProfileCreateButton => 'Crear mi perfil';
+
+  @override
+  String get myProfileEditButton => 'Editar mi perfil';
+
+  @override
+  String get myProfileBadge => 'Yo';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Juegas como «$name»';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'En línea, tu apodo (o tu nombre) debe tener como máximo 20 caracteres, sin caracteres invisibles.';
 }

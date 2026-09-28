@@ -290,6 +290,11 @@ sweep of expired rooms).
   alone: `seed` is only a file id (`onlineGameId`, ≥ 2^52, never a local seed: the with-faces journal replays
   without one) and `onlineSeat` is my seat — **only that seat counts in player statistics**; opponents' pseudos
   never create a profile nor match a local one by name.
+- **The online pseudo is the user profile's `displayName`** (nickname, else name), never typed on the online
+  screen. The profile is an ordinary player fiche pointed at by `AppSettings.myProfileId` (`myProfileProvider`);
+  the splash asks for it (`MyProfileSetupScreen`, via `isMyProfileMissing`) when none is set or its fiche is gone.
+  `isValidOnlineName` (in `protocol.dart`) is the server's own pseudo rule, reused by the profile editor. My fiche
+  is linked to my seat (`playerIds`), so an online game counts for it even under a nickname.
 - Not in v1: bots and mixed local players in online games; forfeiting a started game.
 
 ## Design documents — keep them current

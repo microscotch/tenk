@@ -33,7 +33,12 @@ class OnlineGameLink {
 
   final void Function(GameActionType intent, Map<String, dynamic> params) sendIntent;
 
-  const OnlineGameLink({required this.mySeat, required this.playOrder, required this.sendIntent});
+  /// Ma fiche (mon profil), rattachée à mon siège : ma latéralité s'applique à
+  /// mon tour, et la partie archivée compte pour elle par son identifiant, même
+  /// quand mon pseudo est un surnom. Nul sans profil (tests).
+  final String? myProfileId;
+
+  const OnlineGameLink({required this.mySeat, required this.playOrder, required this.sendIntent, this.myProfileId});
 
   /// Mon index de joueur dans le moteur.
   int get myEngineIndex => playOrder.indexOf(mySeat);
@@ -117,7 +122,12 @@ class GameNotifier extends Notifier<GameEngine?> {
     // En ligne il n'y a pas de seed (le serveur seul la connaît) : le journal
     // porte les faces de chaque lancer, ce qui suffit à le rejouer.
     if (_online != null) {
-      return SavedGame.online(names: _originalSetup!.playerNames, actions: _actions, mySeat: _online!.mySeat);
+      return SavedGame.online(
+        names: _originalSetup!.playerNames,
+        actions: _actions,
+        mySeat: _online!.mySeat,
+        myProfileId: _online!.myProfileId,
+      );
     }
     if (_seed == null || _originalSetup == null) return null;
     return _currentSavedGame();
@@ -382,12 +392,18 @@ class GameNotifier extends Notifier<GameEngine?> {
     required List<GameAction> actions,
     required int mySeat,
     required void Function(GameActionType intent, Map<String, dynamic> params) sendIntent,
+    String? myProfileId,
   }) {
-    final original = GameSetup(playerNames: names);
+    final original = GameSetup(playerNames: names, playerIds: {mySeat: ?myProfileId});
     final replay = replayGame(original, 0, actions);
     final engine = replay.engine;
     if (engine == null) throw StateError('le serveur n\'a pas envoyé de partie commencée');
-    _online = OnlineGameLink(mySeat: mySeat, playOrder: replay.playOrder!, sendIntent: sendIntent);
+    _online = OnlineGameLink(
+      mySeat: mySeat,
+      playOrder: replay.playOrder!,
+      sendIntent: sendIntent,
+      myProfileId: myProfileId,
+    );
     _setup = replay.orderedSetup;
     _originalSetup = original;
     _isReplay = false;

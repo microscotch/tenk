@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Devi rilanciare.",
   "failureNotRolledYet": "Devi lanciare i dadi prima di poterti fermare.",
   "failureWouldMakeWinningImpossible": "Fermarti ora renderebbe impossibile raggiungere esattamente 10000.",
-  "settingsMainPlayerTitle": "Giocatore principale",
-  "settingsYourNameLabel": "Il tuo nome (proprietario del dispositivo)",
   "settingsDelaysTitle": "Temporizzazioni",
   "settingsDelaysDescription": "Ritardo prima che un'azione automatica si attivi da sola. 0 per disattivare.",
   "settingsAiDelayLabel": "Messaggi IA (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Gioca online",
   "onlineResumeButton": "Riprendi la partita online",
   "onlineTitle": "Partita online",
-  "onlineNameLabel": "Il tuo soprannome",
   "onlineCreateButton": "Crea una stanza",
   "onlineJoinButton": "Entra",
   "onlineCodeLabel": "Codice della stanza",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Troppi tentativi: riprova tra un istante.",
   "onlineErrorBadToken": "Il tuo posto in questa stanza non esiste più.",
   "onlineErrorUnsupportedVersion": "Aggiorna l'app per giocare online.",
-  "onlineErrorGeneric": "Si è verificato un errore."
+  "onlineErrorGeneric": "Si è verificato un errore.",
+  "myProfileTitle": "Il mio profilo",
+  "myProfileWelcomeTitle": "Benvenuto!",
+  "myProfileWelcomeMessage": "Crea il tuo profilo: il tuo nome, un soprannome se vuoi, e la mano con cui giochi. Online gli altri giocatori vedranno il tuo soprannome, o il tuo nome se non ne hai uno.",
+  "myProfileExistingPrompt": "Sei già nell'elenco dei giocatori? Tocca il tuo nome.",
+  "myProfileCreateButton": "Crea il mio profilo",
+  "myProfileEditButton": "Modifica il mio profilo",
+  "myProfileBadge": "Io",
+  "onlinePlayingAs": "Giochi come «{name}»",
+  "onlineNameInvalidError": "Online il tuo soprannome (o il tuo nome) deve avere al massimo 20 caratteri, senza caratteri invisibili."
 }

@@ -3,18 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/online_providers.dart';
-import '../../state/settings_providers.dart';
+import '../../game/online/protocol.dart' show isValidOnlineName;
+import '../../game/player_profile.dart';
+import '../../state/player_providers.dart';
+import '../../state/player_store.dart';
 import '../online_messages.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/player_avatar.dart';
+import 'player_edit_screen.dart';
 import 'online_dice_off_screen.dart';
 import 'online_room_screen.dart';
 
 /// L'entrée des parties en ligne : créer un salon, ou rejoindre celui dont on a
 /// le code. Quand une partie en ligne est déjà en cours, on la retrouve (ou on
 /// la quitte) ici plutôt que d'en ouvrir une seconde.
+///
+/// Le pseudo n'est pas saisi : c'est le nom affiché du profil de l'utilisateur
+/// (`myProfileProvider`), qu'on modifie depuis ici ou les réglages. S'il ne
+/// passe pas les règles du serveur, créer et rejoindre restent bloqués jusqu'à
+/// ce que le profil soit corrigé.
 class OnlineEntryScreen extends ConsumerStatefulWidget {
-  /// Le code d'un lien d'invitation, déjà saisi : il reste au joueur à choisir
-  /// son pseudo et à toucher « Rejoindre » (un lien ne rejoint jamais seul).
+  /// Le code d'un lien d'invitation, déjà saisi : il reste au joueur à toucher
+  /// « Rejoindre » (un lien ne rejoint jamais seul).
   final String? initialCode;
 
   const OnlineEntryScreen({super.key, this.initialCode});
@@ -24,24 +34,33 @@ class OnlineEntryScreen extends ConsumerStatefulWidget {
 }
 
 class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
-  late final TextEditingController _name;
   late final TextEditingController _code;
 
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: ref.read(settingsProvider).playerName);
     _code = TextEditingController(text: widget.initialCode);
   }
 
   @override
   void dispose() {
-    _name.dispose();
     _code.dispose();
     super.dispose();
   }
 
-  bool get _nameOk => _name.text.trim().isNotEmpty;
+  /// Mon pseudo en ligne : le nom affiché de mon profil, s'il est utilisable.
+  String? get _onlineName {
+    final name = ref.watch(myProfileProvider)?.displayName;
+    return name != null && isValidOnlineName(name) ? name.trim() : null;
+  }
+
+  Future<void> _editProfile() async {
+    final me = ref.read(myProfileProvider);
+    await Navigator.of(context).push<PlayerProfile>(
+      MaterialPageRoute(builder: (_) => PlayerEditScreen(existing: me, isMyProfile: true)),
+    );
+    ref.invalidate(playersProvider);
+  }
 
   /// Ouvre l'écran qui correspond à l'état de la session : le salon, ou la
   /// partie déjà commencée. Si le [GameNotifier] a servi à autre chose depuis
@@ -136,6 +155,7 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
   Widget _entry(AppLocalizations l10n, bool connecting) {
     final session = ref.read(onlineSessionProvider.notifier);
     final saved = ref.watch(onlineSavedGameProvider).value;
+    final name = _onlineName;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -150,16 +170,10 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
           ),
           const SizedBox(height: 24),
         ],
-        TextField(
-          controller: _name,
-          maxLength: 20,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(labelText: l10n.onlineNameLabel, border: const OutlineInputBorder()),
-          onChanged: (_) => setState(() {}),
-        ),
+        _identity(l10n, name),
         const SizedBox(height: 16),
         FilledButton.icon(
-          onPressed: connecting || !_nameOk ? null : () => session.create(_name.text.trim()),
+          onPressed: connecting || name == null ? null : () => session.create(name),
           icon: const Icon(Icons.add),
           label: Text(l10n.onlineCreateButton),
         ),
@@ -179,9 +193,9 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
-          onPressed: connecting || !_nameOk || _code.text.trim().length != 5
+          onPressed: connecting || name == null || _code.text.trim().length != 5
               ? null
-              : () => session.join(_code.text, _name.text.trim()),
+              : () => session.join(_code.text, name),
           icon: const Icon(Icons.login),
           label: Text(l10n.onlineJoinButton),
         ),
@@ -189,6 +203,35 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
           const SizedBox(height: 24),
           Center(child: Text(l10n.onlineConnecting)),
         ],
+      ],
+    );
+  }
+
+  /// Sous quel nom je joue, et de quoi le changer ; ou, quand le nom de mon
+  /// profil ne peut pas servir en ligne, pourquoi.
+  Widget _identity(AppLocalizations l10n, String? name) {
+    final me = ref.watch(myProfileProvider);
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(children: [
+          PlayerAvatarWidget(name: me?.name ?? '?', size: 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: name != null
+                ? Text(l10n.onlinePlayingAs(name), style: theme.textTheme.titleMedium)
+                : Text(l10n.onlineNameInvalidError, style: TextStyle(color: theme.colorScheme.error)),
+          ),
+        ]),
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: TextButton.icon(
+            onPressed: me == null ? null : _editProfile,
+            icon: const Icon(Icons.edit),
+            label: Text(l10n.myProfileEditButton),
+          ),
+        ),
       ],
     );
   }

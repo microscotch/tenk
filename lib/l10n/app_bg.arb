@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Трябва да хвърлиш отново.",
   "failureNotRolledYet": "Трябва да хвърлиш заровете, преди да можеш да спреш.",
   "failureWouldMakeWinningImpossible": "Ако спреш сега, ще стане невъзможно да достигнеш точно 10000.",
-  "settingsMainPlayerTitle": "Основен играч",
-  "settingsYourNameLabel": "Твоето име (собственик на устройството)",
   "settingsDelaysTitle": "Забавяния",
   "settingsDelaysDescription": "Забавяне, преди автоматично действие да се задейства само. 0 за изключване.",
   "settingsAiDelayLabel": "Съобщения на ИИ (мс)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Игра онлайн",
   "onlineResumeButton": "Продължаване на онлайн играта",
   "onlineTitle": "Онлайн игра",
-  "onlineNameLabel": "Вашият прякор",
   "onlineCreateButton": "Създаване на стая",
   "onlineJoinButton": "Присъединяване",
   "onlineCodeLabel": "Код на стаята",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Твърде много опити: опитайте отново след малко.",
   "onlineErrorBadToken": "Мястото ви в тази стая вече не съществува.",
   "onlineErrorUnsupportedVersion": "Обновете приложението, за да играете онлайн.",
-  "onlineErrorGeneric": "Възникна грешка."
+  "onlineErrorGeneric": "Възникна грешка.",
+  "myProfileTitle": "Моят профил",
+  "myProfileWelcomeTitle": "Добре дошли!",
+  "myProfileWelcomeMessage": "Създайте профила си: вашето име, прякор, ако желаете, и ръката, с която играете. Онлайн другите играчи ще виждат прякора ви или името ви, ако нямате прякор.",
+  "myProfileExistingPrompt": "Вече сте в списъка с играчи? Докоснете името си.",
+  "myProfileCreateButton": "Създай моя профил",
+  "myProfileEditButton": "Редактирай моя профил",
+  "myProfileBadge": "Аз",
+  "onlinePlayingAs": "Играете като „{name}“",
+  "onlineNameInvalidError": "Онлайн прякорът ви (или името ви) трябва да е най-много 20 знака, без невидими знаци."
 }

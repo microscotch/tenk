@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Du måste kasta igen.",
   "failureNotRolledYet": "Du måste kasta tärningarna innan du kan stanna.",
   "failureWouldMakeWinningImpossible": "Att stanna nu skulle göra det omöjligt att nå exakt 10000.",
-  "settingsMainPlayerTitle": "Huvudspelare",
-  "settingsYourNameLabel": "Ditt namn (enhetens ägare)",
   "settingsDelaysTitle": "Fördröjningar",
   "settingsDelaysDescription": "Fördröjning innan en automatisk åtgärd utlöses av sig själv. 0 för att inaktivera.",
   "settingsAiDelayLabel": "AI-meddelanden (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Spela online",
   "onlineResumeButton": "Återuppta onlinespelet",
   "onlineTitle": "Onlinespel",
-  "onlineNameLabel": "Ditt smeknamn",
   "onlineCreateButton": "Skapa ett rum",
   "onlineJoinButton": "Gå med",
   "onlineCodeLabel": "Rumskod",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "För många försök: försök igen om en stund.",
   "onlineErrorBadToken": "Din plats i det här rummet finns inte längre.",
   "onlineErrorUnsupportedVersion": "Uppdatera appen för att spela online.",
-  "onlineErrorGeneric": "Något gick fel."
+  "onlineErrorGeneric": "Något gick fel.",
+  "myProfileTitle": "Min profil",
+  "myProfileWelcomeTitle": "Välkommen!",
+  "myProfileWelcomeMessage": "Skapa din profil: ditt namn, ett smeknamn om du vill och handen du spelar med. Online ser de andra spelarna ditt smeknamn, eller ditt namn om du inte har något.",
+  "myProfileExistingPrompt": "Finns du redan i spelarlistan? Tryck på ditt namn.",
+  "myProfileCreateButton": "Skapa min profil",
+  "myProfileEditButton": "Redigera min profil",
+  "myProfileBadge": "Jag",
+  "onlinePlayingAs": "Du spelar som ”{name}”",
+  "onlineNameInvalidError": "Online får ditt smeknamn (eller ditt namn) vara högst 20 tecken, utan osynliga tecken."
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../game/online/protocol.dart' show isValidOnlineName;
 import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_store.dart';
@@ -11,10 +12,25 @@ import '../widgets/player_avatar.dart';
 ///
 /// [existing] nul crée une fiche neuve ; sinon la fiche est modifiée en place,
 /// ses statistiques intactes — elles ne sont jamais touchées ici.
+///
+/// [isMyProfile] : la fiche est (ou sera) le profil de l'utilisateur. Son nom
+/// affiché devient alors son pseudo en ligne, et doit en passer les règles
+/// ([isValidOnlineName]) : c'est ici qu'on le corrige, pas au moment de
+/// rejoindre un salon. [initialName] et [initialRightHanded] préremplissent une
+/// fiche neuve (l'ancien nom et la latéralité des réglages).
 class PlayerEditScreen extends ConsumerStatefulWidget {
   final PlayerProfile? existing;
+  final bool isMyProfile;
+  final String? initialName;
+  final bool? initialRightHanded;
 
-  const PlayerEditScreen({super.key, this.existing});
+  const PlayerEditScreen({
+    super.key,
+    this.existing,
+    this.isMyProfile = false,
+    this.initialName,
+    this.initialRightHanded,
+  });
 
   @override
   ConsumerState<PlayerEditScreen> createState() => _PlayerEditScreenState();
@@ -30,9 +46,9 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: widget.existing?.name ?? '');
+    _name = TextEditingController(text: widget.existing?.name ?? widget.initialName ?? '');
     _nickname = TextEditingController(text: widget.existing?.nickname ?? '');
-    _rightHanded = widget.existing?.rightHanded ?? true;
+    _rightHanded = widget.existing?.rightHanded ?? widget.initialRightHanded ?? true;
   }
 
   @override
@@ -51,6 +67,11 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
       setState(() => _error = l10n.playerNameRequiredError);
       return;
     }
+    final nickname = _nickname.text.trim();
+    if (widget.isMyProfile && !isValidOnlineName(nickname.isEmpty ? name : nickname)) {
+      setState(() => _error = l10n.onlineNameInvalidError);
+      return;
+    }
 
     setState(() {
       _saving = true;
@@ -67,7 +88,6 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
       return;
     }
 
-    final nickname = _nickname.text.trim();
     final existing = widget.existing;
     // Un renommage passe par `renamedTo`, qui conserve l'ancien nom : les
     // parties archivées ne contiennent que des noms, et c'est par eux qu'elles
@@ -92,7 +112,9 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
     final name = _name.text.trim();
     return Scaffold(
       appBar: AppTopBar(
-        title: Text(widget.existing == null ? l10n.newPlayerTitle : l10n.editPlayerTitle),
+        title: Text(widget.isMyProfile
+            ? l10n.myProfileTitle
+            : (widget.existing == null ? l10n.newPlayerTitle : l10n.editPlayerTitle)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

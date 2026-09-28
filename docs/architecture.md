@@ -162,7 +162,20 @@ pas.
   une pour les parties en cours, une pour les archives.
 - **`SettingsNotifier` / `AppSettings`** portent les préférences persistées ; la
   latéralité d'un joueur, elle, vient de sa fiche (`currentSeatRightHandedProvider`),
-  le réglage d'appareil n'étant qu'un repli.
+  celle du profil de l'utilisateur servant de repli (puis l'ancien réglage d'appareil,
+  tant que le profil n'est pas relu).
+- **Le profil de l'utilisateur est une fiche comme les autres**, désignée par
+  `AppSettings.myProfileId` et résolue par `myProfileProvider` : ses parties, locales
+  comme en ligne, s'y cumulent, et elle ne se supprime pas. Au lancement,
+  `isMyProfileMissing` (qui attend réglages **et** fiches relus, pour ne jamais
+  décider sur des valeurs par défaut) envoie vers `MyProfileSetupScreen` quand il n'y
+  en a pas : créer sa fiche, ou désigner la sienne parmi les existantes — l'ancien
+  « joueur principal » des réglages (`playerName`, toujours relu pour cette migration)
+  en tête. Son nom affiché (surnom, sinon nom) est le **pseudo en ligne** : plus rien
+  à saisir pour créer ou rejoindre un salon, et `isValidOnlineName`, la règle même du
+  serveur, le vérifie dès l'édition du profil. En ligne, la fiche est rattachée à mon
+  siège (`OnlineGameLink.myProfileId` → `playerIds`) : ma latéralité à mon tour, et
+  une archive comptée pour elle par son identifiant, même jouée sous un surnom.
 
 ## Les parties en ligne (turquoise, zone de droite)
 
@@ -206,7 +219,7 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   (`room_link_providers.dart`, regardé par la racine de l'app pour attraper le lien de démarrage) écoute le
   paquet `app_links` derrière `RoomLinkSource` et dépose le code dans `PendingRoomCode`. L'accueil
   (`SetupScreen`) le prend quand il est l'écran affiché — jamais par-dessus une partie — et ouvre
-  `OnlineEntryScreen(initialCode:)` : **un lien ne rejoint jamais seul**, le joueur choisit son pseudo et touche
+  `OnlineEntryScreen(initialCode:)` : **un lien ne rejoint jamais seul**, le joueur relit sous quel nom il joue et touche
   « Rejoindre ». Pour que le système ouvre l'app plutôt que le navigateur, le serveur sert les fichiers de
   vérification (`/.well-known/apple-app-site-association`, `assetlinks.json`, à partir de `LinkConfig`) et une
   page statique `/j/<code>` pour qui n'a pas l'app. Cette page n'interroge aucun salon : sinon on pourrait

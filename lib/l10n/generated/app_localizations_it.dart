@@ -495,13 +495,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Fermarti ora renderebbe impossibile raggiungere esattamente 10000.';
 
   @override
-  String get settingsMainPlayerTitle => 'Giocatore principale';
-
-  @override
-  String get settingsYourNameLabel =>
-      'Il tuo nome (proprietario del dispositivo)';
-
-  @override
   String get settingsDelaysTitle => 'Temporizzazioni';
 
   @override
@@ -730,9 +723,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get onlineTitle => 'Partita online';
 
   @override
-  String get onlineNameLabel => 'Il tuo soprannome';
-
-  @override
   String get onlineCreateButton => 'Crea una stanza';
 
   @override
@@ -829,4 +819,36 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Si è verificato un errore.';
+
+  @override
+  String get myProfileTitle => 'Il mio profilo';
+
+  @override
+  String get myProfileWelcomeTitle => 'Benvenuto!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Crea il tuo profilo: il tuo nome, un soprannome se vuoi, e la mano con cui giochi. Online gli altri giocatori vedranno il tuo soprannome, o il tuo nome se non ne hai uno.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Sei già nell\'elenco dei giocatori? Tocca il tuo nome.';
+
+  @override
+  String get myProfileCreateButton => 'Crea il mio profilo';
+
+  @override
+  String get myProfileEditButton => 'Modifica il mio profilo';
+
+  @override
+  String get myProfileBadge => 'Io';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Giochi come «$name»';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Online il tuo soprannome (o il tuo nome) deve avere al massimo 20 caratteri, senza caratteri invisibili.';
 }

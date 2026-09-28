@@ -11,7 +11,17 @@ enum DiceColorMode { uniform, varied }
 /// d'échec (plateforme sans backend, tests) on reste sur les valeurs par
 /// défaut plutôt que de bloquer ou de faire planter l'app.
 class AppSettings {
+  /// Ancien « nom du joueur principal », remplacé par la fiche de
+  /// l'utilisateur ([myProfileId]). Toujours relu : il présélectionne la fiche
+  /// de ce nom, ou préremplit la création du profil, au premier lancement qui
+  /// suit la mise à jour.
   final String playerName;
+
+  /// Identifiant de la fiche de l'utilisateur de l'appareil, son « profil »
+  /// (voir `myProfileProvider`) : c'est elle qui donne son pseudo en ligne et
+  /// la latéralité par défaut. Nul tant que le profil n'a pas été choisi ou
+  /// créé — l'app le demande alors au lancement.
+  final String? myProfileId;
   final int aiMessageDelayMs;
   final int autoActionDelayMs;
   final DiceColorMode diceColorMode;
@@ -53,6 +63,7 @@ class AppSettings {
 
   const AppSettings({
     this.playerName = '',
+    this.myProfileId,
     this.aiMessageDelayMs = 1000,
     this.autoActionDelayMs = 2000,
     this.diceColorMode = DiceColorMode.uniform,
@@ -71,6 +82,7 @@ class AppSettings {
 
   AppSettings copyWith({
     String? playerName,
+    String? myProfileId,
     int? aiMessageDelayMs,
     int? autoActionDelayMs,
     DiceColorMode? diceColorMode,
@@ -85,6 +97,7 @@ class AppSettings {
   }) {
     return AppSettings(
       playerName: playerName ?? this.playerName,
+      myProfileId: myProfileId ?? this.myProfileId,
       aiMessageDelayMs: aiMessageDelayMs ?? this.aiMessageDelayMs,
       autoActionDelayMs: autoActionDelayMs ?? this.autoActionDelayMs,
       diceColorMode: diceColorMode ?? this.diceColorMode,
@@ -106,6 +119,7 @@ class AppSettings {
 const Object _unset = Object();
 
 const _keyPlayerName = 'settings.playerName';
+const _keyMyProfileId = 'settings.myProfileId';
 const _keyAiMessageDelayMs = 'settings.aiMessageDelayMs';
 const _keyAutoActionDelayMs = 'settings.autoActionDelayMs';
 const _keyDiceColorMode = 'settings.diceColorMode';
@@ -134,8 +148,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      // Le conteneur a pu disparaître pendant la lecture (fin d'un test, app
+      // fermée) : écrire l'état lèverait.
+      if (!ref.mounted) return;
       state = AppSettings(
         playerName: prefs.getString(_keyPlayerName) ?? '',
+        myProfileId: prefs.getString(_keyMyProfileId),
         aiMessageDelayMs: prefs.getInt(_keyAiMessageDelayMs) ?? 1000,
         autoActionDelayMs: prefs.getInt(_keyAutoActionDelayMs) ?? 2000,
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
@@ -152,7 +170,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       // Pas de backend de persistance disponible (tests, plateforme non
       // supportée) : on reste sur les valeurs par défaut en mémoire, mais
       // elles sont désormais définitives — il n'y a plus rien à attendre.
-      state = state.copyWith(loaded: true);
+      if (ref.mounted) state = state.copyWith(loaded: true);
     }
   }
 
@@ -175,6 +193,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setPlayerName(String name) {
     state = state.copyWith(playerName: name);
     _save(_keyPlayerName, name);
+  }
+
+  /// Fait de la fiche [id] le profil de l'utilisateur.
+  Future<void> setMyProfileId(String id) async {
+    state = state.copyWith(myProfileId: id);
+    await _save(_keyMyProfileId, id);
   }
 
   void setAiMessageDelayMs(int ms) {

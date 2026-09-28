@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "You must reroll.",
   "failureNotRolledYet": "You must roll the dice before you can stop.",
   "failureWouldMakeWinningImpossible": "Stopping now would make reaching exactly 10000 impossible.",
-  "settingsMainPlayerTitle": "Main player",
-  "settingsYourNameLabel": "Your name (device owner)",
   "settingsDelaysTitle": "Delays",
   "settingsDelaysDescription": "Delay before an automatic action triggers on its own. 0 to disable.",
   "settingsAiDelayLabel": "AI messages (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Play online",
   "onlineResumeButton": "Resume the online game",
   "onlineTitle": "Online game",
-  "onlineNameLabel": "Your nickname",
   "onlineCreateButton": "Create a room",
   "onlineJoinButton": "Join",
   "onlineCodeLabel": "Room code",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Too many attempts: try again in a moment.",
   "onlineErrorBadToken": "Your seat in this room no longer exists.",
   "onlineErrorUnsupportedVersion": "Update the app to play online.",
-  "onlineErrorGeneric": "Something went wrong."
+  "onlineErrorGeneric": "Something went wrong.",
+  "myProfileTitle": "My profile",
+  "myProfileWelcomeTitle": "Welcome!",
+  "myProfileWelcomeMessage": "Create your profile: your name, a nickname if you like, and the hand you play with. Online, other players will see your nickname, or your name if you have none.",
+  "myProfileExistingPrompt": "Already in the players list? Tap your name.",
+  "myProfileCreateButton": "Create my profile",
+  "myProfileEditButton": "Edit my profile",
+  "myProfileBadge": "Me",
+  "onlinePlayingAs": "You are playing as “{name}”",
+  "onlineNameInvalidError": "Online, your nickname (or your name) must be at most 20 characters, with no invisible character."
 }

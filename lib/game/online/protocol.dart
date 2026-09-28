@@ -262,10 +262,16 @@ bool _bool(Map<String, dynamic> map, String key) {
 /// s'affiche chez les autres joueurs), rogné.
 String _name(Map<String, dynamic> map) {
   final name = _string(map, 'name', min: 1, max: maxPlayerNameLength * 2).trim();
-  if (name.isEmpty || name.length > maxPlayerNameLength || name.runes.any(_isForbiddenInName)) {
-    throw const FormatException('name: pseudo invalide');
-  }
+  if (!isValidOnlineName(name)) throw const FormatException('name: pseudo invalide');
   return name;
+}
+
+/// Vrai si [name], une fois rogné, est un pseudo que le serveur accepte : la
+/// règle même que le serveur applique, pour que l'app refuse d'avance (dans le
+/// profil, sur l'écran « Jouer en ligne ») ce qu'il refuserait.
+bool isValidOnlineName(String name) {
+  final trimmed = name.trim();
+  return trimmed.isNotEmpty && trimmed.length <= maxPlayerNameLength && !trimmed.runes.any(_isForbiddenInName);
 }
 
 /// Ce qui n'a rien à faire dans un pseudo : les caractères de contrôle, et ceux

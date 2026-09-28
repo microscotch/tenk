@@ -36,8 +36,6 @@
   "failureMustContinueHotDice": "Du musst erneut würfeln.",
   "failureNotRolledYet": "Du musst würfeln, bevor du aufhören kannst.",
   "failureWouldMakeWinningImpossible": "Jetzt aufzuhören würde es unmöglich machen, genau 10000 zu erreichen.",
-  "settingsMainPlayerTitle": "Hauptspieler",
-  "settingsYourNameLabel": "Dein Name (Gerätebesitzer)",
   "settingsDelaysTitle": "Verzögerungen",
   "settingsDelaysDescription": "Verzögerung, bevor eine automatische Aktion von selbst ausgelöst wird. 0 zum Deaktivieren.",
   "settingsAiDelayLabel": "KI-Nachrichten (ms)",
@@ -207,7 +205,6 @@
   "onlinePlayButton": "Online spielen",
   "onlineResumeButton": "Online-Spiel fortsetzen",
   "onlineTitle": "Online-Spiel",
-  "onlineNameLabel": "Dein Spitzname",
   "onlineCreateButton": "Raum erstellen",
   "onlineJoinButton": "Beitreten",
   "onlineCodeLabel": "Raumcode",
@@ -235,5 +232,14 @@
   "onlineErrorRateLimited": "Zu viele Versuche: Versuche es gleich noch einmal.",
   "onlineErrorBadToken": "Dein Platz in diesem Raum existiert nicht mehr.",
   "onlineErrorUnsupportedVersion": "Aktualisiere die App, um online zu spielen.",
-  "onlineErrorGeneric": "Es ist ein Fehler aufgetreten."
+  "onlineErrorGeneric": "Es ist ein Fehler aufgetreten.",
+  "myProfileTitle": "Mein Profil",
+  "myProfileWelcomeTitle": "Willkommen!",
+  "myProfileWelcomeMessage": "Erstelle dein Profil: deinen Namen, auf Wunsch einen Spitznamen, und die Hand, mit der du spielst. Online sehen die anderen Spieler deinen Spitznamen oder, falls du keinen hast, deinen Namen.",
+  "myProfileExistingPrompt": "Schon in der Spielerliste? Tippe auf deinen Namen.",
+  "myProfileCreateButton": "Mein Profil erstellen",
+  "myProfileEditButton": "Mein Profil bearbeiten",
+  "myProfileBadge": "Ich",
+  "onlinePlayingAs": "Du spielst als „{name}“",
+  "onlineNameInvalidError": "Online darf dein Spitzname (oder dein Name) höchstens 20 Zeichen lang sein, ohne unsichtbare Zeichen."
 }

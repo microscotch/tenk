@@ -496,12 +496,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Jetzt aufzuhören würde es unmöglich machen, genau 10000 zu erreichen.';
 
   @override
-  String get settingsMainPlayerTitle => 'Hauptspieler';
-
-  @override
-  String get settingsYourNameLabel => 'Dein Name (Gerätebesitzer)';
-
-  @override
   String get settingsDelaysTitle => 'Verzögerungen';
 
   @override
@@ -729,9 +723,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onlineTitle => 'Online-Spiel';
 
   @override
-  String get onlineNameLabel => 'Dein Spitzname';
-
-  @override
   String get onlineCreateButton => 'Raum erstellen';
 
   @override
@@ -827,4 +818,36 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Es ist ein Fehler aufgetreten.';
+
+  @override
+  String get myProfileTitle => 'Mein Profil';
+
+  @override
+  String get myProfileWelcomeTitle => 'Willkommen!';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Erstelle dein Profil: deinen Namen, auf Wunsch einen Spitznamen, und die Hand, mit der du spielst. Online sehen die anderen Spieler deinen Spitznamen oder, falls du keinen hast, deinen Namen.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Schon in der Spielerliste? Tippe auf deinen Namen.';
+
+  @override
+  String get myProfileCreateButton => 'Mein Profil erstellen';
+
+  @override
+  String get myProfileEditButton => 'Mein Profil bearbeiten';
+
+  @override
+  String get myProfileBadge => 'Ich';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Du spielst als „$name“';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'Online darf dein Spitzname (oder dein Name) höchstens 20 Zeichen lang sein, ohne unsichtbare Zeichen.';
 }

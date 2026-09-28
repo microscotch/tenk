@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../game/player_profile.dart';
+import '../../state/player_providers.dart';
+import '../../state/player_store.dart';
 import '../../state/settings_providers.dart';
 import '../widgets/app_title.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/player_avatar.dart';
+import 'player_edit_screen.dart';
 
 /// Nom natif de chaque langue supportée, tel qu'un locuteur de cette langue
 /// le reconnaît — affiché tel quel dans le sélecteur, indépendamment de la
@@ -24,7 +29,7 @@ const Map<String, String> _languageNativeNames = {
 };
 
 /// Écran de configuration : préférences persistées indépendamment de toute
-/// partie en cours (nom du joueur principal, temporisations, couleur des
+/// partie en cours (profil de l'utilisateur, temporisations, couleur des
 /// dés, sons).
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -34,7 +39,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  late final TextEditingController _nameController;
   late final TextEditingController _aiDelayController;
   late final TextEditingController _autoActionDelayController;
 
@@ -42,17 +46,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     final settings = ref.read(settingsProvider);
-    _nameController = TextEditingController(text: settings.playerName);
     _aiDelayController = TextEditingController(text: settings.aiMessageDelayMs.toString());
     _autoActionDelayController = TextEditingController(text: settings.autoActionDelayMs.toString());
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _aiDelayController.dispose();
     _autoActionDelayController.dispose();
     super.dispose();
+  }
+
+  Future<void> _editProfile(PlayerProfile me) async {
+    await Navigator.of(context).push<PlayerProfile>(
+      MaterialPageRoute(builder: (_) => PlayerEditScreen(existing: me, isMyProfile: true)),
+    );
+    ref.invalidate(playersProvider);
   }
 
   @override
@@ -60,6 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final me = ref.watch(myProfileProvider);
 
     return Scaffold(
       appBar: AppTopBar(title: const AppTitle()),
@@ -69,15 +79,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.settingsMainPlayerTitle, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.settingsYourNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: notifier.setPlayerName,
+              Text(l10n.myProfileTitle, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              // Nom, surnom (le pseudo en ligne) et latéralité : c'est la fiche de
+              // l'utilisateur qui les porte, on la modifie comme toute fiche.
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: PlayerAvatarWidget(name: me?.name ?? '?', size: 40),
+                title: Text(me?.displayName ?? ''),
+                subtitle: me?.nickname == null ? null : Text(me!.name),
+                trailing: const Icon(Icons.edit),
+                onTap: me == null ? null : () => _editProfile(me),
               ),
               const SizedBox(height: 28),
               Text(l10n.settingsLanguageTitle, style: Theme.of(context).textTheme.titleMedium),
@@ -140,17 +152,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 28),
               Text(l10n.settingsControlsTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
-              Text(l10n.settingsHandednessLabel, style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 6),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: true, label: Text(l10n.settingsHandednessRight)),
-                  ButtonSegment(value: false, label: Text(l10n.settingsHandednessLeft)),
-                ],
-                selected: {settings.rightHanded},
-                onSelectionChanged: (s) => notifier.setRightHanded(s.first),
-              ),
-              const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.settingsShakeToRollLabel),

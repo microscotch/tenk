@@ -494,12 +494,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'S\'arrêter rendrait la victoire à 10000 inatteignable.';
 
   @override
-  String get settingsMainPlayerTitle => 'Joueur principal';
-
-  @override
-  String get settingsYourNameLabel => 'Votre nom (propriétaire de l\'appareil)';
-
-  @override
   String get settingsDelaysTitle => 'Temporisations';
 
   @override
@@ -726,9 +720,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onlineTitle => 'Partie en ligne';
 
   @override
-  String get onlineNameLabel => 'Votre pseudo';
-
-  @override
   String get onlineCreateButton => 'Créer un salon';
 
   @override
@@ -823,4 +814,36 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onlineErrorGeneric => 'Une erreur est survenue.';
+
+  @override
+  String get myProfileTitle => 'Mon profil';
+
+  @override
+  String get myProfileWelcomeTitle => 'Bienvenue !';
+
+  @override
+  String get myProfileWelcomeMessage =>
+      'Créez votre profil : votre nom, un surnom si vous voulez, et la main avec laquelle vous jouez. En ligne, les autres joueurs verront votre surnom, ou votre nom si vous n\'en avez pas.';
+
+  @override
+  String get myProfileExistingPrompt =>
+      'Vous êtes déjà dans la liste des joueurs ? Touchez votre nom.';
+
+  @override
+  String get myProfileCreateButton => 'Créer mon profil';
+
+  @override
+  String get myProfileEditButton => 'Modifier mon profil';
+
+  @override
+  String get myProfileBadge => 'Moi';
+
+  @override
+  String onlinePlayingAs(String name) {
+    return 'Vous jouez sous le nom « $name »';
+  }
+
+  @override
+  String get onlineNameInvalidError =>
+      'En ligne, votre surnom (ou votre nom) doit faire 20 caractères au plus, sans caractère invisible.';
 }

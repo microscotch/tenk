@@ -40,6 +40,10 @@ Future<int> syncPlayerStatistics({
   for (final game in games) {
     for (var seat = 0; seat < game.setup.playerNames.length; seat++) {
       if (!_countsForProfiles(game, seat)) continue;
+      // Siège déjà rattaché à une fiche par son identifiant : son nom en jeu
+      // peut être un surnom (mon pseudo en ligne), qui ne doit pas devenir une
+      // seconde fiche, vide, à côté de la vraie.
+      if (profiles.any((p) => p.id == game.setup.playerIdAt(seat))) continue;
       final name = game.setup.playerNames[seat];
       if (name.trim().isEmpty) continue;
       if (idByName.containsKey(normalizeName(name))) continue;

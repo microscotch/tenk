@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../widgets/about_dialog.dart' show kAppTagline;
 import '../widgets/die_widget.dart';
+import 'my_profile_setup_screen.dart';
 import 'setup_screen.dart';
 
 /// Écran d'introduction façon "studio" : l'avatar GitHub de l'auteur en zoom
@@ -17,16 +19,16 @@ import 'setup_screen.dart';
 /// mention de paternité apparaît en bas. Une fois la mise en scène terminée,
 /// reste affiché [displayDuration] de plus avant un fondu vers l'écran de
 /// configuration ; sautable à tout moment en touchant l'écran.
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   final Duration displayDuration;
 
   const SplashScreen({super.key, this.displayDuration = const Duration(seconds: 2)});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   // Chorégraphie décrite comme une suite d'étapes séquentielles (chacune son
   // propre délai de déclenchement + sa propre durée de fondu), plutôt qu'une
   // seule timeline proportionnelle : ça permet de faire correspondre le
@@ -114,19 +116,27 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
-  void _goToSetup() {
+  /// Quitte le splash pour l'accueil — ou, sans profil utilisateur, pour sa
+  /// création d'abord (voir `launchScreenFor`), qui attend que réglages et
+  /// fiches soient relus : un toucher qui écourte le splash ne décide donc
+  /// jamais sur des valeurs par défaut.
+  Future<void> _goToSetup() async {
     if (_navigated || !mounted) return;
     _navigated = true;
     for (final timer in _timers) {
       timer.cancel();
     }
+    final next = await launchScreenFor(ProviderScope.containerOf(context, listen: false));
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         // Route nommée : c'est ce nom qui permet à n'importe quel écran plus
         // profond de revenir ici à coup sûr (voir [SetupScreen.routeName]).
-        settings: const RouteSettings(name: SetupScreen.routeName),
+        // Seulement sur l'accueil : la création du profil le pose elle-même
+        // sur l'accueil auquel elle mène.
+        settings: next is SetupScreen ? const RouteSettings(name: SetupScreen.routeName) : null,
         transitionDuration: _fadeOutDuration,
-        pageBuilder: (_, _, _) => const SetupScreen(),
+        pageBuilder: (_, _, _) => next,
         transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
       ),
     );

@@ -63,7 +63,7 @@
           <mxGeometry x="760" y="560" width="300" height="90" as="geometry" />
         </mxCell>
 
-        <mxCell id="e1" value="fin de l&#x27;animation / tap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="splash" target="setup">
+        <mxCell id="e1" value="fin de l&#x27;animation / tap&#10;(profil présent)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="splash" target="setup">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e2" value="Paramètres" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.1;entryX=0;entryY=0.5;" edge="1" parent="1" source="setup" target="settings">
@@ -157,6 +157,12 @@
 <mxCell id="e42" value="l&apos;hôte lance la partie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlineroom" target="onlinediceoff"><mxGeometry relative="1" as="geometry"></mxGeometry></mxCell>
 <mxCell id="e43" value="Jouer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlinediceoff" target="game"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1415" y="530"/></Array></mxGeometry></mxCell>
 <mxCell id="e44" value="reprise" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="onlineentry" target="onlinediceoff"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1580" y="140"/><mxPoint x="1580" y="380"/></Array></mxGeometry></mxCell>
+<mxCell id="myprofile" value="MyProfileSetup&#10;(pas de profil : le créer&#10;ou choisir sa fiche)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1"><mxGeometry x="40" y="10" width="200" height="70" as="geometry"/></mxCell>
+<mxCell id="e50" value="sans profil" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.3;entryX=1;entryY=0.357;" edge="1" parent="1" source="splash" target="myprofile"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e51" value="profil créé / choisi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.8;entryX=0.18;entryY=0;" edge="1" parent="1" source="myprofile" target="setup"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="300" y="66"/><mxPoint x="300" y="95"/><mxPoint x="420" y="95"/></Array></mxGeometry></mxCell>
+<mxCell id="e52" value="Créer mon profil" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.6;entryY=0;" edge="1" parent="1" source="myprofile" target="playeredit"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="140" y="0"/><mxPoint x="1140" y="0"/></Array></mxGeometry></mxCell>
+<mxCell id="e53" value="Mon profil" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0.4;entryY=0;" edge="1" parent="1" source="settings" target="playeredit"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1100" y="85"/></Array></mxGeometry></mxCell>
+<mxCell id="e54" value="Modifier mon profil" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.833;entryX=0.8;entryY=0;" edge="1" parent="1" source="onlineentry" target="playeredit"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1180" y="160"/></Array></mxGeometry></mxCell>
 </root>
     </mxGraphModel>
   </diagram>

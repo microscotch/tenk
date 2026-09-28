@@ -85,18 +85,24 @@ class SavedGame {
 
   /// Le run d'une partie en ligne, tel que l'archive le garde : les joueurs
   /// [names] dans l'ordre des sièges du salon, le journal [actions] du serveur
-  /// (départage compris, faces comprises) et [mySeat].
+  /// (départage compris, faces comprises) et [mySeat], rattaché à ma fiche
+  /// [myProfileId] quand j'ai un profil.
   ///
   /// Tout en est tiré du journal, jamais de l'horloge de l'appareil : la même
   /// partie donne donc le même run, qu'elle soit archivée sur son dernier coup
   /// ou plus tard depuis le journal complet renvoyé par le serveur — même
   /// fichier, réécrit à l'identique, jamais un doublon.
-  factory SavedGame.online({required List<String> names, required List<GameAction> actions, required int mySeat}) {
+  factory SavedGame.online({
+    required List<String> names,
+    required List<GameAction> actions,
+    required int mySeat,
+    String? myProfileId,
+  }) {
     final id = onlineGameId(names, actions);
     final firstTurn = actions.where((a) => a.type == GameActionType.startTurn).firstOrNull;
     return SavedGame(
       seed: id,
-      setup: GameSetup(playerNames: names),
+      setup: GameSetup(playerNames: names, playerIds: {mySeat: ?myProfileId}),
       alias: randomGameAlias(Random(id)),
       // Le serveur horodate en UTC : ramenées à l'heure locale, ces dates
       // s'affichent et s'enregistrent comme celles d'une partie locale.
