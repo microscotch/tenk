@@ -13,10 +13,15 @@ services:
     environment:
       TRUST_PROXY: "1"   # lit X-Forwarded-For : le proxy TLS est devant
       # Certificats de l'application Android, pour que les liens d'invitation l'ouvrent
-      # (/.well-known/assetlinks.json). Séparés par des virgules : la clé d'envoi (les APK
-      # de la CI, ci-dessous) ET la clé de signature de Google Play (console Play →
-      # Intégrité de l'application → Signature d'application), à ajouter à la suite.
-      TENK_ANDROID_CERT_SHA256: "77:08:53:43:37:59:37:34:41:E3:E4:41:45:0B:9E:19:69:B0:24:85:93:37:84:29:56:CC:3E:92:66:80:79:EC"
+      # (/.well-known/assetlinks.json). Séparés par des virgules :
+      # - la clé d'envoi : les APK de la CI, installés à la main ;
+      # - la clé avec laquelle Google Play signe l'app qu'il distribue. Sans elle, les
+      #   liens de l'app installée depuis le Play Store s'ouvrent dans le navigateur.
+      #   La relever sur l'appareil plutôt que dans la console (dont les empreintes
+      #   copiées ne correspondaient pas) : `adb shell pm get-app-links
+      #   net.microscotch.games.tenk`, ligne « Signatures » — le domaine doit y passer
+      #   à « verified » après `pm verify-app-links --re-verify`.
+      TENK_ANDROID_CERT_SHA256: "77:08:53:43:37:59:37:34:41:E3:E4:41:45:0B:9E:19:69:B0:24:85:93:37:84:29:56:CC:3E:92:66:80:79:EC,AB:66:18:EF:08:EF:2C:B0:DB:BD:C4:72:9B:1F:2D:11:C9:58:9D:AB:DE:8F:91:3A:4B:1A:74:05:0A:A7:AC:E0"
       # PORT: "8080"     # défaut
       # HOST: "0.0.0.0"  # défaut
     # Aucun port publié : le reverse proxy (Apache, lui aussi un conteneur) joint
