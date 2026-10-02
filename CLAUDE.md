@@ -104,6 +104,15 @@ a commit into the push already in flight (git resolves which refs to push before
 through cleanly since the local build number is now ahead of the remote's. It does nothing when the tip
 commit's message contains `[no-publish]` (CI won't publish that push, so no build number is consumed).
 
+**Every bump also writes the `Changelog.MD` entry** for the new version, in the same commit:
+`tool/update_changelog.sh <version+build>` (called by the hook and by the CI `bump-build-number` job) lists the
+commits since the **last tag** (cumulative: every build repeats everything since that release tag, until a new tag
+is set; with no tag at all, since the previous `chore: bump build number`), oldest first, as `* [<icon>](<repo>/tree/<sha>): <subject>`
+under `## <version> changelog` — the icon links to the repository tree at that commit (repo URL from the `origin`
+remote, or `CHANGELOG_REPO_URL`), the `type:` prefix becomes an icon (✨ feat, 🐛 fix, 📝 docs, ♻️ refactor, ⚡️ perf,
+✅ test, 📦 build, 🎨 style, ⏪ revert), `chore:`/`ci:` and merges are left out, and nothing is written when
+nothing is left. Commit subjects are therefore the changelog: write them for a reader.
+
 This hook is tracked in the repo but, like all git hooks, never activates on its own — after a
 fresh clone, run once:
 ```bash

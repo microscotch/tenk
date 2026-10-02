@@ -91,8 +91,12 @@ jobs:
           fi
 
           new_build=$((base_build + 1))
+          # Comme le hook pre-push : l'entrée du changelog part dans le même commit.
+          sh tool/update_changelog.sh "${semver}+${new_build}"
           sed -i "s/^version: .*/version: ${semver}+${new_build}/" pubspec.yaml
-          git commit pubspec.yaml -m "chore: bump build number (${semver}+${new_build}) [skip ci]"
+          git add pubspec.yaml
+          [ -f Changelog.MD ] && git add Changelog.MD
+          git commit -m "chore: bump build number (${semver}+${new_build}) [skip ci]"
           git push origin HEAD:main
           echo "Build number corrigé automatiquement : ${semver}+${new_build}."
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"

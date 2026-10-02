@@ -63,16 +63,21 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     continue
   fi
 
-  if ! git diff --quiet HEAD -- pubspec.yaml; then
-    echo "pre-push: pubspec.yaml a des modifications non commitées, bump automatique annulé." >&2
+  if ! git diff --quiet HEAD -- pubspec.yaml Changelog.MD 2>/dev/null; then
+    echo "pre-push: pubspec.yaml ou Changelog.MD a des modifications non commitées, bump automatique annulé." >&2
     echo "pre-push: incrémente le build number toi-même avant de pousser." >&2
     exit 1
   fi
 
   new_build=$((remote_build + 1))
   new_version="version: ${semver}+${new_build}"
+  # L'entrée du changelog (commits depuis le précédent incrément) part dans le
+  # même commit que le nouveau build number.
+  sh tool/update_changelog.sh "${semver}+${new_build}"
   sed -i "s/^version: .*/${new_version}/" pubspec.yaml
-  git commit pubspec.yaml -q -m "chore: bump build number (${semver}+${new_build})"
+  git add pubspec.yaml
+  [ -f Changelog.MD ] && git add Changelog.MD
+  git commit -q -m "chore: bump build number (${semver}+${new_build})"
 
   echo "pre-push: build number incrémenté automatiquement (${semver}+${new_build}), commit $(git rev-parse --short HEAD)." >&2
   echo "pre-push: relance 'git push' pour envoyer ce commit." >&2
