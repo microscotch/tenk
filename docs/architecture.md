@@ -197,7 +197,7 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   `ClientMessage.fromJson` valide chaque champ et ne laisse jamais un client demander autre chose qu'un coup
   de tour : ni départage, ni lancer, ni faces (elles sont ignorées).
 - **`OnlineSession`** (`lib/state`) tient la connexion, le salon et le jeton de reprise (gardé dans
-  `SharedPreferences`) ; elle reconnecte avec attente croissante. Elle numérote les actions : un doublon est
+  `SharedPreferences`) ; elle reconnecte avec attente croissante — jamais en arrière-plan, où le système coupe souvent le réseau (partage du code), mais aussitôt au retour (`appPaused` / `appResumed`, branchés par `onlineLifecycleProvider`). L'échec d'une reconnexion automatique ne s'affiche pas en erreur : l'état « hors ligne » suffit au bandeau, sinon un « Serveur injoignable » par tentative s'empilerait à l'écran. Elle numérote les actions : un doublon est
   ignoré, un trou ou un désaccord repart du journal complet du serveur. `GameNotifier` a un **mode en ligne**
   (`startOnlineGame`) : ses méthodes d'action ne changent rien en local, elles *demandent* le coup
   (`OnlineGameLink.sendIntent`) et l'état ne bouge que quand le serveur renvoie l'action

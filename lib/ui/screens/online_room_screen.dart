@@ -56,6 +56,25 @@ class OnlineRoomScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Connexion tombée (par exemple pendant le partage du code) : la
+                // reconnexion se fait seule, ce bandeau le dit — une seule fois, pas
+                // un message par tentative.
+                if (online.status != OnlineStatus.online)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          l10n.onlineReconnecting,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+                        ),
+                      ),
+                    ),
+                  ),
                 Text(l10n.onlineCodeLabel, style: Theme.of(context).textTheme.labelLarge, textAlign: TextAlign.center),
                 const SizedBox(height: 4),
                 InkWell(

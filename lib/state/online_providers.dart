@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/widgets.dart' show AppLifecycleListener, AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/dice_off.dart';
@@ -113,6 +114,28 @@ class OnlineState {
 
 final onlineSessionProvider = NotifierProvider<OnlineSession, OnlineState>(OnlineSession.new);
 
+/// Relie la session en ligne au cycle de vie de l'app (voir
+/// [OnlineSession.appPaused] / [OnlineSession.appResumed]). Regardé par la
+/// racine de l'app, pour toute sa durée.
+final onlineLifecycleProvider = Provider<void>((ref) {
+  final listener = AppLifecycleListener(
+    onStateChange: (lifecycle) {
+      final session = ref.read(onlineSessionProvider.notifier);
+      switch (lifecycle) {
+        case AppLifecycleState.resumed:
+          session.appResumed();
+        case AppLifecycleState.paused:
+        case AppLifecycleState.hidden:
+          session.appPaused();
+        case AppLifecycleState.inactive:
+        case AppLifecycleState.detached:
+          break;
+      }
+    },
+  );
+  ref.onDispose(listener.dispose);
+});
+
 /// La sélection de 5 en cours de l'autre joueur en ligne qui a la main, sur le
 /// lancer qui attend sa décision : [seq] est le rang de la prochaine action du
 /// journal, qui date la sélection. L'écran de jeu la suit (score de la main,
@@ -163,6 +186,12 @@ class OnlineSession extends Notifier<OnlineState> {
   /// locale restée en mémoire. Sans cette demande, il ne la remplace jamais.
   var _takeover = false;
   Completer<bool>? _reopening;
+
+  /// Vrai tant que l'app est en arrière-plan (partage du code, autre app) :
+  /// le système y coupe souvent le réseau, et chaque tentative échouerait.
+  /// On n'en fait donc aucune ; le retour au premier plan reconnecte aussitôt
+  /// (voir [appResumed]).
+  var _inBackground = false;
 
   @override
   OnlineState build() {
@@ -241,7 +270,28 @@ class OnlineSession extends Notifier<OnlineState> {
     return done.future.timeout(const Duration(seconds: 10), onTimeout: () => false);
   }
 
-  Future<void> _open(ClientMessage first, {String? url}) async {
+  /// L'app passe en arrière-plan : plus de tentative de reconnexion d'ici son
+  /// retour (voir `onlineLifecycleProvider`).
+  void appPaused() {
+    _inBackground = true;
+    _reconnectTimer?.cancel();
+  }
+
+  /// L'app revient au premier plan : si la connexion est tombée entre-temps, on
+  /// la rouvre tout de suite, sans attendre le délai croissant des tentatives.
+  void appResumed() {
+    if (!_inBackground) return;
+    _inBackground = false;
+    final credentials = _credentials;
+    if (_channel != null || _closingOnPurpose || credentials == null || state.phase == RoomPhase.over) return;
+    _attempt = 0;
+    unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url, automatic: true));
+  }
+
+  /// Ouvre la connexion et envoie [first]. [automatic] : une reconnexion que le
+  /// joueur n'a pas demandée — son échec ne s'affiche pas en erreur (une par
+  /// tentative s'empilerait à l'écran), l'état « hors ligne » suffit au bandeau.
+  Future<void> _open(ClientMessage first, {String? url, bool automatic = false}) async {
     await _close();
     _closingOnPurpose = false;
     _reconnectTimer?.cancel();
@@ -254,7 +304,11 @@ class OnlineSession extends Notifier<OnlineState> {
       if (!isAcceptableServerUrl(uri, release: kReleaseMode)) throw StateError('adresse de serveur refusée : $target');
       channel = await ref.read(onlineTransportProvider).connect(uri);
     } catch (_) {
-      _fail(ErrorCode.roomNotFound, unreachable: true);
+      if (automatic) {
+        state = state.copyWith(status: OnlineStatus.offline);
+      } else {
+        _fail(ErrorCode.roomNotFound, unreachable: true);
+      }
       _scheduleReconnect();
       return;
     }
@@ -389,12 +443,16 @@ class OnlineSession extends Notifier<OnlineState> {
   void _resync() {
     final credentials = _credentials;
     if (credentials == null) return;
-    unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url));
+    unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url, automatic: true));
   }
 
   void _onClosed(OnlineChannel channel) {
     if (!identical(channel, _channel)) return;
     _channel = null;
+    // Le flux est fini : son abonnement n'a plus rien à annuler, et attendre
+    // cette annulation à la reconnexion suivante (voir [_close]) peut ne jamais
+    // aboutir.
+    _subscription = null;
     if (_closingOnPurpose) return;
     state = state.copyWith(status: OnlineStatus.offline);
     _scheduleReconnect();
@@ -402,11 +460,11 @@ class OnlineSession extends Notifier<OnlineState> {
 
   void _scheduleReconnect() {
     final credentials = _credentials;
-    if (credentials == null || state.phase == RoomPhase.over) return;
+    if (credentials == null || state.phase == RoomPhase.over || _inBackground) return;
     _reconnectTimer?.cancel();
     final delay = ref.read(onlineReconnectDelayProvider)(_attempt++);
     _reconnectTimer = Timer(delay, () {
-      unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url));
+      unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url, automatic: true));
     });
   }
 

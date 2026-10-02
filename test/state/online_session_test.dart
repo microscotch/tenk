@@ -690,6 +690,46 @@ void main() {
       expect(game().onlineActionCount, journal.length);
     });
 
+    test('une reconnexion automatique qui échoue ne s\'affiche pas en erreur, tentative après tentative', () async {
+      await joinedAndStarted(0, serverJournal());
+      final errors = online().errorSerial;
+      transport.unreachable = true;
+
+      await transport.current.serverDrops();
+      await settle();
+      await settle();
+
+      expect(online().status, OnlineStatus.offline);
+      expect(online().errorSerial, errors, reason: 'un « Serveur injoignable » par tentative s\'empilait à l\'écran');
+    });
+
+    test('en arrière-plan, aucune tentative ; au retour, reconnexion immédiate', () async {
+      await joinedAndStarted(0, serverJournal());
+      final connections = transport.channels.length;
+
+      session().appPaused();
+      await transport.current.serverDrops();
+      await settle();
+      await settle();
+      expect(transport.channels, hasLength(connections), reason: 'le réseau est souvent coupé en arrière-plan');
+
+      session().appResumed();
+      await settle();
+      expect(transport.channels, hasLength(connections + 1));
+      expect(transport.current.sent.single.type, ClientMessageType.rejoin);
+    });
+
+    test('revenir au premier plan sans coupure ne rouvre rien', () async {
+      await joinedAndStarted(0, serverJournal());
+      final connections = transport.channels.length;
+
+      session().appPaused();
+      session().appResumed();
+      await settle();
+
+      expect(transport.channels, hasLength(connections));
+    });
+
     test('quitter volontairement ne déclenche aucune reconnexion', () async {
       await joinedAndStarted(0, serverJournal());
       await session().leave();

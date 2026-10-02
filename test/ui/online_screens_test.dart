@@ -277,6 +277,29 @@ void main() {
       expect(transport.current.lastSent!.type, ClientMessageType.start);
     });
 
+    testWidgets('une connexion perdue (partage du code) : un bandeau, pas un message par tentative', (tester) async {
+      await inRoom(tester, seat: 0, names: ['Anna']);
+      transport.unreachable = true;
+
+      await transport.current.serverDrops();
+      // Plusieurs tentatives de reconnexion, toutes ratées (1, 2, 4, 8 s…).
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(seconds: 5));
+      }
+
+      expect(find.text('Connexion perdue, reconnexion…'), findsOneWidget);
+      expect(find.text('Serveur injoignable.'), findsNothing);
+      expect(transport.channels.length, 1, reason: 'les tentatives échouent avant d\'ouvrir un canal');
+
+      // Le réseau revient : le bandeau s'en va.
+      transport.unreachable = false;
+      await tester.pump(const Duration(seconds: 16));
+      expect(transport.channels.length, 2);
+      expect(transport.current.sent.single.type, ClientMessageType.rejoin);
+      await tester.pumpAndSettle();
+      expect(find.text('Connexion perdue, reconnexion…'), findsNothing);
+    });
+
     testWidgets('le code se partage par la feuille de partage du système', (tester) async {
       await inRoom(tester, seat: 0, names: ['Anna']);
 

@@ -42,10 +42,14 @@ class FakeTransport implements OnlineTransport {
   /// Vrai : le serveur est injoignable.
   bool unreachable = false;
 
+  /// Nombre de tentatives de connexion, réussies ou non.
+  int attempts = 0;
+
   FakeChannel get current => channels.last;
 
   @override
   Future<OnlineChannel> connect(Uri url) async {
+    attempts++;
     if (unreachable) throw StateError('injoignable');
     urls.add(url);
     final channel = FakeChannel();
