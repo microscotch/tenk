@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'page_transitions.dart';
+
 /// Thème "table de jeu" : sombre, doré, plus proche d'un casino que d'un
 /// formulaire — pensé pour un jeu de dés plutôt qu'une appli utilitaire.
 ThemeData buildAppTheme() {
@@ -15,6 +17,9 @@ ThemeData buildAppTheme() {
     // le Navigator dans main.dart) doit rester visible à travers chaque
     // Scaffold et sa barre d'app.
     scaffoldBackgroundColor: Colors.transparent,
+    // Les écrans glissent comme des tuiles, chacun avec son feutre (voir
+    // FeltTileSlidePageTransitionsBuilder) — plutôt que le fondu d'Android.
+    pageTransitionsTheme: feltTileSlideTransitionsTheme,
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: colorScheme.primary,

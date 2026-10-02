@@ -17,8 +17,8 @@ import 'setup_screen.dart';
 /// victoire immédiate dans les règles du jeu). Une fois le lancer
 /// immobilisé, une courte pause puis "10K" zoome au centre, et enfin la
 /// mention de paternité apparaît en bas. Une fois la mise en scène terminée,
-/// reste affiché [displayDuration] de plus avant un fondu vers l'écran de
-/// configuration ; sautable à tout moment en touchant l'écran.
+/// reste affiché [displayDuration] de plus avant de laisser glisser l'écran
+/// suivant par-dessus ; sautable à tout moment en touchant l'écran.
 class SplashScreen extends ConsumerStatefulWidget {
   final Duration displayDuration;
 
@@ -47,7 +47,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   static const _resultFadeIn = Duration(milliseconds: 400);
   static const _gapBeforeFooter = Duration(milliseconds: 200);
   static const _footerFadeIn = Duration(milliseconds: 350);
-  static const _fadeOutDuration = Duration(milliseconds: 600);
 
   // Instants de déclenchement de chaque étape, cumulés à partir des durées
   // ci-dessus (pas `const` : l'opérateur `+` de Duration n'est pas évaluable
@@ -129,15 +128,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final next = await launchScreenFor(ProviderScope.containerOf(context, listen: false));
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
+      MaterialPageRoute<void>(
         // Route nommée : c'est ce nom qui permet à n'importe quel écran plus
         // profond de revenir ici à coup sûr (voir [SetupScreen.routeName]).
         // Seulement sur l'accueil : la création du profil le pose elle-même
-        // sur l'accueil auquel elle mène.
+        // sur l'accueil auquel elle mène. La transition est celle de toutes les
+        // pages (voir `FeltTileSlidePageTransitionsBuilder`).
         settings: next is SetupScreen ? const RouteSettings(name: SetupScreen.routeName) : null,
-        transitionDuration: _fadeOutDuration,
-        pageBuilder: (_, _, _) => next,
-        transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
+        builder: (_) => next,
       ),
     );
   }
