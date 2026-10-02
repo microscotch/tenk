@@ -6,6 +6,7 @@ import 'package:test/test.dart';
 import '../../lib/game/game_recording.dart';
 import '../../lib/game/game_setup.dart';
 import '../../lib/game/online/protocol.dart';
+import '../../lib/game/turn_state.dart';
 import '../src/limits.dart';
 import '../src/room.dart';
 import '../src/room_manager.dart';
@@ -253,6 +254,98 @@ void main() {
       final client = replayGame(const GameSetup(playerNames: ['J1', 'J2']), 31337, seen).engine!;
       expect(client.currentPlayerIndex, room.authority!.engine!.currentPlayerIndex);
       expect(client.activeTurn?.pendingRoll?.faces, room.authority!.engine!.activeTurn?.pendingRoll?.faces);
+    });
+  });
+
+  group('sélection de 5 en cours', () {
+    /// Un salon de 3 (le dernier arrivé est un client d'avant, qui n'annonce
+    /// aucune fonction), amené jusqu'à un lancer où garder plus ou moins de 5
+    /// est un vrai choix. Rend aussi la sélection légale autre que le minimum.
+    (Room, List<(FakeConnection, Session)>, int alternative) atFivesChoice() {
+      final host = open();
+      send(host.$2, ClientMessage.create(name: 'J1'));
+      final code = host.$1.of(ServerMessageType.joined).last.roomCode;
+      final second = open();
+      send(second.$2, ClientMessage.join(code: code, name: 'J2'));
+      final legacy = open();
+      send(legacy.$2, ClientMessage.join(code: code, name: 'J3', features: const []));
+      final players = [host, second, legacy];
+      send(host.$2, ClientMessage.start());
+      final room = manager.room(code)!;
+      for (var moves = 0; moves < 600 && !room.authority!.isOver; moves++) {
+        final authority = room.authority!;
+        final seat = authority.currentSeat!;
+        final turn = authority.engine!.activeTurn;
+        final analysis = turn?.pendingRoll;
+        if (turn != null && analysis != null && !turn.busted) {
+          final fives = analysis.declinableFives?.diceCount ?? 0;
+          final max = maxKeepableFives(turn, analysis, currentTotal: authority.engine!.currentPlayer.totalScore);
+          final min = minKeepableFives(analysis);
+          if (max > min) return (room, players, fives - max);
+          send(players[seat].$2, ClientMessage.play(GameActionType.applyKeep, params: {'declineFivesCount': fives - min}));
+        } else if (turn == null) {
+          send(players[seat].$2, ClientMessage.play(GameActionType.startTurn, params: {'useFullHand': true}));
+        } else if (turn.busted) {
+          send(players[seat].$2, ClientMessage.play(GameActionType.endBustedTurn));
+        } else {
+          final before = authority.actions.length;
+          send(players[seat].$2, ClientMessage.play(GameActionType.bank));
+          if (authority.actions.length == before) send(players[seat].$2, ClientMessage.play(GameActionType.roll));
+        }
+      }
+      throw StateError('aucun choix de 5 atteint');
+    }
+
+    test('relayée aux autres joueurs qui savent l\'afficher, datée du rang de la prochaine action', () {
+      final (room, players, alternative) = atFivesChoice();
+      final seat = room.authority!.currentSeat!;
+      final counts = [for (final p in players) p.$1.of(ServerMessageType.selection).length];
+      final errors = players[seat].$1.of(ServerMessageType.error).length;
+
+      send(players[seat].$2, ClientMessage.select(declineFivesCount: alternative));
+
+      for (var i = 0; i < players.length; i++) {
+        final received = players[i].$1.of(ServerMessageType.selection).skip(counts[i]).toList();
+        if (i == seat || i == 2) {
+          expect(received, isEmpty, reason: i == seat ? 'pas à celui qui sélectionne' : 'pas au client d\'avant');
+        } else {
+          expect((received.single.seq, received.single.declineFivesCount), (room.authority!.actions.length, alternative));
+        }
+      }
+      expect(players[seat].$1.of(ServerMessageType.error), hasLength(errors), reason: 'acceptée');
+    });
+
+    test('une sélection qui ne pourrait pas être jouée est refusée, et personne ne la voit', () {
+      final (room, players, _) = atFivesChoice();
+      final seat = room.authority!.currentSeat!;
+      final other = (seat + 1) % 3;
+      final before = [for (final p in players) p.$1.of(ServerMessageType.selection).length];
+
+      send(players[other].$2, ClientMessage.select(declineFivesCount: 0));
+      expect(players[other].$1.lastError, ErrorCode.notYourTurn);
+      send(players[seat].$2, ClientMessage.select(declineFivesCount: 5));
+      expect(players[seat].$1.lastError, ErrorCode.illegalMove);
+
+      expect([for (final p in players) p.$1.of(ServerMessageType.selection).length], before);
+    });
+
+    test('redonnée à qui revient pendant que le joueur hésite, plus une fois le coup joué', () {
+      final (room, players, alternative) = atFivesChoice();
+      final seat = room.authority!.currentSeat!;
+      final watcher = seat == 0 ? 1 : 0;
+      final token = players[watcher].$1.token;
+      send(players[seat].$2, ClientMessage.select(declineFivesCount: alternative));
+
+      manager.disconnect(players[watcher].$2);
+      final back = open();
+      send(back.$2, ClientMessage.rejoin(token: token));
+      expect(back.$1.of(ServerMessageType.selection).single.declineFivesCount, alternative);
+
+      send(players[seat].$2, ClientMessage.play(GameActionType.applyKeep, params: {'declineFivesCount': alternative}));
+      manager.disconnect(back.$2);
+      final again = open();
+      send(again.$2, ClientMessage.rejoin(token: token));
+      expect(again.$1.of(ServerMessageType.selection), isEmpty, reason: 'le coup joué l\'a rendue caduque');
     });
   });
 

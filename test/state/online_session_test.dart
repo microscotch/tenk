@@ -6,6 +6,7 @@ import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/online/protocol.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/game/player_profile.dart';
+import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_providers.dart';
 import 'package:le10000/state/player_store.dart';
@@ -396,6 +397,92 @@ void main() {
       expect(replayed.gameOver, isTrue);
       expect(replayed.winnerIndex, played.winnerIndex);
       expect([for (final p in replayed.players) p.totalScore], [for (final p in played.players) p.totalScore]);
+    });
+  });
+
+  group('sélection de 5 en cours', () {
+    /// Un journal arrêté sur un lancer où garder plus ou moins de 5 est un vrai
+    /// choix, et le siège du joueur qui a la main.
+    (List<GameAction>, int seat) atFivesChoice() {
+      for (var seed = 1; seed < 100; seed++) {
+        final full = fullJournal(seed: seed);
+        for (var end = 1; end <= full.length; end++) {
+          if (full[end - 1].type != GameActionType.roll) continue;
+          final replay = replayGame(setup, 0, full.sublist(0, end));
+          final engine = replay.engine!;
+          final turn = engine.activeTurn;
+          final analysis = turn?.pendingRoll;
+          if (turn == null || analysis == null || turn.busted) continue;
+          if (maxKeepableFives(turn, analysis, currentTotal: engine.currentPlayer.totalScore) > minKeepableFives(analysis)) {
+            return (full.sublist(0, end), replay.playOrder![engine.currentPlayerIndex]);
+          }
+        }
+      }
+      throw StateError('aucun choix de 5 trouvé');
+    }
+
+    test('celle de l\'autre joueur est retenue si elle date du lancer à l\'écran, ignorée sinon', () async {
+      final (journal, current) = atFivesChoice();
+      await joinedAndStarted(1 - current, journal);
+
+      transport.current.serverSends(ServerMessage.selection(seq: journal.length - 1, declineFivesCount: 1));
+      await settle();
+      expect(container.read(onlineKeepSelectionProvider), isNull, reason: 'un lancer passé');
+
+      transport.current.serverSends(ServerMessage.selection(seq: journal.length, declineFivesCount: 1));
+      await settle();
+      expect(container.read(onlineKeepSelectionProvider), (seq: journal.length, declineFivesCount: 1));
+    });
+
+    test('à mon tour, ma sélection part au serveur ; hors de mon tour, rien', () async {
+      final (journal, current) = atFivesChoice();
+      await joinedAndStarted(current, journal);
+      game().shareKeepSelection(1);
+      expect(transport.current.lastSent!.type, ClientMessageType.select);
+      expect(transport.current.lastSent!.params['declineFivesCount'], 1);
+
+      // Le même lancer, vu par l'autre joueur : ce n'est pas son tour.
+      transport = FakeTransport();
+      container = newContainer();
+      await joinedAndStarted(1 - current, journal);
+      final sent = transport.current.sent.length;
+      game().shareKeepSelection(1);
+      expect(transport.current.sent, hasLength(sent));
+    });
+
+    test('un serveur d\'avant, qui n\'annonce pas la fonction, ne reçoit jamais de sélection', () async {
+      final (journal, current) = atFivesChoice();
+      await session().join('abcde', names[current]);
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: current, features: const []));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: journal));
+      await settle();
+
+      game().shareKeepSelection(1);
+
+      expect(transport.current.sent.where((m) => m.type == ClientMessageType.select), isEmpty);
+    });
+
+    test('un message d\'un type inconnu (serveur plus récent) est ignoré, sans tout redemander', () async {
+      await joinedAndStarted(0, serverJournal());
+      final connections = transport.channels.length;
+
+      transport.current.serverSendsRaw({'v': onlineProtocolVersion, 'type': 'plusTard', 'params': {}});
+      await settle();
+
+      expect(transport.channels, hasLength(connections));
+      expect(game().isOnline, isTrue);
+    });
+
+    test('un nouveau journal efface une sélection d\'avant', () async {
+      final (journal, current) = atFivesChoice();
+      await joinedAndStarted(1 - current, journal);
+      transport.current.serverSends(ServerMessage.selection(seq: journal.length, declineFivesCount: 1));
+      await settle();
+
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: journal));
+      await settle();
+
+      expect(container.read(onlineKeepSelectionProvider), isNull);
     });
   });
 

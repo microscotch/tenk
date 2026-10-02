@@ -295,6 +295,10 @@ sweep of expired rooms).
   the splash asks for it (`MyProfileSetupScreen`, via `isMyProfileMissing`) when none is set or its fiche is gone.
   `isValidOnlineName` (in `protocol.dart`) is the server's own pseudo rule, reused by the profile editor. My fiche
   is linked to my seat (`playerIds`), so an online game counts for it even under a nickname.
+- **The active player's 5s choice is shown live to the others** (`select` → `selection`, not a move: checked by
+  `GameAuthority.checkSelection`, kept by the room until the next action). New protocol messages go behind a
+  **feature negotiation** (`supportedFeatures`, announced in `create`/`join`/`rejoin` and `joined`), never behind a
+  new `onlineProtocolVersion`, which would lock out every installed client.
 - Not in v1: bots and mixed local players in online games; forfeiting a started game.
 
 ## Design documents — keep them current

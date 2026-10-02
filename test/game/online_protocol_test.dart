@@ -7,15 +7,34 @@ ClientMessage roundTrip(ClientMessage m) => ClientMessage.fromJson(m.toJson());
 void main() {
   group('messages du client', () {
     test('chaque message survit à un aller-retour JSON', () {
-      expect(roundTrip(ClientMessage.create(name: 'Anna')).params, {'name': 'Anna'});
-      expect(roundTrip(ClientMessage.join(code: 'ab3cd', name: 'Bob')).params, {'code': 'AB3CD', 'name': 'Bob'});
-      expect(roundTrip(ClientMessage.rejoin(token: 'a' * 32)).params, {'token': 'a' * 32});
+      expect(roundTrip(ClientMessage.create(name: 'Anna')).params, {'name': 'Anna', 'features': supportedFeatures});
+      expect(roundTrip(ClientMessage.join(code: 'ab3cd', name: 'Bob')).params,
+          {'code': 'AB3CD', 'name': 'Bob', 'features': supportedFeatures});
+      expect(roundTrip(ClientMessage.rejoin(token: 'a' * 32)).params, {'token': 'a' * 32, 'features': supportedFeatures});
       expect(roundTrip(ClientMessage.reorder([1, 0, 2])).params, {'order': [1, 0, 2]});
       expect(roundTrip(ClientMessage.start()).type, ClientMessageType.start);
       expect(roundTrip(ClientMessage.leave()).type, ClientMessageType.leave);
       expect(roundTrip(ClientMessage.play(GameActionType.roll)).intent, GameActionType.roll);
       final keep = roundTrip(ClientMessage.play(GameActionType.applyKeep, params: {'declineFivesCount': 2}));
       expect(keep.params['declineFivesCount'], 2);
+      final select = roundTrip(ClientMessage.select(declineFivesCount: 1));
+      expect((select.type, select.params['declineFivesCount']), (ClientMessageType.select, 1));
+    });
+
+    test('les fonctions annoncées : absentes (client d\'avant), elles sont vides ; démesurées, refusées', () {
+      final legacy = ClientMessage.fromJson({'v': onlineProtocolVersion, 'type': 'create', 'params': {'name': 'Anna'}});
+      expect(legacy.features, isEmpty);
+      expect(roundTrip(ClientMessage.create(name: 'Anna')).features, contains(keepSelectionFeature));
+      expect(roundTrip(ClientMessage.create(name: 'Anna', features: const ['plusTard'])).features, ['plusTard'],
+          reason: 'un nom inconnu passe : c\'est au serveur de l\'ignorer');
+      expect(() => roundTrip(ClientMessage.create(name: 'Anna', features: List.filled(17, 'x'))), throwsFormatException);
+      expect(() => roundTrip(ClientMessage.create(name: 'Anna', features: ['x' * 33])), throwsFormatException);
+    });
+
+    test('une sélection hors de 0 à 5 est refusée', () {
+      for (final bad in [-1, 6]) {
+        expect(() => roundTrip(ClientMessage.select(declineFivesCount: bad)), throwsFormatException);
+      }
     });
 
     test('un pseudo est rogné, et refusé s\'il est vide, trop long ou contient un caractère de contrôle', () {
@@ -88,6 +107,21 @@ void main() {
     test('joined, room, action, snapshot et error survivent à un aller-retour JSON', () {
       final joined = roundTripServer(ServerMessage.joined(code: 'ABCDE', token: 'a' * 32, seat: 2));
       expect((joined.roomCode, joined.token, joined.seat), ('ABCDE', 'a' * 32, 2));
+      expect(joined.features, supportedFeatures);
+      final legacyJoined = ServerMessage.fromJson({
+        'v': onlineProtocolVersion,
+        'type': 'joined',
+        'params': {'code': 'ABCDE', 'token': 'a' * 32, 'seat': 0},
+      });
+      expect(legacyJoined.features, isEmpty, reason: 'un serveur d\'avant n\'annonce rien');
+
+      final selection = roundTripServer(ServerMessage.selection(seq: 12, declineFivesCount: 1));
+      expect((selection.type, selection.seq, selection.declineFivesCount), (ServerMessageType.selection, 12, 1));
+      expect(
+        () => ServerMessage.fromJson({'v': onlineProtocolVersion, 'type': 'plusTard', 'params': {}}),
+        throwsA(isA<UnknownServerMessage>()),
+        reason: 'un type inconnu se distingue d\'un message abîmé, pour être ignoré',
+      );
 
       final room = roundTripServer(ServerMessage.room(
         code: 'ABCDE',

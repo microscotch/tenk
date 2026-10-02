@@ -25,6 +25,10 @@ class FakeChannel implements OnlineChannel {
   /// Le serveur envoie [message] au client.
   void serverSends(ServerMessage message) => _incoming.add(jsonEncode(message.toJson()));
 
+  /// Le serveur envoie un message brut, tel qu'un serveur d'une autre version
+  /// pourrait l'écrire.
+  void serverSendsRaw(Map<String, Object?> json) => _incoming.add(jsonEncode(json));
+
   /// Le serveur (ou le réseau) coupe la connexion.
   Future<void> serverDrops() => _incoming.close();
 

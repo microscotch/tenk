@@ -38,7 +38,17 @@ class OnlineGameLink {
   /// quand mon pseudo est un surnom. Nul sans profil (tests).
   final String? myProfileId;
 
-  const OnlineGameLink({required this.mySeat, required this.playOrder, required this.sendIntent, this.myProfileId});
+  /// Fait voir aux autres joueurs ma sélection de 5 en cours, avant que je la
+  /// valide (voir [GameNotifier.shareKeepSelection]). Nul sans session (tests).
+  final void Function(int declineFivesCount)? sendSelection;
+
+  const OnlineGameLink({
+    required this.mySeat,
+    required this.playOrder,
+    required this.sendIntent,
+    this.myProfileId,
+    this.sendSelection,
+  });
 
   /// Mon index de joueur dans le moteur.
   int get myEngineIndex => playOrder.indexOf(mySeat);
@@ -393,6 +403,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     required int mySeat,
     required void Function(GameActionType intent, Map<String, dynamic> params) sendIntent,
     String? myProfileId,
+    void Function(int declineFivesCount)? sendSelection,
   }) {
     final original = GameSetup(playerNames: names, playerIds: {mySeat: ?myProfileId});
     final replay = replayGame(original, 0, actions);
@@ -403,6 +414,7 @@ class GameNotifier extends Notifier<GameEngine?> {
       playOrder: replay.playOrder!,
       sendIntent: sendIntent,
       myProfileId: myProfileId,
+      sendSelection: sendSelection,
     );
     _setup = replay.orderedSetup;
     _originalSetup = original;
@@ -415,6 +427,16 @@ class GameNotifier extends Notifier<GameEngine?> {
       ..addAll(actions);
     state = engine;
     if (engine.gameOver) _archiveOnline();
+  }
+
+  /// En ligne, à mon tour, fait voir aux autres joueurs le nombre de 5 que je
+  /// m'apprête à écarter sur le lancer en attente : leur écran suit ma
+  /// sélection (score de la main, dés qui migrent) avant que je la valide.
+  /// Sans effet hors ligne, ou quand ce n'est pas mon tour.
+  void shareKeepSelection(int declineFivesCount) {
+    final link = _online;
+    if (link == null || !isMyOnlineTurn || state?.activeTurn?.pendingRoll == null) return;
+    link.sendSelection?.call(declineFivesCount);
   }
 
   /// Applique une action décidée par le serveur. Les lancers portent leurs

@@ -111,7 +111,13 @@ bool _hasRealChoice(TurnState turn, RollAnalysis analysis, {required int current
 /// Repli sur le score le plus élevé si toutes les options finissent par 50
 /// (possible seulement via la règle d'extension, où chaque 5 vaut 100 : le
 /// dernier chiffre ne varie alors jamais avec le nombre gardé).
-int _defaultKeepCount(TurnState turn, RollAnalysis analysis, {required int currentTotal}) {
+int _defaultKeepCount(TurnState turn, RollAnalysis analysis, {required int currentTotal}) =>
+    defaultKeepCount(turn, analysis, currentTotal: currentTotal);
+
+/// Voir [_defaultKeepCount] — exposé pour que les tests choisissent une
+/// sélection réellement différente de celle par défaut.
+@visibleForTesting
+int defaultKeepCount(TurnState turn, RollAnalysis analysis, {required int currentTotal}) {
   final fives = analysis.declinableFives;
   if (fives == null) return 0;
   // Borne haute légale plutôt que "tous les 5" : garder au-delà ferait
@@ -614,11 +620,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final initialTurn = initialEngine?.activeTurn;
     final initialPendingRoll = initialTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll != null
-        ? _defaultKeepCount(
-            initialTurn!,
-            initialPendingRoll,
-            currentTotal: initialEngine!.currentPlayer.totalScore,
-          )
+        ? _remoteSelectedKeep(initialEngine!) ??
+            _defaultKeepCount(
+              initialTurn!,
+              initialPendingRoll,
+              currentTotal: initialEngine.currentPlayer.totalScore,
+            )
         : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _seedLogFromHistory();
@@ -1274,6 +1281,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
         }
       });
     }
+    // L'autre joueur en ligne change sa sélection de 5 : mon écran la suit.
+    ref.listen<OnlineKeepSelection?>(onlineKeepSelectionProvider, (previous, next) {
+      final engine = ref.read(gameProvider);
+      final keep = engine == null ? null : _remoteSelectedKeep(engine);
+      if (keep != null && keep != _selectedKeep) setState(() => _selectedKeep = keep);
+    });
     ref.listen<GameEngine?>(gameProvider, (previous, next) {
       if (next == null || _coveredByReplay || _seeking) return;
       // Toute transition du moteur redessine la ligne de contrôle : on la
@@ -1350,13 +1363,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
         if (newPendingRoll != null) SoundEffects.instance.playDiceRoll(newPendingRoll.faces.length);
-        // Par défaut, on tend vers le score optimal (voir _defaultKeepCount).
+        // Par défaut, on tend vers le score optimal (voir _defaultKeepCount) —
+        // sauf si l'autre joueur en ligne a déjà fait voir sa sélection.
         _selectedKeep = newPendingRoll != null
-            ? _defaultKeepCount(
-                next.activeTurn!,
-                newPendingRoll,
-                currentTotal: next.currentPlayer.totalScore,
-              )
+            ? _remoteSelectedKeep(next) ??
+                _defaultKeepCount(
+                  next.activeTurn!,
+                  newPendingRoll,
+                  currentTotal: next.currentPlayer.totalScore,
+                )
             : 0;
         _scheduleRollSettleAndPreviewMove(newPendingRoll);
       }
@@ -1381,6 +1396,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // Un tour qui se joue sans moi : un bot, ou un autre joueur en ligne.
     final isAiTurn = notifier.isObservedTurn(engine.currentPlayerIndex);
     final isRemoteTurn = notifier.isRemotePlayer(engine.currentPlayerIndex);
+    // L'aperçu de la garde (score de la main, dés qui migrent) suit une
+    // sélection : la mienne, ou celle que l'autre joueur en ligne fait en ce
+    // moment (voir onlineKeepSelectionProvider). Seul un bot, qui ne sélectionne
+    // rien à l'écran, garde l'affichage par défaut.
+    final followsSelection = !notifier.isAiPlayer(engine.currentPlayerIndex);
 
     // Dés hérités d'un tour précédent, en attente du choix du joueur (les
     // garder ou repartir avec une main pleine) : pas encore de vrai
@@ -1407,7 +1427,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // sont immobilisés (voir _rollSettled) — pas avant, sinon le score
     // apparaît avant que le joueur ait vu le résultat du lancer.
     final showRollPreview =
-        !isAiTurn && turn.pendingRoll != null && _rollSettled;
+        followsSelection && turn.pendingRoll != null && _rollSettled;
     final liveScore = showRollPreview
         ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep)
         : turn.bankedScore;
@@ -1424,7 +1444,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // y en a un à afficher, sont montrés "tels quels" (rien n'est encore
     // décidé côté joueur).
     final rollZoneSelectedKeep =
-        (!turn.busted && !isAiTurn && turn.pendingRoll != null)
+        (!turn.busted && followsSelection && turn.pendingRoll != null)
         ? _selectedKeep
         : 0;
 
@@ -1449,7 +1469,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     var extendedValuesShown = turn.extendedValues;
     if (pendingAnalysis != null) {
       final currentTotal = engine.currentPlayer.totalScore;
-      final previewKeep = (!turn.busted && !isAiTurn)
+      final previewKeep = (!turn.busted && followsSelection)
           ? _selectedKeep
           : _defaultKeepCount(turn, pendingAnalysis, currentTotal: currentTotal);
       previewStates = _classifyDiceForDisplay(pendingAnalysis, previewKeep);
@@ -2758,6 +2778,35 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Le nombre de 5 gardés que l'autre joueur en ligne a sélectionné sur le
+  /// lancer en attente de [engine] (voir `onlineKeepSelectionProvider`), borné
+  /// comme le sélecteur ; nul si ce n'est pas son tour, si rien n'a été
+  /// sélectionné, ou si la sélection date d'un autre lancer.
+  int? _remoteSelectedKeep(GameEngine engine) {
+    final notifier = ref.read(gameProvider.notifier);
+    final turn = engine.activeTurn;
+    final analysis = turn?.pendingRoll;
+    if (turn == null || analysis == null || turn.busted || !notifier.isRemotePlayer(engine.currentPlayerIndex)) {
+      return null;
+    }
+    final selection = ref.read(onlineKeepSelectionProvider);
+    if (selection == null || selection.seq != notifier.onlineActionCount) return null;
+    final minKeep = minKeepableFives(analysis);
+    final maxKeep = maxKeepableFives(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+    final keep = (analysis.declinableFives?.diceCount ?? 0) - selection.declineFivesCount;
+    return keep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
+  }
+
+  /// Le joueur change le nombre de 5 qu'il garde. En ligne, les autres joueurs
+  /// le voient aussitôt (voir [GameNotifier.shareKeepSelection]) : leur écran
+  /// suit la même sélection, score de la main compris.
+  void _changeSelectedKeep(int keep) {
+    setState(() => _selectedKeep = keep);
+    final roll = ref.read(gameProvider)?.activeTurn?.pendingRoll;
+    if (roll == null) return;
+    ref.read(gameProvider.notifier).shareKeepSelection((roll.declinableFives?.diceCount ?? 0) - keep);
+  }
+
   /// Sélecteur du nombre de 5 conservés — l'échange de dés — à droite de la
   /// ligne de contrôle. Toujours présent, pour que la ligne ne change pas de
   /// forme, mais inerte tant qu'aucun choix réel ne se pose.
@@ -2806,7 +2855,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             items: [
               for (var i = minKeep; i <= highest; i++) DropdownMenuItem(value: i, child: Text('$i')),
             ],
-            onChanged: enabled && !_controlsLocked ? (v) => setState(() => _selectedKeep = v!) : null,
+            onChanged: enabled && !_controlsLocked ? (v) => _changeSelectedKeep(v!) : null,
           ),
         ],
       ),

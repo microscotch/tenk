@@ -113,6 +113,23 @@ class OnlineState {
 
 final onlineSessionProvider = NotifierProvider<OnlineSession, OnlineState>(OnlineSession.new);
 
+/// La sélection de 5 en cours de l'autre joueur en ligne qui a la main, sur le
+/// lancer qui attend sa décision : [seq] est le rang de la prochaine action du
+/// journal, qui date la sélection. L'écran de jeu la suit (score de la main,
+/// dés qui migrent) tant que ce rang est celui de sa partie ; nulle sinon.
+typedef OnlineKeepSelection = ({int seq, int declineFivesCount});
+
+final onlineKeepSelectionProvider =
+    NotifierProvider<OnlineKeepSelectionNotifier, OnlineKeepSelection?>(OnlineKeepSelectionNotifier.new);
+
+class OnlineKeepSelectionNotifier extends Notifier<OnlineKeepSelection?> {
+  @override
+  OnlineKeepSelection? build() => null;
+
+  void set(OnlineKeepSelection selection) => state = selection;
+  void clear() => state = null;
+}
+
 /// La place gardée dans une partie en ligne (jeton d'une session précédente ou
 /// d'une déconnexion volontaire), pour proposer de la retrouver. Se relit dès
 /// que la session entre dans un salon ou en sort.
@@ -136,6 +153,10 @@ class OnlineSession extends Notifier<OnlineState> {
 
   /// Un jeton reçu du serveur, en attente d'être associé à l'adresse utilisée.
   String? _pendingUrl;
+
+  /// Les fonctions facultatives du serveur (voir `supportedFeatures`), apprises
+  /// par `joined`.
+  List<String> _serverFeatures = const [];
 
   /// Vrai quand le joueur vient de demander lui-même à retrouver sa partie en
   /// ligne : le journal qui arrive peut alors prendre la place d'une partie
@@ -176,6 +197,13 @@ class OnlineSession extends Notifier<OnlineState> {
   }
 
   void play(GameActionType intent, Map<String, dynamic> params) => _send(ClientMessage.play(intent, params: params));
+
+  /// Envoie ma sélection de 5 en cours, pour que les autres la voient — si le
+  /// serveur sait la relayer (un serveur d'avant la refuserait).
+  void select(int declineFivesCount) {
+    if (!_serverFeatures.contains(keepSelectionFeature)) return;
+    _send(ClientMessage.select(declineFivesCount: declineFivesCount));
+  }
 
   /// Quitte le salon pour de bon : le siège est libéré (ou, en partie, laissé
   /// vide) et le jeton oublié. Pour partir d'une partie commencée en gardant sa
@@ -242,6 +270,8 @@ class OnlineSession extends Notifier<OnlineState> {
     final ServerMessage message;
     try {
       message = ServerMessage.fromJson(jsonDecode(raw));
+    } on UnknownServerMessage {
+      return; // un serveur plus récent : ce message ne nous concerne pas
     } on FormatException {
       return _resync();
     }
@@ -267,6 +297,8 @@ class OnlineSession extends Notifier<OnlineState> {
           _onAction(message);
         case ServerMessageType.error:
           _onError(message.errorCode);
+        case ServerMessageType.selection:
+          _onSelection(message);
       }
     } on FormatException {
       _resync();
@@ -277,6 +309,7 @@ class OnlineSession extends Notifier<OnlineState> {
     _attempt = 0;
     final credentials = OnlineCredentials(url: _pendingUrl ?? ref.read(onlineServerUrlProvider), code: message.roomCode, token: message.token);
     _credentials = credentials;
+    _serverFeatures = message.features;
     unawaited(ref.read(onlineCredentialsStoreProvider).save(credentials));
     state = state.copyWith(roomCode: message.roomCode, mySeat: message.seat);
   }
@@ -291,6 +324,9 @@ class OnlineSession extends Notifier<OnlineState> {
     final invited = state.phase == RoomPhase.lobby || _takeover;
     if (!_game.isOnline && _game.hasLiveLocalGame && !invited) return;
     _takeover = false;
+    // Un journal neuf : une sélection gardée d'avant (autre partie, autre
+    // lancer) n'a plus cours. Celle du lancer en attente, s'il y en a une, suit.
+    ref.read(onlineKeepSelectionProvider.notifier).clear();
     final names = message.names;
     final actions = message.actions;
     _game.startOnlineGame(
@@ -299,6 +335,7 @@ class OnlineSession extends Notifier<OnlineState> {
       mySeat: seat,
       sendIntent: play,
       myProfileId: ref.read(settingsProvider).myProfileId,
+      sendSelection: select,
     );
     final diceOff = replayGame(GameSetup(playerNames: names), 0, actions.sublist(0, diceOffActionCount(actions))).diceOff;
     state = state.copyWith(gameStarted: true, diceOff: diceOff);
@@ -318,6 +355,16 @@ class OnlineSession extends Notifier<OnlineState> {
     } on StateError {
       _resync(); // le serveur et nous ne sommes plus d'accord : repartir de son journal
     }
+  }
+
+  /// La sélection en cours de l'autre joueur qui a la main. Seulement si elle
+  /// porte sur le lancer que montre l'écran : une sélection en retard (le coup
+  /// est déjà arrivé) ou en avance (il nous manque des actions) est ignorée.
+  void _onSelection(ServerMessage message) {
+    if (!state.gameStarted || !_game.isOnline) return;
+    final seq = message.seq;
+    if (seq != _game.onlineActionCount) return;
+    ref.read(onlineKeepSelectionProvider.notifier).set((seq: seq, declineFivesCount: message.declineFivesCount));
   }
 
   void _onError(ErrorCode code) {

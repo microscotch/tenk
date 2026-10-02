@@ -205,6 +205,16 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   local est en retard sur le serveur, il juge donc la banque sur l'état où la garde est appliquée et envoie
   les deux demandes dans l'ordre. `isObservedTurn` regroupe les tours qui se jouent sans moi (bot ou autre joueur) :
   l'écran n'y propose ni commande ni popup.
+- **Le tour d'un autre joueur se suit en direct**, lancer en attente compris : l'écran compte déjà ce lancer dans
+  le score de la main, avec le choix de 5 par défaut. Quand le joueur qui a la main change ce choix, son écran
+  l'envoie (`GameNotifier.shareKeepSelection` → `ClientMessage.select`), sans rien jouer : le serveur le vérifie
+  comme une vraie garde (`GameAuthority.checkSelection`), le relaie aux autres (`ServerMessage.selection`, daté du
+  rang de la prochaine action) et le garde pour qui se reconnecte pendant l'hésitation, jusqu'au coup suivant.
+  Côté client, `onlineKeepSelectionProvider` le tient ; l'écran ne le suit que s'il date du lancer affiché.
+- **Fonctions facultatives négociées** plutôt qu'une nouvelle version du protocole, qui couperait les anciens
+  clients : chacun annonce les siennes (`features` de `create`/`join`/`rejoin`, puis de `joined` ; voir
+  `supportedFeatures`) et n'envoie à l'autre que ce qu'il a annoncé. Un client inconnu d'un serveur plus récent
+  ignore un type de message inconnu (`UnknownServerMessage`) au lieu de tout redemander.
 - **Une partie en ligne terminée est archivée** dans `over/`, comme une partie locale (`_archiveOnline`, depuis
   `_commit` sur le coup final, ou depuis `startOnlineGame` quand c'est le journal complet du serveur qui apporte la
   fin). Rien n'est écrit en cours de partie : c'est le serveur qui la garde. Le run est tiré du seul journal

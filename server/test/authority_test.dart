@@ -154,4 +154,61 @@ void main() {
     authority.start();
     expect(authority.start, throwsStateError);
   });
+
+  group('sélection de 5 en cours (rien n\'est joué)', () {
+    /// Une partie amenée jusqu'à un lancer où garder plus ou moins de 5 est un
+    /// vrai choix.
+    GameAuthority atFivesChoice() {
+      for (var seed = 1; seed < 200; seed++) {
+        final authority = newAuthority(seed);
+        authority.start();
+        for (var moves = 0; moves < 400 && !authority.isOver; moves++) {
+          final turn = authority.engine!.activeTurn;
+          final analysis = turn?.pendingRoll;
+          if (turn != null && analysis != null && !turn.busted) {
+            final max = maxKeepableFives(turn, analysis, currentTotal: authority.engine!.currentPlayer.totalScore);
+            if (max > minKeepableFives(analysis)) return authority;
+          }
+          playOneMove(authority);
+        }
+      }
+      throw StateError('aucun choix de 5 trouvé');
+    }
+
+    test('toute sélection proposée passe, sans rien jouer', () {
+      final authority = atFivesChoice();
+      final engine = authority.engine!;
+      final analysis = engine.activeTurn!.pendingRoll!;
+      final fives = analysis.declinableFives!.diceCount;
+      final max = maxKeepableFives(engine.activeTurn!, analysis, currentTotal: engine.currentPlayer.totalScore);
+      final journal = authority.actions.length;
+
+      for (var keep = minKeepableFives(analysis); keep <= max; keep++) {
+        authority.checkSelection(authority.currentSeat!, fives - keep);
+      }
+
+      expect(authority.actions, hasLength(journal));
+      expect(identical(authority.engine, engine), isTrue);
+    });
+
+    test('refusée hors de son tour, hors bornes, ou sans lancer en attente', () {
+      final authority = atFivesChoice();
+      final seat = authority.currentSeat!;
+      final analysis = authority.engine!.activeTurn!.pendingRoll!;
+      final fives = analysis.declinableFives!.diceCount;
+      final other = (seat + 1) % names.length;
+
+      expect(() => authority.checkSelection(other, 0),
+          throwsA(isA<IntentRejected>().having((e) => e.code, 'code', ErrorCode.notYourTurn)));
+      expect(() => authority.checkSelection(seat, fives - minKeepableFives(analysis) + 1),
+          throwsA(isA<IntentRejected>().having((e) => e.code, 'code', ErrorCode.illegalMove)),
+          reason: 'écarter plus de 5 que permis');
+
+      authority.play(seat, GameActionType.applyKeep, {'declineFivesCount': fives - minKeepableFives(analysis)});
+      if (authority.engine!.activeTurn?.pendingRoll == null && authority.currentSeat == seat) {
+        expect(() => authority.checkSelection(seat, 0),
+            throwsA(isA<IntentRejected>().having((e) => e.code, 'code', ErrorCode.illegalMove)));
+      }
+    });
+  });
 }

@@ -104,6 +104,32 @@ class GameAuthority {
     return produced;
   }
 
+  /// Vérifie qu'une sélection de 5 en cours est de celles que le joueur du siège
+  /// [seat] pourrait valider — son tour, un lancer en attente, un nombre proposé
+  /// —, sans rien jouer ni changer. Lève [IntentRejected] sinon : on ne relaie
+  /// aux autres que ce qui pourrait réellement être joué.
+  void checkSelection(int seat, int declineFivesCount) {
+    final engine = _engine;
+    if (engine == null || engine.gameOver) throw const IntentRejected(ErrorCode.illegalMove, 'pas de partie en cours');
+    if (seat != currentSeat) throw const IntentRejected(ErrorCode.notYourTurn, 'ce n\'est pas votre tour');
+    _checkKeep(engine, declineFivesCount);
+  }
+
+  /// Les bornes d'une garde : un lancer en attente, et un nombre de 5 à garder
+  /// que l'écran proposerait.
+  void _checkKeep(GameEngine engine, int decline) {
+    final turn = engine.activeTurn;
+    final analysis = turn?.pendingRoll;
+    if (turn == null || analysis == null || turn.busted) {
+      throw const IntentRejected(ErrorCode.illegalMove, 'aucune décision de garde en attente');
+    }
+    final keep = (analysis.declinableFives?.diceCount ?? 0) - decline;
+    final maxKeep = maxKeepableFives(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+    if (decline < 0 || keep < minKeepableFives(analysis) || keep > maxKeep) {
+      throw const IntentRejected(ErrorCode.illegalMove, 'nombre de 5 à garder non proposé');
+    }
+  }
+
   (GameAction, GameEngine) _apply(GameEngine engine, GameActionType intent, Map<String, dynamic> params) {
     final turn = engine.activeTurn;
     switch (intent) {
@@ -125,17 +151,8 @@ class GameAuthority {
         return (GameAction.roll(faces: _random.faces, at: _now()), next);
 
       case GameActionType.applyKeep:
-        final analysis = turn?.pendingRoll;
-        if (turn == null || analysis == null || turn.busted) {
-          throw const IntentRejected(ErrorCode.illegalMove, 'aucune décision de garde en attente');
-        }
         final decline = params['declineFivesCount'] as int? ?? 0;
-        final fives = analysis.declinableFives?.diceCount ?? 0;
-        final keep = fives - decline;
-        final maxKeep = maxKeepableFives(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
-        if (decline < 0 || keep < minKeepableFives(analysis) || keep > maxKeep) {
-          throw const IntentRejected(ErrorCode.illegalMove, 'nombre de 5 à garder non proposé');
-        }
+        _checkKeep(engine, decline);
         return (GameAction.applyKeep(declineFivesCount: decline, at: _now()), engine.applyKeep(declineFivesCount: decline));
 
       case GameActionType.bank:

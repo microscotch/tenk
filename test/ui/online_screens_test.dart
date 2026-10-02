@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/game_recording.dart';
-import 'package:le10000/game/game_setup.dart';
 import 'package:le10000/game/online/protocol.dart';
 import 'package:le10000/game/player_profile.dart';
+import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
@@ -408,6 +408,125 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.byType(GameScreen), findsOneWidget);
+    });
+  });
+
+  group('sélection de 5 de l\'autre joueur', () {
+    const names = ['Anna', 'Bob'];
+    const setup = GameSetup(playerNames: names);
+
+    /// Un journal arrêté sur un lancer où garder plus ou moins de 5 est un vrai
+    /// choix ; le siège qui a la main ; le nombre de 5 écartés par défaut et un
+    /// autre nombre possible.
+    ({List<GameAction> journal, int current, TurnState turn, int alternative}) atFivesChoice() {
+      for (var seed = 1; seed < 100; seed++) {
+        final full = journalWithFaces(setup, seed, playScriptedGame(setup, seed).actions);
+        for (var end = 1; end <= full.length; end++) {
+          if (full[end - 1].type != GameActionType.roll) continue;
+          final replay = replayGame(setup, 0, full.sublist(0, end));
+          final engine = replay.engine!;
+          final turn = engine.activeTurn;
+          final analysis = turn?.pendingRoll;
+          if (turn == null || analysis == null || turn.busted) continue;
+          final total = engine.currentPlayer.totalScore;
+          final max = maxKeepableFives(turn, analysis, currentTotal: total);
+          final min = minKeepableFives(analysis);
+          if (max <= min) continue;
+          // Un autre nombre de 5 que celui choisi par défaut, et qui change le score.
+          final byDefault = defaultKeepCount(turn, analysis, currentTotal: total);
+          final keep = byDefault == min ? max : min;
+          return (
+            journal: full.sublist(0, end),
+            current: replay.playOrder![engine.currentPlayerIndex],
+            turn: turn,
+            alternative: analysis.declinableFives!.diceCount - keep,
+          );
+        }
+      }
+      throw StateError('aucun choix de 5 trouvé');
+    }
+
+    /// Le score de la main affiché pour [declineFivesCount] 5 écartés.
+    int handScore(TurnState turn, int declineFivesCount) {
+      final analysis = turn.pendingRoll!;
+      final fives = analysis.declinableFives!;
+      final keep = fives.diceCount - declineFivesCount;
+      return turn.bankedScore +
+          analysis.mandatoryGroups.fold<int>(0, (sum, g) => sum + g.points) +
+          keep * (fives.points ~/ fives.diceCount);
+    }
+
+    Finder showsHandScore(int score) => find.byWidgetPredicate(
+          (w) => w is RichText && w.text.toPlainText().contains('$score (>'),
+        );
+
+    Future<void> joined(WidgetTester tester, int seat, List<GameAction> journal) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', names[seat]);
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: seat));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: journal));
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+
+    /// L'écran de jeu, les dés immobilisés (ils s'animent sans fin ensuite :
+    /// pas de pumpAndSettle).
+    Future<void> openGame(WidgetTester tester) async {
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GameScreen(),
+        ),
+      ));
+      await tester.pump(const Duration(seconds: 3));
+    }
+
+    testWidgets('le score de la main suit, en direct, la sélection de celui qui a la main', (tester) async {
+      final choice = atFivesChoice();
+      await joined(tester, 1 - choice.current, choice.journal);
+      await openGame(tester);
+      final analysis = choice.turn.pendingRoll!;
+      final byDefault = defaultKeepCount(choice.turn, analysis, currentTotal: container.read(gameProvider)!.currentPlayer.totalScore);
+      final defaultScore = handScore(choice.turn, analysis.declinableFives!.diceCount - byDefault);
+      expect(showsHandScore(defaultScore), findsWidgets,
+          reason: 'le lancer en attente compte déjà dans la main, sans attendre le coup suivant');
+      expect(handScore(choice.turn, choice.alternative), isNot(defaultScore));
+
+      transport.current.serverSends(ServerMessage.selection(seq: choice.journal.length, declineFivesCount: choice.alternative));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(showsHandScore(handScore(choice.turn, choice.alternative)), findsWidgets);
+    });
+
+    testWidgets('une sélection reçue avant que l\'écran de jeu ne s\'ouvre y est montrée', (tester) async {
+      final choice = atFivesChoice();
+      await joined(tester, 1 - choice.current, choice.journal);
+      transport.current.serverSends(ServerMessage.selection(seq: choice.journal.length, declineFivesCount: choice.alternative));
+      await tester.pump(const Duration(milliseconds: 20));
+
+      await openGame(tester);
+
+      expect(showsHandScore(handScore(choice.turn, choice.alternative)), findsWidgets);
+    });
+
+    testWidgets('à mon tour, changer le nombre de 5 envoie ma sélection', (tester) async {
+      final choice = atFivesChoice();
+      await joined(tester, choice.current, choice.journal);
+      await openGame(tester);
+      final keep = choice.turn.pendingRoll!.declinableFives!.diceCount - choice.alternative;
+
+      tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged!(keep);
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final sent = transport.current.sent.where((m) => m.type == ClientMessageType.select).toList();
+      expect(sent.last.params['declineFivesCount'], choice.alternative);
+      expect(showsHandScore(handScore(choice.turn, choice.alternative)), findsWidgets);
     });
   });
 }

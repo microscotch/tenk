@@ -19,7 +19,13 @@ class Session {
   final TokenBucket bucket;
   Room? room;
 
+  /// Les fonctions facultatives annoncées par ce client (voir
+  /// `supportedFeatures`) : on ne lui envoie que les messages qu'il comprend.
+  Set<String> features = const {};
+
   Session(this.connection, this.ip, this.bucket);
+
+  bool get wantsKeepSelection => features.contains(keepSelectionFeature);
 }
 
 class _Seat {
@@ -50,6 +56,10 @@ class Room {
   RoomPhase _phase = RoomPhase.lobby;
   GameAuthority? _authority;
   DateTime _lastActivity;
+
+  /// La dernière sélection de 5 du joueur qui a la main, pour la redonner à qui
+  /// se reconnecte pendant qu'il hésite. Vidée à chaque coup joué.
+  ({int seq, int declineFivesCount})? _selection;
 
   /// Tire les jetons de reprise : doit être cryptographiquement sûr en production.
   final Random tokenRandom;
@@ -112,6 +122,10 @@ class Room {
     _touch();
     _send(session, ServerMessage.joined(code: code, token: entry.token, seat: seat));
     _sendSnapshot(session);
+    final selection = _selection;
+    if (selection != null && session.wantsKeepSelection && selection.seq == _authority?.actions.length) {
+      _send(session, ServerMessage.selection(seq: selection.seq, declineFivesCount: selection.declineFivesCount));
+    }
     _refreshPhase();
     _broadcastRoom();
   }
@@ -159,6 +173,8 @@ class Room {
         leave(session);
       case ClientMessageType.play:
         _play(session, seat, message);
+      case ClientMessageType.select:
+        _select(session, seat, message.params['declineFivesCount'] as int);
       case ClientMessageType.create:
       case ClientMessageType.join:
       case ClientMessageType.rejoin:
@@ -208,12 +224,35 @@ class Room {
     } on IntentRejected catch (e) {
       return _send(session, ServerMessage.error(e.code, e.reason));
     }
+    _selection = null;
     for (var i = 0; i < produced.length; i++) {
       _broadcast(ServerMessage.action(seq: firstSeq + i, action: produced[i]));
     }
     if (authority.isOver) {
       _phase = RoomPhase.over;
       _broadcastRoom();
+    }
+  }
+
+  /// Le joueur qui a la main change sa sélection de 5 : rien n'est joué, on la
+  /// fait seulement voir aux autres joueurs qui savent l'afficher. Refusée comme
+  /// un coup (pas son tour, pas de lancer en attente, nombre non proposé).
+  void _select(Session session, int seat, int declineFivesCount) {
+    final authority = _authority;
+    if (_phase != RoomPhase.playing || authority == null) {
+      return _send(session, ServerMessage.error(ErrorCode.illegalMove, 'la partie n\'est pas en cours'));
+    }
+    try {
+      authority.checkSelection(seat, declineFivesCount);
+    } on IntentRejected catch (e) {
+      return _send(session, ServerMessage.error(e.code, e.reason));
+    }
+    final seq = authority.actions.length;
+    _selection = (seq: seq, declineFivesCount: declineFivesCount);
+    final message = ServerMessage.selection(seq: seq, declineFivesCount: declineFivesCount);
+    for (final s in _seats) {
+      final other = s.session;
+      if (other != null && other != session && other.wantsKeepSelection) _send(other, message);
     }
   }
 

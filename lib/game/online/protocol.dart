@@ -22,9 +22,24 @@ const Set<GameActionType> playIntents = {
   GameActionType.endBustedTurn,
 };
 
-enum ClientMessageType { create, join, rejoin, reorder, start, leave, play }
+/// Fonction facultative : le joueur qui a la main fait voir aux autres sa
+/// sélection de 5 en cours (`select` → `selection`), avant de la valider.
+const String keepSelectionFeature = 'keepSelection';
 
-enum ServerMessageType { joined, room, action, snapshot, error }
+/// Les fonctions facultatives que cette version sait gérer. Client et serveur
+/// s'annoncent les leurs (`create`/`join`/`rejoin`, puis `joined`) et n'envoient
+/// à l'autre que ce qu'il a annoncé : un client ou un serveur d'avant, qui
+/// n'annonce rien, ne reçoit jamais un message qu'il prendrait pour un journal
+/// abîmé. C'est ce qui évite de changer [onlineProtocolVersion], qui couperait
+/// les anciens clients.
+const List<String> supportedFeatures = [keepSelectionFeature];
+
+const int _maxFeatures = 16;
+const int _maxFeatureLength = 32;
+
+enum ClientMessageType { create, join, rejoin, reorder, start, leave, play, select }
+
+enum ServerMessageType { joined, room, action, snapshot, error, selection }
 
 /// Étape d'un salon.
 enum RoomPhase { lobby, playing, suspended, over }
@@ -52,12 +67,15 @@ class ClientMessage {
 
   const ClientMessage._(this.type, [this.params = const {}]);
 
-  factory ClientMessage.create({required String name}) => ClientMessage._(ClientMessageType.create, {'name': name});
+  /// [features] : ce que ce client sait gérer (voir [supportedFeatures]).
+  factory ClientMessage.create({required String name, List<String> features = supportedFeatures}) =>
+      ClientMessage._(ClientMessageType.create, {'name': name, 'features': features});
 
-  factory ClientMessage.join({required String code, required String name}) =>
-      ClientMessage._(ClientMessageType.join, {'code': code, 'name': name});
+  factory ClientMessage.join({required String code, required String name, List<String> features = supportedFeatures}) =>
+      ClientMessage._(ClientMessageType.join, {'code': code, 'name': name, 'features': features});
 
-  factory ClientMessage.rejoin({required String token}) => ClientMessage._(ClientMessageType.rejoin, {'token': token});
+  factory ClientMessage.rejoin({required String token, List<String> features = supportedFeatures}) =>
+      ClientMessage._(ClientMessageType.rejoin, {'token': token, 'features': features});
 
   /// Nouvel ordre des sièges : `order[k]` est le siège actuel qui passe en position k.
   factory ClientMessage.reorder(List<int> order) => ClientMessage._(ClientMessageType.reorder, {'order': order});
@@ -71,8 +89,17 @@ class ClientMessage {
     return ClientMessage._(ClientMessageType.play, {'intent': intent.name, ...params});
   }
 
+  /// Ma sélection de 5 en cours, pour que les autres joueurs la voient : rien
+  /// n'est joué (voir [keepSelectionFeature]). Même nombre que `applyKeep`.
+  factory ClientMessage.select({required int declineFivesCount}) =>
+      ClientMessage._(ClientMessageType.select, {'declineFivesCount': declineFivesCount});
+
   /// L'intention d'un message `play`.
   GameActionType get intent => GameActionType.values.byName(params['intent'] as String);
+
+  /// Les fonctions annoncées par `create`/`join`/`rejoin` ; vide pour un client
+  /// d'avant, qui n'en annonce aucune.
+  List<String> get features => (params['features'] as List?)?.cast<String>() ?? const [];
 
   Map<String, dynamic> toJson() => {'v': onlineProtocolVersion, 'type': type.name, 'params': params};
 
@@ -84,12 +111,12 @@ class ClientMessage {
     final raw = _map(map['params'] ?? const <String, dynamic>{}, 'params');
     switch (type) {
       case ClientMessageType.create:
-        return ClientMessage.create(name: _name(raw));
+        return ClientMessage.create(name: _name(raw), features: _features(raw));
       case ClientMessageType.join:
-        return ClientMessage.join(code: _code(raw), name: _name(raw));
+        return ClientMessage.join(code: _code(raw), name: _name(raw), features: _features(raw));
       case ClientMessageType.rejoin:
         final token = _string(raw, 'token', min: 16, max: 128);
-        return ClientMessage.rejoin(token: token);
+        return ClientMessage.rejoin(token: token, features: _features(raw));
       case ClientMessageType.reorder:
         final order = raw['order'];
         if (order is! List || order.length < minOnlinePlayers || order.length > maxOnlinePlayers) {
@@ -109,6 +136,8 @@ class ClientMessage {
           GameActionType.startTurn => {'useFullHand': _bool(raw, 'useFullHand')},
           _ => const {},
         });
+      case ClientMessageType.select:
+        return ClientMessage.select(declineFivesCount: _int(raw, 'declineFivesCount', min: 0, max: 5));
     }
   }
 }
@@ -141,9 +170,15 @@ class ServerMessage {
 
   const ServerMessage._(this.type, this.params);
 
-  /// Réponse à `create`/`join`/`rejoin` : le siège et le jeton qui permet d'y revenir.
-  factory ServerMessage.joined({required String code, required String token, required int seat}) =>
-      ServerMessage._(ServerMessageType.joined, {'code': code, 'token': token, 'seat': seat});
+  /// Réponse à `create`/`join`/`rejoin` : le siège, le jeton qui permet d'y
+  /// revenir, et les fonctions facultatives de ce serveur (voir [supportedFeatures]).
+  factory ServerMessage.joined({
+    required String code,
+    required String token,
+    required int seat,
+    List<String> features = supportedFeatures,
+  }) =>
+      ServerMessage._(ServerMessageType.joined, {'code': code, 'token': token, 'seat': seat, 'features': features});
 
   /// L'état du salon, rediffusé à chaque arrivée, départ ou changement d'étape.
   factory ServerMessage.room({
@@ -171,6 +206,12 @@ class ServerMessage {
         'actions': [for (final a in actions) a.toJson()],
       });
 
+  /// La sélection de 5 en cours du joueur qui a la main, sur le lancer qui
+  /// attend sa décision : [seq] est le rang de la prochaine action du journal, ce
+  /// qui date la sélection (une sélection d'un lancer passé est ignorée).
+  factory ServerMessage.selection({required int seq, required int declineFivesCount}) =>
+      ServerMessage._(ServerMessageType.selection, {'seq': seq, 'declineFivesCount': declineFivesCount});
+
   factory ServerMessage.error(ErrorCode code, [String message = '']) =>
       ServerMessage._(ServerMessageType.error, {'code': code.name, if (message.isNotEmpty) 'message': message});
 
@@ -183,6 +224,10 @@ class ServerMessage {
   int get seat => _int(params, 'seat', min: 0, max: maxOnlinePlayers - 1);
   int get hostSeat => _int(params, 'hostSeat', min: 0, max: maxOnlinePlayers - 1);
   int get seq => _int(params, 'seq', min: 0, max: 1 << 30);
+  int get declineFivesCount => _int(params, 'declineFivesCount', min: 0, max: 5);
+
+  /// Les fonctions annoncées par `joined` ; vide pour un serveur d'avant.
+  List<String> get features => params.containsKey('features') ? _features(params) : const [];
   RoomPhase get phase => _enumByName(RoomPhase.values, params['phase'], 'phase');
   ErrorCode get errorCode => _enumByName(ErrorCode.values, params['code'], 'code');
 
@@ -212,9 +257,17 @@ class ServerMessage {
     final map = _map(json, 'message');
     final version = map['v'];
     if (version != onlineProtocolVersion) throw UnsupportedVersion(version);
-    final type = _enumByName(ServerMessageType.values, map['type'], 'type');
+    final typeName = map['type'];
+    final type = ServerMessageType.values.where((t) => t.name == typeName).firstOrNull;
+    if (type == null) throw UnknownServerMessage(typeName);
     return ServerMessage._(type, _map(map['params'] ?? const <String, dynamic>{}, 'params'));
   }
+}
+
+/// Un type de message que cette version ne connaît pas : celui d'un serveur plus
+/// récent, à ignorer — pas un journal abîmé, qui ferait tout redemander.
+class UnknownServerMessage extends FormatException {
+  UnknownServerMessage(Object? type) : super('type de message inconnu : $type');
 }
 
 /// Le message vient d'une autre version du protocole.
@@ -250,6 +303,18 @@ int _int(Map<String, dynamic> map, String key, {required int min, required int m
   final value = map[key];
   if (value is! int || value < min || value > max) throw FormatException('$key: entier de $min à $max attendu');
   return value;
+}
+
+/// Les fonctions annoncées : absentes, aucune ; sinon une liste courte de noms
+/// courts. Un nom inconnu passe — c'est à qui le reçoit de l'ignorer.
+List<String> _features(Map<String, dynamic> map) {
+  final raw = map['features'];
+  if (raw == null) return const [];
+  if (raw is! List || raw.length > _maxFeatures) throw const FormatException('features: liste courte attendue');
+  if (raw.any((f) => f is! String || f.isEmpty || f.length > _maxFeatureLength)) {
+    throw const FormatException('features: noms courts attendus');
+  }
+  return raw.cast<String>();
 }
 
 bool _bool(Map<String, dynamic> map, String key) {

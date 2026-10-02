@@ -87,6 +87,9 @@ void main() {
     final code = anna.read(onlineSessionProvider).roomCode!;
     await bob.read(onlineSessionProvider.notifier).join(code, 'Bob');
     await until(() => anna.read(onlineSessionProvider).seats.length == 2, 'Bob dans le salon');
+    // Anna peut apprendre l'arrivée de Bob avant que Bob ne reçoive son siège :
+    // deux connexions, deux rythmes (la suite pleine charge le montre).
+    await until(() => bob.read(onlineSessionProvider).mySeat != null, 'siège reçu par Bob');
     expect(bob.read(onlineSessionProvider).mySeat, 1);
 
     // Le départ.

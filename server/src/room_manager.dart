@@ -98,6 +98,14 @@ class RoomManager {
 
     switch (message.type) {
       case ClientMessageType.create:
+      case ClientMessageType.join:
+      case ClientMessageType.rejoin:
+        // Ce que ce client sait recevoir, pour toute la connexion.
+        session.features = message.features.toSet();
+      default:
+    }
+    switch (message.type) {
+      case ClientMessageType.create:
         _create(session, message.params['name'] as String);
       case ClientMessageType.join:
         _join(session, message.params['code'] as String, message.params['name'] as String);
@@ -107,6 +115,7 @@ class RoomManager {
       case ClientMessageType.start:
       case ClientMessageType.leave:
       case ClientMessageType.play:
+      case ClientMessageType.select:
         session.connection.send(ServerMessage.error(ErrorCode.badRequest, 'pas dans un salon'));
     }
   }
