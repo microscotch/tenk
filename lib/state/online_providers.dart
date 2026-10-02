@@ -202,10 +202,33 @@ class OnlineSession extends Notifier<OnlineState> {
   GameNotifier get _game => ref.read(gameProvider.notifier);
 
   /// Crée un salon et y entre.
-  Future<void> create(String name) => _open(ClientMessage.create(name: name));
+  Future<void> create(String name) {
+    _joinIfBadToken = null;
+    return _open(ClientMessage.create(name: name));
+  }
 
-  /// Entre dans le salon [code].
-  Future<void> join(String code, String name) => _open(ClientMessage.join(code: code.trim().toUpperCase(), name: name));
+  /// Entre dans le salon [code]. Si j'y ai déjà une place (app tuée puis
+  /// rouverte par le lien d'invitation, par exemple), je la reprends avec mon
+  /// jeton plutôt que d'en prendre une seconde — le serveur me verrait sinon
+  /// comme un nouveau joueur, au pseudo suffixé (« Anna 2 »). Si ce jeton ne
+  /// vaut plus rien (salon expiré, place libérée), on entre normalement.
+  Future<void> join(String code, String name) async {
+    final normalized = code.trim().toUpperCase();
+    final saved = await ref.read(onlineCredentialsStoreProvider).load();
+    if (!ref.mounted) return;
+    if (saved != null && saved.code == normalized && saved.url == ref.read(onlineServerUrlProvider)) {
+      _takeover = true;
+      _credentials = saved;
+      _joinIfBadToken = (code: normalized, name: name);
+      return _open(ClientMessage.rejoin(token: saved.token), url: saved.url);
+    }
+    _joinIfBadToken = null;
+    return _open(ClientMessage.join(code: normalized, name: name));
+  }
+
+  /// Un « rejoindre » tenté avec mon jeton gardé (voir [join]) : de quoi entrer
+  /// normalement si le serveur ne reconnaît plus ce jeton.
+  ({String code, String name})? _joinIfBadToken;
 
   /// Reprend sa place avec le jeton gardé d'une session précédente ; sans effet
   /// s'il n'y en a pas. À appeler au lancement de l'app.
@@ -293,6 +316,9 @@ class OnlineSession extends Notifier<OnlineState> {
   /// tentative s'empilerait à l'écran), l'état « hors ligne » suffit au bandeau.
   Future<void> _open(ClientMessage first, {String? url, bool automatic = false}) async {
     await _close();
+    // La session a pu disparaître pendant l'attente (app fermée, conteneur
+    // détruit) : y écrire lèverait, et rien ne doit plus se rouvrir.
+    if (!ref.mounted) return;
     _closingOnPurpose = false;
     _reconnectTimer?.cancel();
     final String target = url ?? ref.read(onlineServerUrlProvider);
@@ -304,12 +330,17 @@ class OnlineSession extends Notifier<OnlineState> {
       if (!isAcceptableServerUrl(uri, release: kReleaseMode)) throw StateError('adresse de serveur refusée : $target');
       channel = await ref.read(onlineTransportProvider).connect(uri);
     } catch (_) {
+      if (!ref.mounted) return;
       if (automatic) {
         state = state.copyWith(status: OnlineStatus.offline);
       } else {
         _fail(ErrorCode.roomNotFound, unreachable: true);
       }
       _scheduleReconnect();
+      return;
+    }
+    if (!ref.mounted) {
+      unawaited(channel.close());
       return;
     }
     _channel = channel;
@@ -361,6 +392,7 @@ class OnlineSession extends Notifier<OnlineState> {
 
   void _onJoined(ServerMessage message) {
     _attempt = 0;
+    _joinIfBadToken = null;
     final credentials = OnlineCredentials(url: _pendingUrl ?? ref.read(onlineServerUrlProvider), code: message.roomCode, token: message.token);
     _credentials = credentials;
     _serverFeatures = message.features;
@@ -425,6 +457,14 @@ class OnlineSession extends Notifier<OnlineState> {
     if (code == ErrorCode.badToken) {
       _credentials = null;
       unawaited(ref.read(onlineCredentialsStoreProvider).clear());
+      // Ma place d'avant n'existe plus : j'entre dans le salon comme demandé,
+      // sans afficher d'erreur pour une place que je ne cherchais pas à reprendre.
+      final join = _joinIfBadToken;
+      if (join != null) {
+        _joinIfBadToken = null;
+        unawaited(_open(ClientMessage.join(code: join.code, name: join.name)));
+        return;
+      }
     }
     _fail(code);
   }

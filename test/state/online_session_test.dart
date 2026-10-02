@@ -160,6 +160,40 @@ void main() {
       expect(online().errorSerial, first + 1);
     });
 
+    test('rejoindre un salon où j\'ai déjà une place la reprend avec mon jeton, sans en prendre une seconde', () async {
+      credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: token);
+
+      await session().join('abcde', 'Anna');
+
+      expect(transport.current.lastSent!.type, ClientMessageType.rejoin);
+      expect(transport.current.lastSent!.params['token'], token);
+    });
+
+    test('si cette place n\'existe plus, on entre normalement, sans afficher d\'erreur', () async {
+      credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: token);
+      await session().join('abcde', 'Anna');
+      final errors = online().errorSerial;
+
+      transport.current.serverSends(ServerMessage.error(ErrorCode.badToken));
+      await settle();
+
+      expect(transport.current.lastSent!.type, ClientMessageType.join);
+      expect(transport.current.lastSent!.params['code'], 'ABCDE');
+      expect(transport.current.lastSent!.params['name'], 'Anna');
+      expect(online().errorSerial, errors);
+      expect(credentials.saved, isNull);
+    });
+
+    test('un jeton gardé pour un autre salon, ou un autre serveur, ne change rien', () async {
+      credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ZZZZZ', token: token);
+      await session().join('abcde', 'Anna');
+      expect(transport.current.lastSent!.type, ClientMessageType.join);
+
+      credentials.saved = const OnlineCredentials(url: 'wss://autre/ws', code: 'ABCDE', token: token);
+      await session().join('abcde', 'Anna');
+      expect(transport.current.lastSent!.type, ClientMessageType.join);
+    });
+
     test('un jeton refusé par le serveur est oublié', () async {
       credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: token);
       expect(await session().tryResume(), isTrue);

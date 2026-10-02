@@ -137,6 +137,30 @@ void main() {
     );
   }, timeout: const Timeout(Duration(seconds: 120)));
 
+  test('l\'hôte dont l\'app a été tuée revient par le code : il reprend sa place, pas un « Anna 2 »', () async {
+    final annaCredentials = FakeCredentialsStore();
+    final anna = newClient(annaCredentials);
+    final bob = newClient(FakeCredentialsStore());
+
+    await anna.read(onlineSessionProvider.notifier).create('Anna');
+    await until(() => anna.read(onlineSessionProvider).phase == RoomPhase.lobby, 'salon créé');
+    final code = anna.read(onlineSessionProvider).roomCode!;
+    await bob.read(onlineSessionProvider.notifier).join(code, 'Bob');
+    await until(() => bob.read(onlineSessionProvider).seats.length == 2, 'Bob dans le salon');
+
+    // L'app d'Anna est tuée : une app toute neuve, avec ce qu'elle avait gardé sur le disque.
+    anna.dispose();
+    final annaAgain = newClient(annaCredentials);
+    await annaAgain.read(onlineSessionProvider.notifier).join(code, 'Anna');
+    await until(() => annaAgain.read(onlineSessionProvider).seats.isNotEmpty, 'Anna de retour dans le salon');
+
+    expect(annaAgain.read(onlineSessionProvider).mySeat, 0);
+    expect(annaAgain.read(onlineSessionProvider).isHost, isTrue);
+    expect(annaAgain.read(onlineSessionProvider).seats.map((s) => s.name), ['Anna', 'Bob']);
+    await until(() => bob.read(onlineSessionProvider).seats.every((s) => s.connected), 'Bob voit Anna reconnectée');
+    expect(bob.read(onlineSessionProvider).seats.map((s) => s.name), ['Anna', 'Bob']);
+  });
+
   test('un client qui essaie de jouer hors tour ne change rien pour personne', () async {
     final anna = newClient(FakeCredentialsStore());
     final bob = newClient(FakeCredentialsStore());
