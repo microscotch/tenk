@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Онлайн прякорът ви (или името ви) трябва да е най-много 20 знака, без невидими знаци.",
   "settingsDiceSoundLabel": "Звук на заровете",
   "settingsDiceSoundRealistic": "Реалистичен",
-  "settingsDiceSoundSynthetic": "Синтетичен"
+  "settingsDiceSoundSynthetic": "Синтетичен",
+  "homeChipsHint": "Задръжте чип, за да видите името му."
 }

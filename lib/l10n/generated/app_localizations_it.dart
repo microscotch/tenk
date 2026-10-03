@@ -860,4 +860,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Sintetico';
+
+  @override
+  String get homeChipsHint => 'Tieni premuta una fiche per vederne il nome.';
 }

@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Online, porecla (sau numele) ta trebuie să aibă cel mult 20 de caractere, fără caractere invizibile.",
   "settingsDiceSoundLabel": "Sunetul zarurilor",
   "settingsDiceSoundRealistic": "Realist",
-  "settingsDiceSoundSynthetic": "Sintetic"
+  "settingsDiceSoundSynthetic": "Sintetic",
+  "homeChipsHint": "Ține apăsat pe o fisă ca să-i vezi numele."
 }

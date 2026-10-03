@@ -228,7 +228,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   It drops the automatic back arrow on Android, where the system back button/gesture does the job,
   and keeps it where there is no system back (iOS, desktop). This applies to every new screen;
   `test/ui/app_top_bar_test.dart` fails on any `AppBar(` written elsewhere in `lib/ui`. The home
-  screen (`SetupScreen`) has no top bar at all: rules, settings and about are buttons in its list.
+  screen (`SetupScreen`) has no top bar at all: its menu is a 3×3 "rack" of casino chips (`CasinoChip`,
+  `lib/ui/widgets/casino_chip.dart`), rules, settings and about included — an icon each, no text; the name is the chip's
+  tooltip (long press) and its semantics label, so tests find a chip by its `label`, not by `find.text`.
 
 - `game_screen.dart` (also the spectator replay, `replayMode`, with its controls pinned in a bottom bar
   outside the inert body) is the densest file: it renders different sub-views depending on

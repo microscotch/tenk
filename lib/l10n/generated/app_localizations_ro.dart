@@ -863,4 +863,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Sintetic';
+
+  @override
+  String get homeChipsHint => 'Ține apăsat pe o fisă ca să-i vezi numele.';
 }

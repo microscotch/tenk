@@ -852,4 +852,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Synthetic';
+
+  @override
+  String get homeChipsHint => 'Long-press a chip to see its name.';
 }

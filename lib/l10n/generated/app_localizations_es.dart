@@ -856,4 +856,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Sintético';
+
+  @override
+  String get homeChipsHint => 'Mantén pulsada una ficha para ver su nombre.';
 }

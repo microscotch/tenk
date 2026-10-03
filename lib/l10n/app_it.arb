@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Online il tuo soprannome (o il tuo nome) deve avere al massimo 20 caratteri, senza caratteri invisibili.",
   "settingsDiceSoundLabel": "Suono dei dadi",
   "settingsDiceSoundRealistic": "Realistico",
-  "settingsDiceSoundSynthetic": "Sintetico"
+  "settingsDiceSoundSynthetic": "Sintetico",
+  "homeChipsHint": "Tieni premuta una fiche per vederne il nome."
 }

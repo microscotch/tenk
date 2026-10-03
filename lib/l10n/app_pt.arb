@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Online, a sua alcunha (ou o seu nome) deve ter no máximo 20 caracteres, sem caracteres invisíveis.",
   "settingsDiceSoundLabel": "Som dos dados",
   "settingsDiceSoundRealistic": "Realista",
-  "settingsDiceSoundSynthetic": "Sintético"
+  "settingsDiceSoundSynthetic": "Sintético",
+  "homeChipsHint": "Mantenha premida uma ficha para ver o nome."
 }

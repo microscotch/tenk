@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Online, your nickname (or your name) must be at most 20 characters, with no invisible character.",
   "settingsDiceSoundLabel": "Dice sound",
   "settingsDiceSoundRealistic": "Realistic",
-  "settingsDiceSoundSynthetic": "Synthetic"
+  "settingsDiceSoundSynthetic": "Synthetic",
+  "homeChipsHint": "Long-press a chip to see its name."
 }

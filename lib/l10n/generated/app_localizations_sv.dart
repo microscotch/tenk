@@ -854,4 +854,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Syntetiskt';
+
+  @override
+  String get homeChipsHint => 'Tryck länge på en mark för att se namnet.';
 }

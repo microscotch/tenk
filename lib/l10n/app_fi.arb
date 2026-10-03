@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Verkossa lempinimesi (tai nimesi) saa olla enintään 20 merkkiä, ilman näkymättömiä merkkejä.",
   "settingsDiceSoundLabel": "Noppien ääni",
   "settingsDiceSoundRealistic": "Realistinen",
-  "settingsDiceSoundSynthetic": "Synteettinen"
+  "settingsDiceSoundSynthetic": "Synteettinen",
+  "homeChipsHint": "Paina pelimerkkiä pitkään nähdäksesi sen nimen."
 }

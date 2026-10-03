@@ -757,5 +757,8 @@
   "@settingsDiceSoundRealistic": {"description": "Bruit des dés : de vrais lancers enregistrés, selon le nombre de dés."},
 
   "settingsDiceSoundSynthetic": "Synthétique",
-  "@settingsDiceSoundSynthetic": {"description": "Bruit des dés : le son synthétique d'origine, le même pour tous les lancers."}
+  "@settingsDiceSoundSynthetic": {"description": "Bruit des dés : le son synthétique d'origine, le même pour tous les lancers."},
+
+  "homeChipsHint": "Appui long sur un jeton : son nom s'affiche.",
+  "@homeChipsHint": {"description": "Ligne sous le menu en jetons de l'accueil : comment lire le nom d'un jeton."}
 }

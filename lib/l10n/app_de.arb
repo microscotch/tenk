@@ -244,5 +244,6 @@
   "onlineNameInvalidError": "Online darf dein Spitzname (oder dein Name) höchstens 20 Zeichen lang sein, ohne unsichtbare Zeichen.",
   "settingsDiceSoundLabel": "Würfelgeräusch",
   "settingsDiceSoundRealistic": "Realistisch",
-  "settingsDiceSoundSynthetic": "Synthetisch"
+  "settingsDiceSoundSynthetic": "Synthetisch",
+  "homeChipsHint": "Lange auf einen Jeton drücken, um seinen Namen zu sehen."
 }

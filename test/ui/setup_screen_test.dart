@@ -12,8 +12,10 @@ import 'package:le10000/ui/screens/paused_games_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
 import 'package:le10000/ui/screens/rules_screen.dart';
 import 'package:le10000/ui/screens/settings_screen.dart';
+import 'package:le10000/ui/screens/statistics_screen.dart';
 import 'package:le10000/ui/screens/setup_screen.dart';
 import 'package:le10000/ui/widgets/app_title.dart';
+import 'package:le10000/ui/widgets/casino_chip.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
@@ -69,31 +71,42 @@ void main() {
   /// Le bouton se cherche par prédicat et non par `find.byType` : celui-ci
   /// exige le type exact, alors que `FilledButton.icon`/`OutlinedButton.icon`
   /// construisent des sous-classes privées.
-  bool isEnabled(WidgetTester tester, String label) {
-    final button = tester.widget<ButtonStyleButton>(
-      find.ancestor(
-        of: find.text(label),
-        matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
-      ),
-    );
-    return button.onPressed != null;
-  }
+  /// Le jeton du menu nommé [label] (son nom est son infobulle).
+  Finder chip(String label) => find.byWidgetPredicate((w) => w is CasinoChip && w.label == label);
 
-  testWidgets('l\'accueil affiche ses huit boutons et plus aucune liste', (tester) async {
+  bool isEnabled(WidgetTester tester, String label) => tester.widget<CasinoChip>(chip(label)).onPressed != null;
+
+  const allLabels = [
+    'Nouvelle partie',
+    'Jouer en ligne',
+    'Reprise de parties',
+    'Gestion des joueurs',
+    'Dernières parties terminées',
+    'Statistiques',
+    'Règles du jeu',
+    'Paramètres',
+    'À propos',
+  ];
+
+  testWidgets('l\'accueil est un rack de neuf jetons : une icône chacun, leur nom en infobulle', (tester) async {
     await pumpHome(tester);
 
-    for (final label in const [
-      'Nouvelle partie',
-      'Reprise de parties',
-      'Gestion des joueurs',
-      'Dernières parties terminées',
-      'Statistiques',
-      'Règles du jeu',
-      'Paramètres',
-      'À propos',
-    ]) {
-      expect(find.text(label), findsOneWidget, reason: '$label doit être proposé');
+    for (final label in allLabels) {
+      expect(chip(label), findsOneWidget, reason: '$label doit être proposé');
+      expect(find.text(label), findsNothing, reason: 'rien d\'écrit sur le jeton');
+      expect(find.byTooltip(label), findsOneWidget, reason: 'son nom, à l\'appui long');
+      expect(find.bySemanticsLabel(label), findsOneWidget, reason: 'et pour un lecteur d\'écran');
     }
+  });
+
+  testWidgets('un appui long sur un jeton affiche son nom', (tester) async {
+    await pumpHome(tester);
+
+    await tester.longPress(chip('Statistiques'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Statistiques'), findsOneWidget);
+    expect(find.byType(StatisticsScreen), findsNothing, reason: 'l\'appui long n\'ouvre rien');
   });
 
   testWidgets('le bouton de reprise est inerte tant qu\'aucune partie n\'est en pause', (tester) async {
@@ -133,34 +146,35 @@ void main() {
     await pumpHome(tester);
     await dismissResumeOffer(tester);
 
-    await tester.tap(find.text('Reprise de parties'));
+    await tester.tap(chip('Reprise de parties'));
     await tester.pumpAndSettle();
     expect(find.byType(PausedGamesScreen), findsOneWidget);
     // Retour système : sur Android, la barre n'a pas de flèche (voir AppTopBar).
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Dernières parties terminées'));
+    await tester.tap(chip('Dernières parties terminées'));
     await tester.pumpAndSettle();
     expect(find.byType(FinishedGamesScreen), findsOneWidget);
     // Retour système : sur Android, la barre n'a pas de flèche (voir AppTopBar).
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Nouvelle partie'));
+    await tester.tap(chip('Nouvelle partie'));
     await tester.pumpAndSettle();
     expect(find.byType(NewGameScreen), findsOneWidget);
   });
 
-  testWidgets('les parties en ligne s\'ouvrent depuis l\'accueil, sous « Nouvelle partie »', (tester) async {
+  testWidgets('les parties en ligne s\'ouvrent depuis l\'accueil, à côté de « Nouvelle partie »', (tester) async {
     await pumpHome(tester);
     await dismissResumeOffer(tester);
 
-    double top(String label) => tester.getTopLeft(find.text(label)).dy;
-    expect(top('Nouvelle partie'), lessThan(top('Jouer en ligne')));
-    expect(top('Jouer en ligne'), lessThan(top('Gestion des joueurs')));
+    final newGame = tester.getCenter(chip('Nouvelle partie'));
+    final online = tester.getCenter(chip('Jouer en ligne'));
+    expect(online.dy, newGame.dy, reason: 'sur la même rangée, la première');
+    expect(online.dx, greaterThan(newGame.dx));
 
-    await tester.tap(find.text('Jouer en ligne'));
+    await tester.tap(chip('Jouer en ligne'));
     await tester.pumpAndSettle();
     expect(find.byType(OnlineEntryScreen), findsOneWidget);
   });
@@ -168,7 +182,7 @@ void main() {
   testWidgets('la gestion des joueurs s\'ouvre depuis l\'accueil', (tester) async {
     await pumpHome(tester);
 
-    await tester.tap(find.text('Gestion des joueurs'));
+    await tester.tap(chip('Gestion des joueurs'));
     await tester.pumpAndSettle();
 
     expect(find.byType(PlayersScreen), findsOneWidget);
@@ -191,7 +205,7 @@ void main() {
     }
   });
 
-  testWidgets('pas de barre du haut : règles, paramètres et à propos sont des boutons, après Statistiques',
+  testWidgets('pas de barre du haut : règles, paramètres et à propos sont la dernière rangée du rack',
       (tester) async {
     PackageInfo.setMockInitialValues(
       appName: 'TenK',
@@ -205,43 +219,41 @@ void main() {
 
     expect(find.byType(AppBar), findsNothing);
 
-    // Dans l'ordre demandé, chacun sous le précédent, préfixé de son icône.
-    double top(String label) => tester.getTopLeft(find.text(label)).dy;
+    // La dernière rangée du rack : règles, paramètres, à propos, chacun avec son icône.
     expect(find.text('TenK'), findsOneWidget, reason: 'le titre de l\'app, sans barre pour le porter');
-    expect(top('TenK'), lessThan(top('Nouvelle partie')), reason: 'en tête de la liste');
-    expect(top('Statistiques'), lessThan(top('Règles du jeu')));
-    expect(top('Règles du jeu'), lessThan(top('Paramètres')));
-    expect(top('Paramètres'), lessThan(top('À propos')));
+    expect(tester.getTopLeft(find.text('TenK')).dy, lessThan(tester.getTopLeft(chip('Nouvelle partie')).dy));
+    final lastRow = tester.getCenter(chip('Règles du jeu')).dy;
+    expect(tester.getCenter(chip('Statistiques')).dy, lessThan(lastRow));
     for (final (label, icon) in [
       ('Règles du jeu', Icons.help_outline),
       ('Paramètres', Icons.settings),
       ('À propos', Icons.info_outline),
     ]) {
-      final button = find.ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton));
-      expect(find.descendant(of: button, matching: find.byIcon(icon)), findsOneWidget, reason: label);
+      expect(tester.getCenter(chip(label)).dy, lastRow, reason: label);
+      expect(find.descendant(of: chip(label), matching: find.byIcon(icon)), findsOneWidget, reason: label);
     }
 
-    await tester.ensureVisible(find.text('Règles du jeu'));
-    await tester.tap(find.text('Règles du jeu'));
+    await tester.ensureVisible(chip('Règles du jeu'));
+    await tester.tap(chip('Règles du jeu'));
     await tester.pumpAndSettle();
     expect(find.byType(RulesScreen), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Paramètres'));
-    await tester.tap(find.text('Paramètres'));
+    await tester.ensureVisible(chip('Paramètres'));
+    await tester.tap(chip('Paramètres'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsScreen), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('À propos'));
-    await tester.tap(find.text('À propos'));
+    await tester.ensureVisible(chip('À propos'));
+    await tester.tap(chip('À propos'));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsOneWidget, reason: 'le dialogue « À propos »');
   });
 
-  testWidgets('deux zones : le titre calé en haut, les boutons centrés dans le reste de l\'écran', (tester) async {
+  testWidgets('deux zones : le titre calé en haut, le rack centré dans le reste de l\'écran', (tester) async {
     // Un téléphone en portrait.
     tester.view.physicalSize = const Size(412, 915);
     tester.view.devicePixelRatio = 1.0;
@@ -253,14 +265,28 @@ void main() {
     final title = tester.getRect(find.byType(AppTitle));
     expect(title.top, lessThan(60), reason: 'le titre est en haut de l\'écran, pas au milieu');
 
-    Rect button(String label) => tester.getRect(find
-        .ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton))
-        .first);
-    final first = button('Nouvelle partie');
-    final last = button('À propos');
-    // La zone des boutons va du bas du titre au bas de l'écran : centrés, ils
-    // laissent autant de place au-dessus qu'en dessous.
-    expect(first.top - title.bottom, closeTo(915 - last.bottom, 2));
-    expect(first.top - title.bottom, greaterThan(100), reason: 'l\'écran est assez haut pour les aérer');
+    final first = tester.getRect(chip('Nouvelle partie'));
+    final last = tester.getRect(chip('À propos'));
+    final hint = tester.getRect(find.text('Appui long sur un jeton : son nom s\'affiche.'));
+    // Le rack est centré entre le titre et la ligne d'aide : autant de place
+    // au-dessus qu'en dessous.
+    expect(first.top - title.bottom, closeTo(hint.top - last.bottom, 2));
+    expect(first.top - title.bottom, greaterThan(60), reason: 'l\'écran est assez haut pour l\'aérer');
+    expect(hint.bottom, lessThanOrEqualTo(915));
+  });
+
+  testWidgets('sur un téléphone étroit, les jetons rapetissent mais gardent trois colonnes', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await pumpHome(tester);
+    await dismissResumeOffer(tester);
+
+    double row(String label) => tester.getCenter(chip(label)).dy;
+    expect(row('Jouer en ligne'), row('Nouvelle partie'));
+    expect(row('Reprise de parties'), row('Nouvelle partie'), reason: 'trois par rangée');
+    expect(row('Gestion des joueurs'), greaterThan(row('Nouvelle partie')));
+    expect(tester.getSize(chip('Nouvelle partie')).width, lessThan(96));
+    expect(tester.takeException(), isNull, reason: 'aucun débordement');
   });
 }

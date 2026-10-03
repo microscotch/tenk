@@ -852,4 +852,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Синтетичен';
+
+  @override
+  String get homeChipsHint => 'Задръжте чип, за да видите името му.';
 }

@@ -859,4 +859,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsDiceSoundSynthetic => 'Synthetisch';
+
+  @override
+  String get homeChipsHint =>
+      'Lange auf einen Jeton drücken, um seinen Namen zu sehen.';
 }

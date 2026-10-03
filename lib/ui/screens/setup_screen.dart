@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +10,7 @@ import '../navigation.dart';
 import '../route_observer.dart';
 import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
+import '../widgets/casino_chip.dart';
 import 'finished_games_screen.dart';
 import 'new_game_screen.dart';
 import 'online_entry_screen.dart';
@@ -141,12 +144,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // tout ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu
     // un bouton, sous les autres.
     return Scaffold(
-      // Des boutons, et rien d'autre : les deux listes qui s'affichaient ici en
-      // permanence vivent désormais derrière le leur (voir [PausedGamesScreen]
-      // et [FinishedGamesScreen]), qui les réutilisent telles quelles.
-      // Deux zones : le titre, calé en haut de l'écran, puis tout le reste de
-      // la hauteur pour les boutons, centrés dans cette zone (et défilants si
-      // l'écran est trop bas pour les contenir tous).
+      // Des jetons, et rien d'autre : un « rack » de 3×3 jetons de casino, une
+      // icône chacun, leur nom à l'appui long (voir [CasinoChip]). Le titre en
+      // haut, le rack centré dans le reste de la hauteur (défilant si l'écran
+      // est trop bas), et une ligne qui dit comment lire les jetons.
       body: SafeArea(
         child: Column(
           children: [
@@ -158,73 +159,110 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
               child: Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: _openNewGame,
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.newGameSectionLabel),
+                  child: _ChipRack(
+                    chips: [
+                      _MenuChip(Icons.add, l10n.newGameSectionLabel, _chipGold, _openNewGame),
+                      _MenuChip(Icons.public, l10n.onlinePlayButton, _chipBlue, () => _open(const OnlineEntryScreen())),
+                      // Inerte tant qu'il n'y a rien à reprendre : ouvrir un écran
+                      // sur une liste vide n'apprendrait rien au joueur.
+                      _MenuChip(
+                        Icons.play_arrow,
+                        l10n.resumeGamesButton,
+                        _chipGreen,
+                        pausedCount == 0 ? null : () => _open(const PausedGamesScreen()),
                       ),
-                      const SizedBox(height: 12),
-                      FilledButton.tonalIcon(
-                        onPressed: () => _open(const OnlineEntryScreen()),
-                        icon: const Icon(Icons.public),
-                        label: Text(l10n.onlinePlayButton),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        // Inerte tant qu'il n'y a rien à reprendre : ouvrir un écran
-                        // sur une liste vide n'apprendrait rien au joueur.
-                        onPressed: pausedCount == 0 ? null : () => _open(const PausedGamesScreen()),
-                        icon: const Icon(Icons.play_arrow),
-                        label: Text(l10n.resumeGamesButton),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _open(const PlayersScreen()),
-                        icon: const Icon(Icons.group),
-                        label: Text(l10n.managePlayersButton),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _open(const FinishedGamesScreen()),
-                        icon: const Icon(Icons.history),
-                        label: Text(l10n.finishedGamesButton),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _open(const StatisticsScreen()),
-                        icon: const Icon(Icons.bar_chart),
-                        label: Text(l10n.statisticsButton),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _open(const RulesScreen()),
-                        icon: const Icon(Icons.help_outline),
-                        label: Text(l10n.helpTooltip),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _open(const SettingsScreen()),
-                        icon: const Icon(Icons.settings),
-                        label: Text(l10n.settingsTooltip),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => showAppAboutDialog(context),
-                        icon: const Icon(Icons.info_outline),
-                        label: Text(l10n.aboutTooltip),
-                      ),
+                      _MenuChip(Icons.group, l10n.managePlayersButton, _chipRed, () => _open(const PlayersScreen())),
+                      _MenuChip(Icons.history, l10n.finishedGamesButton, _chipPurple, () => _open(const FinishedGamesScreen())),
+                      _MenuChip(Icons.bar_chart, l10n.statisticsButton, _chipBlack, () => _open(const StatisticsScreen())),
+                      _MenuChip(Icons.help_outline, l10n.helpTooltip, _chipWhite, () => _open(const RulesScreen())),
+                      _MenuChip(Icons.settings, l10n.settingsTooltip, _chipGrey, () => _open(const SettingsScreen())),
+                      _MenuChip(Icons.info_outline, l10n.aboutTooltip, _chipOrange, () => showAppAboutDialog(context)),
                     ],
                   ),
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                l10n.homeChipsHint,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white60),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Un jeton du menu : son icône, son nom, ses couleurs, son action (nulle :
+/// inerte).
+class _MenuChip {
+  final IconData icon;
+  final String label;
+  final _ChipColors colors;
+  final VoidCallback? onPressed;
+
+  const _MenuChip(this.icon, this.label, this.colors, this.onPressed);
+}
+
+typedef _ChipColors = ({Color color, Color edge, Color ink});
+
+// Une couleur de jeton de casino par entrée du menu.
+const _ChipColors _chipGold = (color: Color(0xFFC9A227), edge: Color(0xFFFFF3C4), ink: Color(0xFF3A2A08));
+const _ChipColors _chipBlue = (color: Color(0xFF1F5FA8), edge: Color(0xFFEAF2FF), ink: Colors.white);
+const _ChipColors _chipGreen = (color: Color(0xFF2E7D4F), edge: Color(0xFFE9F7EE), ink: Colors.white);
+const _ChipColors _chipRed = (color: Color(0xFFB3261E), edge: Color(0xFFFFE9E6), ink: Colors.white);
+const _ChipColors _chipPurple = (color: Color(0xFF5E35B1), edge: Color(0xFFF1EAFF), ink: Colors.white);
+const _ChipColors _chipBlack = (color: Color(0xFF1B1B1B), edge: Color(0xFFE8D9B0), ink: Color(0xFFE8D9B0));
+const _ChipColors _chipWhite = (color: Color(0xFFEDE6D6), edge: Color(0xFFB3261E), ink: Color(0xFF3A2A08));
+const _ChipColors _chipGrey = (color: Color(0xFF6B6F73), edge: Color(0xFFF2F2F2), ink: Colors.white);
+const _ChipColors _chipOrange = (color: Color(0xFFD9732B), edge: Color(0xFFFFF0E2), ink: Colors.white);
+
+/// Le rack : les jetons du menu en grille de trois colonnes, quelle que soit la
+/// largeur de l'écran. Ils mesurent 96
+/// au plus, moins sur un écran étroit, pour que les trois colonnes tiennent.
+class _ChipRack extends StatelessWidget {
+  final List<_MenuChip> chips;
+
+  const _ChipRack({required this.chips});
+
+  static const _maxSize = 96.0;
+  static const _gap = 26.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = math.min(_maxSize, (constraints.maxWidth - 2 * _gap) / 3);
+        // Toujours trois colonnes, même sur un écran large : c'est un rack, pas
+        // une rangée qui s'étire.
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: _gap,
+          children: [
+            for (var row = 0; row < chips.length; row += 3)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: _gap,
+                children: [
+                  for (final chip in chips.skip(row).take(3))
+                    CasinoChip(
+                      icon: chip.icon,
+                      label: chip.label,
+                      color: chip.colors.color,
+                      edge: chip.colors.edge,
+                      ink: chip.colors.ink,
+                      size: size,
+                      onPressed: chip.onPressed,
+                    ),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 }

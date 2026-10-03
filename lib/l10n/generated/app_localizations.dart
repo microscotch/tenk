@@ -1525,6 +1525,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Synthétique'**
   String get settingsDiceSoundSynthetic;
+
+  /// Ligne sous le menu en jetons de l'accueil : comment lire le nom d'un jeton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appui long sur un jeton : son nom s\'affiche.'**
+  String get homeChipsHint;
 }
 
 class _AppLocalizationsDelegate
