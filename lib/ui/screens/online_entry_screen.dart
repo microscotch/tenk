@@ -40,6 +40,11 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
   void initState() {
     super.initState();
     _code = TextEditingController(text: widget.initialCode);
+    // La partie en ligne d'avant est terminée : il n'y a rien à reprendre, on
+    // quitte son salon et l'écran propose d'en créer ou d'en rejoindre un.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(onlineSessionProvider.notifier).leaveFinishedGame();
+    });
   }
 
   @override
@@ -110,7 +115,15 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
         if (message != null) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
       // Le serveur vient de décrire le salon pour la première fois : on y va.
-      if (previous?.phase == null && next.phase != null && next.roomCode != null) _openCurrent();
+      if (previous?.phase == null && next.phase != null && next.roomCode != null) {
+        // Revenu dans un salon dont la partie est finie (l'app avait été fermée
+        // avant de l'apprendre) : rien à y voir, on en sort.
+        if (next.phase == RoomPhase.over) {
+          ref.read(onlineSessionProvider.notifier).leaveFinishedGame();
+        } else {
+          _openCurrent();
+        }
+      }
     });
 
     final connecting = online.status == OnlineStatus.connecting;
@@ -122,7 +135,7 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
             padding: const EdgeInsets.all(16),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: online.inRoom ? _inRoom(l10n, online) : _entry(l10n, connecting),
+              child: online.inRoom && online.phase != RoomPhase.over ? _inRoom(l10n, online) : _entry(l10n, connecting),
             ),
           ),
         ),

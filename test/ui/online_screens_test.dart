@@ -181,6 +181,55 @@ void main() {
       expect(find.text('ABCDE'), findsOneWidget);
     });
 
+    /// Une partie à deux jouée jusqu'au bout, telle que le serveur l'aurait écrite.
+    List<GameAction> finishedJournal() {
+      const setup = GameSetup(playerNames: ['Anna', 'Bob']);
+      return journalWithFaces(setup, 5, playScriptedGame(setup, 5).actions);
+    }
+
+    /// Le serveur annonce que la partie du salon est terminée.
+    void serverEndsGame() => transport.current.serverSends(ServerMessage.room(
+          code: 'ABCDE',
+          phase: RoomPhase.over,
+          seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+          hostSeat: 0,
+        ));
+
+    testWidgets('après une partie terminée, l\'entrée ne propose pas de la reprendre : elle quitte son salon', (tester) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: finishedJournal()));
+      serverEndsGame();
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(container.read(onlineSessionProvider).phase, RoomPhase.over, reason: 'prémisse : partie finie, salon encore là');
+
+      await pump(tester, const OnlineEntryScreen());
+
+      expect(find.text('Reprendre la partie en ligne'), findsNothing);
+      expect(find.text('Créer un salon'), findsOneWidget);
+      expect(transport.channels.first.sent.last.type, ClientMessageType.leave, reason: 'le siège est libéré');
+      expect(container.read(onlineSessionProvider).inRoom, isFalse);
+      expect(container.read(gameProvider.notifier).isOnline, isFalse);
+      expect(credentials.saved, isNull);
+    });
+
+    testWidgets('reprendre une place dont la partie s\'est finie entre-temps : on en sort, sans écran qui attend', (tester) async {
+      credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: _token);
+      await pump(tester, const OnlineEntryScreen());
+
+      await tester.tap(find.text('Reprendre la partie en ligne'));
+      await tester.pump();
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: finishedJournal()));
+      serverEndsGame();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnlineDiceOffScreen), findsNothing);
+      expect(find.byType(GameScreen), findsNothing);
+      expect(find.text('Créer un salon'), findsOneWidget);
+      expect(transport.current.sent.last.type, ClientMessageType.leave);
+    });
+
     testWidgets('ouvrir l\'entrée ne se connecte à rien : rien à faire tant qu\'on n\'a rien demandé', (tester) async {
       credentials.saved = const OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: _token);
       await pump(tester, const OnlineEntryScreen());

@@ -198,8 +198,11 @@ class OnlineKeepSelectionNotifier extends Notifier<OnlineKeepSelection?> {
 /// La place gardée dans une partie en ligne (jeton d'une session précédente ou
 /// d'une déconnexion volontaire), pour proposer de la retrouver. Se relit dès
 /// que la session entre dans un salon ou en sort.
-final onlineSavedGameProvider = FutureProvider<OnlineCredentials?>((ref) {
+final onlineSavedGameProvider = FutureProvider<OnlineCredentials?>((ref) async {
   ref.watch(onlineSessionProvider.select((s) => s.roomCode));
+  // Une partie finie n'a plus de place à reprendre : son jeton est effacé à
+  // l'annonce de la fin, sans qu'on puisse attendre le disque à ce moment-là.
+  if (ref.watch(onlineSessionProvider.select((s) => s.phase)) == RoomPhase.over) return null;
   return ref.watch(onlineCredentialsStoreProvider).load();
 });
 
@@ -313,12 +316,30 @@ class OnlineSession extends Notifier<OnlineState> {
   Future<void> leave() async {
     _send(ClientMessage.leave());
     _credentials = null;
+    // La connexion cesse d'écouter tout de suite (rien de ce qui arriverait
+    // encore ne doit repeupler l'état), mais l'état n'attend pas qu'elle soit
+    // fermée. Il attend en revanche l'effacement du jeton : sa remise à zéro
+    // fait relire [onlineSavedGameProvider], qui reproposerait sinon la place.
+    final closing = _close();
     await ref.read(onlineCredentialsStoreProvider).clear();
-    await _close();
     // Seulement la partie en ligne : une partie locale n'est pas la nôtre.
     if (_game.isOnline) _game.endOnlineGame();
     ref.read(onlineEmotesProvider.notifier).clear();
     state = const OnlineState();
+    await closing;
+  }
+
+  /// Vrai quand la session est encore dans le salon d'une partie terminée :
+  /// rien à y reprendre (voir [leaveFinishedGame]).
+  bool get inFinishedGame => state.inRoom && state.phase == RoomPhase.over;
+
+  /// Quitte le salon d'une partie terminée, s'il en reste un : de retour à
+  /// l'accueil après une partie en ligne, la session y est encore (le serveur
+  /// ne ferme pas le salon), et l'entrée en ligne proposait de « reprendre »
+  /// une partie qui n'avait plus rien à montrer — un écran qui attendait sans
+  /// fin. Sans effet hors de ce cas.
+  Future<void> leaveFinishedGame() async {
+    if (inFinishedGame) await leave();
   }
 
   /// Se déconnecte en GARDANT sa place : le jeton reste, la partie attend le
