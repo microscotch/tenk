@@ -211,6 +211,15 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   comme une vraie garde (`GameAuthority.checkSelection`), le relaie aux autres (`ServerMessage.selection`, daté du
   rang de la prochaine action) et le garde pour qui se reconnecte pendant l'hésitation, jusqu'au coup suivant.
   Côté client, `onlineKeepSelectionProvider` le tient ; l'écran ne le suit que s'il date du lancer affiché.
+- **Les émotions** (un chat contrôlé) : quatre émotions (`Emote`, `lib/game/online/emotes.dart`), chacune avec
+  quelques phrases courtes, toutes désignées par des noms stables — jamais de texte libre, rien à modérer, et chaque
+  appareil affiche la phrase dans sa langue. `OnlineSession.sendEmote` envoie `ClientMessage.emote` ; le salon (`Room`)
+  l'ignore sans réponse avant le départ ou à moins de `emoteCooldown` (3 s) de la précédente du même siège, et la
+  relaie (`ServerMessage.emote`, avec le siège) à tous ceux qui ont annoncé `emotesFeature`, l'envoyeur compris. **Hors
+  du journal** : ni `seq`, ni action, rien d'archivé ni de rejoué. Côté app, `onlineEmotesProvider` garde les dernières
+  reçues ; l'écran de jeu en fait une bulle sur la ligne du joueur (siège → index par l'ordre de jeu) et une ligne de
+  l'Historique — barre qui remplace le journal en ligne et l'ouvre en panneau. Une émotion illisible (version plus
+  récente) est ignorée, pas resynchronisée.
 - **Fonctions facultatives négociées** plutôt qu'une nouvelle version du protocole, qui couperait les anciens
   clients : chacun annonce les siennes (`features` de `create`/`join`/`rejoin`, puis de `joined` ; voir
   `supportedFeatures`) et n'envoie à l'autre que ce qu'il a annoncé. Un client inconnu d'un serveur plus récent

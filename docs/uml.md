@@ -91,7 +91,7 @@ Du salon au coup joué : le serveur tire les dés (les clients n'ont jamais la s
 avec ses faces, que les clients rejouent avec le même moteur. Une intention refusée (pas son tour, coup
 illégal) ne change rien ; une connexion coupée se rétablit avec le jeton et un journal complet. La partie
 finie est archivée sur l'appareil, dans `over/` comme une partie locale, et ne compte que pour mon siège dans
-les statistiques.
+les statistiques. Les émotions (émojis et phrases toutes faites) passent à part : le salon les relaie à tous, hors du journal de la partie.
 
 ### Fin de partie, archivage, statistiques — [`uml/seq-game-over.png`](uml/seq-game-over.png)
 

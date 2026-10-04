@@ -855,4 +855,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeChipsHint => 'Long-press a chip to see its name.';
+
+  @override
+  String get emoteThoughtful => 'Thoughtful';
+
+  @override
+  String get emoteMocking => 'Mocking';
+
+  @override
+  String get emoteDevastated => 'Devastated';
+
+  @override
+  String get emoteJoyful => 'Joyful';
+
+  @override
+  String get emotePhraseCoincidence => 'What a coincidence';
+
+  @override
+  String get emotePhraseStickyFive => 'Sticky five!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Full hand, empty hand!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => 'Never take over a 1000';
+
+  @override
+  String get emotePhraseNoWay => 'No way!';
+
+  @override
+  String get emotePhraseArgh => 'Aaaargh!';
+
+  @override
+  String get emotePhraseHello => 'Hi!';
+
+  @override
+  String get emotePhraseYes => 'Yes!';
+
+  @override
+  String get gameHistoryBar => 'History';
 }

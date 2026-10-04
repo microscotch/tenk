@@ -12,7 +12,7 @@ import 'game_providers.dart';
 import 'online_transport.dart';
 import 'settings_providers.dart';
 
-export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo;
+export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo, Emote, emoteCooldown;
 
 /// L'adresse du serveur des parties en ligne. Celle de production par défaut
 /// (chiffrée : le TLS se termine sur le reverse proxy du serveur) ; pour jouer
@@ -66,6 +66,10 @@ class OnlineState {
   /// Vrai quand [error] vient de ce que le serveur n'a pas pu être joint.
   final bool unreachable;
 
+  /// Vrai quand le serveur relaie les émotions (voir `emotesFeature`) : l'écran
+  /// de jeu propose alors ses boutons d'émotion.
+  final bool emotesEnabled;
+
   const OnlineState({
     this.status = OnlineStatus.offline,
     this.roomCode,
@@ -78,6 +82,7 @@ class OnlineState {
     this.error,
     this.errorSerial = 0,
     this.unreachable = false,
+    this.emotesEnabled = false,
   });
 
   bool get inRoom => roomCode != null;
@@ -95,6 +100,7 @@ class OnlineState {
     ErrorCode? error,
     int? errorSerial,
     bool? unreachable,
+    bool? emotesEnabled,
   }) {
     return OnlineState(
       status: status ?? this.status,
@@ -108,6 +114,7 @@ class OnlineState {
       error: error ?? this.error,
       errorSerial: errorSerial ?? this.errorSerial,
       unreachable: unreachable ?? this.unreachable,
+      emotesEnabled: emotesEnabled ?? this.emotesEnabled,
     );
   }
 }
@@ -135,6 +142,41 @@ final onlineLifecycleProvider = Provider<void>((ref) {
   );
   ref.onDispose(listener.dispose);
 });
+
+/// Une émotion reçue pendant la partie en ligne : de qui (siège du salon),
+/// laquelle, avec quelle phrase (nulle : l'émotion seule), et quand elle est
+/// arrivée. [id] croît d'une émotion à la suivante.
+class EmoteEvent {
+  final int id;
+  final int seat;
+  final Emote emote;
+  final String? phrase;
+  final DateTime at;
+
+  const EmoteEvent({required this.id, required this.seat, required this.emote, this.phrase, required this.at});
+}
+
+/// Les dernières émotions reçues dans la partie en ligne en cours (les plus
+/// récentes en dernier, 50 au plus). L'écran de jeu en tire ses bulles et les
+/// lignes de son Historique — et les y remet quand il se reconstruit, le journal
+/// de la partie n'en gardant aucune trace.
+final onlineEmotesProvider = NotifierProvider<OnlineEmotesNotifier, List<EmoteEvent>>(OnlineEmotesNotifier.new);
+
+class OnlineEmotesNotifier extends Notifier<List<EmoteEvent>> {
+  static const _kept = 50;
+  var _nextId = 0;
+
+  @override
+  List<EmoteEvent> build() => const [];
+
+  void add({required int seat, required Emote emote, String? phrase, DateTime? at}) {
+    final event = EmoteEvent(id: _nextId++, seat: seat, emote: emote, phrase: phrase, at: at ?? DateTime.now());
+    final next = [...state, event];
+    state = next.length > _kept ? next.sublist(next.length - _kept) : next;
+  }
+
+  void clear() => state = const [];
+}
 
 /// La sélection de 5 en cours de l'autre joueur en ligne qui a la main, sur le
 /// lancer qui attend sa décision : [seq] est le rang de la prochaine action du
@@ -257,6 +299,14 @@ class OnlineSession extends Notifier<OnlineState> {
     _send(ClientMessage.select(declineFivesCount: declineFivesCount));
   }
 
+  /// Envoie une émotion aux autres joueurs (et à moi : ma bulle apparaît quand
+  /// le serveur la relaie, comme chez eux). Sans effet si le serveur ne relaie
+  /// pas les émotions.
+  void sendEmote(Emote emote, {String? phrase}) {
+    if (!state.emotesEnabled) return;
+    _send(ClientMessage.emote(emote, phrase: phrase));
+  }
+
   /// Quitte le salon pour de bon : le siège est libéré (ou, en partie, laissé
   /// vide) et le jeton oublié. Pour partir d'une partie commencée en gardant sa
   /// place, c'est [disconnect].
@@ -267,6 +317,7 @@ class OnlineSession extends Notifier<OnlineState> {
     await _close();
     // Seulement la partie en ligne : une partie locale n'est pas la nôtre.
     if (_game.isOnline) _game.endOnlineGame();
+    ref.read(onlineEmotesProvider.notifier).clear();
     state = const OnlineState();
   }
 
@@ -384,6 +435,8 @@ class OnlineSession extends Notifier<OnlineState> {
           _onError(message.errorCode);
         case ServerMessageType.selection:
           _onSelection(message);
+        case ServerMessageType.emote:
+          _onEmote(message);
       }
     } on FormatException {
       _resync();
@@ -396,6 +449,7 @@ class OnlineSession extends Notifier<OnlineState> {
     final credentials = OnlineCredentials(url: _pendingUrl ?? ref.read(onlineServerUrlProvider), code: message.roomCode, token: message.token);
     _credentials = credentials;
     _serverFeatures = message.features;
+    state = state.copyWith(emotesEnabled: _serverFeatures.contains(emotesFeature));
     unawaited(ref.read(onlineCredentialsStoreProvider).save(credentials));
     state = state.copyWith(roomCode: message.roomCode, mySeat: message.seat);
   }
@@ -413,6 +467,9 @@ class OnlineSession extends Notifier<OnlineState> {
     // Un journal neuf : une sélection gardée d'avant (autre partie, autre
     // lancer) n'a plus cours. Celle du lancer en attente, s'il y en a une, suit.
     ref.read(onlineKeepSelectionProvider.notifier).clear();
+    // Les émotions d'une autre partie n'ont rien à faire dans celle-ci ; celles
+    // de cette partie restent quand on y revient après une coupure.
+    if (!state.gameStarted) ref.read(onlineEmotesProvider.notifier).clear();
     final names = message.names;
     final actions = message.actions;
     _game.startOnlineGame(
@@ -451,6 +508,23 @@ class OnlineSession extends Notifier<OnlineState> {
     final seq = message.seq;
     if (seq != _game.onlineActionCount) return;
     ref.read(onlineKeepSelectionProvider.notifier).set((seq: seq, declineFivesCount: message.declineFivesCount));
+  }
+
+  /// Une émotion relayée par le serveur, pour la partie à l'écran. Illisible
+  /// (émotion ou phrase d'une version plus récente) : ignorée — une bulle ratée
+  /// ne vaut pas de redemander tout le journal.
+  void _onEmote(ServerMessage message) {
+    if (!state.gameStarted || !_game.isOnline) return;
+    final int seat;
+    final Emote emote;
+    final String? phrase;
+    try {
+      seat = message.seat;
+      (emote, phrase) = message.emote;
+    } on FormatException {
+      return;
+    }
+    ref.read(onlineEmotesProvider.notifier).add(seat: seat, emote: emote, phrase: phrase);
   }
 
   void _onError(ErrorCode code) {

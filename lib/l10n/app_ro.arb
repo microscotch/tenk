@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Sunetul zarurilor",
   "settingsDiceSoundRealistic": "Realist",
   "settingsDiceSoundSynthetic": "Sintetic",
-  "homeChipsHint": "Ține apăsat pe o fisă ca să-i vezi numele."
+  "homeChipsHint": "Ține apăsat pe o fisă ca să-i vezi numele.",
+  "emoteThoughtful": "Gânditor",
+  "emoteMocking": "Batjocoritor",
+  "emoteDevastated": "Devastat",
+  "emoteJoyful": "Vesel",
+  "emotePhraseCoincidence": "Ce coincidență",
+  "emotePhraseStickyFive": "Un cinci lipicios!",
+  "emotePhraseFullHandEmptyHand": "Mână plină, mână goală!",
+  "emotePhraseNeverTakeA1000": "Un 1000 nu se reia niciodată",
+  "emotePhraseNoWay": "Nu se poate!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Salut!",
+  "emotePhraseYes": "Da!",
+  "gameHistoryBar": "Istoric"
 }

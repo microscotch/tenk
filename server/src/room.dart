@@ -26,6 +26,7 @@ class Session {
   Session(this.connection, this.ip, this.bucket);
 
   bool get wantsKeepSelection => features.contains(keepSelectionFeature);
+  bool get wantsEmotes => features.contains(emotesFeature);
 }
 
 class _Seat {
@@ -56,6 +57,10 @@ class Room {
   RoomPhase _phase = RoomPhase.lobby;
   GameAuthority? _authority;
   DateTime _lastActivity;
+
+  /// L'heure de la dernière émotion relayée, par siège : une suivante qui
+  /// arrive avant [emoteCooldown] est ignorée.
+  final Map<int, DateTime> _lastEmoteAt = {};
 
   /// La dernière sélection de 5 du joueur qui a la main, pour la redonner à qui
   /// se reconnecte pendant qu'il hésite. Vidée à chaque coup joué.
@@ -175,6 +180,9 @@ class Room {
         _play(session, seat, message);
       case ClientMessageType.select:
         _select(session, seat, message.params['declineFivesCount'] as int);
+      case ClientMessageType.emote:
+        final (emote, phrase) = (Emote.byName(message.params['emote'])!, message.params['phrase'] as String?);
+        _emote(seat, emote, phrase);
       case ClientMessageType.create:
       case ClientMessageType.join:
       case ClientMessageType.rejoin:
@@ -253,6 +261,26 @@ class Room {
     for (final s in _seats) {
       final other = s.session;
       if (other != null && other != session && other.wantsKeepSelection) _send(other, message);
+    }
+  }
+
+  /// Le joueur du siège [seat] envoie une émotion : relayée à tous les joueurs
+  /// qui savent l'afficher, lui compris (sa bulle apparaît au même moment que
+  /// chez les autres). Rien n'est joué, rien n'entre au journal.
+  ///
+  /// Ignorée sans réponse avant le départ, ou si la précédente de ce siège date
+  /// de moins de [emoteCooldown] : une erreur s'afficherait chez le joueur pour
+  /// un simple bouton tapé trop vite.
+  void _emote(int seat, Emote emote, String? phrase) {
+    if (_authority == null) return;
+    final t = now();
+    final last = _lastEmoteAt[seat];
+    if (last != null && t.difference(last) < emoteCooldown) return;
+    _lastEmoteAt[seat] = t;
+    final message = ServerMessage.emote(seat: seat, emote: emote, phrase: phrase);
+    for (final s in _seats) {
+      final session = s.session;
+      if (session != null && session.wantsEmotes) _send(session, message);
     }
   }
 

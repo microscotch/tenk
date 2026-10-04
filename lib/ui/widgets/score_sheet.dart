@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_providers.dart';
+import 'emotes.dart';
 import 'player_avatar.dart';
 
 class ScoreSheet extends StatelessWidget {
@@ -18,12 +19,19 @@ class ScoreSheet extends StatelessWidget {
   /// du nom quoi qu'il arrive.
   final Map<String, String> displayNames;
 
+  /// Les bulles à montrer, par index de joueur : ce qu'il vient d'exprimer en
+  /// ligne (voir `EmoteBar`). Une bulle reste dans la hauteur de sa ligne, à
+  /// droite, pointée vers le nom — elle n'en déborde pas, la liste étant dans
+  /// une zone qui défile (et donc rogne).
+  final Map<int, String> bubbles;
+
   const ScoreSheet({
     super.key,
     required this.players,
     required this.currentPlayerIndex,
     this.onTapPlayer,
     this.displayNames = const {},
+    this.bubbles = const {},
   });
 
   @override
@@ -41,6 +49,7 @@ class ScoreSheet extends StatelessWidget {
             onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
             avatarColor: avatarColors[players[i].name],
             podiumRank: ranks[i],
+            bubble: bubbles[i],
           ),
       ],
     );
@@ -119,10 +128,12 @@ class _PlayerRow extends StatelessWidget {
   /// Nom déjà résolu par [ScoreSheet] : la ligne n'a pas à connaître la table
   /// de correspondance, juste ce qu'elle doit écrire.
   final String displayName;
+  final String? bubble;
 
   const _PlayerRow({
     required this.player,
     required this.displayName,
+    this.bubble,
     required this.isCurrent,
     required this.gaps,
     required this.onTap,
@@ -140,7 +151,7 @@ class _PlayerRow extends StatelessWidget {
     final opportunityAbove = gaps.above == 200;
     final previousEntry = player.lastUnbarredEntry;
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Material(
         color: Colors.transparent,
@@ -242,6 +253,34 @@ class _PlayerRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+    final bubble = this.bubble;
+    return Stack(
+      children: [
+        row,
+        Positioned(
+          top: 3,
+          bottom: 3,
+          right: 6,
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, animation) => ScaleTransition(
+                scale: animation,
+                alignment: Alignment.centerLeft,
+                child: FadeTransition(opacity: animation, child: child),
+              ),
+              child: bubble == null
+                  ? const SizedBox.shrink()
+                  : ConstrainedBox(
+                      key: ValueKey(bubble),
+                      constraints: const BoxConstraints(maxWidth: 220),
+                      child: SpeechBubble(text: bubble),
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Suono dei dadi",
   "settingsDiceSoundRealistic": "Realistico",
   "settingsDiceSoundSynthetic": "Sintetico",
-  "homeChipsHint": "Tieni premuta una fiche per vederne il nome."
+  "homeChipsHint": "Tieni premuta una fiche per vederne il nome.",
+  "emoteThoughtful": "Pensieroso",
+  "emoteMocking": "Beffardo",
+  "emoteDevastated": "Distrutto",
+  "emoteJoyful": "Felice",
+  "emotePhraseCoincidence": "Che coincidenza",
+  "emotePhraseStickyFive": "Il cinque non si stacca!",
+  "emotePhraseFullHandEmptyHand": "Mano piena, mano vana!",
+  "emotePhraseNeverTakeA1000": "Un 1000 non si riprende mai",
+  "emotePhraseNoWay": "Non è possibile!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Ciao!",
+  "emotePhraseYes": "Sì!",
+  "gameHistoryBar": "Cronologia"
 }

@@ -857,4 +857,43 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get homeChipsHint => 'Trykk lenge på en sjetong for å se navnet.';
+
+  @override
+  String get emoteThoughtful => 'Ettertenksom';
+
+  @override
+  String get emoteMocking => 'Ertende';
+
+  @override
+  String get emoteDevastated => 'Knust';
+
+  @override
+  String get emoteJoyful => 'Glad';
+
+  @override
+  String get emotePhraseCoincidence => 'For et sammentreff';
+
+  @override
+  String get emotePhraseStickyFive => 'Femmeren som klistrer!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Full hånd, tom hånd!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => 'En 1000 tar man aldri over';
+
+  @override
+  String get emotePhraseNoWay => 'Det er ikke mulig!';
+
+  @override
+  String get emotePhraseArgh => 'Aaaargh!';
+
+  @override
+  String get emotePhraseHello => 'Hei!';
+
+  @override
+  String get emotePhraseYes => 'Ja!';
+
+  @override
+  String get gameHistoryBar => 'Historikk';
 }

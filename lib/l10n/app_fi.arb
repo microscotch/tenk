@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Noppien ääni",
   "settingsDiceSoundRealistic": "Realistinen",
   "settingsDiceSoundSynthetic": "Synteettinen",
-  "homeChipsHint": "Paina pelimerkkiä pitkään nähdäksesi sen nimen."
+  "homeChipsHint": "Paina pelimerkkiä pitkään nähdäksesi sen nimen.",
+  "emoteThoughtful": "Mietteliäs",
+  "emoteMocking": "Pilkallinen",
+  "emoteDevastated": "Murtunut",
+  "emoteJoyful": "Iloinen",
+  "emotePhraseCoincidence": "Mikä sattuma",
+  "emotePhraseStickyFive": "Viitonen tarttuu!",
+  "emotePhraseFullHandEmptyHand": "Täysi käsi, tyhjä käsi!",
+  "emotePhraseNeverTakeA1000": "Tuhatta ei koskaan oteta",
+  "emotePhraseNoWay": "Ei voi olla totta!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Moi!",
+  "emotePhraseYes": "Jes!",
+  "gameHistoryBar": "Historia"
 }

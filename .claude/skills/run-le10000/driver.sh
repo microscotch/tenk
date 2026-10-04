@@ -51,7 +51,9 @@ cmd_start() {
     # default Impeller/EGL path silently renders an all-black window
     # (MESA-EGL "DRI3 error: Could not get DRI3 device" in the log) --
     # verified empirically, not documented anywhere obvious.
-    LIBGL_ALWAYS_SOFTWARE=1 flutter run -d linux >"$FLUTTER_LOG" 2>&1 &
+    # FLUTTER_RUN_ARGS : options de plus, ex. --dart-define=TENK_SERVER_URL=ws://localhost:8080/ws
+    # shellcheck disable=SC2086
+    LIBGL_ALWAYS_SOFTWARE=1 flutter run -d linux ${FLUTTER_RUN_ARGS:-} >"$FLUTTER_LOG" 2>&1 &
     echo $! >"$FLUTTER_PID_FILE"
     disown
     echo "Waiting for the app to build and start (can take ~30-60s)..." >&2

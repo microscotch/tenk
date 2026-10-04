@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Dice sound",
   "settingsDiceSoundRealistic": "Realistic",
   "settingsDiceSoundSynthetic": "Synthetic",
-  "homeChipsHint": "Long-press a chip to see its name."
+  "homeChipsHint": "Long-press a chip to see its name.",
+  "emoteThoughtful": "Thoughtful",
+  "emoteMocking": "Mocking",
+  "emoteDevastated": "Devastated",
+  "emoteJoyful": "Joyful",
+  "emotePhraseCoincidence": "What a coincidence",
+  "emotePhraseStickyFive": "Sticky five!",
+  "emotePhraseFullHandEmptyHand": "Full hand, empty hand!",
+  "emotePhraseNeverTakeA1000": "Never take over a 1000",
+  "emotePhraseNoWay": "No way!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Hi!",
+  "emotePhraseYes": "Yes!",
+  "gameHistoryBar": "History"
 }

@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Würfelgeräusch",
   "settingsDiceSoundRealistic": "Realistisch",
   "settingsDiceSoundSynthetic": "Synthetisch",
-  "homeChipsHint": "Lange auf einen Jeton drücken, um seinen Namen zu sehen."
+  "homeChipsHint": "Lange auf einen Jeton drücken, um seinen Namen zu sehen.",
+  "emoteThoughtful": "Nachdenklich",
+  "emoteMocking": "Spöttisch",
+  "emoteDevastated": "Am Boden zerstört",
+  "emoteJoyful": "Fröhlich",
+  "emotePhraseCoincidence": "Was für ein Zufall",
+  "emotePhraseStickyFive": "Die Fünf klebt!",
+  "emotePhraseFullHandEmptyHand": "Volle Hand, leere Hand!",
+  "emotePhraseNeverTakeA1000": "Eine 1000 übernimmt man nie",
+  "emotePhraseNoWay": "Das gibt's doch nicht!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Hallo!",
+  "emotePhraseYes": "Ja!",
+  "gameHistoryBar": "Verlauf"
 }

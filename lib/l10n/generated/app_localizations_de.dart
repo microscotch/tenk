@@ -863,4 +863,43 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get homeChipsHint =>
       'Lange auf einen Jeton drücken, um seinen Namen zu sehen.';
+
+  @override
+  String get emoteThoughtful => 'Nachdenklich';
+
+  @override
+  String get emoteMocking => 'Spöttisch';
+
+  @override
+  String get emoteDevastated => 'Am Boden zerstört';
+
+  @override
+  String get emoteJoyful => 'Fröhlich';
+
+  @override
+  String get emotePhraseCoincidence => 'Was für ein Zufall';
+
+  @override
+  String get emotePhraseStickyFive => 'Die Fünf klebt!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Volle Hand, leere Hand!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => 'Eine 1000 übernimmt man nie';
+
+  @override
+  String get emotePhraseNoWay => 'Das gibt\'s doch nicht!';
+
+  @override
+  String get emotePhraseArgh => 'Aaaargh!';
+
+  @override
+  String get emotePhraseHello => 'Hallo!';
+
+  @override
+  String get emotePhraseYes => 'Ja!';
+
+  @override
+  String get gameHistoryBar => 'Verlauf';
 }

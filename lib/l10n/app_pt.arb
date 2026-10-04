@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Som dos dados",
   "settingsDiceSoundRealistic": "Realista",
   "settingsDiceSoundSynthetic": "Sintético",
-  "homeChipsHint": "Mantenha premida uma ficha para ver o nome."
+  "homeChipsHint": "Mantenha premida uma ficha para ver o nome.",
+  "emoteThoughtful": "Pensativo",
+  "emoteMocking": "Trocista",
+  "emoteDevastated": "Arrasado",
+  "emoteJoyful": "Contente",
+  "emotePhraseCoincidence": "Que coincidência",
+  "emotePhraseStickyFive": "Aquele cinco não descola!",
+  "emotePhraseFullHandEmptyHand": "Mão cheia, mão vazia!",
+  "emotePhraseNeverTakeA1000": "Nunca se retoma um 1000",
+  "emotePhraseNoWay": "Não é possível!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Olá!",
+  "emotePhraseYes": "Sim!",
+  "gameHistoryBar": "Histórico"
 }

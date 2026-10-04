@@ -116,6 +116,7 @@ class RoomManager {
       case ClientMessageType.leave:
       case ClientMessageType.play:
       case ClientMessageType.select:
+      case ClientMessageType.emote:
         session.connection.send(ServerMessage.error(ErrorCode.badRequest, 'pas dans un salon'));
     }
   }

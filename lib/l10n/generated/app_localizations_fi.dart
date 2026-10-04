@@ -857,4 +857,43 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get homeChipsHint => 'Paina pelimerkkiä pitkään nähdäksesi sen nimen.';
+
+  @override
+  String get emoteThoughtful => 'Mietteliäs';
+
+  @override
+  String get emoteMocking => 'Pilkallinen';
+
+  @override
+  String get emoteDevastated => 'Murtunut';
+
+  @override
+  String get emoteJoyful => 'Iloinen';
+
+  @override
+  String get emotePhraseCoincidence => 'Mikä sattuma';
+
+  @override
+  String get emotePhraseStickyFive => 'Viitonen tarttuu!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Täysi käsi, tyhjä käsi!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => 'Tuhatta ei koskaan oteta';
+
+  @override
+  String get emotePhraseNoWay => 'Ei voi olla totta!';
+
+  @override
+  String get emotePhraseArgh => 'Aaaargh!';
+
+  @override
+  String get emotePhraseHello => 'Moi!';
+
+  @override
+  String get emotePhraseYes => 'Jes!';
+
+  @override
+  String get gameHistoryBar => 'Historia';
 }

@@ -349,6 +349,77 @@ void main() {
     });
   });
 
+  group('émotions', () {
+    /// Un salon de 3 dont le dernier est un client d'avant (il n'annonce aucune
+    /// fonction).
+    (String, List<(FakeConnection, Session)>) threeWithLegacy() {
+      final host = open();
+      send(host.$2, ClientMessage.create(name: 'J1'));
+      final code = host.$1.of(ServerMessageType.joined).last.roomCode;
+      final second = open();
+      send(second.$2, ClientMessage.join(code: code, name: 'J2'));
+      final legacy = open();
+      send(legacy.$2, ClientMessage.join(code: code, name: 'J3', features: const []));
+      return (code, [host, second, legacy]);
+    }
+
+    test('relayée à tous ceux qui savent l\'afficher, l\'envoyeur compris, avec son siège', () {
+      final (_, players) = threeWithLegacy();
+      send(players[0].$2, ClientMessage.start());
+
+      send(players[1].$2, ClientMessage.emote(Emote.mocking, phrase: 'stickyFive'));
+
+      for (final i in [0, 1]) {
+        final message = players[i].$1.of(ServerMessageType.emote).single;
+        expect(message.seat, 1);
+        expect(message.emote, (Emote.mocking, 'stickyFive'));
+      }
+      expect(players[2].$1.of(ServerMessageType.emote), isEmpty, reason: 'un client d\'avant prendrait ce type inconnu pour un journal abîmé');
+    });
+
+    test('ignorée, sans erreur, avant le départ de la partie', () {
+      final (_, players) = threeWithLegacy();
+      send(players[0].$2, ClientMessage.emote(Emote.joyful));
+
+      expect(players[0].$1.of(ServerMessageType.emote), isEmpty);
+      expect(players[1].$1.of(ServerMessageType.emote), isEmpty);
+      expect(players[0].$1.lastError, isNull);
+    });
+
+    test('une seule toutes les 3 secondes par joueur ; la suivante, trop tôt, est ignorée sans erreur', () {
+      final (_, players) = threeWithLegacy();
+      send(players[0].$2, ClientMessage.start());
+      final errors = players[0].$1.of(ServerMessageType.error).length;
+
+      send(players[0].$2, ClientMessage.emote(Emote.joyful));
+      clock = clock.add(const Duration(seconds: 2));
+      send(players[0].$2, ClientMessage.emote(Emote.devastated));
+      send(players[1].$2, ClientMessage.emote(Emote.thoughtful));
+      expect([for (final m in players[1].$1.of(ServerMessageType.emote)) m.emote.$1], [Emote.joyful, Emote.thoughtful],
+          reason: 'le délai est par joueur');
+
+      clock = clock.add(const Duration(seconds: 1));
+      send(players[0].$2, ClientMessage.emote(Emote.devastated, phrase: 'argh'));
+      expect(players[1].$1.of(ServerMessageType.emote).last.emote, (Emote.devastated, 'argh'));
+      expect(players[0].$1.of(ServerMessageType.error), hasLength(errors));
+    });
+
+    test('une émotion ou une phrase inconnue est refusée comme un message abîmé, et personne ne la voit', () {
+      final (_, players) = threeWithLegacy();
+      send(players[0].$2, ClientMessage.start());
+
+      for (final params in [
+        {'emote': 'furieux'},
+        {'emote': 'joyful', 'phrase': 'stickyFive'},
+        {'emote': 'joyful', 'phrase': 3},
+      ]) {
+        manager.onMessage(players[0].$2, jsonEncode({'v': onlineProtocolVersion, 'type': 'emote', 'params': params}));
+        expect(players[0].$1.lastError, ErrorCode.badRequest, reason: '$params');
+      }
+      expect(players[1].$1.of(ServerMessageType.emote), isEmpty);
+    });
+  });
+
   group('reconnexion', () {
     test('un joueur coupé revient avec son jeton : même siège, journal renvoyé', () {
       final (code, players) = lobby(2);

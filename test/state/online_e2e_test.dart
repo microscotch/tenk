@@ -161,6 +161,33 @@ void main() {
     expect(bob.read(onlineSessionProvider).seats.map((s) => s.name), ['Anna', 'Bob']);
   });
 
+  test('une émotion d\'Anna arrive chez Bob, et chez elle, avec son siège', () async {
+    final anna = newClient(FakeCredentialsStore());
+    final bob = newClient(FakeCredentialsStore());
+    await anna.read(onlineSessionProvider.notifier).create('Anna');
+    await until(() => anna.read(onlineSessionProvider).phase == RoomPhase.lobby, 'salon créé');
+    final code = anna.read(onlineSessionProvider).roomCode!;
+    await bob.read(onlineSessionProvider.notifier).join(code, 'Bob');
+    await until(() => anna.read(onlineSessionProvider).seats.length == 2, 'Bob dans le salon');
+    anna.read(onlineSessionProvider.notifier).start();
+    await until(
+      () => anna.read(onlineSessionProvider).gameStarted && bob.read(onlineSessionProvider).gameStarted,
+      'partie commencée chez les deux',
+    );
+    expect(anna.read(onlineSessionProvider).emotesEnabled, isTrue, reason: 'le serveur annonce les émotions');
+
+    anna.read(onlineSessionProvider.notifier).sendEmote(Emote.joyful, phrase: 'hello');
+    await until(
+      () => bob.read(onlineEmotesProvider).isNotEmpty && anna.read(onlineEmotesProvider).isNotEmpty,
+      'émotion relayée aux deux',
+    );
+
+    for (final client in [anna, bob]) {
+      final event = client.read(onlineEmotesProvider).single;
+      expect((event.seat, event.emote, event.phrase), (0, Emote.joyful, 'hello'));
+    }
+  });
+
   test('un client qui essaie de jouer hors tour ne change rien pour personne', () async {
     final anna = newClient(FakeCredentialsStore());
     final bob = newClient(FakeCredentialsStore());

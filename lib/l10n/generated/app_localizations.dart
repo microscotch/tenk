@@ -1531,6 +1531,84 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Appui long sur un jeton : son nom s\'affiche.'**
   String get homeChipsHint;
+
+  /// Nom de l'émotion « songeur » (bouton d'émotion en ligne, lu par les lecteurs d'écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Songeur'**
+  String get emoteThoughtful;
+
+  /// Nom de l'émotion « moqueur ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Moqueur'**
+  String get emoteMocking;
+
+  /// Nom de l'émotion « dévasté ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Dévasté'**
+  String get emoteDevastated;
+
+  /// Nom de l'émotion « joyeux ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Joyeux'**
+  String get emoteJoyful;
+
+  /// Phrase de l'émotion songeur : on soupçonne un coup de chance trop beau.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comme de par hasard'**
+  String get emotePhraseCoincidence;
+
+  /// Phrase moqueuse : un 5 seul qu'on est obligé de garder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cinq qui colle !'**
+  String get emotePhraseStickyFive;
+
+  /// Phrase moqueuse : une main pleine qui ne rapporte finalement rien (jeu de mots).
+  ///
+  /// In fr, this message translates to:
+  /// **'Main pleine, main vaine !'**
+  String get emotePhraseFullHandEmptyHand;
+
+  /// Phrase moqueuse : dicton du jeu, on ne reprend jamais une main de 1000.
+  ///
+  /// In fr, this message translates to:
+  /// **'On reprend jamais un 1000'**
+  String get emotePhraseNeverTakeA1000;
+
+  /// Phrase de l'émotion dévasté.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est pas possible !'**
+  String get emotePhraseNoWay;
+
+  /// Cri de dépit de l'émotion dévasté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aaaarg !'**
+  String get emotePhraseArgh;
+
+  /// Salutation de l'émotion joyeux.
+  ///
+  /// In fr, this message translates to:
+  /// **'Salut !'**
+  String get emotePhraseHello;
+
+  /// Cri de joie de l'émotion joyeux.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yes !'**
+  String get emotePhraseYes;
+
+  /// Barre qui ouvre l'historique (le journal) d'une partie en ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get gameHistoryBar;
 }
 
 class _AppLocalizationsDelegate

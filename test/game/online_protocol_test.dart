@@ -169,6 +169,33 @@ void main() {
     expect(isValidRoomCode('ABCDE'), isTrue);
     expect(isValidRoomCode('abcde'), isFalse, reason: 'le serveur normalise en majuscules avant de valider');
   });
+
+  group('émotions', () {
+    test('le catalogue : quatre émotions, chacune avec ses phrases, sous des noms stables', () {
+      expect(Emote.values.map((e) => e.name), ['thoughtful', 'mocking', 'devastated', 'joyful']);
+      expect(Emote.mocking.phrases, ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000']);
+      expect(supportedFeatures, contains(emotesFeature));
+    });
+
+    test('une émotion, seule ou avec l\'une de ses phrases, fait l\'aller-retour dans les deux sens', () {
+      final alone = roundTrip(ClientMessage.emote(Emote.joyful));
+      expect((alone.type, alone.params['emote'], alone.params.containsKey('phrase')), (ClientMessageType.emote, 'joyful', false));
+      expect(roundTrip(ClientMessage.emote(Emote.mocking, phrase: 'stickyFive')).params['phrase'], 'stickyFive');
+
+      final relayed = ServerMessage.fromJson(ServerMessage.emote(seat: 2, emote: Emote.devastated, phrase: 'argh').toJson());
+      expect((relayed.type, relayed.seat, relayed.emote), (ServerMessageType.emote, 2, (Emote.devastated, 'argh')));
+    });
+
+    test('une émotion inconnue, ou la phrase d\'une autre émotion, est refusée', () {
+      ClientMessage parse(Map<String, Object?> params) =>
+          ClientMessage.fromJson({'v': onlineProtocolVersion, 'type': 'emote', 'params': params});
+      expect(() => parse({'emote': 'furieux'}), throwsFormatException);
+      expect(() => parse({'emote': 'joyful', 'phrase': 'stickyFive'}), throwsFormatException);
+      expect(() => parse({'emote': 'joyful', 'phrase': 1}), throwsFormatException);
+      expect(() => ServerMessage.fromJson({'v': onlineProtocolVersion, 'type': 'emote', 'params': {'seat': 0, 'emote': 'x'}}).emote,
+          throwsFormatException);
+    });
+  });
 }
 
 class JsonName {
@@ -176,4 +203,5 @@ class JsonName {
   const JsonName(this.value);
   @override
   String toString() => 'pseudo ${value.replaceAll('\n', r'\n').replaceAll('\u0000', r'\0')}';
+
 }

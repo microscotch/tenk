@@ -857,4 +857,43 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get homeChipsHint => 'Tryck länge på en mark för att se namnet.';
+
+  @override
+  String get emoteThoughtful => 'Fundersam';
+
+  @override
+  String get emoteMocking => 'Retsam';
+
+  @override
+  String get emoteDevastated => 'Förkrossad';
+
+  @override
+  String get emoteJoyful => 'Glad';
+
+  @override
+  String get emotePhraseCoincidence => 'Vilket sammanträffande';
+
+  @override
+  String get emotePhraseStickyFive => 'Femman som klistrar!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Full hand, tom hand!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => 'En 1000 tar man aldrig över';
+
+  @override
+  String get emotePhraseNoWay => 'Det är inte möjligt!';
+
+  @override
+  String get emotePhraseArgh => 'Aaaargh!';
+
+  @override
+  String get emotePhraseHello => 'Hej!';
+
+  @override
+  String get emotePhraseYes => 'Ja!';
+
+  @override
+  String get gameHistoryBar => 'Historik';
 }

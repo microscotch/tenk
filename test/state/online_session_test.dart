@@ -520,6 +520,66 @@ void main() {
     });
   });
 
+  group('émotions', () {
+    test('le serveur qui les relaie les active ; envoyer part au serveur', () async {
+      await joinedAndStarted(0, serverJournal());
+      expect(online().emotesEnabled, isTrue);
+
+      session().sendEmote(Emote.mocking, phrase: 'stickyFive');
+
+      final sent = transport.current.lastSent!;
+      expect((sent.type, sent.params['emote'], sent.params['phrase']), (ClientMessageType.emote, 'mocking', 'stickyFive'));
+    });
+
+    test('un serveur d\'avant ne les relaie pas : rien n\'est envoyé', () async {
+      await session().join('abcde', names[0]);
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: 0, features: const []));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: serverJournal()));
+      await settle();
+      expect(online().emotesEnabled, isFalse);
+      final count = transport.current.sent.length;
+
+      session().sendEmote(Emote.joyful);
+
+      expect(transport.current.sent, hasLength(count));
+    });
+
+    test('une émotion reçue est retenue, avec le siège de qui l\'envoie', () async {
+      await joinedAndStarted(0, serverJournal());
+
+      transport.current.serverSends(ServerMessage.emote(seat: 1, emote: Emote.devastated, phrase: 'argh'));
+      await settle();
+
+      final event = container.read(onlineEmotesProvider).single;
+      expect((event.seat, event.emote, event.phrase), (1, Emote.devastated, 'argh'));
+    });
+
+    test('une émotion illisible (version plus récente) est ignorée, sans tout redemander', () async {
+      await joinedAndStarted(0, serverJournal());
+      final connections = transport.channels.length;
+
+      transport.current.serverSendsRaw({'v': onlineProtocolVersion, 'type': 'emote', 'params': {'seat': 1, 'emote': 'furieux'}});
+      await settle();
+
+      expect(container.read(onlineEmotesProvider), isEmpty);
+      expect(transport.channels, hasLength(connections));
+    });
+
+    test('elles restent après une reconnexion, mais pas d\'une partie à l\'autre', () async {
+      await joinedAndStarted(0, serverJournal());
+      transport.current.serverSends(ServerMessage.emote(seat: 1, emote: Emote.joyful));
+      await settle();
+
+      // Même partie, après une coupure : le journal revient, les émotions restent.
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: serverJournal()));
+      await settle();
+      expect(container.read(onlineEmotesProvider), hasLength(1));
+
+      await session().leave();
+      expect(container.read(onlineEmotesProvider), isEmpty);
+    });
+  });
+
   group('mon profil dans une partie en ligne', () {
     late PlayerProfile me;
 

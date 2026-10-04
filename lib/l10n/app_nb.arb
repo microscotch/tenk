@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Terningslyd",
   "settingsDiceSoundRealistic": "Realistisk",
   "settingsDiceSoundSynthetic": "Syntetisk",
-  "homeChipsHint": "Trykk lenge på en sjetong for å se navnet."
+  "homeChipsHint": "Trykk lenge på en sjetong for å se navnet.",
+  "emoteThoughtful": "Ettertenksom",
+  "emoteMocking": "Ertende",
+  "emoteDevastated": "Knust",
+  "emoteJoyful": "Glad",
+  "emotePhraseCoincidence": "For et sammentreff",
+  "emotePhraseStickyFive": "Femmeren som klistrer!",
+  "emotePhraseFullHandEmptyHand": "Full hånd, tom hånd!",
+  "emotePhraseNeverTakeA1000": "En 1000 tar man aldri over",
+  "emotePhraseNoWay": "Det er ikke mulig!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Hei!",
+  "emotePhraseYes": "Ja!",
+  "gameHistoryBar": "Historikk"
 }

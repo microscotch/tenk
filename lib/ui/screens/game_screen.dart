@@ -21,6 +21,7 @@ import '../dice_colors.dart';
 import '../navigation.dart';
 import '../shake_detector.dart';
 import '../sound_effects.dart';
+import '../widgets/emotes.dart';
 import '../widgets/app_title.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/bordered_section.dart';
@@ -506,6 +507,9 @@ class GameScreen extends ConsumerStatefulWidget {
 
   const GameScreen({super.key, this.replayMode = false});
 
+  /// Combien de temps reste affichée la bulle d'une émotion en ligne.
+  static const bubbleDuration = Duration(milliseconds: 3500);
+
   /// Le message "Craqué !" ne doit apparaître qu'une fois TOUS les dés du lancer
   /// immobiles (résultat visible), pas dès que le craque est connu côté moteur :
   /// sinon le suspense du lancer est gâché. Chaque dé tire sa durée (voir
@@ -562,6 +566,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// [GameNotifier] : dérivé du même journal d'actions que celui déjà
   /// persisté dans le `.run`, pas dupliqué.
   final List<_LogEntry> _log = [];
+
+  /// Change à chaque modification de [_log] : l'Historique ouvert en panneau
+  /// (partie en ligne, voir [_openHistory]) se redessine sur ce signal.
+  final _logRevision = ValueNotifier<int>(0);
+
+  /// Les bulles d'émotion affichées, par index de joueur, et le minuteur qui
+  /// retire chacune (voir [_showEmote]).
+  final Map<int, String> _bubbles = {};
+  final Map<int, Timer> _bubbleTimers = {};
+
+  /// La dernière émotion déjà montrée (voir `onlineEmotesProvider`) : celles
+  /// d'avant l'ouverture de l'écran vont à l'Historique, pas en bulle.
+  int _lastEmoteId = -1;
   final ScrollController _logScrollController = ScrollController();
 
   Object? _bustKeyBeingRevealed;
@@ -629,6 +646,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _seedLogFromHistory();
+      _seedEmotesIntoLog();
       // Partie reprise sur un lancer déjà affiché (donc déjà immobilisé, cf.
       // _rollSettled) : son résumé doit suivre la même règle que si les dés
       // venaient de s'arrêter sous les yeux du joueur.
@@ -773,6 +791,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ..clear()
         ..addAll(entries);
     });
+    _logRevision.value++;
     _lockControlsBriefly();
     _scheduleReplayStep();
   }
@@ -799,6 +818,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _rollSettleTimer?.cancel();
     _previewMoveTimer?.cancel();
     _previewFrameTimer?.cancel();
+    for (final timer in _bubbleTimers.values) {
+      timer.cancel();
+    }
+    _logRevision.dispose();
     _logScrollController.dispose();
     super.dispose();
   }
@@ -806,7 +829,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// Ajoute une entrée au journal (le plus récent apparaît en premier, voir
   /// [_buildGameLog] — pas d'auto-scroll nécessaire, une nouvelle entrée
   /// apparaît directement en haut, déjà visible).
-  void _appendLog(_LogEntry entry) => setState(() => _log.add(entry));
+  void _appendLog(_LogEntry entry) {
+    setState(() => _log.add(entry));
+    _logRevision.value++;
+  }
 
   /// Rend les commandes inertes pendant [_controlLockAfterTransition], à
   /// appeler à chaque transition de l'écran de jeu : changement d'état du
@@ -864,6 +890,84 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
     if (entries.isEmpty) return;
     setState(() => _log.addAll(entries));
+    _logRevision.value++;
+  }
+
+  /// Le journal d'une partie ne garde pas les émotions : à l'ouverture de
+  /// l'écran (retour dans une partie en ligne), celles déjà reçues reprennent
+  /// leur place dans l'Historique, à leur heure — sans bulle, elles sont passées.
+  void _seedEmotesIntoLog() {
+    final events = ref.read(onlineEmotesProvider);
+    if (events.isEmpty) return;
+    _lastEmoteId = events.last.id;
+    final entries = [for (final event in events) ?_emoteLogEntry(event)];
+    if (entries.isEmpty) return;
+    setState(() {
+      for (final entry in entries) {
+        // Insertion à son heure, après les entrées du même instant : l'ordre
+        // d'arrivée est gardé.
+        var at = _log.length;
+        while (at > 0 && _log[at - 1].timestamp.isAfter(entry.timestamp)) {
+          at--;
+        }
+        _log.insert(at, entry);
+      }
+    });
+    _logRevision.value++;
+  }
+
+  /// L'index de joueur de l'émotion [event] (son siège passé par l'ordre de
+  /// jeu), ou null si ce siège n'est pas dans la partie à l'écran.
+  int? _emotePlayerIndex(EmoteEvent event) {
+    final link = ref.read(gameProvider.notifier).onlineLink;
+    final index = link?.playOrder.indexOf(event.seat) ?? -1;
+    final engine = ref.read(gameProvider);
+    if (index < 0 || engine == null || index >= engine.players.length) return null;
+    return index;
+  }
+
+  _LogEntry? _emoteLogEntry(EmoteEvent event) {
+    final index = _emotePlayerIndex(event);
+    if (index == null) return null;
+    final l10n = AppLocalizations.of(context);
+    return _LogEntry(event.at, ref.read(gameProvider)!.players[index].name, emoteText(l10n, event.emote, event.phrase));
+  }
+
+  /// Une émotion vient d'arriver : sa bulle sur la ligne du joueur, le temps
+  /// de [GameScreen.bubbleDuration], et une ligne dans l'Historique.
+  void _showEmote(EmoteEvent event) {
+    final index = _emotePlayerIndex(event);
+    if (index == null) return;
+    final l10n = AppLocalizations.of(context);
+    _bubbleTimers[index]?.cancel();
+    setState(() => _bubbles[index] = emoteText(l10n, event.emote, event.phrase));
+    _bubbleTimers[index] = Timer(GameScreen.bubbleDuration, () {
+      if (!mounted) return;
+      setState(() => _bubbles.remove(index));
+      _bubbleTimers.remove(index);
+    });
+    final entry = _emoteLogEntry(event);
+    if (entry != null) _appendLog(entry);
+  }
+
+  /// L'Historique d'une partie en ligne, en panneau : le journal, tenu à jour
+  /// tant qu'il est ouvert.
+  void _openHistory(Map<String, Color> avatarColors) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.of(sheetContext).size.height * 0.6,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: ValueListenableBuilder<int>(
+            valueListenable: _logRevision,
+            builder: (_, _, _) => _buildGameLog(avatarColors),
+          ),
+        ),
+      ),
+    );
   }
 
   /// Programme, pour un [pendingRoll] fraîchement apparu (null = décision
@@ -1287,6 +1391,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final keep = engine == null ? null : _remoteSelectedKeep(engine);
       if (keep != null && keep != _selectedKeep) setState(() => _selectedKeep = keep);
     });
+    // Une émotion d'un joueur en ligne (moi compris, une fois relayée) : sa
+    // bulle, et sa ligne d'Historique.
+    ref.listen<List<EmoteEvent>>(onlineEmotesProvider, (previous, next) {
+      for (final event in next) {
+        if (event.id <= _lastEmoteId) continue;
+        _lastEmoteId = event.id;
+        _showEmote(event);
+      }
+    });
     ref.listen<GameEngine?>(gameProvider, (previous, next) {
       if (next == null || _coveredByReplay || _seeking) return;
       // Toute transition du moteur redessine la ligne de contrôle : on la
@@ -1549,6 +1662,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       currentPlayerIndex: engine.currentPlayerIndex,
                       onTapPlayer: _openPlayerGrid,
                       displayNames: ref.watch(displayNamesProvider),
+                      bubbles: _bubbles,
                     ),
                     const SizedBox(height: 12),
                     if (engine.isInFinalRound)
@@ -1603,13 +1717,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       : _buildHumanControlRow(engine, turn))),
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      // Le journal cède aux commandes du rejeu la place
-                      // qu'elles prennent : l'ensemble garde la hauteur qu'il
-                      // a en partie jouée.
-                      height: widget.replayMode ? 240 - ReplayControls.height : 240,
-                      child: _buildGameLog(assignAvatarColors(engine.players.map((p) => p.name))),
-                    ),
+                    // En ligne, quand le serveur relaie les émotions : leurs
+                    // boutons, et le journal replié en une barre « Historique »
+                    // pour leur faire de la place. Ailleurs (partie locale,
+                    // rejeu), le journal tel quel.
+                    if (_emotesShown) ...[
+                      EmoteBar(
+                        onSend: (emote, phrase) =>
+                            ref.read(onlineSessionProvider.notifier).sendEmote(emote, phrase: phrase),
+                      ),
+                      const SizedBox(height: 12),
+                      _historyBar(assignAvatarColors(engine.players.map((p) => p.name))),
+                    ] else
+                      SizedBox(
+                        // Le journal cède aux commandes du rejeu la place
+                        // qu'elles prennent : l'ensemble garde la hauteur qu'il
+                        // a en partie jouée.
+                        height: widget.replayMode ? 240 - ReplayControls.height : 240,
+                        child: _buildGameLog(assignAvatarColors(engine.players.map((p) => p.name))),
+                      ),
                   ],
                 ),
               ),
@@ -1633,6 +1759,32 @@ class _GameScreenState extends ConsumerState<GameScreen>
         popToHome(context);
       },
       child: scaffold,
+    );
+  }
+
+  /// Vrai quand l'écran montre les boutons d'émotion et la barre Historique :
+  /// une partie en ligne jouée (pas un rejeu), sur un serveur qui relaie les
+  /// émotions.
+  bool get _emotesShown =>
+      !widget.replayMode &&
+      ref.watch(gameProvider.notifier).isOnline &&
+      ref.watch(onlineSessionProvider.select((s) => s.emotesEnabled));
+
+  /// La barre « Historique » qui remplace le journal en ligne : un tap l'ouvre
+  /// (voir [_openHistory]).
+  Widget _historyBar(Map<String, Color> avatarColors) {
+    final l10n = AppLocalizations.of(context);
+    return OutlinedButton(
+      onPressed: () => _openHistory(avatarColors),
+      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+      child: Row(
+        children: [
+          const Icon(Icons.history, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(l10n.gameHistoryBar)),
+          const Icon(Icons.expand_less, size: 20),
+        ],
+      ),
     );
   }
 

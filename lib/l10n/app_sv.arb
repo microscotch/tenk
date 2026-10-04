@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Tärningsljud",
   "settingsDiceSoundRealistic": "Realistiskt",
   "settingsDiceSoundSynthetic": "Syntetiskt",
-  "homeChipsHint": "Tryck länge på en mark för att se namnet."
+  "homeChipsHint": "Tryck länge på en mark för att se namnet.",
+  "emoteThoughtful": "Fundersam",
+  "emoteMocking": "Retsam",
+  "emoteDevastated": "Förkrossad",
+  "emoteJoyful": "Glad",
+  "emotePhraseCoincidence": "Vilket sammanträffande",
+  "emotePhraseStickyFive": "Femman som klistrar!",
+  "emotePhraseFullHandEmptyHand": "Full hand, tom hand!",
+  "emotePhraseNeverTakeA1000": "En 1000 tar man aldrig över",
+  "emotePhraseNoWay": "Det är inte möjligt!",
+  "emotePhraseArgh": "Aaaargh!",
+  "emotePhraseHello": "Hej!",
+  "emotePhraseYes": "Ja!",
+  "gameHistoryBar": "Historik"
 }

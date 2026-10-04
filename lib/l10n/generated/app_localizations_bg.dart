@@ -855,4 +855,43 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get homeChipsHint => 'Задръжте чип, за да видите името му.';
+
+  @override
+  String get emoteThoughtful => 'Замислен';
+
+  @override
+  String get emoteMocking => 'Подигравателен';
+
+  @override
+  String get emoteDevastated => 'Съкрушен';
+
+  @override
+  String get emoteJoyful => 'Радостен';
+
+  @override
+  String get emotePhraseCoincidence => 'Какво съвпадение';
+
+  @override
+  String get emotePhraseStickyFive => 'Залепнала петица!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Пълна ръка, празна ръка!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => '1000 никога не се поема';
+
+  @override
+  String get emotePhraseNoWay => 'Не е възможно!';
+
+  @override
+  String get emotePhraseArgh => 'Ааааргх!';
+
+  @override
+  String get emotePhraseHello => 'Здрасти!';
+
+  @override
+  String get emotePhraseYes => 'Да!';
+
+  @override
+  String get gameHistoryBar => 'История';
 }

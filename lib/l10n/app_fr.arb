@@ -760,5 +760,44 @@
   "@settingsDiceSoundSynthetic": {"description": "Bruit des dés : le son synthétique d'origine, le même pour tous les lancers."},
 
   "homeChipsHint": "Appui long sur un jeton : son nom s'affiche.",
-  "@homeChipsHint": {"description": "Ligne sous le menu en jetons de l'accueil : comment lire le nom d'un jeton."}
+  "@homeChipsHint": {"description": "Ligne sous le menu en jetons de l'accueil : comment lire le nom d'un jeton."},
+
+  "emoteThoughtful": "Songeur",
+  "@emoteThoughtful": {"description": "Nom de l'émotion « songeur » (bouton d'émotion en ligne, lu par les lecteurs d'écran)."},
+
+  "emoteMocking": "Moqueur",
+  "@emoteMocking": {"description": "Nom de l'émotion « moqueur »."},
+
+  "emoteDevastated": "Dévasté",
+  "@emoteDevastated": {"description": "Nom de l'émotion « dévasté »."},
+
+  "emoteJoyful": "Joyeux",
+  "@emoteJoyful": {"description": "Nom de l'émotion « joyeux »."},
+
+  "emotePhraseCoincidence": "Comme de par hasard",
+  "@emotePhraseCoincidence": {"description": "Phrase de l'émotion songeur : on soupçonne un coup de chance trop beau."},
+
+  "emotePhraseStickyFive": "Cinq qui colle !",
+  "@emotePhraseStickyFive": {"description": "Phrase moqueuse : un 5 seul qu'on est obligé de garder."},
+
+  "emotePhraseFullHandEmptyHand": "Main pleine, main vaine !",
+  "@emotePhraseFullHandEmptyHand": {"description": "Phrase moqueuse : une main pleine qui ne rapporte finalement rien (jeu de mots)."},
+
+  "emotePhraseNeverTakeA1000": "On reprend jamais un 1000",
+  "@emotePhraseNeverTakeA1000": {"description": "Phrase moqueuse : dicton du jeu, on ne reprend jamais une main de 1000."},
+
+  "emotePhraseNoWay": "C'est pas possible !",
+  "@emotePhraseNoWay": {"description": "Phrase de l'émotion dévasté."},
+
+  "emotePhraseArgh": "Aaaarg !",
+  "@emotePhraseArgh": {"description": "Cri de dépit de l'émotion dévasté."},
+
+  "emotePhraseHello": "Salut !",
+  "@emotePhraseHello": {"description": "Salutation de l'émotion joyeux."},
+
+  "emotePhraseYes": "Yes !",
+  "@emotePhraseYes": {"description": "Cri de joie de l'émotion joyeux."},
+
+  "gameHistoryBar": "Historique",
+  "@gameHistoryBar": {"description": "Barre qui ouvre l'historique (le journal) d'une partie en ligne."}
 }

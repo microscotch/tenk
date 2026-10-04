@@ -1,4 +1,7 @@
 import '../game_recording.dart';
+import 'emotes.dart';
+
+export 'emotes.dart';
 
 /// Version du protocole des parties en ligne : le serveur refuse un client d'une
 /// autre version plutôt que de deviner ce qu'il veut dire.
@@ -32,14 +35,14 @@ const String keepSelectionFeature = 'keepSelection';
 /// n'annonce rien, ne reçoit jamais un message qu'il prendrait pour un journal
 /// abîmé. C'est ce qui évite de changer [onlineProtocolVersion], qui couperait
 /// les anciens clients.
-const List<String> supportedFeatures = [keepSelectionFeature];
+const List<String> supportedFeatures = [keepSelectionFeature, emotesFeature];
 
 const int _maxFeatures = 16;
 const int _maxFeatureLength = 32;
 
-enum ClientMessageType { create, join, rejoin, reorder, start, leave, play, select }
+enum ClientMessageType { create, join, rejoin, reorder, start, leave, play, select, emote }
 
-enum ServerMessageType { joined, room, action, snapshot, error, selection }
+enum ServerMessageType { joined, room, action, snapshot, error, selection, emote }
 
 /// Étape d'un salon.
 enum RoomPhase { lobby, playing, suspended, over }
@@ -94,6 +97,13 @@ class ClientMessage {
   factory ClientMessage.select({required int declineFivesCount}) =>
       ClientMessage._(ClientMessageType.select, {'declineFivesCount': declineFivesCount});
 
+  /// Une émotion pour les autres joueurs, avec l'une de ses phrases ou seule
+  /// (voir [emotesFeature]) : rien n'est joué.
+  factory ClientMessage.emote(Emote emote, {String? phrase}) {
+    assert(emote.accepts(phrase));
+    return ClientMessage._(ClientMessageType.emote, {'emote': emote.name, 'phrase': ?phrase});
+  }
+
   /// L'intention d'un message `play`.
   GameActionType get intent => GameActionType.values.byName(params['intent'] as String);
 
@@ -138,6 +148,9 @@ class ClientMessage {
         });
       case ClientMessageType.select:
         return ClientMessage.select(declineFivesCount: _int(raw, 'declineFivesCount', min: 0, max: 5));
+      case ClientMessageType.emote:
+        final (emote, phrase) = _emote(raw);
+        return ClientMessage.emote(emote, phrase: phrase);
     }
   }
 }
@@ -212,6 +225,11 @@ class ServerMessage {
   factory ServerMessage.selection({required int seq, required int declineFivesCount}) =>
       ServerMessage._(ServerMessageType.selection, {'seq': seq, 'declineFivesCount': declineFivesCount});
 
+  /// L'émotion envoyée par le joueur du siège [seat] (voir [emotesFeature]).
+  /// Hors du journal de la partie : ni rang, ni action, rien n'est rejoué.
+  factory ServerMessage.emote({required int seat, required Emote emote, String? phrase}) =>
+      ServerMessage._(ServerMessageType.emote, {'seat': seat, 'emote': emote.name, 'phrase': ?phrase});
+
   factory ServerMessage.error(ErrorCode code, [String message = '']) =>
       ServerMessage._(ServerMessageType.error, {'code': code.name, if (message.isNotEmpty) 'message': message});
 
@@ -225,6 +243,10 @@ class ServerMessage {
   int get hostSeat => _int(params, 'hostSeat', min: 0, max: maxOnlinePlayers - 1);
   int get seq => _int(params, 'seq', min: 0, max: 1 << 30);
   int get declineFivesCount => _int(params, 'declineFivesCount', min: 0, max: 5);
+
+  /// L'émotion d'un message `emote`, et sa phrase (nulle : l'émotion seule).
+  /// Lève une [FormatException] pour une émotion ou une phrase inconnue.
+  (Emote, String?) get emote => _emote(params);
 
   /// Les fonctions annoncées par `joined` ; vide pour un serveur d'avant.
   List<String> get features => params.containsKey('features') ? _features(params) : const [];
@@ -315,6 +337,17 @@ List<String> _features(Map<String, dynamic> map) {
     throw const FormatException('features: noms courts attendus');
   }
   return raw.cast<String>();
+}
+
+/// Une émotion connue et, s'il y en a une, l'une de ses phrases.
+(Emote, String?) _emote(Map<String, dynamic> map) {
+  final emote = Emote.byName(map['emote']);
+  if (emote == null) throw const FormatException('emote: émotion inconnue');
+  final phrase = map['phrase'];
+  if (phrase != null && (phrase is! String || !emote.accepts(phrase))) {
+    throw const FormatException('phrase: phrase inconnue pour cette émotion');
+  }
+  return (emote, phrase as String?);
 }
 
 bool _bool(Map<String, dynamic> map, String key) {

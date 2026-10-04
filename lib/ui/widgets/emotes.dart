@@ -1,0 +1,184 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../../l10n/generated/app_localizations.dart';
+import '../../state/online_providers.dart';
+
+/// L'émoji d'une émotion : celui du système, pour être lu d'un coup d'œil.
+String emoteEmoji(Emote emote) => switch (emote) {
+      Emote.thoughtful => '🤔',
+      Emote.mocking => '😏',
+      Emote.devastated => '😭',
+      Emote.joyful => '😄',
+    };
+
+/// Le nom d'une émotion, pour les lecteurs d'écran.
+String emoteName(AppLocalizations l10n, Emote emote) => switch (emote) {
+      Emote.thoughtful => l10n.emoteThoughtful,
+      Emote.mocking => l10n.emoteMocking,
+      Emote.devastated => l10n.emoteDevastated,
+      Emote.joyful => l10n.emoteJoyful,
+    };
+
+/// Une phrase d'émotion, dans la langue de l'appareil ; null pour un
+/// identifiant inconnu (une version plus récente).
+String? emotePhrase(AppLocalizations l10n, String phrase) => switch (phrase) {
+      'coincidence' => l10n.emotePhraseCoincidence,
+      'stickyFive' => l10n.emotePhraseStickyFive,
+      'fullHandEmptyHand' => l10n.emotePhraseFullHandEmptyHand,
+      'neverTakeA1000' => l10n.emotePhraseNeverTakeA1000,
+      'noWay' => l10n.emotePhraseNoWay,
+      'argh' => l10n.emotePhraseArgh,
+      'hello' => l10n.emotePhraseHello,
+      'yes' => l10n.emotePhraseYes,
+      _ => null,
+    };
+
+/// Ce que montre une émotion reçue : sa phrase quand il y en a une, à la place
+/// de l'émoji ; l'émoji sinon.
+String emoteText(AppLocalizations l10n, Emote emote, String? phrase) =>
+    (phrase == null ? null : emotePhrase(l10n, phrase)) ?? emoteEmoji(emote);
+
+/// Les boutons d'émotion d'une partie en ligne : un tap envoie l'émoji, un appui
+/// long ouvre le menu des phrases de cette émotion. Après un envoi, tous
+/// restent grisés [emoteCooldown] durant — le serveur ignorerait ce qui part
+/// plus tôt.
+class EmoteBar extends StatefulWidget {
+  final void Function(Emote emote, String? phrase) onSend;
+
+  const EmoteBar({super.key, required this.onSend});
+
+  @override
+  State<EmoteBar> createState() => _EmoteBarState();
+}
+
+class _EmoteBarState extends State<EmoteBar> {
+  Timer? _cooldown;
+
+  @override
+  void dispose() {
+    _cooldown?.cancel();
+    super.dispose();
+  }
+
+  bool get _coolingDown => _cooldown?.isActive ?? false;
+
+  void _send(Emote emote, String? phrase) {
+    if (_coolingDown) return;
+    widget.onSend(emote, phrase);
+    setState(() => _cooldown = Timer(emoteCooldown, () {
+          if (mounted) setState(() {});
+        }));
+  }
+
+  Future<void> _openPhrases(BuildContext buttonContext, Emote emote) async {
+    if (_coolingDown) return;
+    final l10n = AppLocalizations.of(context);
+    final box = buttonContext.findRenderObject()! as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
+    final phrase = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(origin & box.size, Offset.zero & overlay.size),
+      items: [
+        for (final phrase in emote.phrases)
+          PopupMenuItem(value: phrase, child: Text(emotePhrase(l10n, phrase) ?? phrase)),
+      ],
+    );
+    if (phrase != null && mounted) _send(emote, phrase);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final enabled = !_coolingDown;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        for (final emote in Emote.values)
+          Builder(
+            builder: (buttonContext) => Semantics(
+              button: true,
+              enabled: enabled,
+              label: emoteName(l10n, emote),
+              excludeSemantics: true,
+              child: InkResponse(
+                onTap: enabled ? () => _send(emote, null) : null,
+                onLongPress: enabled ? () => _openPhrases(buttonContext, emote) : null,
+                radius: 28,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: enabled ? 1 : 0.35,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(emoteEmoji(emote), style: const TextStyle(fontSize: 26)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Une bulle de bande dessinée, sa pointe à gauche vers le joueur qui parle.
+class SpeechBubble extends StatelessWidget {
+  final String text;
+
+  const SpeechBubble({super.key, required this.text});
+
+  static const _paper = Color(0xFFFFFBF0);
+  static const _ink = Color(0xFF2A2116);
+  static const _tail = 8.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: const _BubblePainter(color: _paper, tail: _tail),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(_tail + 10, 4, 10, 4),
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          // Un émoji seul (l'émotion sans phrase) se lit en plus grand.
+          style: TextStyle(color: _ink, fontWeight: FontWeight.w700, fontSize: text.runes.length <= 2 ? 22 : 14),
+        ),
+      ),
+    );
+  }
+}
+
+class _BubblePainter extends CustomPainter {
+  final Color color;
+  final double tail;
+
+  const _BubblePainter({required this.color, required this.tail});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final body = RRect.fromRectAndRadius(Rect.fromLTRB(tail, 0, size.width, size.height), const Radius.circular(12));
+    final pointer = Path()
+      ..moveTo(tail + 1, size.height * 0.35)
+      ..lineTo(0, size.height * 0.75)
+      ..lineTo(tail + 1, size.height * 0.65)
+      ..close();
+    final path = Path()
+      ..addRRect(body)
+      ..addPath(pointer, Offset.zero);
+    canvas.drawShadow(path, Colors.black, 3, false);
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_BubblePainter old) => old.color != color || old.tail != tail;
+}

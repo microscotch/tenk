@@ -866,4 +866,43 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get homeChipsHint => 'Ține apăsat pe o fisă ca să-i vezi numele.';
+
+  @override
+  String get emoteThoughtful => 'Gânditor';
+
+  @override
+  String get emoteMocking => 'Batjocoritor';
+
+  @override
+  String get emoteDevastated => 'Devastat';
+
+  @override
+  String get emoteJoyful => 'Vesel';
+
+  @override
+  String get emotePhraseCoincidence => 'Ce coincidență';
+
+  @override
+  String get emotePhraseStickyFive => 'Un cinci lipicios!';
+
+  @override
+  String get emotePhraseFullHandEmptyHand => 'Mână plină, mână goală!';
+
+  @override
+  String get emotePhraseNeverTakeA1000 => 'Un 1000 nu se reia niciodată';
+
+  @override
+  String get emotePhraseNoWay => 'Nu se poate!';
+
+  @override
+  String get emotePhraseArgh => 'Aaaargh!';
+
+  @override
+  String get emotePhraseHello => 'Salut!';
+
+  @override
+  String get emotePhraseYes => 'Da!';
+
+  @override
+  String get gameHistoryBar => 'Istoric';
 }

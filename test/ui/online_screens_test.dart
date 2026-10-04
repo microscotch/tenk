@@ -17,6 +17,7 @@ import 'package:le10000/ui/screens/online_dice_off_screen.dart';
 import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/online_room_screen.dart';
 import 'package:le10000/ui/share.dart';
+import 'package:le10000/ui/widgets/emotes.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
@@ -550,6 +551,125 @@ void main() {
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.select).toList();
       expect(sent.last.params['declineFivesCount'], choice.alternative);
       expect(showsHandScore(handScore(choice.turn, choice.alternative)), findsWidgets);
+    });
+  });
+
+  group('émotions', () {
+    const names = ['Anna', 'Bob'];
+    const setup = GameSetup(playerNames: names);
+
+    /// Le début d'une partie où le tirage au sort a inversé les sièges (Bob, au
+    /// siège 1, joue en premier) : une bulle mal rattachée irait sur la
+    /// mauvaise ligne.
+    List<GameAction> swappedStart() {
+      for (var seed = 1; seed < 100; seed++) {
+        final full = journalWithFaces(setup, seed, playScriptedGame(setup, seed).actions);
+        final start = full.sublist(0, full.indexWhere((a) => a.type == GameActionType.startTurn) + 1);
+        if (replayGame(setup, 0, start).playOrder!.first == 1) return start;
+      }
+      throw StateError('aucun tirage qui inverse les sièges');
+    }
+
+    Future<void> joined(WidgetTester tester, {List<String> features = supportedFeatures}) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0, features: features));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: swappedStart()));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GameScreen(),
+        ),
+      ));
+      await tester.pump(const Duration(seconds: 1));
+    }
+
+    Finder emoteButton(String name) => find.bySemanticsLabel(name);
+
+    /// La ligne du joueur [name] dans la liste des joueurs.
+    Finder rowOf(String name) => find.ancestor(of: find.text(name), matching: find.byType(Stack)).first;
+
+    testWidgets('en ligne : quatre boutons d\'émotion et une barre Historique, à la place du journal', (tester) async {
+      await joined(tester);
+
+      for (final name in ['Songeur', 'Moqueur', 'Dévasté', 'Joyeux']) {
+        expect(emoteButton(name), findsOneWidget, reason: name);
+      }
+      expect(find.text('Historique'), findsOneWidget);
+      expect(find.text('😏'), findsOneWidget);
+    });
+
+    testWidgets('un serveur qui ne relaie pas les émotions : ni boutons, ni barre, le journal reste', (tester) async {
+      await joined(tester, features: const [keepSelectionFeature]);
+
+      expect(emoteButton('Moqueur'), findsNothing);
+      expect(find.text('Historique'), findsNothing);
+    });
+
+    testWidgets('un tap envoie l\'émoji ; les boutons restent grisés 3 secondes', (tester) async {
+      await joined(tester);
+
+      await tester.tap(emoteButton('Moqueur'));
+      await tester.pump();
+      final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).toList();
+      expect((sent.single.params['emote'], sent.single.params.containsKey('phrase')), ('mocking', false));
+
+      await tester.tap(emoteButton('Joyeux'), warnIfMissed: false);
+      await tester.pump();
+      expect(transport.current.sent.where((m) => m.type == ClientMessageType.emote), hasLength(1), reason: 'encore grisés');
+
+      await tester.pump(emoteCooldown);
+      await tester.tap(emoteButton('Joyeux'));
+      await tester.pump();
+      expect(transport.current.sent.where((m) => m.type == ClientMessageType.emote), hasLength(2));
+    });
+
+    testWidgets('un appui long ouvre les phrases de l\'émotion ; en choisir une l\'envoie à la place de l\'émoji', (tester) async {
+      await joined(tester);
+
+      await tester.longPress(emoteButton('Moqueur'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Cinq qui colle !'), findsOneWidget);
+      expect(find.text('Main pleine, main vaine !'), findsOneWidget);
+      expect(find.text('On reprend jamais un 1000'), findsOneWidget);
+
+      await tester.tap(find.text('Main pleine, main vaine !'));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).single;
+      expect((sent.params['emote'], sent.params['phrase']), ('mocking', 'fullHandEmptyHand'));
+    });
+
+    testWidgets('une émotion reçue s\'affiche en bulle sur la ligne de qui l\'envoie, puis s\'efface et reste dans l\'Historique',
+        (tester) async {
+      await joined(tester);
+
+      // Bob est au siège 1, mais en tête de la liste (il joue en premier).
+      transport.current.serverSends(ServerMessage.emote(seat: 1, emote: Emote.mocking, phrase: 'stickyFive'));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final bubble = find.widgetWithText(SpeechBubble, 'Cinq qui colle !');
+      expect(bubble, findsOneWidget);
+      expect(find.descendant(of: rowOf('Bob'), matching: bubble), findsOneWidget, reason: 'sur la ligne de Bob');
+      expect(find.descendant(of: rowOf('Anna'), matching: bubble), findsNothing);
+
+      await tester.pump(GameScreen.bubbleDuration);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(SpeechBubble), findsNothing, reason: 'la bulle s\'efface');
+
+      await tester.ensureVisible(find.text('Historique'));
+      await tester.tap(find.text('Historique'));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(BottomSheet), findsOneWidget, reason: 'l\'Historique s\'ouvre');
+      expect(find.textContaining('Cinq qui colle !', findRichText: true), findsOneWidget, reason: 'elle reste dans l\'Historique');
     });
   });
 }

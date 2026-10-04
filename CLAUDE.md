@@ -310,6 +310,12 @@ sweep of expired rooms).
   `GameAuthority.checkSelection`, kept by the room until the next action). New protocol messages go behind a
   **feature negotiation** (`supportedFeatures`, announced in `create`/`join`/`rejoin` and `joined`), never behind a
   new `onlineProtocolVersion`, which would lock out every installed client.
+- **Emotes (a controlled chat)**: 4 emotions × a few short phrases (`lib/game/online/emotes.dart`), sent by **stable
+  string ids**, never free text nor indexes; each device shows the phrase in its own language. They are **outside the
+  game journal** (no seq, never archived/replayed). The room relays them to every session that announced
+  `emotesFeature` (sender included), silently drops one within `emoteCooldown` (3 s) of the same seat's previous one,
+  and ignores them before the start. Changing the set means a new feature name (`emotes2`), not editing `emotes`.
+  Online only: the game screen swaps its log for an "Historique" bar and shows the emote buttons and bubbles.
 - Not in v1: bots and mixed local players in online games; forfeiting a started game.
 
 ## Design documents — keep them current

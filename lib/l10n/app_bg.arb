@@ -245,5 +245,18 @@
   "settingsDiceSoundLabel": "Звук на заровете",
   "settingsDiceSoundRealistic": "Реалистичен",
   "settingsDiceSoundSynthetic": "Синтетичен",
-  "homeChipsHint": "Задръжте чип, за да видите името му."
+  "homeChipsHint": "Задръжте чип, за да видите името му.",
+  "emoteThoughtful": "Замислен",
+  "emoteMocking": "Подигравателен",
+  "emoteDevastated": "Съкрушен",
+  "emoteJoyful": "Радостен",
+  "emotePhraseCoincidence": "Какво съвпадение",
+  "emotePhraseStickyFive": "Залепнала петица!",
+  "emotePhraseFullHandEmptyHand": "Пълна ръка, празна ръка!",
+  "emotePhraseNeverTakeA1000": "1000 никога не се поема",
+  "emotePhraseNoWay": "Не е възможно!",
+  "emotePhraseArgh": "Ааааргх!",
+  "emotePhraseHello": "Здрасти!",
+  "emotePhraseYes": "Да!",
+  "gameHistoryBar": "История"
 }
