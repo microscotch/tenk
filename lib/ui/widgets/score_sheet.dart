@@ -20,9 +20,8 @@ class ScoreSheet extends StatelessWidget {
   final Map<String, String> displayNames;
 
   /// Les bulles à montrer, par index de joueur : ce qu'il vient d'exprimer en
-  /// ligne (voir `EmoteBar`). Une bulle reste dans la hauteur de sa ligne, à
-  /// droite, pointée vers le nom — elle n'en déborde pas, la liste étant dans
-  /// une zone qui défile (et donc rogne).
+  /// ligne (voir `EmoteBar`). Une bulle part du blason du joueur et s'étend à
+  /// sa droite, sur plusieurs lignes s'il le faut (voir [_AvatarWithBubble]).
   final Map<int, String> bubbles;
 
   const ScoreSheet({
@@ -171,7 +170,10 @@ class _PlayerRow extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
+                      child: _AvatarWithBubble(
+                        bubble: bubble,
+                        child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
+                      ),
                     ),
                     Text(displayName,
                         style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -254,33 +256,97 @@ class _PlayerRow extends StatelessWidget {
         ),
       ),
     );
-    final bubble = this.bubble;
-    return Stack(
-      children: [
-        row,
-        Positioned(
-          top: 3,
-          bottom: 3,
-          right: 6,
-          child: Center(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              transitionBuilder: (child, animation) => ScaleTransition(
-                scale: animation,
+    return row;
+  }
+}
+
+/// Le blason d'un joueur, et la bulle de ce qu'il vient d'exprimer, quand il y
+/// en a une : pointe sur le bord droit du blason, centrée sur lui.
+///
+/// La bulle est dessinée dans l'overlay de la page, accrochée au blason (un
+/// [CompositedTransformFollower] suit son [CompositedTransformTarget]) : elle
+/// peut ainsi dépasser la hauteur de la ligne, sans être rognée par la zone qui
+/// défile, tout en suivant la ligne quand elle défile.
+class _AvatarWithBubble extends StatefulWidget {
+  final String? bubble;
+  final Widget child;
+
+  const _AvatarWithBubble({required this.bubble, required this.child});
+
+  @override
+  State<_AvatarWithBubble> createState() => _AvatarWithBubbleState();
+}
+
+class _AvatarWithBubbleState extends State<_AvatarWithBubble> {
+  final _link = LayerLink();
+  final _portal = OverlayPortalController();
+
+  /// La dernière bulle montrée, gardée le temps qu'elle s'efface.
+  String? _shown;
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_AvatarWithBubble old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    if (widget.bubble == null) return;
+    _shown = widget.bubble;
+    if (_portal.isShowing) return;
+    // Pas pendant la construction de l'arbre, que `show` refuse : juste après.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.bubble != null && !_portal.isShowing) _portal.show();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = widget.bubble != null;
+    return CompositedTransformTarget(
+      link: _link,
+      child: OverlayPortal(
+        controller: _portal,
+        // Un `Positioned` sans taille : le suiveur prend celle de la bulle, que
+        // `followerAnchor` peut alors centrer sur le blason (sans lui, il
+        // prendrait tout l'overlay).
+        overlayChildBuilder: (_) => Positioned(
+          left: 0,
+          top: 0,
+          child: CompositedTransformFollower(
+            link: _link,
+            targetAnchor: Alignment.centerRight,
+            followerAnchor: Alignment.centerLeft,
+            offset: const Offset(2, 0),
+            child: IgnorePointer(
+              child: AnimatedScale(
+                scale: visible ? 1 : 0.6,
                 alignment: Alignment.centerLeft,
-                child: FadeTransition(opacity: animation, child: child),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutBack,
+                child: AnimatedOpacity(
+                  opacity: visible ? 1 : 0,
+                  duration: const Duration(milliseconds: 180),
+                  onEnd: () {
+                    if (!visible && mounted) _portal.hide();
+                  },
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 240),
+                    child: SpeechBubble(text: _shown ?? ''),
+                  ),
+                ),
               ),
-              child: bubble == null
-                  ? const SizedBox.shrink()
-                  : ConstrainedBox(
-                      key: ValueKey(bubble),
-                      constraints: const BoxConstraints(maxWidth: 220),
-                      child: SpeechBubble(text: bubble),
-                    ),
             ),
           ),
         ),
-      ],
+        child: widget.child,
+      ),
     );
   }
 }

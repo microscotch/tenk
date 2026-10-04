@@ -11,7 +11,10 @@ import 'widgets/casino_felt_background.dart';
 /// Les écrans sont transparents (voir `buildAppTheme`) : le feutre de table est
 /// peint une fois derrière le navigateur. Un glissé laisserait donc voir la page
 /// qui part à travers celle qui arrive. Chaque page porte ici son propre feutre,
-/// pour glisser d'un bloc, opaque.
+/// pour glisser d'un bloc, opaque — un feutre dessiné comme fixé à l'écran
+/// ([ScreenFixedFeltBackground]) : seul le contenu glisse, l'éclairage du
+/// tapis (dégradé, vignette) et ses losanges ne bougent pas, sans quoi le fond
+/// paraît terne le temps du passage.
 class FeltTileSlidePageTransitionsBuilder extends PageTransitionsBuilder {
   const FeltTileSlidePageTransitionsBuilder();
 
@@ -36,7 +39,10 @@ class FeltTileSlidePageTransitionsBuilder extends PageTransitionsBuilder {
       context,
       animation,
       secondaryAnimation,
-      Stack(children: [const CasinoFeltBackground(), child]),
+      Stack(children: [
+        ScreenFixedFeltBackground(motion: Listenable.merge([animation, secondaryAnimation])),
+        child,
+      ]),
     );
   }
 }

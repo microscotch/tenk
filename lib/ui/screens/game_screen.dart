@@ -35,6 +35,7 @@ import 'pass_device_screen.dart';
 import 'game_statistics_screen.dart';
 import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
+import 'settings_screen.dart';
 
 /// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
 /// nombre de 5 que le joueur envisage de garder (aperçu avant validation).
@@ -1814,29 +1815,41 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Le menu de la barre du haut (☰) : grille des scores, évolution des
+  /// scores, bilan de la partie et paramètres — trop d'icônes pour les aligner
+  /// une à une dans la barre.
   List<Widget> _scoreGridAction(List<Player> players) {
     // En mode rejeu, seul le retour compte (retour standard, voir
-    // [AppTopBar]) : pas d'icône grille de score. Les commandes du rejeu (vitesse comprise)
+    // [AppTopBar]) : pas de menu. Les commandes du rejeu (vitesse comprise)
     // sont en bas de l'écran, sous le journal.
     if (widget.replayMode) return const [];
 
     final l10n = AppLocalizations.of(context);
+    PopupMenuItem<VoidCallback> item(IconData icon, String label, VoidCallback open) => PopupMenuItem(
+          value: open,
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(icon),
+            title: Text(label),
+          ),
+        );
     return [
-      IconButton(
-        icon: const Icon(Icons.grid_on),
-        tooltip: l10n.scoreGridLabel,
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)),
-        ),
+      PopupMenuButton<VoidCallback>(
+        icon: const Icon(Icons.menu),
+        onSelected: (open) => open(),
+        itemBuilder: (_) => [
+          item(Icons.grid_on, l10n.scoreGridLabel, () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)));
+          }),
+          item(Icons.show_chart, l10n.scoreChartTitle, () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScoreChartScreen()));
+          }),
+          item(Icons.bar_chart, l10n.gameStatsTitle, () => _openGameStats(context)),
+          item(Icons.settings, l10n.settingsTooltip, () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+          }),
+        ],
       ),
-      IconButton(
-        icon: const Icon(Icons.show_chart),
-        tooltip: l10n.scoreChartTitle,
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ScoreChartScreen()),
-        ),
-      ),
-      _gameStatsButton(context),
     ];
   }
 
@@ -1848,20 +1861,22 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return IconButton(
       icon: const Icon(Icons.bar_chart),
       tooltip: AppLocalizations.of(context).gameStatsTitle,
-      onPressed: () {
-        final engine = ref.read(gameProvider);
-        final record = ref.read(gameProvider.notifier).gameRecord;
-        if (engine == null || record == null) return;
-        Navigator.of(navigatorContext).push(
-          MaterialPageRoute(
-            builder: (_) => GameStatisticsScreen(
-              players: engine.players,
-              winnerIndex: engine.winnerIndex,
-              record: record,
-            ),
-          ),
-        );
-      },
+      onPressed: () => _openGameStats(navigatorContext),
+    );
+  }
+
+  void _openGameStats(BuildContext navigatorContext) {
+    final engine = ref.read(gameProvider);
+    final record = ref.read(gameProvider.notifier).gameRecord;
+    if (engine == null || record == null) return;
+    Navigator.of(navigatorContext).push(
+      MaterialPageRoute(
+        builder: (_) => GameStatisticsScreen(
+          players: engine.players,
+          winnerIndex: engine.winnerIndex,
+          record: record,
+        ),
+      ),
     );
   }
 
@@ -1976,8 +1991,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   ),
                   const SizedBox(height: 12),
                 ],
-                Text(
-                  l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice),
+                // Les dés qu'une extension fait valoir 100 dans la suite de cette
+                // main : à savoir avant de la reprendre.
+                Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: l10n.inheritedHandDialogMessage(engine.inheritedScore, engine.nextTurnDice)),
+                    ..._extensionSpans(engine.inheritedExtendedValues, glyphSize: 15),
+                  ]),
                   textAlign: TextAlign.center,
                 ),
                 // En rejeu, rien à consulter : la popup se referme d'elle-même,
@@ -2115,6 +2135,44 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ),
       ],
     );
+  }
+
+  /// « · (un dé) = 100 » : la valeur que la règle d'extension fait valoir 100 dans
+  /// la suite de la main, à la suite d'un libellé de score (zone « Main
+  /// courante », popup de reprise). Rien quand aucune ne s'applique.
+  ///
+  /// La valeur 1 est filtrée : `applyKeep` l'y met dès qu'un as isolé est gardé
+  /// (les as isolés sont des groupes obligatoires), mais un as vaut déjà 100 —
+  /// l'annoncer n'apprendrait rien. Après ce filtre il reste au plus UNE
+  /// valeur : la seule façon d'en ajouter une est un brelan/carré, qui laisse au
+  /// plus 2 dés à relancer — de quoi ne jamais refaire de brelan avant la main
+  /// pleine, qui remet ces valeurs à zéro. Une main pleine efface donc la
+  /// mention EN MÊME TEMPS que les dés rouges qu'elle explique.
+  ///
+  /// Elle n'est volontairement PAS rouge comme ces dés : sur le feutre vert, un
+  /// rouge se lit mal et n'attire pas l'œil (voir [kExtensionLabelColor]). Le dé
+  /// est dessiné et non écrit (ni chiffre, ni caractère ⚁⚂⚃⚄⚅, qu'aucune police
+  /// embarquée ne couvre) ; un WidgetSpan ne prenant pas la taille de la police
+  /// ambiante, [glyphSize] la fixe sous la hauteur de ligne du libellé.
+  List<InlineSpan> _extensionSpans(Set<int> extendedValues, {required double glyphSize}) {
+    final extended = extendedValues.where((v) => v != 1).toList()..sort();
+    if (extended.isEmpty) return const [];
+    return [
+      const TextSpan(text: '  ·  '),
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: DieGlyph(
+          value: extended.first,
+          state: DieVisualState.extended,
+          size: glyphSize,
+          accent: kExtensionLabelColor,
+          // Des pips sombres : rouges sur le corps ivoire du glyphe, ils se
+          // lisaient mal à cette taille, le 6 surtout.
+          pipColor: pipColorFor(DieVisualState.kept),
+        ),
+      ),
+      const TextSpan(text: ' = 100', style: TextStyle(color: kExtensionLabelColor)),
+    ];
   }
 
   Widget _inheritedHandActions(
@@ -2303,14 +2361,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         : keptDisplayOrder(pendingAnalysis);
     final totalCount = kept.length + pendingOrder.length;
     // [extendedValues] vient de `build` et reflète déjà la garde en cours, pas
-    // seulement ce que le moteur a encaissé. La valeur 1 est filtrée ici :
-    // `applyKeep` l'y met dès qu'un as isolé est gardé (les as isolés sont des
-    // groupes obligatoires), mais un as vaut déjà 100 — l'annoncer
-    // n'apprendrait rien. Après ce filtre il reste au plus UNE valeur : la
-    // seule façon d'en ajouter une est un brelan/carré, qui laisse au plus
-    // 2 dés à relancer — de quoi ne jamais refaire de brelan avant la main
-    // pleine, qui remet ces valeurs à zéro.
-    final extended = extendedValues.where((v) => v != 1).toList()..sort();
+    // seulement ce que le moteur a encaissé (voir [_extensionSpans]).
     return BorderedSection(
       label: l10n.currentHandZoneLabel,
       fillAvailableSpace: false,
@@ -2329,39 +2380,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           text: ' (>$minimum)',
           style: TextStyle(color: minimumColor),
         ),
-        // Une main pleine efface la règle d'extension EN MÊME TEMPS que les
-        // dés gardés : cette mention et les dés rouges qu'elle explique
-        // disparaissent donc ensemble, sans traitement particulier ici. Elle
-        // n'est volontairement PAS rouge comme ces dés : sur le feutre vert,
-        // un rouge se lit mal et n'attire pas l'œil (voir
-        // [kExtensionLabelColor]).
-        if (extended.isNotEmpty) ...[
-          const TextSpan(text: '  ·  '),
-          // Le dé est dessiné et non écrit en chiffre : c'est l'objet dont on
-          // parle. Pas de caractère Unicode non plus (⚁⚂⚃⚄⚅) — aucune police
-          // embarquée ne les couvre et le thème n'en impose aucune, leur rendu
-          // dépendrait donc d'un repli de plateforme.
-          //
-          // Un WidgetSpan ne se dimensionne pas sur la police ambiante : la
-          // taille est fixée à la main, sous la hauteur de ligne du libellé
-          // (12 px) pour ne pas faire grossir la pastille incrustée.
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: DieGlyph(
-              value: extended.first,
-              state: DieVisualState.extended,
-              size: 13,
-              accent: kExtensionLabelColor,
-              // Des pips sombres : rouges sur le corps ivoire du glyphe, ils se
-              // lisaient mal à cette taille, le 6 surtout.
-              pipColor: pipColorFor(DieVisualState.kept),
-            ),
-          ),
-          TextSpan(
-            text: ' = 100',
-            style: const TextStyle(color: kExtensionLabelColor),
-          ),
-        ],
+        ..._extensionSpans(extendedValues, glyphSize: 13),
       ],
       child: _DiceZoneBody(
         child: totalCount == 0

@@ -18,6 +18,7 @@ import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/online_room_screen.dart';
 import 'package:le10000/ui/share.dart';
 import 'package:le10000/ui/widgets/emotes.dart';
+import 'package:le10000/ui/widgets/player_avatar.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
@@ -594,8 +595,21 @@ void main() {
 
     Finder emoteButton(String name) => find.bySemanticsLabel(name);
 
-    /// La ligne du joueur [name] dans la liste des joueurs.
-    Finder rowOf(String name) => find.ancestor(of: find.text(name), matching: find.byType(Stack)).first;
+    /// Le blason du joueur [name] dans la liste des joueurs.
+    Finder avatarOf(String name) => find.byWidgetPredicate((w) => w is PlayerAvatarWidget && w.name == name).first;
+
+    testWidgets('une phrase longue passe à la ligne au lieu d\'être tronquée', (tester) async {
+      await joined(tester);
+
+      transport.current.serverSends(ServerMessage.emote(seat: 0, emote: Emote.mocking, phrase: 'neverTakeA1000'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300)); // la bulle s'ouvre à la frame suivante
+
+      final text = tester.widget<Text>(find.descendant(of: find.byType(SpeechBubble), matching: find.byType(Text)));
+      expect(text.maxLines, isNull);
+      expect(text.overflow, isNot(TextOverflow.ellipsis));
+      expect(tester.getSize(find.byType(SpeechBubble)).width, lessThanOrEqualTo(240));
+    });
 
     testWidgets('en ligne : quatre boutons d\'émotion et une barre Historique, à la place du journal', (tester) async {
       await joined(tester);
@@ -655,11 +669,15 @@ void main() {
       // Bob est au siège 1, mais en tête de la liste (il joue en premier).
       transport.current.serverSends(ServerMessage.emote(seat: 1, emote: Emote.mocking, phrase: 'stickyFive'));
       await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300)); // la bulle s'ouvre à la frame suivante
 
       final bubble = find.widgetWithText(SpeechBubble, 'Cinq qui colle !');
       expect(bubble, findsOneWidget);
-      expect(find.descendant(of: rowOf('Bob'), matching: bubble), findsOneWidget, reason: 'sur la ligne de Bob');
-      expect(find.descendant(of: rowOf('Anna'), matching: bubble), findsNothing);
+      // La bulle part du blason de Bob : collée à son bord droit, centrée sur lui.
+      final bob = tester.getRect(avatarOf('Bob'));
+      final rect = tester.getRect(bubble);
+      expect(rect.left, closeTo(bob.right, 4), reason: 'la pointe touche le blason de Bob');
+      expect(rect.center.dy, closeTo(bob.center.dy, 1), reason: 'à la hauteur de Bob, pas d\'Anna');
 
       await tester.pump(GameScreen.bubbleDuration);
       await tester.pump(const Duration(milliseconds: 300));

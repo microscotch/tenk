@@ -8,6 +8,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/game_statistics_screen.dart';
+import 'package:le10000/ui/screens/settings_screen.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
@@ -45,13 +46,35 @@ void main() {
 
   Finder inAppBar(Finder f) => find.descendant(of: find.byType(AppBar), matching: f);
 
-  testWidgets('la barre de l\'écran de jeu porte le bilan de la partie, après la courbe', (tester) async {
-    await pumpResumedGame(tester);
+  /// Ouvre le menu (☰) de la barre de l'écran de jeu.
+  Future<void> openMenu(WidgetTester tester) async {
+    await tester.tap(inAppBar(find.byIcon(Icons.menu)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
 
-    final chart = tester.getRect(inAppBar(find.byTooltip('Évolution des scores')));
-    final stats = tester.getRect(inAppBar(find.byTooltip('Statistiques de la partie')));
-    expect(stats.left, greaterThanOrEqualTo(chart.right), reason: 'le bilan vient après la courbe');
-    expect(inAppBar(find.byIcon(Icons.bar_chart)), findsOneWidget);
+  testWidgets('le menu de la barre porte la grille, la courbe, le bilan de la partie, puis les paramètres', (tester) async {
+    await pumpResumedGame(tester);
+    await openMenu(tester);
+
+    double top(String label) => tester.getTopLeft(find.text(label)).dy;
+    expect(top('Grille des scores'), lessThan(top('Évolution des scores')));
+    expect(top('Évolution des scores'), lessThan(top('Statistiques de la partie')));
+    expect(top('Statistiques de la partie'), lessThan(top('Paramètres')));
+    expect(find.byIcon(Icons.bar_chart), findsOneWidget);
+    expect(inAppBar(find.byIcon(Icons.grid_on)), findsNothing, reason: 'plus d\'icônes alignées dans la barre');
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('le menu ouvre les paramètres', (tester) async {
+    await pumpResumedGame(tester);
+    await openMenu(tester);
+
+    await tester.tap(find.text('Paramètres'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(SettingsScreen), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -66,7 +89,8 @@ void main() {
     ).bySeat.fold(0, (sum, s) => sum + s.rollsTotal);
     expect(expected, greaterThan(0), reason: 'prémisse : la partie a déjà des lancers');
 
-    await tester.tap(inAppBar(find.byTooltip('Statistiques de la partie')));
+    await openMenu(tester);
+    await tester.tap(find.text('Statistiques de la partie'));
     await tester.pumpAndSettle();
 
     expect(find.byType(GameStatisticsScreen), findsOneWidget);
@@ -77,9 +101,9 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('en rejeu, la barre ne porte pas le bilan', (tester) async {
+  testWidgets('en rejeu, la barre ne porte pas de menu', (tester) async {
     await pumpResumedGame(tester, replay: true);
-    expect(inAppBar(find.byTooltip('Statistiques de la partie')), findsNothing);
+    expect(inAppBar(find.byIcon(Icons.menu)), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
 }

@@ -298,6 +298,70 @@ void main() {
     expect(find.descendant(of: score, matching: find.byIcon(Icons.remove)), findsNothing);
   });
 
+  testWidgets('la popup de main héritée annonce le dé qui vaut 100 quand une extension s\'applique',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Un brelan de 4 déjà gardé : un 4 isolé vaudra 100 dans la suite de la main.
+    const kept = [
+      KeptDie(value: 4, points: 400, isExtended: false),
+      KeptDie(value: 4, points: 0, isExtended: false),
+      KeptDie(value: 4, points: 0, isExtended: false),
+    ];
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 2,
+      inheritedScore: 400,
+      inheritedKeptDice: kept,
+      inheritedExtendedValues: {4},
+    );
+    container.read(gameProvider.notifier).debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final inDialog = find.byType(AlertDialog);
+    expect(find.descendant(of: inDialog, matching: find.textContaining('= 100', findRichText: true)), findsOneWidget);
+    final glyph = tester.widget<DieGlyph>(find.descendant(of: inDialog, matching: find.byType(DieGlyph)));
+    expect(glyph.value, 4);
+  });
+
+  testWidgets('sans extension, la popup de main héritée n\'annonce rien de plus', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    var engine = GameEngine.newGame(['A', 'B']);
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      nextTurnDice: 2,
+      inheritedScore: 300,
+      inheritedKeptDice: const [
+        KeptDie(value: 1, points: 100, isExtended: false),
+        KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
+        KeptDie(value: 5, points: 50, isExtended: false, rollIndex: 1),
+      ],
+      inheritedExtendedValues: {1},
+    );
+    container.read(gameProvider.notifier).debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('= 100', findRichText: true)), findsNothing,
+        reason: 'un as vaut déjà 100 : rien à annoncer');
+  });
+
   testWidgets('la popup de main héritée montre les dés déjà mis de côté, sur une seule ligne',
       (tester) async {
     final container = ProviderContainer();

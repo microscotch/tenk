@@ -165,7 +165,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.grid_on));
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Grille des scores'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ScoreGridScreen), findsOneWidget);

@@ -130,7 +130,9 @@ class _EmoteBarState extends State<EmoteBar> {
   }
 }
 
-/// Une bulle de bande dessinée, sa pointe à gauche vers le joueur qui parle.
+/// Une bulle de bande dessinée, sa pointe à gauche vers le blason du joueur
+/// qui parle. Le texte passe à la ligne plutôt que d'être tronqué ; corps et
+/// pointe forment un seul contour, sans raccord visible.
 class SpeechBubble extends StatelessWidget {
   final String text;
 
@@ -138,20 +140,23 @@ class SpeechBubble extends StatelessWidget {
 
   static const _paper = Color(0xFFFFFBF0);
   static const _ink = Color(0xFF2A2116);
-  static const _tail = 8.0;
+  static const _outline = Color(0xFF8A6A2E);
+
+  /// La longueur de la pointe, du bord du corps à son extrémité.
+  static const tail = 14.0;
 
   @override
   Widget build(BuildContext context) {
+    // Un émoji seul (l'émotion sans phrase) se lit en plus grand.
+    final emojiOnly = text.runes.length <= 2;
     return CustomPaint(
-      painter: const _BubblePainter(color: _paper, tail: _tail),
+      painter: const _BubblePainter(fill: _paper, outline: _outline, tail: tail),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(_tail + 10, 4, 10, 4),
+        padding: EdgeInsets.fromLTRB(tail + 10, emojiOnly ? 2 : 6, 12, emojiOnly ? 2 : 6),
         child: Text(
           text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          // Un émoji seul (l'émotion sans phrase) se lit en plus grand.
-          style: TextStyle(color: _ink, fontWeight: FontWeight.w700, fontSize: text.runes.length <= 2 ? 22 : 14),
+          softWrap: true,
+          style: TextStyle(color: _ink, fontWeight: FontWeight.w700, fontSize: emojiOnly ? 22 : 14, height: 1.25),
         ),
       ),
     );
@@ -159,26 +164,45 @@ class SpeechBubble extends StatelessWidget {
 }
 
 class _BubblePainter extends CustomPainter {
-  final Color color;
+  final Color fill;
+  final Color outline;
   final double tail;
 
-  const _BubblePainter({required this.color, required this.tail});
+  const _BubblePainter({required this.fill, required this.outline, required this.tail});
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final body = RRect.fromRectAndRadius(Rect.fromLTRB(tail, 0, size.width, size.height), const Radius.circular(12));
+  /// Le contour : le corps arrondi et sa pointe, réunis en une seule forme.
+  Path _shape(Size size) {
+    const radius = 14.0;
+    final body = Path()
+      ..addRRect(RRect.fromRectAndRadius(Rect.fromLTRB(tail, 0, size.width, size.height), const Radius.circular(radius)));
+    // La pointe part du milieu du bord gauche, assez large à la base pour se
+    // fondre dans le corps, et se termine en pointe vers le blason.
+    final middle = size.height / 2;
+    final halfBase = (size.height / 2 - 3).clamp(6.0, 11.0);
+    // Deux courbes creusées vers l'intérieur, qui se rejoignent en une pointe
+    // nette juste à côté du blason : la pointe d'une bulle de bande dessinée.
     final pointer = Path()
-      ..moveTo(tail + 1, size.height * 0.35)
-      ..lineTo(0, size.height * 0.75)
-      ..lineTo(tail + 1, size.height * 0.65)
+      ..moveTo(tail + radius, middle - halfBase)
+      ..quadraticBezierTo(tail * 0.55, middle - halfBase * 0.25, 0, middle + 3)
+      ..quadraticBezierTo(tail * 0.75, middle + halfBase * 0.55, tail + radius, middle + halfBase)
       ..close();
-    final path = Path()
-      ..addRRect(body)
-      ..addPath(pointer, Offset.zero);
-    canvas.drawShadow(path, Colors.black, 3, false);
-    canvas.drawPath(path, Paint()..color = color);
+    return Path.combine(PathOperation.union, body, pointer);
   }
 
   @override
-  bool shouldRepaint(_BubblePainter old) => old.color != color || old.tail != tail;
+  void paint(Canvas canvas, Size size) {
+    final shape = _shape(size);
+    canvas.drawShadow(shape, Colors.black, 4, false);
+    canvas.drawPath(shape, Paint()..color = fill);
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..color = outline
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BubblePainter old) => old.fill != fill || old.outline != outline || old.tail != tail;
 }

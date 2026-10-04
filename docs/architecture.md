@@ -217,7 +217,7 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   l'ignore sans réponse avant le départ ou à moins de `emoteCooldown` (3 s) de la précédente du même siège, et la
   relaie (`ServerMessage.emote`, avec le siège) à tous ceux qui ont annoncé `emotesFeature`, l'envoyeur compris. **Hors
   du journal** : ni `seq`, ni action, rien d'archivé ni de rejoué. Côté app, `onlineEmotesProvider` garde les dernières
-  reçues ; l'écran de jeu en fait une bulle sur la ligne du joueur (siège → index par l'ordre de jeu) et une ligne de
+  reçues ; l'écran de jeu en fait une bulle partant du blason du joueur (siège → index par l'ordre de jeu), dessinée dans l'overlay de la page pour pouvoir s'étendre sur plusieurs lignes sans être rognée par la zone qui défile, et une ligne de
   l'Historique — barre qui remplace le journal en ligne et l'ouvre en panneau. Une émotion illisible (version plus
   récente) est ignorée, pas resynchronisée.
 - **Fonctions facultatives négociées** plutôt qu'une nouvelle version du protocole, qui couperait les anciens

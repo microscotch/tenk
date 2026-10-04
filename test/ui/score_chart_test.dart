@@ -44,17 +44,18 @@ void main() {
     return container;
   }
 
-  testWidgets('l\'icône de courbe est dans la barre pendant une partie', (tester) async {
+  testWidgets('la courbe est dans le menu de la barre pendant une partie', (tester) async {
     await pumpGame(tester);
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.show_chart), findsOneWidget);
   });
 
-  testWidgets('elle disparaît en mode rejeu, comme la grille', (tester) async {
+  testWidgets('le menu disparaît en mode rejeu', (tester) async {
     await pumpGame(tester, replayMode: true);
 
-    expect(find.byIcon(Icons.show_chart), findsNothing);
-    expect(find.byIcon(Icons.grid_on), findsNothing);
+    expect(find.byIcon(Icons.menu), findsNothing);
   });
 
   testWidgets('sans journal, l\'écran le dit au lieu de planter', (tester) async {
@@ -62,6 +63,8 @@ void main() {
     // les tests d'écran de jeu, et celui d'un état reconstruit à la main.
     await pumpGame(tester);
 
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.show_chart));
     await tester.pumpAndSettle();
 

@@ -104,8 +104,8 @@ void main() {
     expect(find.byType(BackButton), findsNothing, reason: 'plus de flèche de retour');
     expect(find.byIcon(Icons.arrow_back), findsNothing);
     expect(find.byIcon(Icons.exit_to_app), findsNothing, reason: 'plus de bouton "quitter"');
-    expect(find.byIcon(Icons.grid_on), findsOneWidget,
-        reason: 'la grille de score, elle, reste accessible');
+    expect(find.byIcon(Icons.menu), findsOneWidget,
+        reason: 'le menu (grille, courbe, bilan, paramètres), lui, reste accessible');
   });
 
   testWidgets('fin de partie : le retour système ramène à l\'accueil, pile nettoyée',
