@@ -860,7 +860,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get emoteThoughtful => 'Замислен';
 
   @override
-  String get emoteMocking => 'Подигравателен';
+  String get emoteMocking => 'Умирам от смях';
 
   @override
   String get emoteDevastated => 'Съкрушен';

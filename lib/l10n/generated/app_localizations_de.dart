@@ -868,7 +868,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get emoteThoughtful => 'Nachdenklich';
 
   @override
-  String get emoteMocking => 'Spöttisch';
+  String get emoteMocking => 'Totgelacht';
 
   @override
   String get emoteDevastated => 'Am Boden zerstört';

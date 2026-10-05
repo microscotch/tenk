@@ -868,7 +868,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get emoteThoughtful => 'Pensieroso';
 
   @override
-  String get emoteMocking => 'Beffardo';
+  String get emoteMocking => 'Morto dal ridere';
 
   @override
   String get emoteDevastated => 'Distrutto';

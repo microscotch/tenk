@@ -1538,10 +1538,10 @@ abstract class AppLocalizations {
   /// **'Songeur'**
   String get emoteThoughtful;
 
-  /// Nom de l'émotion « moqueur ».
+  /// Nom de l'émotion « mort de rire » (identifiant `mocking`, gardé pour le protocole).
   ///
   /// In fr, this message translates to:
-  /// **'Moqueur'**
+  /// **'Mort de rire'**
   String get emoteMocking;
 
   /// Nom de l'émotion « dévasté ».

@@ -862,7 +862,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emoteThoughtful => 'Ettertenksom';
 
   @override
-  String get emoteMocking => 'Ertende';
+  String get emoteMocking => 'Dør av latter';
 
   @override
   String get emoteDevastated => 'Knust';

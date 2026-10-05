@@ -8,7 +8,7 @@ import '../../state/online_providers.dart';
 /// L'émoji d'une émotion : celui du système, pour être lu d'un coup d'œil.
 String emoteEmoji(Emote emote) => switch (emote) {
       Emote.thoughtful => '🤔',
-      Emote.mocking => '😏',
+      Emote.mocking => '🤣',
       Emote.devastated => '😭',
       Emote.joyful => '😄',
     };

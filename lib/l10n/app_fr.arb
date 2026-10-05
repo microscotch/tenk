@@ -765,8 +765,8 @@
   "emoteThoughtful": "Songeur",
   "@emoteThoughtful": {"description": "Nom de l'émotion « songeur » (bouton d'émotion en ligne, lu par les lecteurs d'écran)."},
 
-  "emoteMocking": "Moqueur",
-  "@emoteMocking": {"description": "Nom de l'émotion « moqueur »."},
+  "emoteMocking": "Mort de rire",
+  "@emoteMocking": {"description": "Nom de l'émotion « mort de rire » (identifiant `mocking`, gardé pour le protocole)."},
 
   "emoteDevastated": "Dévasté",
   "@emoteDevastated": {"description": "Nom de l'émotion « dévasté »."},

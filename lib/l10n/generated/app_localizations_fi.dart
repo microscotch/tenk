@@ -862,7 +862,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get emoteThoughtful => 'Mietteliäs';
 
   @override
-  String get emoteMocking => 'Pilkallinen';
+  String get emoteMocking => 'Kuolen nauruun';
 
   @override
   String get emoteDevastated => 'Murtunut';

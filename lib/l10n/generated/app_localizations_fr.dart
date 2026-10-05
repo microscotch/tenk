@@ -863,7 +863,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emoteThoughtful => 'Songeur';
 
   @override
-  String get emoteMocking => 'Moqueur';
+  String get emoteMocking => 'Mort de rire';
 
   @override
   String get emoteDevastated => 'Dévasté';

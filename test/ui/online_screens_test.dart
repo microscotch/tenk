@@ -663,24 +663,24 @@ void main() {
     testWidgets('en ligne : quatre boutons d\'émotion et une barre Historique, à la place du journal', (tester) async {
       await joined(tester);
 
-      for (final name in ['Songeur', 'Moqueur', 'Dévasté', 'Joyeux']) {
+      for (final name in ['Songeur', 'Mort de rire', 'Dévasté', 'Joyeux']) {
         expect(emoteButton(name), findsOneWidget, reason: name);
       }
       expect(find.text('Historique'), findsOneWidget);
-      expect(find.text('😏'), findsOneWidget);
+      expect(find.text('🤣'), findsOneWidget);
     });
 
     testWidgets('un serveur qui ne relaie pas les émotions : ni boutons, ni barre, le journal reste', (tester) async {
       await joined(tester, features: const [keepSelectionFeature]);
 
-      expect(emoteButton('Moqueur'), findsNothing);
+      expect(emoteButton('Mort de rire'), findsNothing);
       expect(find.text('Historique'), findsNothing);
     });
 
     testWidgets('un tap envoie l\'émoji ; les boutons restent grisés 3 secondes', (tester) async {
       await joined(tester);
 
-      await tester.tap(emoteButton('Moqueur'));
+      await tester.tap(emoteButton('Mort de rire'));
       await tester.pump();
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).toList();
       expect((sent.single.params['emote'], sent.single.params.containsKey('phrase')), ('mocking', false));
@@ -698,7 +698,7 @@ void main() {
     testWidgets('un appui long ouvre les phrases de l\'émotion ; en choisir une l\'envoie à la place de l\'émoji', (tester) async {
       await joined(tester);
 
-      await tester.longPress(emoteButton('Moqueur'));
+      await tester.longPress(emoteButton('Mort de rire'));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Cinq qui colle !'), findsOneWidget);
       expect(find.text('Main pleine, main vaine !'), findsOneWidget);

@@ -20,6 +20,8 @@ const Duration emoteCooldown = Duration(seconds: 3);
 /// Une émotion, et les phrases courtes qu'elle propose à l'appui long.
 enum Emote {
   thoughtful(['coincidence']),
+  /// « Mort de rire » à l'écran : le nom `mocking` (ex-« moqueur ») reste,
+  /// c'est l'identifiant qui voyage.
   mocking(['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000']),
   devastated(['noWay', 'argh']),
   joyful(['hello', 'yes']);

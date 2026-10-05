@@ -860,7 +860,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emoteThoughtful => 'Thoughtful';
 
   @override
-  String get emoteMocking => 'Mocking';
+  String get emoteMocking => 'Dying of laughter';
 
   @override
   String get emoteDevastated => 'Devastated';
