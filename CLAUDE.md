@@ -222,12 +222,14 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   shows nicknames with no game in progress), and `syncPlayerStatistics`, which recomputes every
   profile's statistics from the archived journals.
 - `update_check.dart` — the update offer at launch: `availableUpdateProvider` compares the installed build
-  number with `latest.json` on the **`store-builds` branch** (read through raw.githubusercontent.com), which
+  number with the server's `/latest-build` (`latestBuildUrlFor`: next to `/ws`), which relays — `LatestBuildRelay`,
+  re-read every 10 min, `TENK_LATEST_BUILDS_URL` — `latest.json` on the **`store-builds` branch**, which
   `tool/publish_store_build.sh` updates from `build_apk.yaml` **only after a real store upload** (the step's
   `outcome`, not its `continue-on-error` conclusion), with an `availableFrom` delay for store processing
   (15 min Play, 30 min TestFlight). The home screen shows it as `UpdateBanner`; "Plus tard" dismisses that
   build only. Debug builds and desktop never check. Never merge `store-builds` into `main`, and never move the
-  version number to a tag (the changelog counts commits since the last tag).
+  version number to a tag (the changelog counts commits since the last tag). Phones never contact GitHub (privacy
+  policy); the reverse proxy must forward `/latest-build` too.
 
 ### UI layer (`lib/ui/`)
 
@@ -297,7 +299,7 @@ sweep of expired rooms).
   `/.well-known/apple-app-site-association`, `/.well-known/assetlinks.json` (fingerprints from
   `TENK_ANDROID_CERT_SHA256`: the upload key **and** the Google Play signing key) and a static `/j/<code>` page
   that must never look a room up (it would let anyone probe codes around the failed-join limits). The reverse
-  proxy must forward `/.well-known/` and `/j/` as well as `/ws`. iOS needs Associated Domains (present in both
+  proxy must forward `/.well-known/`, `/j/` and `/latest-build` as well as `/ws`. iOS needs Associated Domains (present in both
   provisioning profiles): `ios/Runner/Runner.entitlements` for Release (TestFlight — iOS reads the AASA file
   through Apple's CDN, which only loads a domain when the app is installed from the App Store/TestFlight) and
   `Runner-Dev.entitlements` for Debug and Profile, whose `?mode=developer` makes iOS read the file straight from

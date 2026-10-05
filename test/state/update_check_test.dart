@@ -8,6 +8,11 @@ void main() {
   final past = DateTime.utc(2026, 10, 5, 1);
   final now = DateTime.utc(2026, 10, 5, 2);
 
+  test('latestBuildUrlFor : la route du serveur des parties, à côté de /ws', () {
+    expect(latestBuildUrlFor('wss://tenk.microscotch.net/ws'), Uri.parse('https://tenk.microscotch.net/latest-build'));
+    expect(latestBuildUrlFor('ws://localhost:8080/ws'), Uri.parse('http://localhost:8080/latest-build'));
+  });
+
   group('PublishedBuild.parse', () {
     const body =
         '{"android": {"version": "1.0.0", "build": 95, "availableFrom": "2026-10-05T01:00:00Z"},'

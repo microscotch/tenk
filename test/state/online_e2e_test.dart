@@ -30,7 +30,7 @@ void main() {
     await probe.close();
 
     server = await Process.start('dart', ['run', 'bin/server.dart'],
-        workingDirectory: 'server', environment: {'PORT': '$port', 'HOST': '127.0.0.1'});
+        workingDirectory: 'server', environment: {'PORT': '$port', 'HOST': '127.0.0.1', 'TENK_LATEST_BUILDS_URL': ''});
     final ready = Completer<void>();
     server.stdout.transform(utf8.decoder).listen((line) {
       if (line.contains('à l\'écoute') && !ready.isCompleted) ready.complete();

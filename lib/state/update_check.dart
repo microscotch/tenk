@@ -6,10 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Où l'application apprend le dernier build arrivé sur chaque store : un
+import 'online_providers.dart';
+
+/// Où l'application apprend le dernier build arrivé sur chaque store : la route
+/// `/latest-build` du serveur des parties en ligne, à côté de `/ws`
+/// (`wss://hôte/ws` → `https://hôte/latest-build`). Le serveur y relaie le
 /// fichier que la CI met à jour après un envoi réussi (voir
-/// `tool/publish_store_build.sh`), sur une branche à part du dépôt.
-const latestBuildsUrl = 'https://raw.githubusercontent.com/microscotch/tenk/store-builds/latest.json';
+/// `tool/publish_store_build.sh`) : l'application ne contacte que lui.
+Uri latestBuildUrlFor(String serverUrl) {
+  final server = Uri.parse(serverUrl);
+  return server.replace(scheme: server.scheme == 'ws' ? 'http' : 'https', path: '/latest-build', query: null);
+}
 
 /// Le store d'où vient l'application installée, et donc ses mises à jour.
 enum StorePlatform {
@@ -93,7 +100,10 @@ abstract interface class UpdateCheckEnvironment {
 }
 
 class DeviceUpdateCheckEnvironment implements UpdateCheckEnvironment {
-  const DeviceUpdateCheckEnvironment();
+  /// Voir [latestBuildUrlFor].
+  final Uri latestBuildUrl;
+
+  const DeviceUpdateCheckEnvironment(this.latestBuildUrl);
 
   static const _dismissedKey = 'update.dismissedBuild';
 
@@ -114,7 +124,7 @@ class DeviceUpdateCheckEnvironment implements UpdateCheckEnvironment {
   Future<String?> fetchLatestBuilds() async {
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
-      final request = await client.getUrl(Uri.parse(latestBuildsUrl));
+      final request = await client.getUrl(latestBuildUrl);
       final response = await request.close().timeout(const Duration(seconds: 10));
       if (response.statusCode != HttpStatus.ok) return null;
       return await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 10));
@@ -143,7 +153,9 @@ class DeviceUpdateCheckEnvironment implements UpdateCheckEnvironment {
   }
 }
 
-final updateCheckEnvironmentProvider = Provider<UpdateCheckEnvironment>((ref) => const DeviceUpdateCheckEnvironment());
+final updateCheckEnvironmentProvider = Provider<UpdateCheckEnvironment>(
+  (ref) => DeviceUpdateCheckEnvironment(latestBuildUrlFor(ref.read(onlineServerUrlProvider))),
+);
 
 /// La mise à jour à proposer au lancement (voir [updateToOffer]), ou nul. Vérifiée
 /// une fois par lancement de l'application ; n'échoue jamais : tout incident

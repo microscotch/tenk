@@ -1,7 +1,8 @@
 #!/bin/sh
 # Annonce aux applications installées qu'un build vient d'arriver sur un store :
 # met à jour `latest.json` sur la branche `store-builds`, que l'application lit
-# au lancement (via raw.githubusercontent.com, voir lib/state/update_check.dart)
+# au lancement (relayé par le serveur sur /latest-build, voir lib/state/update_check.dart
+# et server/src/latest_build.dart)
 # pour proposer la mise à jour :
 #
 #   {

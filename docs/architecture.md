@@ -177,8 +177,9 @@ pas.
   siège (`OnlineGameLink.myProfileId` → `playerIds`) : ma latéralité à mon tour, et
   une archive comptée pour elle par son identifiant, même jouée sous un surnom.
 - **La recherche de mise à jour** (`update_check.dart`) : au lancement, `availableUpdateProvider`
-  (`AvailableUpdate`) lit le numéro de build de l'app installée et le `latest.json` que la CI publie sur la
-  branche `store-builds` après un envoi **réussi** vers Google Play ou TestFlight
+  (`AvailableUpdate`) lit le numéro de build de l'app installée et la route `/latest-build` du serveur de jeu
+  (`latestBuildUrlFor`, à côté de `/ws`). Le serveur (`LatestBuildRelay`) y relaie, relu toutes les 10 minutes, le
+  `latest.json` que la CI publie sur la branche `store-builds` après un envoi **réussi** vers Google Play ou TestFlight
   (`tool/publish_store_build.sh`). `updateToOffer` décide, sans effet de bord : un build plus récent, déjà
   traité par le store (`availableFrom`), et pas écarté par « Plus tard » (retenu par build, pas pour
   toujours). Tout ce qui touche l'appareil et le réseau passe par `UpdateCheckEnvironment`, que les tests
