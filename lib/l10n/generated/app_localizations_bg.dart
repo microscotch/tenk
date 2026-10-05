@@ -869,7 +869,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get emoteJoyful => 'Прегръдка';
 
   @override
-  String get emotePhraseCoincidence => 'Какво съвпадение';
+  String get emotePhraseCoincidence => 'Какво съвпадение...';
 
   @override
   String get emotePhraseStickyFive => 'Залепнала петица!';
@@ -878,19 +878,40 @@ class AppLocalizationsBg extends AppLocalizations {
   String get emotePhraseFullHandEmptyHand => 'Пълна ръка, празна ръка!';
 
   @override
-  String get emotePhraseNeverTakeA1000 => '1000 никога не се поема';
+  String get emotePhraseNeverTakeA1000 => '1000 никога не се поема!';
 
   @override
-  String get emotePhraseNoWay => 'Не е възможно!';
+  String get emotePhraseNoWay => 'Просто невъзможно!';
 
   @override
-  String get emotePhraseArgh => 'Ааааргх!';
+  String get emotePhraseArgh => 'Аааааргх!';
 
   @override
   String get emotePhraseHello => 'Здрасти!';
 
   @override
   String get emotePhraseYes => 'Да!';
+
+  @override
+  String get emotePhraseTooGreedy => 'Прекалено алчен!';
+
+  @override
+  String get emotePhraseTooLucky => 'Малко прекалено голям късмет...';
+
+  @override
+  String get emotePhraseDryTenThousand => 'Направо към 10000';
+
+  @override
+  String get emotePhraseLucky => 'Късметлия!';
+
+  @override
+  String get emotePhraseGoodLuck => 'Успех!';
+
+  @override
+  String get emotePhraseThanks => 'Благодаря';
+
+  @override
+  String get emotePhraseSorryMustGo => 'Съжалявам, но трябва да тръгвам';
 
   @override
   String get gameHistoryBar => 'История';

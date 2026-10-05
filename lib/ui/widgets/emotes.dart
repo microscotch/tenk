@@ -32,6 +32,13 @@ String? emotePhrase(AppLocalizations l10n, String phrase) => switch (phrase) {
       'argh' => l10n.emotePhraseArgh,
       'hello' => l10n.emotePhraseHello,
       'yes' => l10n.emotePhraseYes,
+      'tooGreedy' => l10n.emotePhraseTooGreedy,
+      'tooLucky' => l10n.emotePhraseTooLucky,
+      'dryTenThousand' => l10n.emotePhraseDryTenThousand,
+      'lucky' => l10n.emotePhraseLucky,
+      'goodLuck' => l10n.emotePhraseGoodLuck,
+      'thanks' => l10n.emotePhraseThanks,
+      'sorryMustGo' => l10n.emotePhraseSorryMustGo,
       _ => null,
     };
 

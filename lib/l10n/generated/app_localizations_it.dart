@@ -877,7 +877,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get emoteJoyful => 'Abbraccio';
 
   @override
-  String get emotePhraseCoincidence => 'Che coincidenza';
+  String get emotePhraseCoincidence => 'Che coincidenza...';
 
   @override
   String get emotePhraseStickyFive => 'Il cinque non si stacca!';
@@ -886,19 +886,40 @@ class AppLocalizationsIt extends AppLocalizations {
   String get emotePhraseFullHandEmptyHand => 'Mano piena, mano vana!';
 
   @override
-  String get emotePhraseNeverTakeA1000 => 'Un 1000 non si riprende mai';
+  String get emotePhraseNeverTakeA1000 => 'Un 1000 non si riprende mai!';
 
   @override
-  String get emotePhraseNoWay => 'Non è possibile!';
+  String get emotePhraseNoWay => 'Semplicemente impossibile!';
 
   @override
-  String get emotePhraseArgh => 'Aaaargh!';
+  String get emotePhraseArgh => 'Aaaaaargh!';
 
   @override
   String get emotePhraseHello => 'Ciao!';
 
   @override
   String get emotePhraseYes => 'Sì!';
+
+  @override
+  String get emotePhraseTooGreedy => 'Troppo ingordo!';
+
+  @override
+  String get emotePhraseTooLucky => 'Un po\' troppo fortunato...';
+
+  @override
+  String get emotePhraseDryTenThousand => 'Dritto ai 10000';
+
+  @override
+  String get emotePhraseLucky => 'Che fortunello!';
+
+  @override
+  String get emotePhraseGoodLuck => 'Buona fortuna!';
+
+  @override
+  String get emotePhraseThanks => 'Grazie';
+
+  @override
+  String get emotePhraseSorryMustGo => 'Scusate, ma devo andare';
 
   @override
   String get gameHistoryBar => 'Cronologia';

@@ -1556,10 +1556,10 @@ abstract class AppLocalizations {
   /// **'Câlin'**
   String get emoteJoyful;
 
-  /// Phrase de l'émotion songeur : on soupçonne un coup de chance trop beau.
+  /// Phrase de l'émotion dévasté (ex-songeur, identifiant gardé) : on soupçonne un coup de chance trop beau.
   ///
   /// In fr, this message translates to:
-  /// **'Comme de par hasard'**
+  /// **'Comme de par hasard...'**
   String get emotePhraseCoincidence;
 
   /// Phrase moqueuse : un 5 seul qu'on est obligé de garder.
@@ -1577,19 +1577,19 @@ abstract class AppLocalizations {
   /// Phrase moqueuse : dicton du jeu, on ne reprend jamais une main de 1000.
   ///
   /// In fr, this message translates to:
-  /// **'On reprend jamais un 1000'**
+  /// **'On ne reprend jamais sur un 1000 !'**
   String get emotePhraseNeverTakeA1000;
 
   /// Phrase de l'émotion dévasté.
   ///
   /// In fr, this message translates to:
-  /// **'C\'est pas possible !'**
+  /// **'Juste pas possible !'**
   String get emotePhraseNoWay;
 
   /// Cri de dépit de l'émotion dévasté.
   ///
   /// In fr, this message translates to:
-  /// **'Aaaarg !'**
+  /// **'Aaaaaarg !'**
   String get emotePhraseArgh;
 
   /// Salutation de l'émotion câlin.
@@ -1598,11 +1598,53 @@ abstract class AppLocalizations {
   /// **'Salut !'**
   String get emotePhraseHello;
 
-  /// Cri de joie de l'émotion câlin.
+  /// Cri de joie de l'émotion câlin, retiré du menu : seulement affiché quand une app plus ancienne l'envoie.
   ///
   /// In fr, this message translates to:
   /// **'Yes !'**
   String get emotePhraseYes;
+
+  /// Phrase de l'émotion mort de rire : l'autre a trop tenté sa chance et a tout perdu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop gourmand !'**
+  String get emotePhraseTooGreedy;
+
+  /// Phrase de l'émotion songeur : on soupçonne une chance trop belle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un peu trop chanceux...'**
+  String get emotePhraseTooLucky;
+
+  /// Phrase de l'émotion songeur : l'autre semble foncer droit sur les 10000 (« sec » : d'un coup, sans détour).
+  ///
+  /// In fr, this message translates to:
+  /// **'En mode 10000 sec'**
+  String get emotePhraseDryTenThousand;
+
+  /// Phrase de l'émotion dévasté : « veinard, va ! », dit d'un adversaire chanceux.
+  ///
+  /// In fr, this message translates to:
+  /// **'Veinard va !'**
+  String get emotePhraseLucky;
+
+  /// Souhait de l'émotion câlin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonne chance !'**
+  String get emotePhraseGoodLuck;
+
+  /// Remerciement de l'émotion câlin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci'**
+  String get emotePhraseThanks;
+
+  /// Phrase de l'émotion câlin : on s'excuse de devoir quitter la partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désolé mais je dois partir'**
+  String get emotePhraseSorryMustGo;
 
   /// Barre qui ouvre l'historique (le journal) d'une partie en ligne.
   ///

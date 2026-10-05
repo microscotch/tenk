@@ -871,7 +871,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get emoteJoyful => 'Halaus';
 
   @override
-  String get emotePhraseCoincidence => 'Mikä sattuma';
+  String get emotePhraseCoincidence => 'Mikä sattuma...';
 
   @override
   String get emotePhraseStickyFive => 'Viitonen tarttuu!';
@@ -880,19 +880,40 @@ class AppLocalizationsFi extends AppLocalizations {
   String get emotePhraseFullHandEmptyHand => 'Täysi käsi, tyhjä käsi!';
 
   @override
-  String get emotePhraseNeverTakeA1000 => 'Tuhatta ei koskaan oteta';
+  String get emotePhraseNeverTakeA1000 => 'Tuhatta ei koskaan oteta!';
 
   @override
-  String get emotePhraseNoWay => 'Ei voi olla totta!';
+  String get emotePhraseNoWay => 'Yksinkertaisesti mahdotonta!';
 
   @override
-  String get emotePhraseArgh => 'Aaaargh!';
+  String get emotePhraseArgh => 'Aaaaaargh!';
 
   @override
   String get emotePhraseHello => 'Moi!';
 
   @override
   String get emotePhraseYes => 'Jes!';
+
+  @override
+  String get emotePhraseTooGreedy => 'Liian ahne!';
+
+  @override
+  String get emotePhraseTooLucky => 'Vähän liian onnekas...';
+
+  @override
+  String get emotePhraseDryTenThousand => 'Suoraan 10000:een';
+
+  @override
+  String get emotePhraseLucky => 'Onnenpekka!';
+
+  @override
+  String get emotePhraseGoodLuck => 'Onnea!';
+
+  @override
+  String get emotePhraseThanks => 'Kiitos';
+
+  @override
+  String get emotePhraseSorryMustGo => 'Sori, mutta minun täytyy lähteä';
 
   @override
   String get gameHistoryBar => 'Historia';

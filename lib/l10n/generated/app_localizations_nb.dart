@@ -871,7 +871,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emoteJoyful => 'Klem';
 
   @override
-  String get emotePhraseCoincidence => 'For et sammentreff';
+  String get emotePhraseCoincidence => 'For et sammentreff...';
 
   @override
   String get emotePhraseStickyFive => 'Femmeren som klistrer!';
@@ -880,19 +880,40 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emotePhraseFullHandEmptyHand => 'Full hånd, tom hånd!';
 
   @override
-  String get emotePhraseNeverTakeA1000 => 'En 1000 tar man aldri over';
+  String get emotePhraseNeverTakeA1000 => 'En 1000 tar man aldri over!';
 
   @override
-  String get emotePhraseNoWay => 'Det er ikke mulig!';
+  String get emotePhraseNoWay => 'Rett og slett umulig!';
 
   @override
-  String get emotePhraseArgh => 'Aaaargh!';
+  String get emotePhraseArgh => 'Aaaaaargh!';
 
   @override
   String get emotePhraseHello => 'Hei!';
 
   @override
   String get emotePhraseYes => 'Ja!';
+
+  @override
+  String get emotePhraseTooGreedy => 'For grådig!';
+
+  @override
+  String get emotePhraseTooLucky => 'Litt vel heldig...';
+
+  @override
+  String get emotePhraseDryTenThousand => 'Rett til 10000';
+
+  @override
+  String get emotePhraseLucky => 'Din heldiggris!';
+
+  @override
+  String get emotePhraseGoodLuck => 'Lykke til!';
+
+  @override
+  String get emotePhraseThanks => 'Takk';
+
+  @override
+  String get emotePhraseSorryMustGo => 'Beklager, men jeg må gå';
 
   @override
   String get gameHistoryBar => 'Historikk';

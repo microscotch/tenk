@@ -880,7 +880,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get emoteJoyful => 'Îmbrățișare';
 
   @override
-  String get emotePhraseCoincidence => 'Ce coincidență';
+  String get emotePhraseCoincidence => 'Ce coincidență...';
 
   @override
   String get emotePhraseStickyFive => 'Un cinci lipicios!';
@@ -889,19 +889,40 @@ class AppLocalizationsRo extends AppLocalizations {
   String get emotePhraseFullHandEmptyHand => 'Mână plină, mână goală!';
 
   @override
-  String get emotePhraseNeverTakeA1000 => 'Un 1000 nu se reia niciodată';
+  String get emotePhraseNeverTakeA1000 => 'Un 1000 nu se reia niciodată!';
 
   @override
-  String get emotePhraseNoWay => 'Nu se poate!';
+  String get emotePhraseNoWay => 'Pur și simplu imposibil!';
 
   @override
-  String get emotePhraseArgh => 'Aaaargh!';
+  String get emotePhraseArgh => 'Aaaaaargh!';
 
   @override
   String get emotePhraseHello => 'Salut!';
 
   @override
   String get emotePhraseYes => 'Da!';
+
+  @override
+  String get emotePhraseTooGreedy => 'Prea lacom!';
+
+  @override
+  String get emotePhraseTooLucky => 'Cam prea norocos...';
+
+  @override
+  String get emotePhraseDryTenThousand => 'Direct la 10000';
+
+  @override
+  String get emotePhraseLucky => 'Norocosule!';
+
+  @override
+  String get emotePhraseGoodLuck => 'Baftă!';
+
+  @override
+  String get emotePhraseThanks => 'Mulțumesc';
+
+  @override
+  String get emotePhraseSorryMustGo => 'Scuze, dar trebuie să plec';
 
   @override
   String get gameHistoryBar => 'Istoric';

@@ -774,8 +774,8 @@
   "emoteJoyful": "Câlin",
   "@emoteJoyful": {"description": "Nom de l'émotion « câlin » (identifiant `joyful`, gardé pour le protocole)."},
 
-  "emotePhraseCoincidence": "Comme de par hasard",
-  "@emotePhraseCoincidence": {"description": "Phrase de l'émotion songeur : on soupçonne un coup de chance trop beau."},
+  "emotePhraseCoincidence": "Comme de par hasard...",
+  "@emotePhraseCoincidence": {"description": "Phrase de l'émotion dévasté (ex-songeur, identifiant gardé) : on soupçonne un coup de chance trop beau."},
 
   "emotePhraseStickyFive": "Cinq qui colle !",
   "@emotePhraseStickyFive": {"description": "Phrase moqueuse : un 5 seul qu'on est obligé de garder."},
@@ -783,20 +783,41 @@
   "emotePhraseFullHandEmptyHand": "Main pleine, main vaine !",
   "@emotePhraseFullHandEmptyHand": {"description": "Phrase moqueuse : une main pleine qui ne rapporte finalement rien (jeu de mots)."},
 
-  "emotePhraseNeverTakeA1000": "On reprend jamais un 1000",
+  "emotePhraseNeverTakeA1000": "On ne reprend jamais sur un 1000 !",
   "@emotePhraseNeverTakeA1000": {"description": "Phrase moqueuse : dicton du jeu, on ne reprend jamais une main de 1000."},
 
-  "emotePhraseNoWay": "C'est pas possible !",
+  "emotePhraseNoWay": "Juste pas possible !",
   "@emotePhraseNoWay": {"description": "Phrase de l'émotion dévasté."},
 
-  "emotePhraseArgh": "Aaaarg !",
+  "emotePhraseArgh": "Aaaaaarg !",
   "@emotePhraseArgh": {"description": "Cri de dépit de l'émotion dévasté."},
 
   "emotePhraseHello": "Salut !",
   "@emotePhraseHello": {"description": "Salutation de l'émotion câlin."},
 
   "emotePhraseYes": "Yes !",
-  "@emotePhraseYes": {"description": "Cri de joie de l'émotion câlin."},
+  "@emotePhraseYes": {"description": "Cri de joie de l'émotion câlin, retiré du menu : seulement affiché quand une app plus ancienne l'envoie."},
+
+  "emotePhraseTooGreedy": "Trop gourmand !",
+  "@emotePhraseTooGreedy": {"description": "Phrase de l'émotion mort de rire : l'autre a trop tenté sa chance et a tout perdu."},
+
+  "emotePhraseTooLucky": "Un peu trop chanceux...",
+  "@emotePhraseTooLucky": {"description": "Phrase de l'émotion songeur : on soupçonne une chance trop belle."},
+
+  "emotePhraseDryTenThousand": "En mode 10000 sec",
+  "@emotePhraseDryTenThousand": {"description": "Phrase de l'émotion songeur : l'autre semble foncer droit sur les 10000 (« sec » : d'un coup, sans détour)."},
+
+  "emotePhraseLucky": "Veinard va !",
+  "@emotePhraseLucky": {"description": "Phrase de l'émotion dévasté : « veinard, va ! », dit d'un adversaire chanceux."},
+
+  "emotePhraseGoodLuck": "Bonne chance !",
+  "@emotePhraseGoodLuck": {"description": "Souhait de l'émotion câlin."},
+
+  "emotePhraseThanks": "Merci",
+  "@emotePhraseThanks": {"description": "Remerciement de l'émotion câlin."},
+
+  "emotePhraseSorryMustGo": "Désolé mais je dois partir",
+  "@emotePhraseSorryMustGo": {"description": "Phrase de l'émotion câlin : on s'excuse de devoir quitter la partie."},
 
   "gameHistoryBar": "Historique",
   "@gameHistoryBar": {"description": "Barre qui ouvre l'historique (le journal) d'une partie en ligne."},

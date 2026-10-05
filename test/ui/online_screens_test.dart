@@ -702,13 +702,32 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Cinq qui colle !'), findsOneWidget);
       expect(find.text('Main pleine, main vaine !'), findsOneWidget);
-      expect(find.text('On reprend jamais un 1000'), findsOneWidget);
+      expect(find.text('On ne reprend jamais sur un 1000 !'), findsOneWidget);
+      expect(find.text('Trop gourmand !'), findsOneWidget);
 
       await tester.tap(find.text('Main pleine, main vaine !'));
       await tester.pump(const Duration(milliseconds: 400));
 
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).single;
       expect((sent.params['emote'], sent.params['phrase']), ('mocking', 'fullHandEmptyHand'));
+    });
+
+    testWidgets('une phrase retirée du menu n\'y est plus proposée, mais s\'affiche encore quand on la reçoit', (tester) async {
+      await joined(tester);
+
+      await tester.longPress(emoteButton('Câlin'));
+      await tester.pump(const Duration(milliseconds: 400));
+      for (final phrase in ['Salut !', 'Bonne chance !', 'Merci', 'Désolé mais je dois partir']) {
+        expect(find.text(phrase), findsOneWidget, reason: phrase);
+      }
+      expect(find.text('Yes !'), findsNothing);
+      await tester.tapAt(Offset.zero); // referme le menu
+      await tester.pump(const Duration(milliseconds: 400));
+
+      transport.current.serverSends(ServerMessage.emote(seat: 1, emote: Emote.joyful, phrase: 'yes'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300)); // la bulle s'ouvre à la frame suivante
+      expect(find.widgetWithText(SpeechBubble, 'Yes !'), findsOneWidget);
     });
 
     testWidgets('une émotion reçue s\'affiche en bulle sur la ligne de qui l\'envoie, puis s\'efface et reste dans l\'Historique',

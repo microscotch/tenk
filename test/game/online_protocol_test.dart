@@ -173,7 +173,10 @@ void main() {
   group('émotions', () {
     test('le catalogue : quatre émotions, chacune avec ses phrases, sous des noms stables', () {
       expect(Emote.values.map((e) => e.name), ['thoughtful', 'mocking', 'devastated', 'joyful']);
-      expect(Emote.mocking.phrases, ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000']);
+      expect(Emote.mocking.phrases, ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy']);
+      expect(Emote.thoughtful.phrases, ['tooLucky', 'dryTenThousand']);
+      expect(Emote.devastated.phrases, ['noWay', 'coincidence', 'lucky', 'argh']);
+      expect(Emote.joyful.phrases, ['hello', 'goodLuck', 'thanks', 'sorryMustGo']);
       expect(supportedFeatures, contains(emotesFeature));
     });
 
@@ -184,6 +187,16 @@ void main() {
 
       final relayed = ServerMessage.fromJson(ServerMessage.emote(seat: 2, emote: Emote.devastated, phrase: 'argh').toJson());
       expect((relayed.type, relayed.seat, relayed.emote), (ServerMessageType.emote, 2, (Emote.devastated, 'argh')));
+    });
+
+    test('une phrase retirée du menu reste acceptée : une app plus ancienne peut encore l\'envoyer', () {
+      expect(Emote.thoughtful.retired, ['coincidence']);
+      expect(Emote.joyful.retired, ['yes']);
+      for (final emote in Emote.values) {
+        expect(emote.phrases.toSet().intersection(emote.retired.toSet()), isEmpty, reason: emote.name);
+      }
+      expect(roundTrip(ClientMessage.emote(Emote.joyful, phrase: 'yes')).params['phrase'], 'yes');
+      expect(roundTrip(ClientMessage.emote(Emote.thoughtful, phrase: 'coincidence')).params['phrase'], 'coincidence');
     });
 
     test('une émotion inconnue, ou la phrase d\'une autre émotion, est refusée', () {
