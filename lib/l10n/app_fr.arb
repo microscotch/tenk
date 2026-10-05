@@ -771,8 +771,8 @@
   "emoteDevastated": "Dévasté",
   "@emoteDevastated": {"description": "Nom de l'émotion « dévasté »."},
 
-  "emoteJoyful": "Joyeux",
-  "@emoteJoyful": {"description": "Nom de l'émotion « joyeux »."},
+  "emoteJoyful": "Câlin",
+  "@emoteJoyful": {"description": "Nom de l'émotion « câlin » (identifiant `joyful`, gardé pour le protocole)."},
 
   "emotePhraseCoincidence": "Comme de par hasard",
   "@emotePhraseCoincidence": {"description": "Phrase de l'émotion songeur : on soupçonne un coup de chance trop beau."},
@@ -793,10 +793,10 @@
   "@emotePhraseArgh": {"description": "Cri de dépit de l'émotion dévasté."},
 
   "emotePhraseHello": "Salut !",
-  "@emotePhraseHello": {"description": "Salutation de l'émotion joyeux."},
+  "@emotePhraseHello": {"description": "Salutation de l'émotion câlin."},
 
   "emotePhraseYes": "Yes !",
-  "@emotePhraseYes": {"description": "Cri de joie de l'émotion joyeux."},
+  "@emotePhraseYes": {"description": "Cri de joie de l'émotion câlin."},
 
   "gameHistoryBar": "Historique",
   "@gameHistoryBar": {"description": "Barre qui ouvre l'historique (le journal) d'une partie en ligne."}

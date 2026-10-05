@@ -10,7 +10,7 @@ String emoteEmoji(Emote emote) => switch (emote) {
       Emote.thoughtful => '🤔',
       Emote.mocking => '🤣',
       Emote.devastated => '😭',
-      Emote.joyful => '😄',
+      Emote.joyful => '🤗',
     };
 
 /// Le nom d'une émotion, pour les lecteurs d'écran.

@@ -868,7 +868,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emoteDevastated => 'Förkrossad';
 
   @override
-  String get emoteJoyful => 'Glad';
+  String get emoteJoyful => 'Kram';
 
   @override
   String get emotePhraseCoincidence => 'Vilket sammanträffande';

@@ -1550,10 +1550,10 @@ abstract class AppLocalizations {
   /// **'Dévasté'**
   String get emoteDevastated;
 
-  /// Nom de l'émotion « joyeux ».
+  /// Nom de l'émotion « câlin » (identifiant `joyful`, gardé pour le protocole).
   ///
   /// In fr, this message translates to:
-  /// **'Joyeux'**
+  /// **'Câlin'**
   String get emoteJoyful;
 
   /// Phrase de l'émotion songeur : on soupçonne un coup de chance trop beau.
@@ -1592,13 +1592,13 @@ abstract class AppLocalizations {
   /// **'Aaaarg !'**
   String get emotePhraseArgh;
 
-  /// Salutation de l'émotion joyeux.
+  /// Salutation de l'émotion câlin.
   ///
   /// In fr, this message translates to:
   /// **'Salut !'**
   String get emotePhraseHello;
 
-  /// Cri de joie de l'émotion joyeux.
+  /// Cri de joie de l'émotion câlin.
   ///
   /// In fr, this message translates to:
   /// **'Yes !'**

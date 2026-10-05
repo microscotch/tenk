@@ -24,6 +24,8 @@ enum Emote {
   /// c'est l'identifiant qui voyage.
   mocking(['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000']),
   devastated(['noWay', 'argh']),
+  /// « Câlin » à l'écran : le nom `joyful` (ex-« joyeux ») reste,
+  /// c'est l'identifiant qui voyage.
   joyful(['hello', 'yes']);
 
   const Emote(this.phrases);

@@ -868,7 +868,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get emoteDevastated => 'Murtunut';
 
   @override
-  String get emoteJoyful => 'Iloinen';
+  String get emoteJoyful => 'Halaus';
 
   @override
   String get emotePhraseCoincidence => 'Mikä sattuma';

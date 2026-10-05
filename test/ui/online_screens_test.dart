@@ -663,7 +663,7 @@ void main() {
     testWidgets('en ligne : quatre boutons d\'émotion et une barre Historique, à la place du journal', (tester) async {
       await joined(tester);
 
-      for (final name in ['Songeur', 'Mort de rire', 'Dévasté', 'Joyeux']) {
+      for (final name in ['Songeur', 'Mort de rire', 'Dévasté', 'Câlin']) {
         expect(emoteButton(name), findsOneWidget, reason: name);
       }
       expect(find.text('Historique'), findsOneWidget);
@@ -685,12 +685,12 @@ void main() {
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).toList();
       expect((sent.single.params['emote'], sent.single.params.containsKey('phrase')), ('mocking', false));
 
-      await tester.tap(emoteButton('Joyeux'), warnIfMissed: false);
+      await tester.tap(emoteButton('Câlin'), warnIfMissed: false);
       await tester.pump();
       expect(transport.current.sent.where((m) => m.type == ClientMessageType.emote), hasLength(1), reason: 'encore grisés');
 
       await tester.pump(emoteCooldown);
-      await tester.tap(emoteButton('Joyeux'));
+      await tester.tap(emoteButton('Câlin'));
       await tester.pump();
       expect(transport.current.sent.where((m) => m.type == ClientMessageType.emote), hasLength(2));
     });

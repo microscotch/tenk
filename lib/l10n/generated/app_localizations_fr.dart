@@ -869,7 +869,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emoteDevastated => 'Dévasté';
 
   @override
-  String get emoteJoyful => 'Joyeux';
+  String get emoteJoyful => 'Câlin';
 
   @override
   String get emotePhraseCoincidence => 'Comme de par hasard';

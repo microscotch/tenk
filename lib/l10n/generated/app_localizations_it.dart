@@ -874,7 +874,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get emoteDevastated => 'Distrutto';
 
   @override
-  String get emoteJoyful => 'Felice';
+  String get emoteJoyful => 'Abbraccio';
 
   @override
   String get emotePhraseCoincidence => 'Che coincidenza';

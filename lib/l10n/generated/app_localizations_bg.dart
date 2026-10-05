@@ -866,7 +866,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get emoteDevastated => 'Съкрушен';
 
   @override
-  String get emoteJoyful => 'Радостен';
+  String get emoteJoyful => 'Прегръдка';
 
   @override
   String get emotePhraseCoincidence => 'Какво съвпадение';

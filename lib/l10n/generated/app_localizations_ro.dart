@@ -877,7 +877,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get emoteDevastated => 'Devastat';
 
   @override
-  String get emoteJoyful => 'Vesel';
+  String get emoteJoyful => 'Îmbrățișare';
 
   @override
   String get emotePhraseCoincidence => 'Ce coincidență';
