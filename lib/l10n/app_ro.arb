@@ -258,5 +258,8 @@
   "emotePhraseArgh": "Aaaargh!",
   "emotePhraseHello": "Salut!",
   "emotePhraseYes": "Da!",
-  "gameHistoryBar": "Istoric"
+  "gameHistoryBar": "Istoric",
+  "updateAvailableMessage": "Este disponibilă o versiune nouă ({version}, build {build}).",
+  "updateNowButton": "Actualizează",
+  "updateLaterButton": "Mai târziu"
 }

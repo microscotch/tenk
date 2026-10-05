@@ -124,6 +124,10 @@ jobs:
     needs: bump-build-number
     if: ${{ !failure() && !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android') }}
     runs-on: ubuntu-latest
+    # contents: write pour annoncer le build (branche store-builds, voir la
+    # dernière étape).
+    permissions:
+      contents: write
     steps:
       # fetch-depth: 0 (historique complet) : nécessaire pour lister les
       # commits de ce push via `git log` ci-dessous (notes de version). ref:
@@ -210,6 +214,7 @@ jobs:
       # toute première release manuelle depuis la console (prérequis Google
       # avant tout envoi via l'API).
       - name: Envoie vers Google Play (internal)
+        id: play
         if: env.PUBLISH == 'true'
         continue-on-error: true
         uses: r0adkll/upload-google-play@v1
@@ -220,10 +225,23 @@ jobs:
           track: internal
           whatsNewDirectory: distribution/whatsnew
 
+      # Dit aux applications installées qu'une mise à jour existe (elles lisent
+      # latest.json au lancement, voir tool/publish_store_build.sh). Seulement
+      # si l'envoi a VRAIMENT réussi : `outcome`, pas la conclusion que
+      # `continue-on-error` repeint en vert. 15 minutes pour que Play la
+      # propose sur la piste interne.
+      - name: Annonce le build aux applications installées
+        if: github.ref == 'refs/heads/main' && steps.play.outcome == 'success'
+        run: sh tool/publish_store_build.sh android 15
+
   build-ios:
     needs: bump-build-number
     if: ${{ !failure() && !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios') }}
     runs-on: macos-latest
+    # contents: write pour annoncer le build (branche store-builds, voir la
+    # dernière étape).
+    permissions:
+      contents: write
     steps:
       # fetch-depth: 0 (historique complet) : nécessaire pour lister les
       # commits de ce push via `git log` ci-dessous (notes "What to Test").
@@ -379,3 +397,12 @@ jobs:
         with:
           name: le10000-ipa-dev
           path: build/ios/ipa/*.ipa
+
+      # Comme côté Android : annonce le build aux applications installées, si
+      # l'envoi vers TestFlight a vraiment réussi. 30 minutes : l'envoi n'attend
+      # pas le traitement d'App Store Connect (`--skip_waiting_for_build_processing`),
+      # qui prend souvent plus d'une dizaine de minutes. En dernier, pour qu'un
+      # échec ici n'empêche pas l'IPA de développement.
+      - name: Annonce le build aux applications installées
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && steps.testflight.outcome == 'success' }}
+        run: sh tool/publish_store_build.sh ios 30

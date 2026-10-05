@@ -176,6 +176,14 @@ pas.
   serveur, le vérifie dès l'édition du profil. En ligne, la fiche est rattachée à mon
   siège (`OnlineGameLink.myProfileId` → `playerIds`) : ma latéralité à mon tour, et
   une archive comptée pour elle par son identifiant, même jouée sous un surnom.
+- **La recherche de mise à jour** (`update_check.dart`) : au lancement, `availableUpdateProvider`
+  (`AvailableUpdate`) lit le numéro de build de l'app installée et le `latest.json` que la CI publie sur la
+  branche `store-builds` après un envoi **réussi** vers Google Play ou TestFlight
+  (`tool/publish_store_build.sh`). `updateToOffer` décide, sans effet de bord : un build plus récent, déjà
+  traité par le store (`availableFrom`), et pas écarté par « Plus tard » (retenu par build, pas pour
+  toujours). Tout ce qui touche l'appareil et le réseau passe par `UpdateCheckEnvironment`, que les tests
+  remplacent ; un build de debug ou le bureau (`platform` nul) ne vérifie rien. L'accueil l'affiche dans un
+  bandeau (`UpdateBanner`), jamais dans une fenêtre qui recouvrirait la reprise ou un lien d'invitation.
 
 ## Les parties en ligne (turquoise, zone de droite)
 

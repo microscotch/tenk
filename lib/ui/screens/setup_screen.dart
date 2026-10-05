@@ -11,6 +11,7 @@ import '../route_observer.dart';
 import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
 import '../widgets/casino_chip.dart';
+import '../widgets/update_banner.dart';
 import 'finished_games_screen.dart';
 import 'new_game_screen.dart';
 import 'online_entry_screen.dart';
@@ -182,6 +183,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                 ),
               ),
             ),
+            // Une mise à jour arrivée sur le store, s'il y en a une.
+            const UpdateBanner(),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Text(

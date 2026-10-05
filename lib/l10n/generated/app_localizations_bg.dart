@@ -894,4 +894,15 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get gameHistoryBar => 'История';
+
+  @override
+  String updateAvailableMessage(String version, int build) {
+    return 'Налична е нова версия ($version, компилация $build).';
+  }
+
+  @override
+  String get updateNowButton => 'Обнови';
+
+  @override
+  String get updateLaterButton => 'По-късно';
 }

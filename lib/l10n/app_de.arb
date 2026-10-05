@@ -258,5 +258,8 @@
   "emotePhraseArgh": "Aaaargh!",
   "emotePhraseHello": "Hallo!",
   "emotePhraseYes": "Ja!",
-  "gameHistoryBar": "Verlauf"
+  "gameHistoryBar": "Verlauf",
+  "updateAvailableMessage": "Eine neue Version ist verfügbar ({version}, Build {build}).",
+  "updateNowButton": "Aktualisieren",
+  "updateLaterButton": "Später"
 }

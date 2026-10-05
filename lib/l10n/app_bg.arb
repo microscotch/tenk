@@ -258,5 +258,8 @@
   "emotePhraseArgh": "Ааааргх!",
   "emotePhraseHello": "Здрасти!",
   "emotePhraseYes": "Да!",
-  "gameHistoryBar": "История"
+  "gameHistoryBar": "История",
+  "updateAvailableMessage": "Налична е нова версия ({version}, компилация {build}).",
+  "updateNowButton": "Обнови",
+  "updateLaterButton": "По-късно"
 }

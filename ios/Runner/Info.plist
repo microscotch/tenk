@@ -79,5 +79,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- url_launcher : ouvrir TestFlight quand une mise à jour est disponible. -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>itms-beta</string>
+	</array>
 </dict>
 </plist>

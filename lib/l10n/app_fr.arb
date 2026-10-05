@@ -799,5 +799,17 @@
   "@emotePhraseYes": {"description": "Cri de joie de l'émotion câlin."},
 
   "gameHistoryBar": "Historique",
-  "@gameHistoryBar": {"description": "Barre qui ouvre l'historique (le journal) d'une partie en ligne."}
+  "@gameHistoryBar": {"description": "Barre qui ouvre l'historique (le journal) d'une partie en ligne."},
+
+  "updateAvailableMessage": "Une nouvelle version est disponible ({version}, build {build}).",
+  "@updateAvailableMessage": {
+    "description": "Bandeau de l'accueil quand un build plus récent est arrivé sur le store (Google Play ou TestFlight).",
+    "placeholders": {"version": {"type": "String"}, "build": {"type": "int"}}
+  },
+
+  "updateNowButton": "Mettre à jour",
+  "@updateNowButton": {"description": "Bouton du bandeau de mise à jour : ouvre Google Play ou TestFlight."},
+
+  "updateLaterButton": "Plus tard",
+  "@updateLaterButton": {"description": "Bouton du bandeau de mise à jour : n'en reparle plus pour ce build."}
 }

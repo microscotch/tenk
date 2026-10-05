@@ -258,5 +258,8 @@
   "emotePhraseArgh": "Aaaargh!",
   "emotePhraseHello": "Moi!",
   "emotePhraseYes": "Jes!",
-  "gameHistoryBar": "Historia"
+  "gameHistoryBar": "Historia",
+  "updateAvailableMessage": "Uusi versio on saatavilla ({version}, koontiversio {build}).",
+  "updateNowButton": "Päivitä",
+  "updateLaterButton": "Myöhemmin"
 }

@@ -896,4 +896,15 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get gameHistoryBar => 'Historia';
+
+  @override
+  String updateAvailableMessage(String version, int build) {
+    return 'Uusi versio on saatavilla ($version, koontiversio $build).';
+  }
+
+  @override
+  String get updateNowButton => 'Päivitä';
+
+  @override
+  String get updateLaterButton => 'Myöhemmin';
 }

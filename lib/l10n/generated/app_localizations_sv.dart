@@ -896,4 +896,15 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get gameHistoryBar => 'Historik';
+
+  @override
+  String updateAvailableMessage(String version, int build) {
+    return 'En ny version finns tillgänglig ($version, bygge $build).';
+  }
+
+  @override
+  String get updateNowButton => 'Uppdatera';
+
+  @override
+  String get updateLaterButton => 'Senare';
 }

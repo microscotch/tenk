@@ -905,4 +905,15 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get gameHistoryBar => 'Istoric';
+
+  @override
+  String updateAvailableMessage(String version, int build) {
+    return 'Este disponibilă o versiune nouă ($version, build $build).';
+  }
+
+  @override
+  String get updateNowButton => 'Actualizează';
+
+  @override
+  String get updateLaterButton => 'Mai târziu';
 }

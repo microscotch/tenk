@@ -1609,6 +1609,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Historique'**
   String get gameHistoryBar;
+
+  /// Bandeau de l'accueil quand un build plus récent est arrivé sur le store (Google Play ou TestFlight).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une nouvelle version est disponible ({version}, build {build}).'**
+  String updateAvailableMessage(String version, int build);
+
+  /// Bouton du bandeau de mise à jour : ouvre Google Play ou TestFlight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre à jour'**
+  String get updateNowButton;
+
+  /// Bouton du bandeau de mise à jour : n'en reparle plus pour ce build.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get updateLaterButton;
 }
 
 class _AppLocalizationsDelegate

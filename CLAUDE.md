@@ -221,6 +221,13 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   config of the game **being shown**, linking by profile id, never by name — so an archived game
   shows nicknames with no game in progress), and `syncPlayerStatistics`, which recomputes every
   profile's statistics from the archived journals.
+- `update_check.dart` — the update offer at launch: `availableUpdateProvider` compares the installed build
+  number with `latest.json` on the **`store-builds` branch** (read through raw.githubusercontent.com), which
+  `tool/publish_store_build.sh` updates from `build_apk.yaml` **only after a real store upload** (the step's
+  `outcome`, not its `continue-on-error` conclusion), with an `availableFrom` delay for store processing
+  (15 min Play, 30 min TestFlight). The home screen shows it as `UpdateBanner`; "Plus tard" dismisses that
+  build only. Debug builds and desktop never check. Never merge `store-builds` into `main`, and never move the
+  version number to a tag (the changelog counts commits since the last tag).
 
 ### UI layer (`lib/ui/`)
 
