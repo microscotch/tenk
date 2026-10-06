@@ -72,10 +72,25 @@ class DiceFaceTextures {
   static const _size = 128.0;
   static final Map<String, Future<Texture2D>> _cache = {};
 
+  static final Map<String, Texture2D> _ready = {};
+
+  static String _key(int value, DieVisualState state, Color? baseColor) =>
+      '$value|$state|${(baseColor ?? kDefaultDieBodyColor).toARGB32()}';
+
   static Future<Texture2D> get(int value, DieVisualState state, [Color? baseColor]) {
-    final key = '$value|$state|${(baseColor ?? kDefaultDieBodyColor).toARGB32()}';
-    return _cache.putIfAbsent(key, () => _render(value, state, baseColor));
+    final key = _key(value, state, baseColor);
+    return _cache.putIfAbsent(key, () async {
+      final texture = await _render(value, state, baseColor);
+      _ready[key] = texture;
+      return texture;
+    });
   }
+
+  /// La texture, si elle est déjà prête : permet à un dé qu'on vient de créer de
+  /// se construire tout de suite, au lieu d'attendre un tour de boucle
+  /// d'événements pendant lequel il resterait invisible (voir `_buildFaces`).
+  static Texture2D? peek(int value, DieVisualState state, [Color? baseColor]) =>
+      _ready[_key(value, state, baseColor)];
 
   static Future<Texture2D> _render(int value, DieVisualState state, Color? baseColor) async {
     final recorder = ui.PictureRecorder();

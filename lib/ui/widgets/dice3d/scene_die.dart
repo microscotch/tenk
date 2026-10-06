@@ -89,7 +89,11 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
     super.initState();
     _scene.add(_dieNode);
     if (widget.rollToken != null) _startRoll();
-    _buildFaces();
+    // Un dé neuf dont les textures sont déjà en cache (c'est le cas d'un dé qui
+    // passe de la piste à la main courante) se construit tout de suite : sinon
+    // il restait invisible le temps d'un tour de boucle, d'où un « flick » à
+    // chaque lancer sur les dés déjà gardés.
+    if (!_buildFacesNow()) _buildFaces();
   }
 
   @override
@@ -122,6 +126,21 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  /// Construit le dé sans attendre, si les six textures sont déjà prêtes.
+  bool _buildFacesNow() {
+    final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
+    final textures = <MapEntry<String, Texture2D>>[];
+    for (final e in values.entries) {
+      final texture = DiceFaceTextures.peek(e.value, widget.state, widget.bodyColor);
+      if (texture == null) return false;
+      textures.add(MapEntry(e.key, texture));
+    }
+    _loadGeneration++;
+    _applyFaces(textures);
+    _facesReady = true;
+    return true;
+  }
+
   Future<void> _buildFaces() async {
     final generation = ++_loadGeneration;
     final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
@@ -130,8 +149,15 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
           .map((e) async => MapEntry(e.key, await DiceFaceTextures.get(e.value, widget.state, widget.bodyColor))),
     );
     if (!mounted || generation != _loadGeneration) return;
+    _applyFaces(textures);
+    setState(() => _facesReady = true);
+  }
 
+  void _applyFaces(List<MapEntry<String, Texture2D>> textures) {
     _dieNode.removeAll();
+    // Orientation déjà posée avant le premier tick de la scène : sans elle, le
+    // dé apparaîtrait un instant droit, avant de prendre son orientation.
+    _onTick(Duration.zero, 0);
     for (final entry in textures) {
       final placement = _facePlacements[entry.key]!;
       // Fini plastique mat (dé physique) plutôt que le défaut métallique
@@ -144,7 +170,6 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
         mesh: Mesh(PlaneGeometry(), material),
       ));
     }
-    setState(() => _facesReady = true);
   }
 
   void _onTick(Duration elapsed, double deltaSeconds) {
