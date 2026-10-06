@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'online_providers.dart';
+import 'online_transport.dart' show tenkUserAgent;
 
 /// Où l'application apprend le dernier build arrivé sur chaque store : la route
 /// `/latest-build` du serveur des parties en ligne, à côté de `/ws`
@@ -125,6 +126,7 @@ class DeviceUpdateCheckEnvironment implements UpdateCheckEnvironment {
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
       final request = await client.getUrl(latestBuildUrl);
+      request.headers.set(HttpHeaders.userAgentHeader, await tenkUserAgent());
       final response = await request.close().timeout(const Duration(seconds: 10));
       if (response.statusCode != HttpStatus.ok) return null;
       return await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 10));

@@ -133,7 +133,10 @@
     Sont alors transmis : <strong>ton pseudo</strong> (le surnom de ton profil, ou son nom si tu n'as pas de surnom) (visible des autres joueurs du
     salon), <strong>un jeton aléatoire</strong> qui te permet de retrouver ta place après une
     coupure, <strong>les coups de la partie</strong> et <strong>les émotions que tu envoies</strong>
-    (des émojis et des phrases toutes faites, choisis dans une liste : jamais de texte libre). Ces informations ne sont conservées que
+    (des émojis et des phrases toutes faites, choisis dans une liste : jamais de texte libre). Comme
+    toute connexion réseau, elle porte aussi un en-tête technique (« User-Agent ») indiquant le nom et
+    la version de l'application, la plateforme (Android ou iOS) et la version de son système — jamais
+    d'identifiant personnel. Ces informations ne sont conservées que
     dans la mémoire du serveur, le temps de la partie, et sont effacées quand le salon disparaît
     (au plus 24 heures après la dernière activité). Le serveur ne les écrit sur aucun disque, ne
     les relie à aucune identité et ne les partage avec personne. Ton adresse IP n'est utilisée
@@ -153,8 +156,10 @@
   <h2>Recherche de mise à jour</h2>
   <p>
     Au lancement, l'application demande au serveur de jeu le numéro de la dernière version
-    publiée, pour te proposer de mettre à jour. Rien n'est envoyé : ni identifiant, ni pseudo,
-    ni partie. Comme pour les parties en ligne, le serveur ne tient aucun journal et n'enregistre
+    publiée, pour te proposer de mettre à jour. Aucun identifiant, aucun pseudo, aucune partie
+    n'est envoyé — seul l'en-tête technique décrit ci-dessus (nom et version de l'application,
+    plateforme et version du système) accompagne la requête, comme pour toute connexion réseau.
+    Comme pour les parties en ligne, le serveur ne tient aucun journal et n'enregistre
     pas ton adresse IP ; sans connexion, la recherche est simplement abandonnée.
   </p>
 
@@ -209,7 +214,10 @@
     What is then sent: <strong>your nickname</strong> (the one in your profile, or its name if it has none) (visible to the other players in the
     room), <strong>a random token</strong> that lets you get your seat back after a dropped
     connection, <strong>the moves of the game</strong> and <strong>the emotions you send</strong>
-    (emojis and ready-made phrases picked from a list: never free text). This is kept only in the server's
+    (emojis and ready-made phrases picked from a list: never free text). Like any network
+    connection, it also carries a technical header ("User-Agent") stating the app's name and
+    version, the platform (Android or iOS) and its system version — never a personal identifier.
+    This is kept only in the server's
     memory, for the length of the game, and is erased when the room goes away (at most 24 hours
     after its last activity). The server writes it to no disk, links it to no identity and shares
     it with no one. Your IP address is used in memory only, to limit abuse (number of
@@ -219,7 +227,9 @@
   <h2>Update check</h2>
   <p>
     At launch, the app asks the game server for the number of the latest published version, so
-    that it can offer you the update. Nothing is sent: no identifier, no nickname, no game. As for
+    that it can offer you the update. No identifier, no nickname, no game is sent — only the
+    technical header described above (app name and version, platform and system version)
+    accompanies the request, as with any network connection. As for
     online games, the server keeps no log and does not record your IP address; without a
     connection, the check is simply dropped.
   </p>
