@@ -129,6 +129,7 @@ SavedGame buildResumableSavedGame({
         turn,
         minimumRequired: engine.minimumForCurrentPlayer,
         currentTotal: engine.currentPlayer.totalScore,
+        isFinalRound: engine.isInFinalRound,
       );
       if (attempt.success) {
         final (next, _) = engine.bank();

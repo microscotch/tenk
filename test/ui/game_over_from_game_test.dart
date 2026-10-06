@@ -20,18 +20,22 @@ import '../test_helpers/scripted_game.dart';
 void main() {
   testWidgets('la victoire ouvre un écran de fin qui porte le journal de la partie', (tester) async {
     const setup = GameSetup(playerNames: ['A', 'B']);
-    // Une partie dont la dernière action est un banquage : la victoire déclenche
-    // un dernier tour pour les autres joueurs, qui peut tout aussi bien finir
-    // par un craque — ce test veut un banquage, qu'il peut rejouer à la main.
+    // Atteindre exactement 10000 relance toujours un tour final complet
+    // (voir GameEngine._advance) plutôt que de terminer la partie sur-le-champ
+    // — et s'arrêter en-dessous est désormais interdit pendant ce tour final
+    // (BankFailureReason.mustContinueFinalRound). La partie ne peut donc plus
+    // jamais se terminer par un banquage : toujours par le craque de celui
+    // qui, en tour final, échoue à égaler le détenteur. C'est ce craque que
+    // ce test rejoue à la main.
     var seed = 1;
     late List<GameAction> complete;
     while (true) {
       complete = playScriptedGame(setup, seed).actions;
-      if (complete.last.type == GameActionType.bank) break;
+      if (complete.last.type == GameActionType.endBustedTurn) break;
       seed++;
-      expect(seed, lessThan(300), reason: 'aucune partie de test ne finit par un banquage');
+      expect(seed, lessThan(300), reason: 'aucune partie de test ne finit par un craque');
     }
-    // Le journal s'arrête juste avant le banquage final : la partie est
+    // Le journal s'arrête juste avant le craque final : la partie est
     // reprise à l'instant précis où il ne manque plus que lui.
     final beforeVictory = SavedGame(
       seed: seed,
@@ -64,7 +68,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(notifier.bank().success, isTrue, reason: 'prémisse : c\'est bien le banquage gagnant');
+    expect(container.read(gameProvider)!.activeTurn?.busted, isTrue, reason: 'prémisse : c\'est bien le craque final');
+    notifier.endBustedTurn();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 

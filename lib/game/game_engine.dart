@@ -254,9 +254,19 @@ class GameEngine {
   /// retombe sur son score précédent (comme avant) ; si c'est une ligne déjà
   /// dépassée, seule cette ligne historique est marquée barrée, sans
   /// affecter son score courant (voir [Player.applyScoreCollisionBarAt]).
-  (GameEngine, BankAttempt) bank() {
-    final attempt =
-        tryBank(activeTurn!, minimumRequired: minimumForCurrentPlayer, currentTotal: currentPlayer.totalScore);
+  ///
+  /// [enforceFinalRound] : interdit, pendant le tour final, un arrêt sous la
+  /// cible (voir [isInFinalRound] et [tryBank]) — en jeu normal (humain, IA,
+  /// serveur) toujours vrai ; [applyGameAction] le passe à `false` pour
+  /// rejouer tel quel une partie archivée avant l'existence de cette règle,
+  /// où un tel arrêt était encore légal.
+  (GameEngine, BankAttempt) bank({bool enforceFinalRound = true}) {
+    final attempt = tryBank(
+      activeTurn!,
+      minimumRequired: minimumForCurrentPlayer,
+      currentTotal: currentPlayer.totalScore,
+      isFinalRound: enforceFinalRound && isInFinalRound,
+    );
     if (!attempt.success) return (this, attempt);
     return (_applySuccessfulBank(activeTurn!, attempt.bankedPoints!), attempt);
   }

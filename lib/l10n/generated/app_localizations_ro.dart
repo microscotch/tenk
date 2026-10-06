@@ -493,6 +493,10 @@ class AppLocalizationsRo extends AppLocalizations {
   String get failureMustContinueHotDice => 'Trebuie să arunci din nou.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Nu te poți opri: ultima rundă necesită să atingi exact 10000.';
+
+  @override
   String get failureNotRolledYet =>
       'Trebuie să arunci zarurile înainte de a te putea opri.';
 
@@ -715,7 +719,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Primul jucător care ajunge la exact 10.000 de puncte declanșează o rundă finală: fiecare dintre ceilalți jucători are o ultimă șansă să-l egaleze sau să-l depășească la tura sa. Dacă în această rundă finală și alt jucător ajunge la exact 10.000, el preia coroana și o nouă rundă finală începe în jurul lui.';
+      'Primul jucător care ajunge la exact 10.000 de puncte declanșează o rundă finală: fiecare dintre ceilalți jucători are o ultimă șansă să-l egaleze la tura sa. De fiecare dată când o aruncare permite atingerea exactă a 10.000, luarea este automată și tura se încheie imediat, fie că e rundă finală sau nu. În runda finală, în schimb, nimeni nu se poate opri voluntar sub 10.000: trebuie să continue să arunce zarurile până egalează acel scor sau eșuează. Dacă în această rundă finală și alt jucător ajunge la exact 10.000, el preia coroana și o nouă rundă finală începe în jurul lui.';
 
   @override
   String get onlinePlayButton => 'Joacă online';

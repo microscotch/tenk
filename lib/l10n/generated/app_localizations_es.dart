@@ -486,6 +486,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get failureMustContinueHotDice => 'Debes volver a tirar.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'No puedes plantarte: la última ronda exige alcanzar exactamente 10000.';
+
+  @override
   String get failureNotRolledYet =>
       'Debes lanzar los dados antes de poder plantarte.';
 
@@ -709,7 +713,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'El primer jugador que alcanza exactamente 10 000 puntos desencadena una ronda final: cada uno de los demás jugadores tiene una última oportunidad de igualarlo o superarlo en su turno. Si otro jugador alcanza también exactamente 10 000 durante esa ronda final, se queda con la corona y empieza una nueva ronda final a su alrededor.';
+      'El primer jugador que alcanza exactamente 10 000 puntos desencadena una ronda final: cada uno de los demás jugadores tiene una última oportunidad de igualarlo en su turno. En cuanto una tirada permite llegar a exactamente 10 000, la toma es automática y el turno se detiene al instante, haya o no ronda final. Durante la ronda final, en cambio, nadie puede plantarse voluntariamente por debajo de 10 000: hay que seguir tirando hasta igualar esa puntuación o fallar la tirada. Si otro jugador alcanza también exactamente 10 000, se queda con la corona y empieza una nueva ronda final a su alrededor.';
 
   @override
   String get onlinePlayButton => 'Jugar en línea';

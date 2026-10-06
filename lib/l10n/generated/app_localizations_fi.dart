@@ -486,6 +486,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get failureMustContinueHotDice => 'Sinun täytyy heittää uudelleen.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Et voi lopettaa: viimeinen kierros vaatii tarkalleen 10000 pistettä.';
+
+  @override
   String get failureNotRolledYet =>
       'Sinun täytyy heittää nopat ennen kuin voit lopettaa.';
 
@@ -707,7 +711,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Ensimmäinen pelaaja, joka saavuttaa tasan 10 000 pistettä, käynnistää loppukierroksen: jokaisella muulla pelaajalla on vuorollaan viimeinen mahdollisuus tasoittaa tai ohittaa hänet. Jos toinenkin pelaaja saavuttaa loppukierroksen aikana tasan 10 000, hän ottaa kruunun ja hänen ympärillään alkaa uusi loppukierros.';
+      'Ensimmäinen pelaaja, joka saavuttaa tasan 10 000 pistettä, käynnistää loppukierroksen: jokaisella muulla pelaajalla on vuorollaan viimeinen mahdollisuus tasoittaa hänet. Kun heitto tekee tasan 10 000 pisteen saavuttamisen mahdolliseksi, otto tapahtuu automaattisesti ja vuoro päättyy saman tien, loppukierroksella tai ei. Loppukierroksen aikana kukaan ei sen sijaan voi pysähtyä vapaaehtoisesti alle 10 000 pisteeseen: nopanheittoa on jatkettava, kunnes saavuttaa tuon tuloksen tai epäonnistuu. Jos toinenkin pelaaja saavuttaa tasan 10 000, hän ottaa kruunun ja hänen ympärillään alkaa uusi loppukierros.';
 
   @override
   String get onlinePlayButton => 'Pelaa verkossa';

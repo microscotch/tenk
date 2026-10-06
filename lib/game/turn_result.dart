@@ -22,6 +22,13 @@ enum BankFailureReason {
   /// s'applique jamais si le score total atteindrait exactement 10000 : ce
   /// cas-là est toujours autorisé, y compris en dés chauds.
   wouldMakeWinningImpossible,
+
+  /// Le tour final (voir `GameEngine.isInFinalRound`) interdit tout arrêt
+  /// volontaire : son seul but est d'atteindre exactement 10000 pour barrer
+  /// le détenteur actuel, pas d'engranger un score moindre. Ne s'applique
+  /// jamais si le score total atteindrait exactement 10000 : ce cas-là reste
+  /// toujours autorisé (c'est même le seul moyen de finir son tour).
+  mustContinueFinalRound,
 }
 
 /// Résultat d'une tentative de banquer (valider) le score du tour en cours.

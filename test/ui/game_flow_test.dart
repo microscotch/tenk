@@ -1453,12 +1453,16 @@ void main() {
     expect(find.textContaining('400 pts sont repris'), findsOneWidget);
   });
 
-  testWidgets('atteindre exactement 10000 lors du tour final affiche l\'écran de victoire', (tester) async {
+  testWidgets('un tour final qui craque (sans égaler 10000) affiche l\'écran de victoire de l\'ancien détenteur',
+      (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
     // A a déjà déclenché le tour final en atteignant 10000 ; c'est au tour
-    // de B de jouer son unique tour final, qu'il réussit à banquer.
+    // de B de jouer son unique tour final. S'arrêter sous la cible est
+    // désormais interdit pendant le tour final (voir BankFailureReason.
+    // mustContinueFinalRound) : B n'a d'autre choix que de relancer, et
+    // craque faute de dé marquant.
     var engine = GameEngine.newGame(['A', 'B']).startTurn();
     engine = engine.copyWith(
       players: [
@@ -1468,7 +1472,12 @@ void main() {
       currentPlayerIndex: 1,
       triggeringWinnerIndex: 0,
       remainingFinalTurns: 1,
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true),
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        bankedScore: 200,
+        pendingRoll: analyzeRoll([2, 3, 4]), // aucun dé marquant
+        busted: true,
+      ),
     );
     container.read(gameProvider.notifier).debugLoadState(
           engine,
@@ -1485,8 +1494,8 @@ void main() {
 
     expect(find.textContaining('Tour final'), findsOneWidget);
 
-    await tester.ensureVisible(find.byIcon(Icons.front_hand));
-    await tester.tap(find.byIcon(Icons.front_hand));
+    await revealBust(tester);
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
 
     expect(find.byType(GameOverScreen), findsOneWidget);
@@ -1495,6 +1504,86 @@ void main() {
     final after = container.read(gameProvider)!;
     expect(after.gameOver, isTrue);
     expect(after.winnerIndex, 0, reason: 'A doit gagner malgré le tour final joué par B');
+  });
+
+  testWidgets('pendant le tour final, Stop reste affiché mais désactivé sous la cible, '
+      'avec le message dédié', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // Comme le test ci-dessus, mais le lancer de B marque (il reste assez de
+    // dés pour une décision) : la ligne de contrôle doit refuser Stop,
+    // jamais l'activer sur un score sous 10000 en tour final.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        Player(name: 'A', totalScore: 10000, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+      ],
+      currentPlayerIndex: 1,
+      triggeringWinnerIndex: 0,
+      remainingFinalTurns: 1,
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true), // B : 3000 -> 3200
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(_stopEnabled(tester), isFalse, reason: 's\'arrêter sous la cible est interdit en tour final');
+    expect(
+      find.textContaining('Impossible de s\'arrêter : le tour final exige d\'atteindre 10000 pile.'),
+      findsOneWidget,
+    );
+
+    // Le moteur n'a pas bougé : aucun banquage silencieux.
+    final after = container.read(gameProvider)!;
+    expect(after.players[1].totalScore, 3000);
+    expect(after.activeTurn!.bankedScore, 200);
+  });
+
+  testWidgets(
+      'un lancer qui permet d\'atteindre exactement 10000 banque automatiquement, '
+      'sans aucun tap, même pour un humain hors mode auto', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // A, à 9900, reçoit un lancer de deux 5 (+ un junk) : garder les deux
+    // atteint pile 10000 (voir winningDeclineFivesCount) — un vrai choix
+    // existerait sinon (garder 1 -> 9950), mais cette cible-là est automatique.
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 9900, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(diceToRoll: 3, pendingRoll: analyzeRoll([5, 5, 3]), hasRolledThisTurn: true),
+    );
+    // Pas de autoPlayers : A est un humain ordinaire, jamais en mode auto.
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Aucun tap : seul le temps qui passe (délai d'auto-avancement).
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[0].totalScore, 10000);
+    expect(after.currentPlayerIndex, 1, reason: 'le tour de A doit être banqué et passé à B');
   });
 
   testWidgets('le choix de main héritée ouvre une popup dédiée qui relance directement', (tester) async {

@@ -153,6 +153,18 @@ class GameAuthority {
       case GameActionType.applyKeep:
         final decline = params['declineFivesCount'] as int? ?? 0;
         _checkKeep(engine, decline);
+        // Atteindre exactement 10000 est désormais automatique (voir
+        // winningDeclineFivesCount) : un VRAI coup ne peut pas s'en détourner
+        // en déclinant un autre nombre, même légal par ailleurs. Vérifié ici
+        // seulement, pas dans _checkKeep : checkSelection l'appelle aussi pour
+        // chaque position du curseur affichée en direct, qui n'est pas encore
+        // un coup et doit rester libre d'explorer n'importe quelle valeur
+        // légale avant de valider.
+        final analysis = turn!.pendingRoll!;
+        final winningDecline = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+        if (winningDecline != null && decline != winningDecline) {
+          throw const IntentRejected(ErrorCode.illegalMove, 'atteindre 10000 est obligatoire sur ce lancer');
+        }
         return (GameAction.applyKeep(declineFivesCount: decline, at: _now()), engine.applyKeep(declineFivesCount: decline));
 
       case GameActionType.bank:

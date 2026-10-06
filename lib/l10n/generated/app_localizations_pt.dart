@@ -486,6 +486,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get failureMustContinueHotDice => 'Tens de relançar.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Não podes parar: a última ronda exige atingir exatamente 10000.';
+
+  @override
   String get failureNotRolledYet =>
       'Tens de lançar os dados antes de poderes parar.';
 
@@ -709,7 +713,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'O primeiro jogador a atingir exatamente 10 000 pontos desencadeia uma ronda final: cada um dos outros jogadores tem uma última oportunidade de o igualar ou ultrapassar na sua vez. Se outro jogador também atingir exatamente 10 000 durante essa ronda final, fica ele com a coroa e começa uma nova ronda final à sua volta.';
+      'O primeiro jogador a atingir exatamente 10 000 pontos desencadeia uma ronda final: cada um dos outros jogadores tem uma última oportunidade de o igualar na sua vez. Logo que um lançamento permita atingir exatamente 10 000, a tomada é automática e o turno para de imediato, seja ou não ronda final. Durante a ronda final, porém, ninguém pode parar voluntariamente abaixo de 10 000: é preciso continuar a lançar os dados até igualar essa pontuação ou rebentar. Se outro jogador também atingir exatamente 10 000, fica ele com a coroa e começa uma nova ronda final à sua volta.';
 
   @override
   String get onlinePlayButton => 'Jogar online';

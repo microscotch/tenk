@@ -488,6 +488,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get failureMustContinueHotDice => 'Du musst erneut würfeln.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Du kannst nicht aufhören: Die letzte Runde erfordert genau 10000 Punkte.';
+
+  @override
   String get failureNotRolledYet =>
       'Du musst würfeln, bevor du aufhören kannst.';
 
@@ -711,7 +715,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Wer als Erster genau 10.000 Punkte erreicht, löst eine Schlussrunde aus: Jeder andere Spieler hat in seinem Zug eine letzte Chance, gleichzuziehen oder ihn zu übertreffen. Erreicht während dieser Schlussrunde ein anderer Spieler ebenfalls genau 10.000, übernimmt er die Krone und eine neue Schlussrunde beginnt um ihn herum.';
+      'Wer als Erster genau 10.000 Punkte erreicht, löst eine Schlussrunde aus: Jeder andere Spieler hat in seinem Zug eine letzte Chance, gleichzuziehen. Sobald ein Wurf genau 10.000 Punkte ermöglicht, erfolgt die Aufnahme automatisch und der Zug endet sofort — ob in der Schlussrunde oder nicht. Während der Schlussrunde darf jedoch niemand freiwillig unter 10.000 aufhören: Man muss weiterwürfeln, bis man diesen Wert erreicht oder einen Fehlwurf macht. Erreicht während dieser Schlussrunde ein anderer Spieler ebenfalls genau 10.000, übernimmt er die Krone und eine neue Schlussrunde beginnt um ihn herum.';
 
   @override
   String get onlinePlayButton => 'Online spielen';

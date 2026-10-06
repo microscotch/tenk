@@ -878,6 +878,12 @@ abstract class AppLocalizations {
   /// **'Vous devez relancer.'**
   String get failureMustContinueHotDice;
 
+  /// Raison pour laquelle le joueur ne peut pas s'arrêter : tour final, seul un score de 10000 pile est autorisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de s\'arrêter : le tour final exige d\'atteindre 10000 pile.'**
+  String get failureMustContinueFinalRound;
+
   /// Raison pour laquelle le joueur ne peut pas s'arrêter : aucun lancer effectué ce tour.
   ///
   /// In fr, this message translates to:
@@ -1265,7 +1271,7 @@ abstract class AppLocalizations {
   /// Texte de la section "victoire" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.'**
+  /// **'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler à son tour. Dès qu\'un lancer permet d\'atteindre exactement 10 000, la prise est automatique et le tour s\'arrête aussitôt, en tour final ou non. Pendant le tour final, en revanche, personne ne peut s\'arrêter volontairement en dessous de 10 000 : il faut continuer à lancer les dés jusqu\'à égaler ce score ou craquer. Si un autre joueur atteint lui aussi exactement 10 000, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.'**
   String get rulesVictoryBody;
 
   /// Bouton de l'accueil qui ouvre les parties en ligne.

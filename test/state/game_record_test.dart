@@ -81,7 +81,8 @@ void main() {
       } else if (!turn.mustContinue &&
           tryBank(turn,
                   minimumRequired: engine.minimumForCurrentPlayer,
-                  currentTotal: engine.currentPlayer.totalScore)
+                  currentTotal: engine.currentPlayer.totalScore,
+                  isFinalRound: engine.isInFinalRound)
               .success) {
         notifier.bank();
       } else {

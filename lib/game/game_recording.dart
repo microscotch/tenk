@@ -287,7 +287,12 @@ GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) 
     case GameActionType.endBustedTurn:
       return engine.endBustedTurn();
     case GameActionType.bank:
-      final (next, _) = engine.bank();
+      // enforceFinalRound: false — une partie archivée avant cette règle
+      // peut contenir un arrêt dans le tour final sous la cible, alors
+      // encore légal ; le rejeu doit retomber sur le même état qu'à
+      // l'époque, pas échouer silencieusement ce banquage (voir
+      // GameEngine.bank).
+      final (next, _) = engine.bank(enforceFinalRound: false);
       return next;
     case GameActionType.resume:
       return engine;

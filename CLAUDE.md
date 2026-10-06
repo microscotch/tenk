@@ -287,6 +287,19 @@ sweep of expired rooms).
   creations, failed joins): a new connection must not hand back a fresh burst. A pseudo is trimmed and
   refuses control, zero-width and bidi characters (spoofing another player). A release build only talks to a
   `wss://` server (`isAcceptableServerUrl`).
+- Every request to the server — the WebSocket connection and the `/latest-build` check — carries a
+  custom User-Agent, `tenkUserAgent()` (`lib/state/online_transport.dart`): `<app name>/<version>+<build>
+  (<platform> <OS version>)`, e.g. `TenK/1.0.0+95 (Android 14)`. The OS version comes from
+  `device_info_plus` (`AndroidDeviceInfo.version.release`, `IosDeviceInfo.systemVersion`), never from
+  `Platform.operatingSystemVersion` directly — on Android that's the underlying Linux kernel string, not
+  the Android version. Set via the `WebSocket.userAgent` (`dart:io`) static setter, never `headers:` or
+  `customClient:` on `IOWebSocketChannel.connect` — verified by hand (`nc -l` + a real connection):
+  `headers` *adds* to dart:io's own default rather than replacing it (`Dart/x (dart:io), TenK/…`, which
+  breaks an Apache `^TenK/` filter), and `customClient` creates a fresh `HttpClient` that
+  `test/state/online_e2e_test.dart` (a real connection, `flutter test`) can't get through — flutter_test's
+  HTTP mock intercepts it, but not `WebSocket.connect`'s own default client singleton. A reverse-proxy
+  User-Agent filter must cover only `/ws` and `/latest-build` — never `/.well-known/` (fetched by Apple's
+  CDN and Google) or `/j/<code>` (opened by browsers).
 - `test/state/online_e2e_test.dart` starts the real server (`dart run server/bin/server.dart`, after a
   `dart pub get` in `server/`) and drives two real `OnlineSession`s through a game and a reconnect: it is what
   proves the two engines agree.
@@ -401,3 +414,32 @@ them accurate as part of the same batch.
 - Victory: first exact 10000 triggers a final round giving every other player one more turn to match
   it; if another player also reaches exactly 10000 during that round, they bar the previous holder and
   a fresh final round starts around them.
+- Landing exactly on 10000 on a roll (full hand excepted, see above) is never offered as a choice: if
+  some legal keep count hits the target, it's the only sensible one and it's mandatory —
+  `winningDeclineFivesCount` (`turn_state.dart`) finds it; it's unique when it exists, since the exact
+  hit is always the largest legal keep (`maxKeepableFives` already caps there for the same reason).
+  `GameEngine.applyKeep` itself stays neutral (it still does whatever `declineFivesCount` it's handed —
+  existing tests rely on that), so every *decider* must compute and pass this count itself: the UI
+  (`_scheduleAutoAdvanceIfNeeded` in `game_screen.dart`) auto-fires `stopTurn` with no tap, for any
+  human regardless of "auto mode" (not a convenience there, a forced rule — disables Roll and the 5s
+  chips too, and `_rollForHumanTurn`/shake guard against it independently); `GameNotifier.playAiTurnStep`
+  forces the same count for the AI and skips its `decideContinue` strategy check when it lands on the
+  target; `GameAuthority._apply`'s `applyKeep` case rejects any other count. `checkSelection` (the live
+  5s-choice preview broadcast to other online players) deliberately does **not** enforce this — it
+  only previews bounds, not the forced choice, so the cursor stays free to explore before landing.
+- During the final round, voluntarily stopping below the target is forbidden: the only legal way to
+  end a turn there is to bust or match exactly 10000 (`BankFailureReason.mustContinueFinalRound`,
+  `tryBank`'s required `isFinalRound` param, threaded through every live caller — UI, AI preview, the
+  notifier, `GameAuthority`). Direct, load-bearing consequence, **for a game played (or replayed) under
+  this rule** — not for an archived journal predating it, see the leniency below: once any final round
+  has started, `GameEngine.gameOver` can only become `true` via `endBustedTurn` — reaching the target
+  during a final round always *resets* `remainingFinalTurns` around the new holder rather than ending
+  the game, so a bank can never itself be the action that ends a game (see the test suite's
+  `scripted_game.dart` helper, which now always ends on a bust). **Replay leniency**: an archived
+  journal from before this rule can contain a legal final-round bank below target, which *did* end the
+  game then — `GameEngine.bank({enforceFinalRound: true})` defaults strict (every live path keeps that
+  default), but `applyGameAction`'s `bank` case — what `replayGame` *and* `GameNotifier.applyOnlineAction`
+  both go through — passes `enforceFinalRound: false`, so an old journal reaches that same, now-impossible
+  outcome instead of silently stalling mid-replay (see `game_recording_test.dart`'s regression test,
+  which replays exactly this). `GameAuthority`'s own `bank` case calls `engine.bank()` directly, never
+  through `applyGameAction`, so the server stays strict and never inherits that leniency.

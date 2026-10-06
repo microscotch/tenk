@@ -486,6 +486,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get failureMustContinueHotDice => 'Du måste kasta igen.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Du kan inte stanna: sista rundan kräver att du når exakt 10000.';
+
+  @override
   String get failureNotRolledYet =>
       'Du måste kasta tärningarna innan du kan stanna.';
 
@@ -707,7 +711,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Den första spelaren som når exakt 10 000 poäng utlöser en slutrunda: varje annan spelare får en sista chans på sin tur att komma ikapp eller gå förbi. Om en annan spelare också når exakt 10 000 under slutrundan tar hen över kronan och en ny slutrunda börjar runt hen.';
+      'Den första spelaren som når exakt 10 000 poäng utlöser en slutrunda: varje annan spelare får en sista chans på sin tur att komma ikapp. Så snart ett kast gör det möjligt att nå exakt 10 000 sker det automatiskt och rundan stannar genast, oavsett om det är slutrundan eller inte. Under slutrundan kan däremot ingen stanna frivilligt under 10 000: man måste fortsätta kasta tills man når samma resultat eller bommar. Om en annan spelare också når exakt 10 000 under slutrundan tar hen över kronan och en ny slutrunda börjar runt hen.';
 
   @override
   String get onlinePlayButton => 'Spela online';

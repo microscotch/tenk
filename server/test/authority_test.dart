@@ -22,7 +22,13 @@ void playOneMove(GameAuthority authority) {
   } else if (turn.pendingRoll != null) {
     final analysis = turn.pendingRoll!;
     final fives = analysis.declinableFives?.diceCount ?? 0;
-    authority.play(seat, GameActionType.applyKeep, {'declineFivesCount': fives - minKeepableFives(analysis)});
+    // Atteindre exactement 10000 est désormais obligatoire quand ce lancer
+    // le permet (voir winningDeclineFivesCount, imposé par
+    // GameAuthority._checkKeep) : une garde minimale qui s'en détournerait
+    // serait refusée.
+    final winningDecline = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+    final decline = winningDecline ?? (fives - minKeepableFives(analysis));
+    authority.play(seat, GameActionType.applyKeep, {'declineFivesCount': decline});
   } else {
     try {
       authority.play(seat, GameActionType.bank, {});
@@ -209,6 +215,61 @@ void main() {
         expect(() => authority.checkSelection(seat, 0),
             throwsA(isA<IntentRejected>().having((e) => e.code, 'code', ErrorCode.illegalMove)));
       }
+    });
+  });
+
+  group('atteindre exactement 10000 est automatique', () {
+    /// Une partie amenée jusqu'à un lancer où une prise existe qui atteint
+    /// pile 10000, parmi plusieurs prises légales (un vrai choix).
+    GameAuthority atWinningFivesChoice() {
+      for (var seed = 1; seed < 2000; seed++) {
+        final authority = newAuthority(seed);
+        authority.start();
+        for (var moves = 0; moves < 600 && !authority.isOver; moves++) {
+          final engine = authority.engine!;
+          final turn = engine.activeTurn;
+          final analysis = turn?.pendingRoll;
+          if (turn != null && analysis != null && !turn.busted) {
+            final max = maxKeepableFives(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+            final min = minKeepableFives(analysis);
+            final winning = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+            if (winning != null && max > min) return authority;
+          }
+          playOneMove(authority);
+        }
+      }
+      throw StateError('aucun choix gagnant trouvé');
+    }
+
+    test('une sélection non gagnante reste un aperçu accepté (checkSelection), '
+        'mais un VRAI coup qui s\'en détourne est refusé (applyKeep)', () {
+      final authority = atWinningFivesChoice();
+      final seat = authority.currentSeat!;
+      final engine = authority.engine!;
+      final turn = engine.activeTurn!;
+      final analysis = turn.pendingRoll!;
+      final fives = analysis.declinableFives!.diceCount;
+      final min = minKeepableFives(analysis);
+      final max = maxKeepableFives(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+      final winningDecline = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore)!;
+      final winningKeep = fives - winningDecline;
+      final otherKeep = [for (var k = min; k <= max; k++) k].firstWhere((k) => k != winningKeep);
+      final otherDecline = fives - otherKeep;
+
+      // Explorer cette valeur au curseur (avant de valider) reste libre :
+      // checkSelection ne connaît que les bornes, pas l'obligation de gagner.
+      authority.checkSelection(seat, otherDecline);
+
+      // Mais la jouer pour de vrai est refusée : seule la prise gagnante l'est.
+      expect(() => authority.play(seat, GameActionType.applyKeep, {'declineFivesCount': otherDecline}),
+          throwsA(isA<IntentRejected>().having((e) => e.code, 'code', ErrorCode.illegalMove)));
+
+      // La prise gagnante, elle, est acceptée — applyKeep met seulement le
+      // tour à exactement 10000 (bankedScore), c'est le bank qui suit (envoyé
+      // à la suite par stopTurn côté client) qui crédite le joueur.
+      authority.play(seat, GameActionType.applyKeep, {'declineFivesCount': winningDecline});
+      authority.play(seat, GameActionType.bank, {});
+      expect(authority.engine!.players[seat].totalScore, 10000);
     });
   });
 }

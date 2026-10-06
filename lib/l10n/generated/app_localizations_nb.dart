@@ -486,6 +486,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get failureMustContinueHotDice => 'Du må kaste på nytt.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Du kan ikke stoppe: siste runde krever at du når nøyaktig 10000.';
+
+  @override
   String get failureNotRolledYet => 'Du må kaste terningene før du kan stoppe.';
 
   @override
@@ -706,7 +710,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Den første spilleren som når nøyaktig 10 000 poeng, utløser en siste runde: hver av de andre spillerne får en siste sjanse på sin tur til å ta igjen eller slå vedkommende. Hvis en annen spiller også når nøyaktig 10 000 i løpet av denne siste runden, tar han eller hun over kronen, og en ny siste runde starter rundt dem.';
+      'Den første spilleren som når nøyaktig 10 000 poeng, utløser en siste runde: hver av de andre spillerne får en siste sjanse på sin tur til å ta igjen vedkommende. Så snart et kast gjør det mulig å nå nøyaktig 10 000, skjer det automatisk, og runden stopper med en gang — siste runde eller ikke. I siste runde kan derimot ingen frivillig stoppe under 10 000: man må fortsette å kaste til man når det samme resultatet eller bommer. Hvis en annen spiller også når nøyaktig 10 000 i løpet av denne siste runden, tar han eller hun over kronen, og en ny siste runde starter rundt dem.';
 
   @override
   String get onlinePlayButton => 'Spill på nett';

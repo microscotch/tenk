@@ -1036,6 +1036,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       afterKeep,
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: currentTotal,
+      isFinalRound: engine.isInFinalRound,
     );
     if (attempt.success) return; // s'arrêter reste un choix ouvert
 
@@ -1340,6 +1341,24 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     if (turn.pendingRoll != null) {
       final analysis = turn.pendingRoll!;
+      final winningDecline = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+      if (winningDecline != null) {
+        // Atteindre exactement 10000 est automatique, quel que soit le mode
+        // auto du joueur : ce n'est pas une facilité d'auto-jeu, c'est la
+        // seule prise sensée (voir winningDeclineFivesCount). On programme
+        // donc l'action sans passer par _scheduleIfAuto (qui ne la
+        // déclencherait que pour un joueur en mode auto). Le délai ne doit
+        // jamais être plus court que l'animation des dés en cours
+        // (`autoActionDelay` peut être réglé à 0) : sinon le tour banquerait
+        // avant même que les dés soient immobilisés à l'écran.
+        final autoActionDelay = ref.read(settingsProvider).autoActionDelay;
+        final delay = autoActionDelay < DieWidget.maxRollDuration ? DieWidget.maxRollDuration : autoActionDelay;
+        _scheduleAutoAction(() {
+          if (ref.read(gameProvider)?.activeTurn?.pendingRoll != analysis) return;
+          ref.read(gameProvider.notifier).stopTurn(declineFivesCount: winningDecline);
+        }, delay);
+        return;
+      }
       if (_hasRealChoice(turn, analysis, currentTotal: engine.currentPlayer.totalScore)) {
         _cancelAutoAction();
         return;
@@ -1355,8 +1374,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
       turn,
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: engine.currentPlayer.totalScore,
+      isFinalRound: engine.isInFinalRound,
     );
     if (attempt.success) {
+      // Pile sur 10000 (garde déjà appliquée, bank restant à faire — reprise
+      // d'une partie à cet instant précis, ou écho en ligne reçu entre les
+      // deux) : automatique là aussi, jamais une question d'arrêt volontaire.
+      if (engine.currentPlayer.totalScore + turn.bankedScore == winningScore) {
+        _scheduleAutoAction(() {
+          final currentTurn = ref.read(gameProvider)?.activeTurn;
+          if (currentTurn != turn) return;
+          ref.read(gameProvider.notifier).bank();
+        }, ref.read(settingsProvider).autoActionDelay);
+        return;
+      }
       _cancelAutoAction();
       return;
     }
@@ -2703,8 +2734,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
       turn,
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: currentTotal,
+      isFinalRound: engine.isInFinalRound,
     ).success;
-    final stops = canBank && !notifier.previewAiContinue(turn);
+    // Pile sur 10000 : prise automatique, jamais soumise à la stratégie de
+    // l'IA (voir playAiTurnStep).
+    final reachedTarget = currentTotal + turn.bankedScore == winningScore;
+    final stops = canBank && (reachedTarget || !notifier.previewAiContinue(turn));
     return _controlRow(
       primary: _rollButton(
         onPressed: stops ? null : _guarded(action),
@@ -2773,6 +2808,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final notifier = ref.read(gameProvider.notifier);
     if (pending != null) {
       final currentTotal = engine.currentPlayer.totalScore;
+      // Atteindre exactement 10000 est automatique (voir
+      // winningDeclineFivesCount) : un tap sur "Lancer" (déjà désactivé, voir
+      // _buildHumanControlRow) ou une secousse ne doivent pas pouvoir s'en
+      // détourner — le déclenchement automatique (_scheduleAutoAdvanceIfNeeded)
+      // s'en occupe déjà.
+      if (winningDeclineFivesCount(turn, pending, currentTotal: currentTotal) != null) return;
       final fives = pending.declinableFives;
       final minKeep = minKeepableFives(pending);
       final maxKeep = maxKeepableFives(turn, pending, currentTotal: currentTotal);
@@ -2787,6 +2828,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
       // plus rien à lancer, le résultat est déjà à l'écran.
       final afterKeep = ref.read(gameProvider)?.activeTurn;
       if (afterKeep == null || afterKeep.busted) return;
+    } else if (engine.currentPlayer.totalScore + turn.bankedScore == winningScore) {
+      // Garde déjà appliquée, pile sur 10000, bank restant à faire : même
+      // garde-fou, pour le même motif (voir ci-dessus) — relancer ferait
+      // nécessairement dépasser la cible.
+      return;
     }
     notifier.roll();
   }
@@ -2825,16 +2871,35 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final l10n = AppLocalizations.of(context);
     final pending = turn.pendingRoll;
     final currentTotal = engine.currentPlayer.totalScore;
-    final canChoose = pending != null && _hasRealChoice(turn, pending, currentTotal: currentTotal);
+    // Atteindre exactement 10000 est automatique (voir
+    // winningDeclineFivesCount) : ni le choix des 5 ni "Lancer" ne doivent
+    // alors rester actionnables, ou un tap pourrait s'en détourner avant que
+    // le déclenchement automatique (_scheduleAutoAdvanceIfNeeded) n'ait joué —
+    // la garde affichée est alors forcée à cette valeur, "Stop" restant la
+    // seule issue (il suffit d'accélérer le délai, voir _skipPendingAction).
+    final winningDecline = pending == null
+        ? null
+        : winningDeclineFivesCount(turn, pending, currentTotal: currentTotal);
+    // Idem sans lancer en attente : garde déjà appliquée, pile sur 10000,
+    // bank restant à faire (reprise, écho en ligne — voir
+    // _scheduleAutoAdvanceIfNeeded) — "Lancer" ne doit pas plus y être actionnable.
+    final reachedTargetIdle = pending == null && currentTotal + turn.bankedScore == winningScore;
+    // La désactivation elle-même attend `_rollSettled` : sinon elle trahirait
+    // d'avance, pendant que les dés roulent encore, que CE lancer gagne — le
+    // même suspense que pour "Stop" juste en dessous.
+    final forcedWin = (winningDecline != null || reachedTargetIdle) && _rollSettled;
+    final canChoose = pending != null &&
+        (winningDecline == null || !_rollSettled) &&
+        _hasRealChoice(turn, pending, currentTotal: currentTotal);
     final fives = pending?.declinableFives;
     final minKeep = pending != null ? minKeepableFives(pending) : 0;
     // Garder plus que cette borne ferait dépasser 10000 : ces options ne sont
     // pas proposées du tout (voir maxKeepableFives).
     final maxKeep = pending != null ? maxKeepableFives(turn, pending, currentTotal: currentTotal) : 0;
     final selectedKeep = _selectedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
-    final declineCount = pending != null
-        ? (fives?.diceCount ?? 0) - selectedKeep
-        : 0;
+    final declineCount = pending == null
+        ? 0
+        : winningDecline ?? (fives?.diceCount ?? 0) - selectedKeep;
 
     // État hypothétique si la sélection en cours était appliquée (ou déjà
     // décidé si aucun lancer en attente) : sert à la fois au pourcentage du
@@ -2847,6 +2912,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       effective,
       minimumRequired: engine.minimumForCurrentPlayer,
       currentTotal: engine.currentPlayer.totalScore,
+      isFinalRound: engine.isInFinalRound,
     );
     // mustContinue doit refléter l'état hypothétique (`effective`), pas
     // l'état déjà commité (`turn`) : tant qu'un lancer reste en attente sans
@@ -2894,7 +2960,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
           leading: _stopButton(
             onPressed: bankAttempt.success && _rollSettled ? _guarded(onStop) : null,
           ),
-          primary: _rollButton(onPressed: _guarded(onRoll), label: rollLabel),
+          primary: _rollButton(
+            onPressed: !forcedWin ? _guarded(onRoll) : null,
+            label: rollLabel,
+          ),
           trailing: _exchangeControl(
             enabled: canChoose,
             value: selectedKeep,
@@ -3073,6 +3142,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
         return l10n.failureNotRolledYet;
       case BankFailureReason.wouldMakeWinningImpossible:
         return l10n.failureWouldMakeWinningImpossible;
+      case BankFailureReason.mustContinueFinalRound:
+        return l10n.failureMustContinueFinalRound;
       case null:
         return '';
     }

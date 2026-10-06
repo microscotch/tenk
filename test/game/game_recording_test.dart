@@ -1,12 +1,48 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/game_setup.dart';
+import 'package:le10000/game/player.dart';
+import 'package:le10000/game/turn_result.dart';
+import 'package:le10000/game/turn_state.dart';
 
 import '../test_helpers/scripted_game.dart';
 
 void main() {
+  test(
+      'un vieux journal avec un banquage de tour final sous la cible rejoue sans '
+      'planter (archivé avant la règle qui l\'interdit désormais en direct)', () {
+    final engine = GameEngine.newGame(['A', 'B']).copyWith(
+      players: [
+        Player(name: 'A', totalScore: 10000, hasEntered: true),
+        Player(name: 'B', totalScore: 3000, hasEntered: true),
+      ],
+      currentPlayerIndex: 1,
+      triggeringWinnerIndex: 0,
+      remainingFinalTurns: 1,
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true), // B : 3000 -> 3200
+    );
+
+    // En direct, ce banquage est désormais refusé (mustContinueFinalRound) :
+    // voir GameEngine.bank, enforceFinalRound par défaut.
+    final liveAttempt = engine.bank().$2;
+    expect(liveAttempt.success, isFalse);
+    expect(liveAttempt.reason, BankFailureReason.mustContinueFinalRound);
+
+    // Mais un journal archivé avant l'existence de cette règle contient ce
+    // même banquage, alors légal : applyGameAction (ce que replayGame rejoue)
+    // doit continuer à l'accepter tel quel (GameEngine.bank(enforceFinalRound:
+    // false)), pour que rejouer une vieille partie retombe sur le même état
+    // qu'à l'époque plutôt que d'échouer silencieusement et de désynchroniser
+    // tout le rejeu qui suit.
+    final replayed = applyGameAction(engine, GameAction.bank(), Random(0));
+    expect(replayed.players[1].totalScore, 3200);
+    expect(replayed.gameOver, isTrue, reason: 'B n\'a pas égalé 10000 : la partie se termine, A gagne');
+    expect(replayed.winnerIndex, 0);
+  });
+
   test('rejouer le journal depuis la seed reproduit exactement le même état final', () {
     const seed = 20260901;
     const setup = GameSetup(playerNames: ['A', 'B', 'C']);

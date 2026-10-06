@@ -10,6 +10,7 @@ import '../game/game_engine.dart';
 import '../game/game_recording.dart';
 import '../game/dice_roll.dart';
 import '../game/game_setup.dart';
+import '../game/player.dart' show winningScore;
 import '../game/turn_result.dart';
 import '../game/turn_state.dart';
 import 'game_save_store.dart';
@@ -596,8 +597,14 @@ class GameNotifier extends Notifier<GameEngine?> {
         turn,
         minimumRequired: engine.minimumForCurrentPlayer,
         currentTotal: engine.currentPlayer.totalScore,
+        isFinalRound: engine.isInFinalRound,
       );
-      if (attempt.success && !previewAiContinue(turn)) {
+      // Pile sur 10000 : la seule prise sensée, jamais une question de
+      // stratégie — on ne consulte pas previewAiContinue dans ce cas (voir
+      // winningDeclineFivesCount, déjà appliqué par previewAiDeclineFives
+      // juste au-dessus pour en arriver là).
+      final reachedTarget = engine.currentPlayer.totalScore + turn.bankedScore == winningScore;
+      if (attempt.success && (reachedTarget || !previewAiContinue(turn))) {
         bank();
         return;
       }
@@ -636,6 +643,12 @@ class GameNotifier extends Notifier<GameEngine?> {
   int previewAiDeclineFives(TurnState turn) {
     final engine = state!;
     final analysis = turn.pendingRoll!;
+    // Atteindre exactement 10000 est automatique, pas une décision de
+    // stratégie : si ce lancer le permet, c'est la seule prise sensée,
+    // imposée avant même de consulter le profil d'IA (voir
+    // winningDeclineFivesCount).
+    final winningDecline = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
+    if (winningDecline != null) return winningDecline;
     final fives = analysis.declinableFives?.diceCount ?? 0;
     final minKeep = minKeepableFives(analysis);
     final maxKeep = maxKeepableFives(

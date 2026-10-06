@@ -487,6 +487,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get failureMustContinueHotDice => 'Devi rilanciare.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Non puoi fermarti: l\'ultimo giro richiede di raggiungere esattamente 10000.';
+
+  @override
   String get failureNotRolledYet =>
       'Devi lanciare i dadi prima di poterti fermare.';
 
@@ -711,7 +715,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Il primo giocatore che raggiunge esattamente 10.000 punti fa scattare un giro finale: ogni altro giocatore ha un\'ultima possibilità di eguagliarlo o superarlo al proprio turno. Se durante il giro finale anche un altro giocatore raggiunge esattamente 10.000, prende lui la corona e ricomincia un nuovo giro finale attorno a lui.';
+      'Il primo giocatore che raggiunge esattamente 10.000 punti fa scattare un giro finale: ogni altro giocatore ha un\'ultima possibilità di eguagliarlo al proprio turno. Non appena un lancio permette di raggiungere esattamente 10.000, la presa è automatica e il turno si ferma subito, giro finale o no. Durante il giro finale, invece, nessuno può fermarsi volontariamente sotto i 10.000: bisogna continuare a lanciare i dadi finché non si eguaglia quel punteggio o si fa uno sballo. Se durante il giro finale anche un altro giocatore raggiunge esattamente 10.000, prende lui la corona e ricomincia un nuovo giro finale attorno a lui.';
 
   @override
   String get onlinePlayButton => 'Gioca online';

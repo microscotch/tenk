@@ -485,6 +485,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failureMustContinueHotDice => 'You must reroll.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Can\'t stop: the final round requires reaching exactly 10000.';
+
+  @override
   String get failureNotRolledYet =>
       'You must roll the dice before you can stop.';
 
@@ -706,7 +710,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'The first player to reach exactly 10,000 points triggers a final round: every other player gets one last chance to match or beat them on their turn. If another player also reaches exactly 10,000 during that final round, they take the crown instead and a new final round starts around them.';
+      'The first player to reach exactly 10,000 points triggers a final round: every other player gets one last chance to match them on their turn. Whenever a roll makes it possible to land on exactly 10,000, the take happens automatically and the turn stops right away, final round or not. During the final round, though, nobody may voluntarily stop below 10,000: you must keep rolling until you match that score or bust. If another player also reaches exactly 10,000, they take the crown instead and a new final round starts around them.';
 
   @override
   String get onlinePlayButton => 'Play online';

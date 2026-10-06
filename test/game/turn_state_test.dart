@@ -293,7 +293,7 @@ void main() {
     test('échoue sous le minimum requis', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 6]));
       state = applyKeepDecision(state); // 100 points
-      final attempt = tryBank(state, minimumRequired: 500, currentTotal: 0);
+      final attempt = tryBank(state, minimumRequired: 500, currentTotal: 0, isFinalRound: false);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.belowMinimum);
     });
@@ -302,7 +302,7 @@ void main() {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 5, 3, 4]));
       state = applyKeepDecision(state); // 100+100+50 = 250
       expect(state.bankedScore, 250);
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0, isFinalRound: false);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.endsIn50);
     });
@@ -311,7 +311,7 @@ void main() {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 2, 3, 4, 5]));
       state = applyKeepDecision(state); // suite, 500 points, tout est gardé -> hot dice
       expect(state.mustContinue, isTrue);
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0, isFinalRound: false);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.mustContinueHotDice);
     });
@@ -324,7 +324,7 @@ void main() {
       // Une main pleine oblige à relancer sans exception : tomber pile sur
       // 10000 n'est pas une victoire mais une impasse (tout relancer
       // dépasserait), sanctionnée en craque par GameEngine.applyKeep.
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0, isFinalRound: false);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.mustContinueHotDice);
     });
@@ -332,7 +332,7 @@ void main() {
     test('succès si minimum atteint et score valide', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
       state = applyKeepDecision(state); // 200
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0, isFinalRound: false);
       expect(attempt.success, isTrue);
       expect(attempt.bankedPoints, 200);
     });
@@ -341,7 +341,7 @@ void main() {
       // Simule un tour qui démarre sur une main héritée : le score hérité
       // dépasse déjà le minimum, mais aucun dé n'a été relancé cette fois-ci.
       const state = TurnState(diceToRoll: 3, bankedScore: 500);
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 0, isFinalRound: false);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.notRolledYet);
     });
@@ -352,7 +352,7 @@ void main() {
       // jamais retomber pile sur 10000 (9900+200 dépasserait).
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
       state = applyKeepDecision(state); // 200
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9700);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9700, isFinalRound: false);
       expect(attempt.success, isFalse);
       expect(attempt.reason, BankFailureReason.wouldMakeWinningImpossible);
     });
@@ -360,7 +360,7 @@ void main() {
     test('succès à la limite exacte : 9600+200=9800 laisse tout juste un tour futur possible', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
       state = applyKeepDecision(state); // 200
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9600);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9600, isFinalRound: false);
       expect(attempt.success, isTrue);
       expect(attempt.bankedPoints, 200);
     });
@@ -368,9 +368,54 @@ void main() {
     test('succès si banquer atteint exactement 10000 en partant de près de la cible', () {
       var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
       state = applyKeepDecision(state); // 200
-      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9800);
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9800, isFinalRound: false);
       expect(attempt.success, isTrue);
       expect(attempt.bankedPoints, 200);
+    });
+
+    test('isFinalRound : échoue sous la cible, même si banquer serait sinon légal', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state); // 200
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9000, isFinalRound: true);
+      expect(attempt.success, isFalse);
+      expect(attempt.reason, BankFailureReason.mustContinueFinalRound);
+    });
+
+    test('isFinalRound : réussit toujours pile sur 10000', () {
+      var state = rollTurn(TurnState.initial(5), random: _QueueRandom([1, 1, 2, 3, 4]));
+      state = applyKeepDecision(state); // 200
+      final attempt = tryBank(state, minimumRequired: 200, currentTotal: 9800, isFinalRound: true);
+      expect(attempt.success, isTrue);
+      expect(attempt.bankedPoints, 200);
+    });
+  });
+
+  group('winningDeclineFivesCount', () {
+    test('un choix de 5 où garder le maximum légal atteint pile 10000', () {
+      final analysis = analyzeRoll([5, 5, 3]); // deux 5 déclinables + un junk
+      final state = TurnState(diceToRoll: 3, bankedScore: 0, pendingRoll: analysis);
+      // garder 1 -> 9950, garder 2 -> 10000 : un vrai choix (min 1, max 2),
+      // dont celui qui gagne est de tout garder (decline = 0).
+      expect(winningDeclineFivesCount(state, analysis, currentTotal: 9900), 0);
+    });
+
+    test('des groupes obligatoires seuls (aucun choix) qui atteignent pile 10000', () {
+      final analysis = analyzeRoll([1, 1, 1, 6, 6]); // brelan d'as (1000), 6 6 junk
+      final state = TurnState(diceToRoll: 5, bankedScore: 0, pendingRoll: analysis);
+      expect(winningDeclineFivesCount(state, analysis, currentTotal: 9000), 0);
+    });
+
+    test('une main pleine (hors quinte d\'as) tombant pile sur 10000 ne compte pas : null', () {
+      final analysis = analyzeRoll([1, 2, 3, 4, 5]); // suite, 500 points, tout gardé -> dés chauds
+      final state = TurnState(diceToRoll: 5, bankedScore: 0, pendingRoll: analysis);
+      expect(winningDeclineFivesCount(state, analysis, currentTotal: 9500), isNull);
+    });
+
+    test('aucun nombre de 5 gardé n\'atteint exactement la cible : null', () {
+      final analysis = analyzeRoll([5, 5, 3]);
+      final state = TurnState(diceToRoll: 3, bankedScore: 0, pendingRoll: analysis);
+      // garder 1 -> 9050, garder 2 -> 9100 : jamais pile 9000+100=... ni 10000.
+      expect(winningDeclineFivesCount(state, analysis, currentTotal: 9000), isNull);
     });
   });
 

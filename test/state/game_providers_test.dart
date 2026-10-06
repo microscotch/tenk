@@ -3,7 +3,11 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/ai/ai_profiles.dart';
+import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
+import 'package:le10000/game/player.dart';
+import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
 
@@ -186,5 +190,33 @@ void main() {
     await _flushMicrotasks();
 
     expect(await store.exists(42), isTrue);
+  });
+
+  test(
+      'playAiTurnStep banque pile sur 10000 sans consulter la stratégie de l\'IA, '
+      'même la plus joueuse avec un risque perçu faible', () {
+    final notifier = container.read(gameProvider.notifier);
+    var engine = GameEngine.newGame(['Bot', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [
+        Player(name: 'Bot', totalScore: 9800, hasEntered: true),
+        Player(name: 'B', hasEntered: true),
+      ],
+      // diceToRoll: 5 -> risque de craquer perçu très faible : une IA
+      // agressive (budget de risque 0.65) choisirait de continuer si cette
+      // décision passait par decideContinue. bankedScore: 200 -> pile 10000.
+      activeTurn: const TurnState(diceToRoll: 5, bankedScore: 200, hasRolledThisTurn: true),
+    );
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['Bot', 'B'], aiPlayers: {0: AiDifficulty.agressif}));
+
+    notifier.playAiTurnStep();
+
+    final after = container.read(gameProvider)!;
+    // Le tour de Bot doit être banqué, pas relancé : la main passe à B — qui
+    // démarre d'ailleurs lui-même tout seul (5 dés neufs hérités, aucun vrai
+    // choix de main), d'où activeTurn à nouveau non null, mais pour B cette
+    // fois.
+    expect(after.players[0].totalScore, 10000);
+    expect(after.currentPlayerIndex, 1, reason: 'la main doit être passée à B après le banquage');
   });
 }

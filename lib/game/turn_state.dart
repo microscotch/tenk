@@ -327,6 +327,31 @@ int maxKeepableFives(TurnState state, RollAnalysis analysis, {required int curre
   return 0;
 }
 
+/// Si garder le maximum légal de 5 isolés ([maxKeepableFives]) sur ce lancer
+/// permet d'atteindre exactement [winningScore] sans faire de dés chauds,
+/// le nombre de 5 à décliner pour cela — sinon `null`.
+///
+/// Dès que la cible est atteignable, elle le devient forcément en gardant ce
+/// maximum : le dépasser ferait craquer ([maxKeepableFives] le plafonne déjà
+/// pour cette raison), et n'importe quel nombre inférieur resterait en-deçà.
+/// Une fois ce choix identifié, c'est la seule prise sensée (voir les
+/// appelants) : elle est donc imposée plutôt que simplement proposée, qu'il
+/// y ait par ailleurs un vrai choix de 5 ou pas.
+///
+/// Main pleine ("hors main pleine" dans la règle) volontairement exclue :
+/// c'est l'autre cas, géré séparément par [GameEngine.applyKeep] (quinte
+/// d'as gagnante, sinon craque).
+int? winningDeclineFivesCount(TurnState state, RollAnalysis analysis, {required int currentTotal}) {
+  final fives = analysis.declinableFives;
+  final maxKeep = maxKeepableFives(state, analysis, currentTotal: currentTotal);
+  if (maxKeep < minKeepableFives(analysis)) return null; // craque couru d'avance, pas notre affaire ici
+  final decline = fives == null ? 0 : fives.diceCount - maxKeep;
+  final hypothetical = applyKeepDecision(state, declineFivesCount: decline);
+  if (hypothetical.mustContinue) return null;
+  if (currentTotal + hypothetical.bankedScore != winningScore) return null;
+  return decline;
+}
+
 /// Applique la décision du joueur sur le lancer en attente : combien de 5
 /// isolés (parmi ceux déclinables) il choisit de ne PAS garder pour les
 /// relancer avec les dés non-marquants.
@@ -414,7 +439,13 @@ TurnState applyKeepDecision(TurnState state, {int declineFivesCount = 0}) {
 ///   minimum par tour l'en empêcherait toujours) : refusé, pour ne pas
 ///   piéger le joueur dans une position de victoire déjà mathématiquement
 ///   impossible sans qu'il l'ait choisi explicitement en craquant.
-BankAttempt tryBank(TurnState state, {required int minimumRequired, required int currentTotal}) {
+///
+/// [isFinalRound] (voir `GameEngine.isInFinalRound`) interdit tout arrêt
+/// volontaire sous la cible : le seul but du tour final est de l'atteindre
+/// pile pour barrer le détenteur actuel, pas d'engranger un score moindre.
+/// Obligatoire plutôt que par défaut, pour qu'aucun appelant ne l'oublie —
+/// voir [BankFailureReason.mustContinueFinalRound].
+BankAttempt tryBank(TurnState state, {required int minimumRequired, required int currentTotal, required bool isFinalRound}) {
   if (state.pendingRoll != null) {
     throw StateError('Une décision est en attente sur le lancer précédent');
   }
@@ -431,6 +462,9 @@ BankAttempt tryBank(TurnState state, {required int minimumRequired, required int
   final newTotal = currentTotal + state.bankedScore;
   if (newTotal == winningScore) {
     return BankAttempt.success(state.bankedScore);
+  }
+  if (isFinalRound) {
+    return const BankAttempt.failure(BankFailureReason.mustContinueFinalRound);
   }
   if (state.bankedScore < minimumRequired) {
     return const BankAttempt.failure(BankFailureReason.belowMinimum);

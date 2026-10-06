@@ -440,6 +440,7 @@ void main() {
       resumed.activeTurn!,
       minimumRequired: resumed.minimumForCurrentPlayer,
       currentTotal: resumed.currentPlayer.totalScore,
+      isFinalRound: false,
     );
     expect(attempt.success, isFalse);
     expect(attempt.reason, BankFailureReason.notRolledYet);
@@ -471,13 +472,17 @@ void main() {
     expect(after.gameOver, isFalse);
     expect(after.currentPlayerIndex, 2); // au tour de C
 
-    // C joue son tour final mais n'égale pas 10000 (pas de collision).
+    // C joue son tour final mais n'égale pas 10000 : s'arrêter sous la cible
+    // est désormais interdit pendant le tour final (seul un score pile sur
+    // 10000 le serait) — il doit relancer, et craque.
     after = after.startTurn().copyWith(
           activeTurn: const TurnState(diceToRoll: 3, bankedScore: 6000, hasRolledThisTurn: true),
         );
-    final (finalEngine, finalAttempt) = after.bank();
-    expect(finalAttempt.success, isTrue);
-    expect(finalEngine.players[2].totalScore, 9000);
+    final blockedAttempt = after.bank().$2;
+    expect(blockedAttempt.success, isFalse);
+    expect(blockedAttempt.reason, BankFailureReason.mustContinueFinalRound);
+    after = after.copyWith(activeTurn: const TurnState(diceToRoll: 3, bankedScore: 6000, busted: true));
+    final finalEngine = after.endBustedTurn();
     expect(finalEngine.gameOver, isTrue);
     expect(finalEngine.winnerIndex, 0); // A gagne, personne ne l'a égalé
   });
@@ -529,12 +534,17 @@ void main() {
     expect(end.gameOver, isFalse);
     expect(end.currentPlayerIndex, 1); // au tour de B
 
-    // B valide un tour qui n'égale pas 10000 : le tour final se termine, C gagne.
+    // B n'égale pas 10000 : s'arrêter sous la cible est désormais interdit
+    // pendant le tour final, il doit relancer, et craque — le tour final se
+    // termine, C gagne.
     end = end.startTurn().copyWith(
           activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true), // B : 3000 -> 3200
         );
-    final (finalEngine, finalAttempt) = end.bank();
-    expect(finalAttempt.success, isTrue);
+    final blockedAttempt = end.bank().$2;
+    expect(blockedAttempt.success, isFalse);
+    expect(blockedAttempt.reason, BankFailureReason.mustContinueFinalRound);
+    end = end.copyWith(activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, busted: true));
+    final finalEngine = end.endBustedTurn();
     expect(finalEngine.gameOver, isTrue);
     expect(finalEngine.winnerIndex, 2); // C conserve la couronne jusqu'au bout
   });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
 import 'package:le10000/game/turn_state.dart';
@@ -23,8 +24,9 @@ import '../test_helpers/fake_game_save_store.dart';
 void main() {
   final navigatorKey = GlobalKey<NavigatorState>();
 
-  /// Accueil + écran de jeu par-dessus, partie en cours (le tour de B est
-  /// banquable, donc l'écran reste stable au lieu d'enchaîner tout seul).
+  /// Accueil + écran de jeu par-dessus, partie en cours (le lancer de B est
+  /// déjà craqué, en attente de révélation, donc l'écran reste stable au
+  /// lieu d'enchaîner tout seul).
   Future<ProviderContainer> pumpGameScreen(
     WidgetTester tester, {
     TargetPlatform? platform,
@@ -60,7 +62,15 @@ void main() {
       currentPlayerIndex: 1,
       triggeringWinnerIndex: 0,
       remainingFinalTurns: 1,
-      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 200, hasRolledThisTurn: true),
+      // S'arrêter sous la cible est interdit pendant le tour final (voir
+      // BankFailureReason.mustContinueFinalRound) : B ne peut plus que
+      // relancer, ici sur un craque déjà constaté (aucun dé marquant).
+      activeTurn: TurnState(
+        diceToRoll: 3,
+        bankedScore: 200,
+        pendingRoll: analyzeRoll([2, 3, 4]),
+        busted: true,
+      ),
     );
     container.read(gameProvider.notifier).debugLoadState(
           engine,
@@ -75,13 +85,17 @@ void main() {
     return container;
   }
 
-  /// Même pile, poussée jusqu'à la fin de partie : B banque son tour final,
+  /// Même pile, poussée jusqu'à la fin de partie : le craque de B sur son
+  /// tour final (seule issue possible, voir [pumpGameScreen]) est révélé,
   /// le moteur passe en `gameOver` et GameScreen pousse lui-même
   /// [GameOverScreen] depuis son `ref.listen`, exactement comme en jeu.
   Future<void> pumpEndOfGame(WidgetTester tester, {TargetPlatform? platform}) async {
     await pumpGameScreen(tester, platform: platform);
-    await tester.ensureVisible(find.byIcon(Icons.front_hand));
-    await tester.tap(find.byIcon(Icons.front_hand));
+    // La popup de craque attend l'arrêt du plus lent des dés (voir
+    // GameScreen.bustRevealDelay) avant d'afficher "Continuer".
+    await tester.pump(GameScreen.bustRevealDelay);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
     expect(find.byType(GameOverScreen), findsOneWidget);
   }

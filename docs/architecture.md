@@ -46,7 +46,18 @@ une partie rejouable à l'identique.
   partagent la même conséquence — appliquer le score, barrer les collisions,
   passer la main — factorisée dans `_applySuccessfulBank`, pour qu'un
   banquage réussi se comporte toujours pareil, quel que soit le chemin qui y
-  mène.
+  mène. Atteindre exactement 10000 relance toujours un tour final complet
+  (`remainingFinalTurns` reparti à `players.length - 1`) plutôt que de
+  terminer la partie sur-le-champ — même la première fois : en jeu direct,
+  sous la règle stricte par défaut, `gameOver` ne peut donc plus devenir vrai
+  depuis un banquage, seulement depuis `endBustedTurn`. `bank({
+  enforceFinalRound = true})` n'impose cette rigueur que par défaut,
+  désactivable : le rejeu d'un journal archivé avant l'interdiction de
+  s'arrêter en tour final (voir `tryBank` ci-dessous) la désactive pour
+  retomber sur l'état d'alors — y compris, le cas échéant, une victoire par
+  banquage sous la cible, légale à l'époque. L'invariant ne vaut donc que
+  pour une partie jouée (ou rejouée) sous la règle actuelle, pas pour
+  n'importe quel journal archivé.
 - **`Player` porte une grille complète (`List<ScoreEntry>`), pas un score
   scalaire.** C'est délibéré : un tiret ou un barré s'attache à *la ligne* qui
   l'a reçue et y reste, même après des tours réussis. `Player.hasTiret` est
@@ -89,7 +100,17 @@ Les **fonctions pures** (encarts violets) — `rollDice`, `analyzeRoll`, `rollTu
 `applyKeepDecision`, `tryBank`, mais aussi celles qui lisent un journal
 (`replayGame`, `replayTurnStarts`, `collectGameStatistics`, `scoreSeriesByPlayer`)
 — sont des fonctions de haut niveau, pas des méthodes. Le RNG y est injectable,
-ce qui rend les tests déterministes.
+ce qui rend les tests déterministes. `tryBank` prend un `isFinalRound`
+obligatoire (jamais par défaut, pour qu'aucun appelant ne l'oublie) : pendant
+le tour final, il refuse tout arrêt sous la cible
+(`BankFailureReason.mustContinueFinalRound`), sauf pile sur 10000, toujours
+autorisé. `winningDeclineFivesCount` dit, pour un lancer donné, le nombre de 5
+à décliner qui atteint exactement la cible s'il en existe un — forcément le
+seul, puisque c'est toujours la garde maximale légale (`maxKeepableFives`,
+déjà plafonnée pour ne jamais dépasser 10000) : quand il existe, c'est la
+seule prise sensée, imposée par chaque décideur (voir `GameEngine` ci-dessus
+et `lib/state`/`server` plus bas) plutôt que par la fonction elle-même, qui
+reste neutre.
 
 ## Fiches, statistiques et journal (bas du diagramme)
 
@@ -128,7 +149,11 @@ La stratégie ne raisonne que sur le tour en cours : elle ignore le score déjà
 acquis, donc le plafond de 10000. C'est `GameNotifier` qui borne ses réponses,
 au seul endroit qui connaît les deux — et par le même calcul que celui affiché à
 l'écran (`previewAiDeclineFives`), pour que l'affiché et le joué ne divergent
-pas.
+pas. Atteindre exactement 10000 n'est jamais soumis à la stratégie :
+`previewAiDeclineFives` impose la garde gagnante (`winningDeclineFivesCount`)
+avant même de consulter le profil, et `playAiTurnStep` banque sans consulter
+`decideContinue` dès que ce point est atteint — un profil « agressif » ne
+risque donc jamais de relancer depuis une victoire acquise.
 
 ## La couche d'état (vert)
 
@@ -205,6 +230,13 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
 - **Le protocole** (`lib/game/online/protocol.dart`, partagé par les deux côtés) est du JSON versionné.
   `ClientMessage.fromJson` valide chaque champ et ne laisse jamais un client demander autre chose qu'un coup
   de tour : ni départage, ni lancer, ni faces (elles sont ignorées).
+- **`tenkUserAgent()`** (`online_transport.dart`) calcule, une seule fois, le User-Agent envoyé avec le
+  WebSocket et `/latest-build` : nom/version/build de l'app (`PackageInfo`) et plateforme/version d'OS
+  (`device_info_plus` — jamais `Platform.operatingSystemVersion`, qui donne le noyau Linux sur Android,
+  pas la version Android). Appliqué via le setter statique `WebSocket.userAgent` (`dart:io`), pas
+  `headers:`/`customClient:` sur `IOWebSocketChannel.connect` : le premier s'ajoute à la valeur par
+  défaut plutôt que de la remplacer, le second crée un `HttpClient` qu'intercepte le mock HTTP de
+  `flutter_test` (`test/state/online_e2e_test.dart`, une vraie connexion).
 - **`OnlineSession`** (`lib/state`) tient la connexion, le salon et le jeton de reprise (gardé dans
   `SharedPreferences`) ; elle reconnecte avec attente croissante — jamais en arrière-plan, où le système coupe souvent le réseau (partage du code), mais aussitôt au retour (`appPaused` / `appResumed`, branchés par `onlineLifecycleProvider`). L'échec d'une reconnexion automatique ne s'affiche pas en erreur : l'état « hors ligne » suffit au bandeau, sinon un « Serveur injoignable » par tentative s'empilerait à l'écran. « Rejoindre » un salon où l'app a déjà une place (app tuée puis rouverte par le lien d'invitation) reprend cette place avec le jeton gardé, et n'entre comme un nouveau joueur que si le serveur ne le reconnaît plus — sinon le serveur verrait un second joueur au même pseudo, suffixé (« Anna 2 »). Une partie finie n'a plus rien à reprendre : le serveur garde son salon, et la session y resterait, l'entrée en ligne proposant alors de « reprendre » une partie qui n'a plus rien à montrer (un écran qui attend sans fin). L'entrée quitte donc ce salon dès qu'elle s'ouvre (`leaveFinishedGame`, vrai quand `inFinishedGame`), comme quand elle y revient par une reprise, et `onlineSavedGameProvider` ne propose aucune place tant que le salon est fini. Elle numérote les actions : un doublon est
   ignoré, un trou ou un désaccord repart du journal complet du serveur. `GameNotifier` a un **mode en ligne**
@@ -220,6 +252,9 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   comme une vraie garde (`GameAuthority.checkSelection`), le relaie aux autres (`ServerMessage.selection`, daté du
   rang de la prochaine action) et le garde pour qui se reconnecte pendant l'hésitation, jusqu'au coup suivant.
   Côté client, `onlineKeepSelectionProvider` le tient ; l'écran ne le suit que s'il date du lancer affiché.
+  `checkSelection` ne vérifie que les bornes légales, jamais l'obligation de prendre une garde gagnante sur
+  10000 (voir plus haut) : c'est un aperçu, pas un coup, et le curseur reste libre d'explorer — seul le VRAI
+  coup (`applyKeep`, dans `_apply`) l'impose, et le refuse sinon.
 - **Les émotions** (un chat contrôlé) : quatre émotions (`Emote`, `lib/game/online/emotes.dart`), chacune avec
   quelques phrases courtes, toutes désignées par des noms stables — jamais de texte libre, rien à modérer, et chaque
   appareil affiche la phrase dans sa langue. `OnlineSession.sendEmote` envoie `ClientMessage.emote` ; le salon (`Room`)
@@ -267,7 +302,13 @@ Représentée volontairement en couche grossière : les widgets Flutter sont
 structurellement uniformes, et les détailler noierait le modèle. À retenir :
 `GameScreen` est de loin l'écran le plus dense (il rend des vues différentes
 selon l'état du tour, pilote l'avancement automatique et sert aussi de rejeu
-spectateur, avec ses commandes fixées en bas), et deux services
+spectateur, avec ses commandes fixées en bas). `_scheduleAutoAdvanceIfNeeded`
+y déclenche aussi, pour n'importe quel joueur humain (jamais limité au mode
+auto, puisque ce n'est pas une facilité mais une règle forcée), la prise
+automatique sur exactement 10000 — bouton Lancer et choix des 5 désactivés
+le temps que le minuteur s'exécute (ou qu'un tap sur l'écran l'accélère) —
+et le même filet pour un tour repris inerte à ce point précis (après garde,
+avant banquage). Deux services
 vivent à part — `SoundEffects` (singleton observant le cycle de vie) et
 `ShakeDetector` (accéléromètre → lancer de dés). Le bruit d'un lancer vient de
 vrais lancers enregistrés, plusieurs prises par nombre de dés

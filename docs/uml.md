@@ -52,7 +52,11 @@ Lancer, garde des 5, arrêt, main pleine, craque et ses causes (dépassement au 
 
 Ce qui se passe entre les tours : choix de la main héritée, tour final déclenché par le premier 10000 pile
 (quinte d'as comprise), couronne qui change de main quand un autre atteint 10000 à son tour, fin de partie,
-archivage, et la pause, possible à tout moment puisque chaque coup est déjà sauvegardé.
+archivage, et la pause, possible à tout moment puisque chaque coup est déjà sauvegardé. Pendant le tour
+final, s'arrêter sous la cible est interdit : la seule issue d'un tour y est le craque, ou l'égalité pile
+sur 10000 (qui peut encore laisser une main héritée au joueur suivant, comme en jeu normal). En jeu direct
+(hors rejeu d'une partie archivée avant cette règle), la partie elle-même ne peut donc plus se terminer que
+sur un craque.
 
 ### Départage — [`uml/state-dice-off.png`](uml/state-dice-off.png)
 

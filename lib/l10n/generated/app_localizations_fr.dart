@@ -486,6 +486,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get failureMustContinueHotDice => 'Vous devez relancer.';
 
   @override
+  String get failureMustContinueFinalRound =>
+      'Impossible de s\'arrêter : le tour final exige d\'atteindre 10000 pile.';
+
+  @override
   String get failureNotRolledYet =>
       'Vous devez lancer les dés avant de pouvoir vous arrêter.';
 
@@ -708,7 +712,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesVictoryBody =>
-      'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler ou de le dépasser à son tour. Si un autre joueur atteint lui aussi exactement 10 000 pendant ce tour final, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.';
+      'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler à son tour. Dès qu\'un lancer permet d\'atteindre exactement 10 000, la prise est automatique et le tour s\'arrête aussitôt, en tour final ou non. Pendant le tour final, en revanche, personne ne peut s\'arrêter volontairement en dessous de 10 000 : il faut continuer à lancer les dés jusqu\'à égaler ce score ou craquer. Si un autre joueur atteint lui aussi exactement 10 000, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.';
 
   @override
   String get onlinePlayButton => 'Jouer en ligne';
