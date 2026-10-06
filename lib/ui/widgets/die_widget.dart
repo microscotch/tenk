@@ -38,6 +38,10 @@ class DieWidget extends StatelessWidget {
   /// tenir sur une seule ligne (voir `_fittedDiceRow` dans game_screen.dart).
   final double size;
 
+  /// Graine de l'orientation d'arrêt du dé (voir [DieRollMotion.resting]) ;
+  /// null pour une orientation tirée au hasard à chaque dé.
+  final int? restSeed;
+
   /// Taille maximale d'un dé : atteinte seulement sur écran large, une
   /// rangée de 5 étant contrainte par la largeur disponible bien avant sur un
   /// téléphone (voir `_fittedDiceRow` dans game_screen.dart).
@@ -67,15 +71,16 @@ class DieWidget extends StatelessWidget {
     this.rollToken,
     this.bodyColor,
     this.size = defaultSize,
+    this.restSeed,
   });
 
   @override
   Widget build(BuildContext context) {
     if (Scene3DDie.isSupported) {
-      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size);
+      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size, restSeed: restSeed);
     }
     return _TransformCubeDie(
-        value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size);
+        value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size, restSeed: restSeed);
   }
 }
 
@@ -124,16 +129,25 @@ class DieRollMotion {
   /// Mouvement d'un dé qui n'a pas (encore) été lancé : sans rotation ni
   /// rebond ([anglesAt] et [hopAt] n'en montrent que la position de repos),
   /// mais avec une orientation d'arrêt tirée au sort comme pour un lancer.
-  factory DieRollMotion.resting(math.Random random) => DieRollMotion(
-        duration: DieWidget.maxRollDuration,
-        turnsX: 0,
-        turnsY: 0,
-        turnsZ: 0,
-        quarterTurns: random.nextInt(4),
-        restYaw: _randomRestYaw(random),
-      );
+  ///
+  /// [restSeed], s'il est donné, fixe l'orientation d'arrêt (et elle seule) :
+  /// deux dés de même graine s'immobilisent donc exactement de la même façon,
+  /// ce qui permet à un dé de garder son orientation en passant de la piste à
+  /// la main courante (voir `_restSeed` dans game_screen.dart).
+  factory DieRollMotion.resting(math.Random random, {int? restSeed}) {
+    final rest = restSeed == null ? random : math.Random(restSeed);
+    return DieRollMotion(
+      duration: DieWidget.maxRollDuration,
+      turnsX: 0,
+      turnsY: 0,
+      turnsZ: 0,
+      quarterTurns: rest.nextInt(4),
+      restYaw: _randomRestYaw(rest),
+    );
+  }
 
-  factory DieRollMotion.random(math.Random random) {
+  factory DieRollMotion.random(math.Random random, {int? restSeed}) {
+    final rest = restSeed == null ? random : math.Random(restSeed);
     int signed(int turns) => random.nextBool() ? turns : -turns;
     final spanMs = (DieWidget.maxRollDuration - DieWidget.minRollDuration).inMilliseconds;
     return DieRollMotion(
@@ -141,11 +155,11 @@ class DieRollMotion {
       turnsX: signed(2 + random.nextInt(3)),
       turnsY: signed(2 + random.nextInt(3)),
       turnsZ: signed(1 + random.nextInt(2)),
-      quarterTurns: random.nextInt(4),
+      quarterTurns: rest.nextInt(4),
       bounces: 2 + random.nextInt(3),
       firstHop: 0.7 + random.nextDouble() * 0.3,
       restitution: 0.45 + random.nextDouble() * 0.15,
-      restYaw: _randomRestYaw(random),
+      restYaw: _randomRestYaw(rest),
     );
   }
 
@@ -257,6 +271,7 @@ class _TransformCubeDie extends StatefulWidget {
   final Object? rollToken;
   final Color? bodyColor;
   final double size;
+  final int? restSeed;
 
   const _TransformCubeDie({
     required this.value,
@@ -265,6 +280,7 @@ class _TransformCubeDie extends StatefulWidget {
     this.rollToken,
     this.bodyColor,
     required this.size,
+    this.restSeed,
   });
 
   @override
@@ -306,7 +322,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
   late final AnimationController _controller;
   Object? _lastRollToken;
   final _random = math.Random();
-  late DieRollMotion _motion = DieRollMotion.resting(_random);
+  late DieRollMotion _motion = DieRollMotion.resting(_random, restSeed: widget.restSeed);
 
   @override
   void initState() {
@@ -331,7 +347,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
   }
 
   void _startRoll() {
-    _motion = DieRollMotion.random(_random);
+    _motion = DieRollMotion.random(_random, restSeed: widget.restSeed);
     _controller
       ..duration = _motion.duration
       ..forward(from: 0);

@@ -34,6 +34,7 @@ class Scene3DDie extends StatefulWidget {
   final Object? rollToken;
   final Color? bodyColor;
   final double size;
+  final int? restSeed;
 
   const Scene3DDie({
     super.key,
@@ -43,6 +44,7 @@ class Scene3DDie extends StatefulWidget {
     this.rollToken,
     this.bodyColor,
     required this.size,
+    this.restSeed,
   });
 
   /// Vrai si Flutter GPU/Impeller est disponible sur ce moteur, calculé une
@@ -74,7 +76,7 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   final Node _dieNode = Node();
 
   Object? _lastRollToken;
-  late DieRollMotion _motion = DieRollMotion.resting(_random);
+  late DieRollMotion _motion = DieRollMotion.resting(_random, restSeed: widget.restSeed);
 
   /// Progression du lancer (0 → 1), qui pilote la rotation (lue à chaque tick
   /// de la scène) et le rebond (qui redessine le widget).
@@ -108,7 +110,7 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   /// Tire le mouvement du lancer (les faces en dépendent) et le lance.
   void _startRoll() {
     _lastRollToken = widget.rollToken;
-    _motion = DieRollMotion.random(_random);
+    _motion = DieRollMotion.random(_random, restSeed: widget.restSeed);
     _controller
       ..duration = _motion.duration
       ..forward(from: 0);

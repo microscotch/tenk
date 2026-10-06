@@ -147,4 +147,24 @@ void main() {
       expect(-DieRollMotion.restTiltX * 180 / pi, closeTo(37, 1e-9));
     });
   });
+
+  group('graine d\'orientation de repos', () {
+    test('un dé lancé et un dé posé de même graine s\'immobilisent pareil', () {
+      for (var seed = 0; seed < 50; seed++) {
+        final rolled = DieRollMotion.random(Random(1000 + seed), restSeed: seed);
+        final resting = DieRollMotion.resting(Random(2000 + seed), restSeed: seed);
+        expect(rolled.quarterTurns, resting.quarterTurns);
+        expect(rolled.restYaw, resting.restYaw);
+      }
+    });
+
+    test('des graines différentes donnent des orientations variées', () {
+      final orientations = {
+        for (var seed = 0; seed < 50; seed++)
+          (DieRollMotion.resting(Random(), restSeed: seed).quarterTurns,
+              DieRollMotion.resting(Random(), restSeed: seed).restYaw),
+      };
+      expect(orientations.length, greaterThan(5));
+    });
+  });
 }

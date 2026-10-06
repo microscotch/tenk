@@ -255,6 +255,16 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   - These auto-advances use `Timer` (not bare `Future.delayed`) stored in fields and cancelled in
     `dispose()` — this matters for widget tests, since flutter_test's fake-clock `pumpAndSettle()` can
     otherwise fire disconnected timers and/or fail on "Timer still pending" at teardown.
+  - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
+    `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
+    revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**
+    (`_scheduleAiIfNeeded` bypasses "mode auto" and its 0-means-manual rule), after `aiMessageDelay`, plus
+    `bustRevealDelay` when the turn busted on a roll, so the bust stays readable as long as any other AI message.
+  - **A die keeps its resting orientation from the roll track to the current hand, and roll after roll**: each
+    die gets a `restSeed` (`DieWidget.restSeed`, `DieRollMotion`) = hash of a per-roll salt (`_rollSalts`, re-drawn
+    at each new roll) and its slot in `keptDisplayOrder`; the roll zone, the hand's pending slots and the kept
+    batches (`KeptDie.rollIndex` + position) compute the same seed. Without it each new widget drew a random
+    orientation, which flicked at every transfer.
   - Widget test states are built with `debugLoadState` snapshots; because of the auto-advance behavior,
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.

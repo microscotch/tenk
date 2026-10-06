@@ -2127,54 +2127,83 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
   });
 
-  testWidgets('la ligne de contrôle d\'un tour IA se superpose exactement à celle d\'un tour humain',
+  testWidgets('la ligne de contrôle d\'un tour IA ne montre qu\'un bouton Lancer inerte, « <joueur> joue… »',
       (tester) async {
-    // Même situation de jeu jouée deux fois, une fois par un humain, une
-    // fois par une IA : le bouton principal doit occuper le même
-    // emplacement, à la même taille, avec le même pictogramme -- rien ne
-    // doit sauter à l'écran quand la main passe de l'un à l'autre.
-    Future<(Offset, Size)> measure({required bool ai}) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
 
-      var engine = GameEngine.newGame(['A', 'B']).startTurn();
-      engine = engine.copyWith(
-        players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
-        activeTurn: const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
-      );
-      container.read(gameProvider.notifier).debugLoadState(
-            engine,
-            GameSetup(
-              playerNames: const ['A', 'B'],
-              aiPlayers: ai ? const {0: AiDifficulty.prudent} : const {},
-            ),
-          );
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B'], aiPlayers: {0: AiDifficulty.prudent}),
+        );
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
-        ),
-      );
-      await tester.pump();
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
 
-      final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
-      expect(rollButton, findsOneWidget,
-          reason: ai ? 'le tour IA doit montrer le même bouton dé' : null);
-      final geometry = (tester.getTopLeft(rollButton), tester.getSize(rollButton));
+    // Comme pour un joueur distant en ligne : ni Stop, ni choix des 5, et le
+    // seul bouton est inerte — le bot joue seul, rien à presser.
+    final button = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'A joue…'));
+    expect(button.onPressed, isNull);
+    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas de bouton Stop pendant le tour d\'un bot');
+    expect(find.byIcon(Icons.swap_vert), findsNothing);
 
-      // L'IA enchaîne toute seule : on démonte avant que ses temporisations
-      // ne fassent diverger l'état mesuré.
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpAndSettle();
-      return geometry;
-    }
+    // L'IA enchaîne toute seule : on démonte avant que ses temporisations
+    // ne fassent diverger l'état mesuré.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
 
-    final human = await measure(ai: false);
-    final ai = await measure(ai: true);
+  testWidgets('le craque d\'un bot reste affiché, inerte, le temps de la temporisation des messages IA',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
 
-    expect(ai.$1, human.$1, reason: 'même position à l\'écran');
-    expect(ai.$2, human.$2, reason: 'même taille');
+    var engine = GameEngine.newGame(['Bot', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'Bot', totalScore: 700, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(diceToRoll: 3, pendingRoll: analyzeRoll([2, 3, 4]), busted: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['Bot', 'B'], aiPlayers: {0: AiDifficulty.prudent}),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pump();
+
+    // Avant la révélation : le libellé ordinaire, qui ne trahit rien.
+    expect(find.widgetWithText(FilledButton, 'Bot joue…'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Craqué !'), findsNothing);
+
+    // Dés immobilisés : « Craqué ! », inerte, et le tour n'est pas encore fini.
+    await tester.pump(GameScreen.bustRevealDelay);
+    final busted = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Craqué !'));
+    expect(busted.onPressed, isNull);
+    expect(container.read(gameProvider)!.currentPlayerIndex, 0);
+
+    // Il reste lisible aussi longtemps que la temporisation des messages IA.
+    await tester.pump(const AppSettings().aiMessageDelay - const Duration(milliseconds: 100));
+    expect(container.read(gameProvider)!.currentPlayerIndex, 0, reason: 'le craque doit rester visible');
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(container.read(gameProvider)!.currentPlayerIndex, 1, reason: 'puis la main passe');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets('le tour d\'un joueur IA se joue automatiquement à l\'écran, sans interaction', (tester) async {
@@ -2207,7 +2236,7 @@ void main() {
     // auto) : le bouton affiché est le sien, pas un choix réservé à
     // l'humain ("S'arrêter" n'a de sens que dans le dialogue de banque
     // humain à deux boutons, "Valider" n'existe plus du tout).
-    expect(_stopEnabled(tester), isFalse, reason: 'le tour est à l\'IA : rien à arrêter soi-même');
+    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'le tour est à l\'IA : rien à arrêter soi-même');
     expect(find.text('Valider'), findsNothing);
 
     // On laisse le temps s'écouler (délai de "réflexion" de l'IA) jusqu'à ce
@@ -2451,7 +2480,7 @@ void main() {
     expect(find.text('Refuser'), findsNothing,
         reason: 'ce choix ne s\'adresse à personne : l\'IA décide seule');
     expect(find.text('Reprendre ?'), findsNothing, reason: 'ni popup pour l\'IA');
-    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget,
+    expect(find.widgetWithText(FilledButton, 'Bot joue…'), findsOneWidget,
         reason: 'la ligne garde la forme d\'un tour d\'IA ordinaire');
 
     // L'IA enchaîne toute seule : on démonte avant que ses temporisations ne

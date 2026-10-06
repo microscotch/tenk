@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1314,11 +1315,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
     if (!notifier.isAiPlayer(engine.currentPlayerIndex)) return;
-    _scheduleIfAuto(
-      engine.currentPlayerIndex,
-      () => ref.read(gameProvider.notifier).playAiTurnStep(),
-      ref.read(settingsProvider).aiMessageDelay,
-    );
+    var delay = ref.read(settingsProvider).aiMessageDelay;
+    // « Craqué ! » n'apparaît qu'une fois les dés immobilisés (voir
+    // [_scheduleBustRevealIfNeeded]) : la temporisation ne démarre qu'à ce
+    // moment-là, pour que le craque reste lisible aussi longtemps que les
+    // autres messages de l'IA.
+    final turn = engine.activeTurn;
+    if (turn != null && turn.busted && turn.pendingRoll != null) {
+      delay += GameScreen.bustRevealDelay;
+    }
+    // Un bot joue toujours seul, quel que soit le mode auto de la partie : sa
+    // ligne de contrôle n'a plus de bouton à presser (voir [_buildAiTurnView]).
+    _scheduleAutoAction(() => ref.read(gameProvider.notifier).playAiTurnStep(), delay);
   }
 
   /// Programme l'auto-validation du tour d'un joueur humain (en mode auto)
@@ -1507,7 +1515,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
       if (gainAlreadyLogged) _gainLoggedForRoll = null;
       final newPendingRoll = next.activeTurn?.pendingRoll;
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
-        if (newPendingRoll != null) SoundEffects.instance.playDiceRoll(newPendingRoll.faces.length);
+        if (newPendingRoll != null) {
+          SoundEffects.instance.playDiceRoll(newPendingRoll.faces.length);
+          _rollSalts[_pendingRollIndex(next.activeTurn!.keptDiceThisTurn)] = _saltRandom.nextInt(1 << 30);
+        }
         // Par défaut, on tend vers le score optimal (voir _defaultKeepCount) —
         // sauf si l'autre joueur en ligne a déjà fait voir sa sélection.
         _selectedKeep = newPendingRoll != null
@@ -2285,6 +2296,21 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   static const _previewFadeDuration = Duration(milliseconds: 300);
 
+  /// Numéro du prochain lancer de la main courante (voir [KeptDie.rollIndex]).
+  int _pendingRollIndex(List<KeptDie> kept) => kept.isEmpty ? 0 : kept.last.rollIndex + 1;
+
+  /// Sel de chaque lancer de la main courante, retiré à chaque nouveau lancer
+  /// (voir le `ref.listen` de [build]) : avec la place du dé dans l'ordre de
+  /// la main (voir [keptDisplayOrder]), il donne la graine d'orientation
+  /// ([DieWidget.restSeed]) que le dé garde en quittant la piste pour la main
+  /// courante, puis lancer après lancer — sans quoi chaque nouveau widget tirait
+  /// une orientation au hasard, d'où un « flick » à chaque transfert.
+  final Map<int, int> _rollSalts = {};
+  final _saltRandom = math.Random();
+
+  int _restSeed(int rollIndex, int slot) =>
+      Object.hash(_rollSalts.putIfAbsent(rollIndex, () => _saltRandom.nextInt(1 << 30)), slot);
+
   /// Zone bordurée "Piste" : uniquement les dés du lancer en attente de
   /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
   /// le libellé lui-même, entre parenthèses, une fois [showScore] (les dés
@@ -2337,6 +2363,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     rollToken: analysis,
                     bodyColor: _diceColor(i),
                     size: size,
+                    restSeed: _restSeed(_pendingRollIndex(turn.keptDiceThisTurn), keptDisplayOrder(analysis).indexOf(i)),
                   );
                   final opacity =
                       (previewRevealed && previewIndices.contains(i))
@@ -2456,6 +2483,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
         for (final batch in _keptDiceByRoll(kept)) {
           final dice = <Widget>[];
+          var slot = 0;
           for (final d in batch) {
             dice.add(
               DieWidget(
@@ -2463,9 +2491,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
                 bodyColor: _diceColor(position),
                 size: size,
+                restSeed: _restSeed(d.rollIndex, slot),
               ),
             );
             position++;
+            slot++;
           }
           children.add(
             _KeptRollFrame(
@@ -2477,7 +2507,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
         if (pendingOrder.isNotEmpty) {
           final slots = <Widget>[];
-          for (final faceIndex in pendingOrder) {
+          final pendingRollIndex = _pendingRollIndex(kept);
+          for (var slot = 0; slot < pendingOrder.length; slot++) {
+            final faceIndex = pendingOrder[slot];
             final visible = previewRevealed && previewIndices.contains(faceIndex);
             slots.add(
               AnimatedOpacity(
@@ -2488,6 +2520,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   state: previewStates![faceIndex],
                   bodyColor: _diceColor(position),
                   size: size,
+                  restSeed: _restSeed(pendingRollIndex, slot),
                 ),
               ),
             );
@@ -2660,98 +2693,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Tour de l'IA en cours : un unique bouton explicite reflétant l'action
-  /// qu'elle va effectuer, qui déclenche cette même action (les deux
-  /// s'appuient sur la même logique de décision, voir [GameNotifier]). Gère
-  /// aussi elle-même le choix de main héritée (`engine.activeTurn == null`)
-  /// — plus d'écran séparé, voir CLAUDE.md. Le craque est géré séparément
-  /// par [_buildBustedView] (appelé avant celle-ci par l'appelant, IA ou
-  /// humain confondus).
-  Widget _buildAiTurnView(GameEngine engine) {
-    final l10n = AppLocalizations.of(context);
-    final notifier = ref.read(gameProvider.notifier);
-    void action() => ref.read(gameProvider.notifier).playAiTurnStep();
-
-    // Choix de main héritée : l'IA tranche seule, personne n'a de réponse à
-    // donner. Lui afficher les deux options — dont un "Refuser" que le joueur
-    // ne peut pas actionner — ne dit rien d'utile ; la ligne garde donc la
-    // forme de n'importe quel tour d'IA, et c'est le journal qui rapporte
-    // après coup ce qu'elle a repris (voir logResumedHandMessage).
-    if (engine.activeTurn == null) {
-      final accepts = notifier.previewAiAcceptInheritedHand();
-      return _controlRow(
-        leading: _stopButton(onPressed: null),
-        primary: _rollButton(
-          onPressed: _guarded(action),
-          // La main sur laquelle porte la probabilité est celle que l'IA va
-          // réellement jouer : les dés hérités si elle les reprend, une main
-          // neuve de 5 dés sinon.
-          label: accepts
-              ? _rollLabel(engine.nextTurnDice, engine.inheritedExtendedValues)
-              : _rollLabel(5, const {}),
-        ),
-      );
-    }
-
-    final turn = engine.activeTurn!;
-    final currentTotal = engine.currentPlayer.totalScore;
-    final pending = turn.pendingRoll;
-
-    // Décision de garde en attente : la ligne montre déjà ce que le lancer
-    // vaudra une fois cette garde appliquée, exactement comme le bouton d'un
-    // joueur humain au même instant — et le nombre de 5 que l'IA garde
-    // là où l'humain a son sélecteur.
-    if (pending != null) {
-      final declineCount = notifier.previewAiDeclineFives(turn);
-      final effective = applyKeepDecision(turn, declineFivesCount: declineCount);
-      final fives = pending.declinableFives?.diceCount ?? 0;
-      return _controlRow(
-        primary: _rollButton(
-          onPressed: _guarded(action),
-          label: effective.mustContinue
-              ? l10n.logHotDiceMessage
-              : _rollLabel(effective.diceToRoll, effective.extendedValues),
-        ),
-        leading: _stopButton(onPressed: null),
-        trailing: _hasRealChoice(turn, pending, currentTotal: currentTotal)
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.swap_vert, size: 18),
-                  const SizedBox(width: 4),
-                  Text('${fives - declineCount}'),
-                ],
-              )
-            : null,
-      );
-    }
-
-    // Plus de lancer en attente : l'IA va relancer ou s'arrêter. Les deux
-    // commandes occupent les mêmes emplacements que pour un humain — Stop
-    // n'apparaissant que si s'arrêter est légal — et seule celle qu'elle
-    // prend est active.
-    final canBank = tryBank(
-      turn,
-      minimumRequired: engine.minimumForCurrentPlayer,
-      currentTotal: currentTotal,
-      isFinalRound: engine.isInFinalRound,
-    ).success;
-    // Pile sur 10000 : prise automatique, jamais soumise à la stratégie de
-    // l'IA (voir playAiTurnStep).
-    final reachedTarget = currentTotal + turn.bankedScore == winningScore;
-    final stops = canBank && (reachedTarget || !notifier.previewAiContinue(turn));
-    return _controlRow(
-      primary: _rollButton(
-        onPressed: stops ? null : _guarded(action),
-        label: turn.mustContinue
-            ? l10n.logHotDiceMessage
-            : _rollLabel(turn.diceToRoll, turn.extendedValues),
-      ),
-      leading: _stopButton(
-        onPressed: canBank && _rollSettled && stops ? _guarded(action) : null,
-      ),
-    );
-  }
+  /// Tour de l'IA en cours : comme celui d'un autre joueur en ligne (voir
+  /// [_buildRemoteTurnView]), aucune commande — un seul bouton Lancer, inerte,
+  /// qui dit qui joue. Ce que l'IA décide se lit dans les zones du dessus, et
+  /// dans le journal. Le craque est géré séparément par [_buildBustedView]
+  /// (appelé avant celle-ci par l'appelant, IA ou humain confondus).
+  Widget _buildAiTurnView(GameEngine engine) => _buildRemoteTurnView(engine);
 
   /// [isAiTurn] : un tour IA n'attend jamais de clic sur ce bouton (le
   /// craque est acquitté tout seul par [GameNotifier.playAiTurnStep], ou par le
@@ -2776,6 +2723,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // c'est la popup qui porte l'action (voir [_showBustDialog]), et laisser
     // la ligne se vider ferait sauter la mise en page.
     if (!revealed || !isAiTurn) {
+      // Un bot, avant la révélation : le même libellé que pendant son tour,
+      // qui ne trahit rien du lancer.
+      if (isAiTurn && !isRemoteTurn) return _buildRemoteTurnView(ref.read(gameProvider)!);
       return _controlRow(
         primary: _rollButton(
           onPressed: null,
@@ -2783,18 +2733,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ),
       );
     }
-    if (isRemoteTurn) {
-      return _controlRow(
-        primary: FilledButton(onPressed: null, child: Text(AppLocalizations.of(context).bustedTitle)),
-      );
-    }
 
-    // Tour IA : pas de popup, l'acquittement se fait ici.
+    // Tour IA ou distant : aucune action ici (le bot acquitte tout seul, voir
+    // [_scheduleAiIfNeeded] ; un joueur distant, c'est à lui) — le libellé
+    // reste affiché le temps de la temporisation des messages.
     return _controlRow(
-      primary: FilledButton(
-        onPressed: _guarded(() => ref.read(gameProvider.notifier).endBustedTurn()),
-        child: Text(AppLocalizations.of(context).bustedTitle),
-      ),
+      primary: FilledButton(onPressed: null, child: Text(AppLocalizations.of(context).bustedTitle)),
     );
   }
 
