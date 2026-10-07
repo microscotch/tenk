@@ -2,26 +2,50 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart' hide Matrix4;
 import 'package:flutter_scene/scene.dart';
-import 'package:vector_math/vector_math.dart' show Matrix4, Vector3;
+import 'package:vector_math/vector_math.dart' show Matrix4, Vector3, Vector4;
 
 import '../die_widget.dart' show DieBounce, DieRollMotion, DieVisualState, DieWidget, dieFaceValues;
 import 'dice_face_texture.dart';
 
 
 /// Placement (rotation seule, sans translation) de chaque face d'un cube
-/// construit à partir de [PlaneGeometry] (face par défaut orientée +Y).
-/// Vérifié numériquement : la normale (0,1,0) tournée par cette matrice
-/// pointe dans la direction voulue pour chaque face (la caméra par défaut de
-/// flutter_scene est en (0,0,-5) regardant l'origine, donc "front" a besoin
-/// d'une normale -Z).
-final Map<String, Matrix4> _facePlacements = {
-  'top': Matrix4.identity(),
-  'bottom': Matrix4.identity()..rotateX(math.pi),
-  'front': Matrix4.identity()..rotateX(-math.pi / 2),
-  'back': Matrix4.identity()..rotateX(math.pi / 2),
-  'right': Matrix4.identity()..rotateZ(-math.pi / 2),
-  'left': Matrix4.identity()..rotateZ(math.pi / 2),
-};
+/// construit à partir de [PlaneGeometry] : face par défaut orientée +Y, image
+/// de gauche à droite sur +X et de haut en bas sur +Z.
+///
+/// La caméra de flutter_scene est à gauche (droite = haut × avant) : elle est
+/// en (0,0,-3.2) et regarde +Z, l'écran a donc +X à droite et +Y en haut, et
+/// la face "avant" a besoin d'une normale -Z. Une rotation ne peut pas, avec
+/// cette géométrie, à la fois mettre l'image « de haut en bas » sur le bas de
+/// la face et « de gauche à droite » sur sa droite : elle tourne toujours le
+/// plan en image miroir. On choisit donc, pour chaque face, la rotation qui
+/// pose le bas de l'image vers le bas de la face, et les textures sont
+/// dessinées en miroir horizontal (voir `DiceFaceTextures`) pour que la
+/// double inversion les remette à l'endroit. Sans quoi, selon la face,
+/// un 2 ou un 3 se retrouvait en miroir, un 6 couché sur le flanc, ou la
+/// face à l'envers — le motif d'un même dé n'avait aucune orientation fixe.
+///
+/// [topQuarterTurns] fait en plus tourner la texture du dessus (voir
+/// [DieRollMotion.topQuarterTurns]).
+Matrix4 dieFacePlacement(String face, {int topQuarterTurns = 0}) {
+  final (normal, down) = switch (face) {
+    'top' => (Vector3(0, 1, 0), Vector3(0, 0, -1)),
+    'bottom' => (Vector3(0, -1, 0), Vector3(0, 0, 1)),
+    'front' => (Vector3(0, 0, -1), Vector3(0, -1, 0)),
+    'back' => (Vector3(0, 0, 1), Vector3(0, -1, 0)),
+    'right' => (Vector3(1, 0, 0), Vector3(0, -1, 0)),
+    'left' => (Vector3(-1, 0, 0), Vector3(0, -1, 0)),
+    _ => throw ArgumentError('face inconnue : $face'),
+  };
+  final across = normal.cross(down);
+  final basis = Matrix4.columns(
+    Vector4(across.x, across.y, across.z, 0),
+    Vector4(normal.x, normal.y, normal.z, 0),
+    Vector4(down.x, down.y, down.z, 0),
+    Vector4(0, 0, 0, 1),
+  );
+  if (face == 'top' && topQuarterTurns != 0) basis.rotateY(-topQuarterTurns * math.pi / 2);
+  return basis;
+}
 
 /// Un dé rendu comme un vrai cube 3D via flutter_scene (Impeller/Flutter
 /// GPU), avec une texture par face (fond + pips) générée à la volée et mise
@@ -159,7 +183,7 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
     // dé apparaîtrait un instant droit, avant de prendre son orientation.
     _onTick(Duration.zero, 0);
     for (final entry in textures) {
-      final placement = _facePlacements[entry.key]!;
+      final placement = dieFacePlacement(entry.key, topQuarterTurns: _motion.topQuarterTurns);
       // Fini plastique mat (dé physique) plutôt que le défaut métallique
       // brillant de PhysicallyBasedMaterial, qui donnait un aspect artificiel.
       final material = PhysicallyBasedMaterial(baseColorTexture: entry.value)

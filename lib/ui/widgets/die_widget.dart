@@ -179,6 +179,13 @@ class DieRollMotion {
   /// en achevant sa rotation.
   static const _bouncingPart = 0.85;
 
+  /// Quart de tour (0 ou 1) dont on tourne la texture du dessus pour que son
+  /// motif reste à moins de 45° de la verticale de l'écran, quel que soit
+  /// [restYaw] : un 2 ou un 3 garde ainsi toujours la même diagonale, et les
+  /// deux colonnes d'un 6 restent des colonnes, au lieu de basculer d'un dé à
+  /// l'autre selon la façon dont il s'est posé.
+  int get topQuarterTurns => restYaw > math.pi / 4 ? 1 : 0;
+
   /// Hauteur du dé au-dessus de la table (0 = posé, 1 = hauteur maximale) à la
   /// [progress] du lancer. Chaque rebond est une parabole ; comme en vrai, la
   /// vitesse au contact est multipliée par [restitution], donc la hauteur par
@@ -305,15 +312,40 @@ class _Face {
 /// vertical : comme un vrai dé, un même résultat peut ainsi s'arrêter avec
 /// quatre paires de faces latérales différentes visibles. Une rotation ne
 /// change pas la disposition relative des faces : le dé reste le même dé.
+///
+/// Le dé est toujours un dé **occidental** (chiralité directe) : vu d'un coin,
+/// dessus puis avant puis droite se suivent dans le sens inverse des aiguilles
+/// d'une montre, comme 1-2-3. Sans cette contrainte, le choix de la face
+/// "droite" était arbitraire, et certains résultats se retrouvaient avec le
+/// dé en image miroir.
 Map<String, int> dieFaceValues(int top, {int quarterTurns = 0}) {
   final bottom = 7 - top;
   final remaining = [1, 2, 3, 4, 5, 6].where((v) => v != top && v != bottom).toList();
   final front = remaining[0];
-  final right = remaining.firstWhere((v) => v != front && v != 7 - front);
+  var right = remaining.firstWhere((v) => v != front && v != 7 - front);
+  if (_westernHandedness(top, front, right) < 0) right = 7 - right;
   final ring = [front, right, 7 - front, 7 - right];
   final shift = quarterTurns % 4;
   int at(int i) => ring[(i + shift) % 4];
   return {'front': at(0), 'right': at(1), 'back': at(2), 'left': at(3), 'top': top, 'bottom': bottom};
+}
+
+/// +1 si les trois faces voisines (dessus, avant, droite) se suivent comme
+/// 1, 2, 3 d'un dé occidental, -1 si c'est son image miroir : la parité de la
+/// permutation des paires de faces opposées ({1,6}, {2,5}, {3,4}), changée à
+/// chaque face prise du côté « haut » (4, 5, 6) de sa paire.
+int _westernHandedness(int top, int front, int right) {
+  int pair(int v) => v <= 3 ? v : 7 - v;
+  int side(int v) => v <= 3 ? 1 : -1;
+  final p = [pair(top), pair(front), pair(right)];
+  var inversions = 0;
+  for (var i = 0; i < 3; i++) {
+    for (var j = i + 1; j < 3; j++) {
+      if (p[i] > p[j]) inversions++;
+    }
+  }
+  final permutation = inversions.isEven ? 1 : -1;
+  return permutation * side(top) * side(front) * side(right);
 }
 
 class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerProviderStateMixin {
@@ -375,7 +407,7 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
       _Face(values['back']!, Matrix4.identity()..rotateY(math.pi)),
       _Face(values['right']!, Matrix4.identity()..rotateY(math.pi / 2)),
       _Face(values['left']!, Matrix4.identity()..rotateY(-math.pi / 2)),
-      _Face(values['top']!, Matrix4.identity()..rotateX(math.pi / 2)),
+      _Face(values['top']!, Matrix4.identity()..rotateX(math.pi / 2)..rotateZ(_motion.topQuarterTurns * math.pi / 2)),
       _Face(values['bottom']!, Matrix4.identity()..rotateX(-math.pi / 2)),
     ];
 

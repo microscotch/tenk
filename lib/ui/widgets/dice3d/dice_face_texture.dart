@@ -95,6 +95,11 @@ class DiceFaceTextures {
   static Future<Texture2D> _render(int value, DieVisualState state, Color? baseColor) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, _size, _size));
+    // En miroir horizontal : la géométrie du plan de flutter_scene retourne
+    // l'image à l'affichage (voir `dieFacePlacement`), cette inversion la
+    // remet à l'endroit sur chaque face.
+    canvas.translate(_size, 0);
+    canvas.scale(-1, 1);
     final body = bodyColorFor(state, baseColor);
     final accent = accentColorFor(state);
     final pipColor = pipColorFor(state);

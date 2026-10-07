@@ -265,6 +265,14 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     at each new roll) and its slot in `keptDisplayOrder`; the roll zone, the hand's pending slots and the kept
     batches (`KeptDie.rollIndex` + position) compute the same seed. Without it each new widget drew a random
     orientation, which flicked at every transfer.
+  - **Dice are Western and show 2, 3 and 6 the same way on every die.** `dieFaceValues` always returns a
+    right-handed die (top, front, right read like 1-2-3, counter-clockwise from a corner), never its mirror image.
+    The top face's texture is turned a quarter turn when the resting yaw exceeds 45° (`DieRollMotion.topQuarterTurns`),
+    so a pattern stays within 45° of screen-upright: a 2 or 3 keeps one diagonal, a 6 stays two columns. In the 3D
+    scene (`dice3d/`), `PlaneGeometry` plus flutter_scene's left-handed camera mirror or rotate a texture depending on
+    the face: `dieFacePlacement` picks, per face, the rotation that puts the image's bottom toward the face's bottom,
+    and `DiceFaceTextures` draws every texture mirrored horizontally to cancel the reflection — checked
+    numerically in `test/ui/die_scene_placement_test.dart` (no GPU in tests, so never seen rendered there).
   - Widget test states are built with `debugLoadState` snapshots; because of the auto-advance behavior,
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.
