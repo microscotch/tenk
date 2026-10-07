@@ -636,6 +636,67 @@ class AppLocalizationsBg extends AppLocalizations {
   String get rulesScreenTitle => 'Правила на играта';
 
   @override
+  String get tutorialTitle => 'Урок';
+
+  @override
+  String get tutorialSkip => 'Пропусни';
+
+  @override
+  String get tutorialNext => 'Напред';
+
+  @override
+  String get tutorialRoll => 'Хвърли заровете';
+
+  @override
+  String get tutorialKeep => 'Запази';
+
+  @override
+  String get tutorialFinish => 'Започни да играеш';
+
+  @override
+  String get tutorialReplayButton => 'Виж урока отново';
+
+  @override
+  String get tutorialStep0 =>
+      'Добре дошли в Le 10000! Целта: да достигнете точно 10 000 точки. Ще изиграем един ход заедно; нищо от това, което правите тук, не се записва.';
+
+  @override
+  String get tutorialStep1 =>
+      'На свой ред хвърляте 5 зара. Натиснете „Хвърли заровете“.';
+
+  @override
+  String get tutorialStep2 =>
+      'Тук точки носят само единицата (100 точки) и петицата (50 точки). Единицата е задължителна; петицата може да се остави настрана, но нека я запазим. Натиснете „Запази“.';
+
+  @override
+  String get tutorialStep3 =>
+      'Текущата ръка струва 150 точки и остават 3 зара за ново хвърляне. За да влезете в играта, трябват поне 500 точки: хвърляме отново.';
+
+  @override
+  String get tutorialStep4 =>
+      'Три еднакви зара: три тройки струват 300 точки. Запазете ги.';
+
+  @override
+  String get tutorialStep5 =>
+      'Всички зарове донесоха точки: горещи зарове! Трябва да хвърлите отново и петте зара и не можете да спрете. Текущата ръка запазва своите 450 точки.';
+
+  @override
+  String get tutorialStep6 =>
+      'Две единици и една петица: още 250, или 700. Петицата си струва да се запази: спирането на 650 би било забранено (никога сбор, завършващ на 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 точки: над 500 и без 50 накрая. Можете да спрете и да ги запишете. Натиснете „Спри“.';
+
+  @override
+  String get tutorialStep8 =>
+      '700 точки записани! Сега да видим какво става, когато заровете не носят нищо: хвърлете.';
+
+  @override
+  String get tutorialStep9 =>
+      'Никой зар не носи точки: провал! Ходът е загубен и черта отбелязва реда ви в резултатите; втори провал би го зачертал. Първият, достигнал точно 10 000, задейства финален кръг за останалите. Пълните правила са в менюто. Приятна игра!';
+
+  @override
   String get rulesGoalTitle => 'Цел на играта';
 
   @override

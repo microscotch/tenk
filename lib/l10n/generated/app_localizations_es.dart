@@ -638,6 +638,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesScreenTitle => 'Reglas del juego';
 
   @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Saltar';
+
+  @override
+  String get tutorialNext => 'Siguiente';
+
+  @override
+  String get tutorialRoll => 'Tirar los dados';
+
+  @override
+  String get tutorialKeep => 'Quedarse';
+
+  @override
+  String get tutorialFinish => 'Empezar a jugar';
+
+  @override
+  String get tutorialReplayButton => 'Ver el tutorial de nuevo';
+
+  @override
+  String get tutorialStep0 =>
+      '¡Bienvenido a Le 10000! El objetivo: alcanzar exactamente 10 000 puntos. Jugaremos un turno juntos; nada de lo que hagas aquí se guarda.';
+
+  @override
+  String get tutorialStep1 =>
+      'En tu turno tiras 5 dados. Pulsa «Tirar los dados».';
+
+  @override
+  String get tutorialStep2 =>
+      'Aquí solo puntúan el 1 (100 puntos) y el 5 (50 puntos). El 1 es obligatorio; el 5 se podría apartar, pero lo guardamos. Pulsa «Quedarse».';
+
+  @override
+  String get tutorialStep3 =>
+      'La mano actual vale 150 puntos y quedan 3 dados por volver a tirar. Para entrar en la partida hacen falta al menos 500 puntos: volvemos a tirar.';
+
+  @override
+  String get tutorialStep4 =>
+      'Tres dados iguales: tres 3 valen 300 puntos. Guárdalos.';
+
+  @override
+  String get tutorialStep5 =>
+      'Todos los dados han puntuado: ¡dados calientes! Hay que volver a tirar los 5 dados, sin poder plantarse. La mano actual conserva sus 450 puntos.';
+
+  @override
+  String get tutorialStep6 =>
+      'Dos 1 y un 5: 250 más, o sea 700. Quedarse con el 5 conviene: plantarse en 650 estaría prohibido (nunca un total que acabe en 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 puntos: más de 500 y sin 50 al final. Puedes plantarte y anotarlos. Pulsa «Plantarse».';
+
+  @override
+  String get tutorialStep8 =>
+      '¡700 puntos anotados! Veamos ahora qué pasa cuando los dados no dan nada: tira.';
+
+  @override
+  String get tutorialStep9 =>
+      'Ningún dado puntúa: ¡un pase! El turno se pierde y un guion marca tu línea de puntuación; un segundo pase la tacharía. El primero en alcanzar exactamente 10 000 desencadena una ronda final para los demás. Las reglas completas están en el menú. ¡Buena partida!';
+
+  @override
   String get rulesGoalTitle => 'Objetivo del juego';
 
   @override

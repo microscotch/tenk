@@ -638,6 +638,67 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesScreenTitle => 'Regras do jogo';
 
   @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Saltar';
+
+  @override
+  String get tutorialNext => 'Seguinte';
+
+  @override
+  String get tutorialRoll => 'Lançar os dados';
+
+  @override
+  String get tutorialKeep => 'Manter';
+
+  @override
+  String get tutorialFinish => 'Começar a jogar';
+
+  @override
+  String get tutorialReplayButton => 'Rever o tutorial';
+
+  @override
+  String get tutorialStep0 =>
+      'Bem-vindo ao Le 10000! O objetivo: atingir exatamente 10 000 pontos. Vamos jogar um turno juntos; nada do que fizeres aqui é guardado.';
+
+  @override
+  String get tutorialStep1 =>
+      'Na tua vez, lanças 5 dados. Toca em «Lançar os dados».';
+
+  @override
+  String get tutorialStep2 =>
+      'Aqui só pontuam o 1 (100 pontos) e o 5 (50 pontos). O 1 é obrigatório; o 5 podia ser posto de lado, mas vamos mantê-lo. Toca em «Manter».';
+
+  @override
+  String get tutorialStep3 =>
+      'A mão atual vale 150 pontos e restam 3 dados para relançar. Para entrar no jogo são precisos pelo menos 500 pontos: relançamos.';
+
+  @override
+  String get tutorialStep4 =>
+      'Três dados iguais: três 3 valem 300 pontos. Mantém-nos.';
+
+  @override
+  String get tutorialStep5 =>
+      'Todos os dados pontuaram: dados quentes! Tens de relançar os 5 dados, sem poder parar. A mão atual mantém os seus 450 pontos.';
+
+  @override
+  String get tutorialStep6 =>
+      'Dois 1 e um 5: mais 250, ou seja 700. Manter o 5 compensa: parar em 650 seria proibido (nunca um total que termine em 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 pontos: mais de 500 e sem 50 no fim. Podes parar e registá-los. Toca em «Parar».';
+
+  @override
+  String get tutorialStep8 =>
+      '700 pontos registados! Vejamos agora o que acontece quando os dados não dão nada: lança.';
+
+  @override
+  String get tutorialStep9 =>
+      'Nenhum dado pontua: um rebentamento! O turno perde-se e um traço marca a tua linha de pontuação; um segundo rebentamento riscá-la-ia. O primeiro a atingir exatamente 10 000 desencadeia uma ronda final para os outros. As regras completas estão no menu. Bom jogo!';
+
+  @override
   String get rulesGoalTitle => 'Objetivo do jogo';
 
   @override

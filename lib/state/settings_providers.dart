@@ -50,6 +50,11 @@ class AppSettings {
   /// calcul, qui retire au jeu une part de son pari.
   final bool showProbabilities;
 
+  /// Vrai une fois le tutoriel vu (ou passé) : il n'est proposé qu'au tout
+  /// premier lancement (voir `launchScreenFor`), puis seulement à la demande,
+  /// depuis l'écran des règles.
+  final bool tutorialSeen;
+
   /// Code de langue forcé (ex. "en", "es") ; null = suit la langue de
   /// l'appareil.
   final String? languageOverride;
@@ -79,6 +84,7 @@ class AppSettings {
     this.confirmBeforeDeleteGame = true,
     this.shakeToRollEnabled = false,
     this.showProbabilities = false,
+    this.tutorialSeen = false,
     this.languageOverride,
     this.rightHanded = true,
     this.loaded = false,
@@ -99,6 +105,7 @@ class AppSettings {
     bool? confirmBeforeDeleteGame,
     bool? shakeToRollEnabled,
     bool? showProbabilities,
+    bool? tutorialSeen,
     Object? languageOverride = _unset,
     bool? rightHanded,
     bool? loaded,
@@ -115,6 +122,7 @@ class AppSettings {
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
       showProbabilities: showProbabilities ?? this.showProbabilities,
+      tutorialSeen: tutorialSeen ?? this.tutorialSeen,
       languageOverride: identical(languageOverride, _unset) ? this.languageOverride : languageOverride as String?,
       rightHanded: rightHanded ?? this.rightHanded,
       loaded: loaded ?? this.loaded,
@@ -141,6 +149,7 @@ const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 // simplement ignorée.
 const _keyShakeToRollEnabled = 'settings.shakeToRollEnabled';
 const _keyShowProbabilities = 'settings.showProbabilities';
+const _keyTutorialSeen = 'settings.tutorialSeen';
 const _keyRightHanded = 'settings.rightHanded';
 const _keyLanguageOverride = 'settings.languageOverride';
 
@@ -173,6 +182,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
         showProbabilities: prefs.getBool(_keyShowProbabilities) ?? false,
+        tutorialSeen: prefs.getBool(_keyTutorialSeen) ?? false,
         languageOverride: prefs.getString(_keyLanguageOverride),
         rightHanded: prefs.getBool(_keyRightHanded) ?? true,
         loaded: true,
@@ -257,6 +267,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setShowProbabilities(bool enabled) {
     state = state.copyWith(showProbabilities: enabled);
     _save(_keyShowProbabilities, enabled);
+  }
+
+  void markTutorialSeen() {
+    state = state.copyWith(tutorialSeen: true);
+    _save(_keyTutorialSeen, true);
   }
 
   void setRightHanded(bool rightHanded) {

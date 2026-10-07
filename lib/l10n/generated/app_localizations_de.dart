@@ -641,6 +641,67 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesScreenTitle => 'Spielregeln';
 
   @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Überspringen';
+
+  @override
+  String get tutorialNext => 'Weiter';
+
+  @override
+  String get tutorialRoll => 'Würfeln';
+
+  @override
+  String get tutorialKeep => 'Behalten';
+
+  @override
+  String get tutorialFinish => 'Spielen';
+
+  @override
+  String get tutorialReplayButton => 'Tutorial noch einmal ansehen';
+
+  @override
+  String get tutorialStep0 =>
+      'Willkommen bei Le 10000! Ziel: genau 10.000 Punkte erreichen. Wir spielen gemeinsam einen Zug; nichts, was du hier tust, wird gespeichert.';
+
+  @override
+  String get tutorialStep1 =>
+      'Du bist am Zug und würfelst 5 Würfel. Tippe auf „Würfeln“.';
+
+  @override
+  String get tutorialStep2 =>
+      'Nur die 1 (100 Punkte) und die 5 (50 Punkte) bringen hier etwas. Die 1 ist Pflicht; die 5 könnte man beiseitelassen, aber behalten wir sie. Tippe auf „Behalten“.';
+
+  @override
+  String get tutorialStep3 =>
+      'Die aktuelle Hand ist 150 Punkte wert, 3 Würfel bleiben zum Neuwurf. Um ins Spiel zu kommen, braucht man mindestens 500 Punkte: also noch einmal würfeln.';
+
+  @override
+  String get tutorialStep4 =>
+      'Drei gleiche Würfel: drei 3en sind 300 Punkte wert. Behalte sie.';
+
+  @override
+  String get tutorialStep5 =>
+      'Alle Würfel haben gezählt: heiße Würfel! Du musst alle 5 Würfel neu werfen und darfst nicht aufhören. Die aktuelle Hand behält ihre 450 Punkte.';
+
+  @override
+  String get tutorialStep6 =>
+      'Zwei Einsen und eine 5: 250 mehr, also 700. Die 5 zu behalten lohnt sich: Bei 650 aufzuhören wäre verboten (nie eine Summe, die auf 50 endet).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 Punkte: über 500 und keine 50 am Ende. Du kannst aufhören und sie verbuchen. Tippe auf „Aufhören“.';
+
+  @override
+  String get tutorialStep8 =>
+      '700 Punkte verbucht! Sehen wir nun, was passiert, wenn die Würfel nichts bringen: würfle.';
+
+  @override
+  String get tutorialStep9 =>
+      'Kein Würfel bringt etwas: ein Fehlwurf! Der Zug ist verloren und ein Strich markiert deine Punktezeile; ein zweiter Fehlwurf würde sie streichen. Wer als Erster genau 10.000 erreicht, löst für die anderen eine Schlussrunde aus. Die vollständigen Regeln findest du im Menü. Viel Spaß!';
+
+  @override
   String get rulesGoalTitle => 'Ziel des Spiels';
 
   @override

@@ -640,6 +640,67 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesScreenTitle => 'Regole del gioco';
 
   @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Salta';
+
+  @override
+  String get tutorialNext => 'Avanti';
+
+  @override
+  String get tutorialRoll => 'Lancia i dadi';
+
+  @override
+  String get tutorialKeep => 'Tieni';
+
+  @override
+  String get tutorialFinish => 'Inizia a giocare';
+
+  @override
+  String get tutorialReplayButton => 'Rivedi il tutorial';
+
+  @override
+  String get tutorialStep0 =>
+      'Benvenuto in Le 10000! L\'obiettivo: raggiungere esattamente 10.000 punti. Giocheremo un turno insieme; nulla di ciò che fai qui viene salvato.';
+
+  @override
+  String get tutorialStep1 =>
+      'Al tuo turno lanci 5 dadi. Tocca «Lancia i dadi».';
+
+  @override
+  String get tutorialStep2 =>
+      'Qui valgono solo l\'1 (100 punti) e il 5 (50 punti). L\'1 è obbligatorio; il 5 si potrebbe mettere da parte, ma teniamolo. Tocca «Tieni».';
+
+  @override
+  String get tutorialStep3 =>
+      'La mano corrente vale 150 punti e restano 3 dadi da rilanciare. Per entrare in partita servono almeno 500 punti: rilanciamo.';
+
+  @override
+  String get tutorialStep4 =>
+      'Tre dadi uguali: tre 3 valgono 300 punti. Tienili.';
+
+  @override
+  String get tutorialStep5 =>
+      'Tutti i dadi hanno fatto punti: dadi bollenti! Bisogna rilanciare tutti e 5 i dadi, senza potersi fermare. La mano corrente conserva i suoi 450 punti.';
+
+  @override
+  String get tutorialStep6 =>
+      'Due 1 e un 5: 250 in più, cioè 700. Tenere il 5 conviene: fermarsi a 650 sarebbe vietato (mai un totale che finisce per 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 punti: più di 500 e niente 50 alla fine. Puoi fermarti e incassarli. Tocca «Fermarsi».';
+
+  @override
+  String get tutorialStep8 =>
+      '700 punti incassati! Vediamo ora cosa succede quando i dadi non valgono nulla: lancia.';
+
+  @override
+  String get tutorialStep9 =>
+      'Nessun dado fa punti: uno sballo! Il turno è perso e un trattino segna la tua riga di punteggio; un secondo sballo la cancellerebbe. Il primo a raggiungere esattamente 10.000 fa scattare un giro finale per gli altri. Le regole complete sono nel menu. Buon divertimento!';
+
+  @override
   String get rulesGoalTitle => 'Scopo del gioco';
 
   @override

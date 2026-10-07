@@ -113,6 +113,9 @@
           <mxGeometry x="1530" y="150" width="350" height="355" as="geometry" />
         </mxCell>
 
+        <mxCell id="TutorialSession" value="&lt;b&gt;TutorialSession&lt;/b&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;tutoriel : un tour scénarisé, sans partie&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;step : int · total : int&lt;br/&gt;turn : TurnState&lt;hr size=&quot;1&quot;/&gt;+ current : TutorialStep · isLast : bool&lt;br/&gt;+ perform(TutorialAction) : TutorialSession&lt;br/&gt;&lt;i&gt;tutorialSteps : scénario (dés par ScriptedRandom)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1170" width="230" height="150" as="geometry" />
+        </mxCell>
         <mxCell id="DiceOffNotifier" value="&lt;b&gt;DiceOffNotifier&lt;/b&gt; &lt;i&gt;extends Notifier&amp;lt;DiceOffState?&amp;gt;&lt;/i&gt;&lt;div style=&quot;font-size:10px;color:#666&quot;&gt;diceOffProvider&lt;/div&gt;&lt;hr size=&quot;1&quot;/&gt;+ start(setup) / rollRound()&lt;br/&gt;+ resumeFromSave(saved) / isUnfinished(saved)  &lt;i&gt;(static)&lt;/i&gt;&lt;br/&gt;+ buildOrderedSetup() : GameSetup&lt;br/&gt;+ handoff() : GameRecordingHandoff&lt;br/&gt;+ setup / nameOf(i) / allPlayersAreAuto" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="1930" y="150" width="320" height="148" as="geometry" />
         </mxCell>

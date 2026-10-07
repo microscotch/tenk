@@ -637,6 +637,67 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesScreenTitle => 'Pelisäännöt';
 
   @override
+  String get tutorialTitle => 'Opastus';
+
+  @override
+  String get tutorialSkip => 'Ohita';
+
+  @override
+  String get tutorialNext => 'Seuraava';
+
+  @override
+  String get tutorialRoll => 'Heitä nopat';
+
+  @override
+  String get tutorialKeep => 'Pidä';
+
+  @override
+  String get tutorialFinish => 'Aloita pelaaminen';
+
+  @override
+  String get tutorialReplayButton => 'Katso opastus uudelleen';
+
+  @override
+  String get tutorialStep0 =>
+      'Tervetuloa Le 10000 -peliin! Tavoite: saavuttaa tasan 10 000 pistettä. Pelaamme yhden vuoron yhdessä; mitään täällä tekemääsi ei tallenneta.';
+
+  @override
+  String get tutorialStep1 =>
+      'Omalla vuorollasi heität 5 noppaa. Napauta ”Heitä nopat”.';
+
+  @override
+  String get tutorialStep2 =>
+      'Tässä pisteitä tuovat vain ykkönen (100 pistettä) ja viitonen (50 pistettä). Ykkönen on pakollinen; viitosen voisi jättää sivuun, mutta pidetään se. Napauta ”Pidä”.';
+
+  @override
+  String get tutorialStep3 =>
+      'Nykyinen käsi on 150 pisteen arvoinen ja 3 noppaa on jäljellä heitettäväksi. Peliin pääsyyn tarvitaan vähintään 500 pistettä: heitetään uudelleen.';
+
+  @override
+  String get tutorialStep4 =>
+      'Kolme samaa noppaa: kolme kolmosta on 300 pistettä. Pidä ne.';
+
+  @override
+  String get tutorialStep5 =>
+      'Kaikki nopat toivat pisteitä: kuumat nopat! Sinun on heitettävä kaikki 5 noppaa uudelleen etkä voi lopettaa. Nykyinen käsi säilyttää 450 pistettään.';
+
+  @override
+  String get tutorialStep6 =>
+      'Kaksi ykköstä ja viitonen: 250 lisää, eli 700. Viitosen pitäminen kannattaa: lopettaminen lukuun 650 olisi kiellettyä (ei koskaan summaa, joka päättyy lukuun 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 pistettä: yli 500 eikä 50 lopussa. Voit lopettaa ja kirjata ne. Napauta ”Lopeta”.';
+
+  @override
+  String get tutorialStep8 =>
+      '700 pistettä kirjattu! Katsotaan nyt, mitä tapahtuu, kun nopat eivät tuo mitään: heitä.';
+
+  @override
+  String get tutorialStep9 =>
+      'Mikään noppa ei tuo pisteitä: epäonnistuminen! Vuoro menetetään ja viiva merkitsee pisterivisi; toinen epäonnistuminen yliviivaisi sen. Ensimmäinen, joka saavuttaa tasan 10 000, käynnistää muille loppukierroksen. Täydelliset säännöt ovat valikossa. Hauskaa peliä!';
+
+  @override
   String get rulesGoalTitle => 'Pelin tavoite';
 
   @override

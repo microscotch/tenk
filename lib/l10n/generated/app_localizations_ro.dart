@@ -644,6 +644,67 @@ class AppLocalizationsRo extends AppLocalizations {
   String get rulesScreenTitle => 'Regulile jocului';
 
   @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Sari peste';
+
+  @override
+  String get tutorialNext => 'Înainte';
+
+  @override
+  String get tutorialRoll => 'Aruncă zarurile';
+
+  @override
+  String get tutorialKeep => 'Păstrează';
+
+  @override
+  String get tutorialFinish => 'Începe să joci';
+
+  @override
+  String get tutorialReplayButton => 'Revezi tutorialul';
+
+  @override
+  String get tutorialStep0 =>
+      'Bun venit în Le 10000! Scopul: să atingi exact 10.000 de puncte. Vom juca o tură împreună; nimic din ce faci aici nu se salvează.';
+
+  @override
+  String get tutorialStep1 =>
+      'La rândul tău arunci 5 zaruri. Apasă pe „Aruncă zarurile”.';
+
+  @override
+  String get tutorialStep2 =>
+      'Aici aduc puncte doar 1 (100 de puncte) și 5 (50 de puncte). Zarul de 1 este obligatoriu; pe cel de 5 l-am putea pune deoparte, dar îl păstrăm. Apasă pe „Păstrează”.';
+
+  @override
+  String get tutorialStep3 =>
+      'Mâna curentă valorează 150 de puncte și mai rămân 3 zaruri de aruncat. Ca să intri în joc ai nevoie de cel puțin 500 de puncte: aruncăm din nou.';
+
+  @override
+  String get tutorialStep4 =>
+      'Trei zaruri identice: trei de 3 valorează 300 de puncte. Păstrează-le.';
+
+  @override
+  String get tutorialStep5 =>
+      'Toate zarurile au contat: zaruri fierbinți! Trebuie să arunci din nou toate cele 5 zaruri, fără să te poți opri. Mâna curentă își păstrează cele 450 de puncte.';
+
+  @override
+  String get tutorialStep6 =>
+      'Doi de 1 și un 5: încă 250, adică 700. Merită să păstrezi 5: oprirea la 650 ar fi interzisă (niciodată un total care se termină în 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 de puncte: peste 500 și fără 50 la final. Te poți opri și le încasezi. Apasă pe „Oprește-te”.';
+
+  @override
+  String get tutorialStep8 =>
+      '700 de puncte încasate! Să vedem acum ce se întâmplă când zarurile nu aduc nimic: aruncă.';
+
+  @override
+  String get tutorialStep9 =>
+      'Niciun zar nu aduce puncte: un eșec! Tura e pierdută și o liniuță marchează linia ta de scor; un al doilea eșec ar tăia-o. Primul care atinge exact 10.000 declanșează o rundă finală pentru ceilalți. Regulile complete sunt în meniu. Joc plăcut!';
+
+  @override
   String get rulesGoalTitle => 'Scopul jocului';
 
   @override

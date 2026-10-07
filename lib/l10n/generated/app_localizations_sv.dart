@@ -637,6 +637,67 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesScreenTitle => 'Spelregler';
 
   @override
+  String get tutorialTitle => 'Handledning';
+
+  @override
+  String get tutorialSkip => 'Hoppa över';
+
+  @override
+  String get tutorialNext => 'Nästa';
+
+  @override
+  String get tutorialRoll => 'Kasta tärningarna';
+
+  @override
+  String get tutorialKeep => 'Behåll';
+
+  @override
+  String get tutorialFinish => 'Börja spela';
+
+  @override
+  String get tutorialReplayButton => 'Se handledningen igen';
+
+  @override
+  String get tutorialStep0 =>
+      'Välkommen till Le 10000! Målet: nå exakt 10 000 poäng. Vi spelar en runda tillsammans; inget du gör här sparas.';
+
+  @override
+  String get tutorialStep1 =>
+      'På din tur kastar du 5 tärningar. Tryck på ”Kasta tärningarna”.';
+
+  @override
+  String get tutorialStep2 =>
+      'Bara ettan (100 poäng) och femman (50 poäng) ger poäng här. Ettan är obligatorisk; femman kunde läggas undan, men vi behåller den. Tryck på ”Behåll”.';
+
+  @override
+  String get tutorialStep3 =>
+      'Den aktuella handen är värd 150 poäng och 3 tärningar återstår att kasta om. För att komma in i spelet behövs minst 500 poäng: vi kastar om.';
+
+  @override
+  String get tutorialStep4 =>
+      'Tre likadana tärningar: tre treor är värda 300 poäng. Behåll dem.';
+
+  @override
+  String get tutorialStep5 =>
+      'Alla tärningar gav poäng: heta tärningar! Du måste kasta om alla 5 och kan inte stanna. Den aktuella handen behåller sina 450 poäng.';
+
+  @override
+  String get tutorialStep6 =>
+      'Två ettor och en femma: 250 till, alltså 700. Det lönar sig att behålla femman: att stanna på 650 är förbjudet (aldrig en summa som slutar på 50).';
+
+  @override
+  String get tutorialStep7 =>
+      '700 poäng: över 500 och ingen 50 på slutet. Du kan stanna och bokföra dem. Tryck på ”Stanna”.';
+
+  @override
+  String get tutorialStep8 =>
+      '700 poäng bokförda! Nu ser vi vad som händer när tärningarna inte ger något: kasta.';
+
+  @override
+  String get tutorialStep9 =>
+      'Ingen tärning ger poäng: en bom! Rundan är förlorad och ett streck markerar din poängrad; en andra bom skulle stryka den. Den första som når exakt 10 000 utlöser en slutrunda för de andra. De fullständiga reglerna finns i menyn. Ha så roligt!';
+
+  @override
   String get rulesGoalTitle => 'Spelets mål';
 
   @override

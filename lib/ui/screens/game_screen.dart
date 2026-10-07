@@ -27,6 +27,7 @@ import '../widgets/app_title.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/dice3d/dice_face_texture.dart' show kExtensionLabelColor, pipColorFor;
+import '../widgets/dice_classification.dart';
 import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/replay_controls.dart';
@@ -38,62 +39,6 @@ import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
 import 'rules_screen.dart';
 import 'settings_screen.dart';
-
-/// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
-/// nombre de 5 que le joueur envisage de garder (aperçu avant validation).
-List<DieVisualState> _classifyDiceForDisplay(
-  RollAnalysis analysis,
-  int selectedKeepCount,
-) {
-  if (analysis.groups.any((g) => g.isSuite)) {
-    return List.filled(analysis.faces.length, DieVisualState.kept);
-  }
-
-  final mandatoryRemaining = <int, int>{};
-  for (final g in analysis.mandatoryGroups) {
-    mandatoryRemaining[g.value] =
-        (mandatoryRemaining[g.value] ?? 0) + g.diceCount;
-  }
-
-  final fives = analysis.declinableFives;
-  var keepRemaining = selectedKeepCount;
-
-  return [
-    for (final v in analysis.faces)
-      if ((mandatoryRemaining[v] ?? 0) > 0)
-        _consume(mandatoryRemaining, v, _mandatoryVisualState(analysis, v))
-      else if (fives != null && v == 5)
-        (() {
-          if (keepRemaining > 0) {
-            keepRemaining--;
-            final perDie = fives.points ~/ fives.diceCount;
-            return perDie == 100
-                ? DieVisualState.extended
-                : DieVisualState.kept;
-          }
-          return DieVisualState.declined;
-        })()
-      else
-        DieVisualState.junk,
-  ];
-}
-
-DieVisualState _mandatoryVisualState(RollAnalysis analysis, int value) {
-  final g = analysis.mandatoryGroups.firstWhere((g) => g.value == value);
-  // Un groupe obligatoire isolé (moins de 3 dés) de valeur non-as ne peut
-  // exister que via la règle d'extension : ses points sont "temporaires".
-  final isExtended = g.diceCount < 3 && g.value != 1;
-  return isExtended ? DieVisualState.extended : DieVisualState.kept;
-}
-
-DieVisualState _consume(
-  Map<int, int> remaining,
-  int value,
-  DieVisualState result,
-) {
-  remaining[value] = remaining[value]! - 1;
-  return result;
-}
 
 /// Vrai s'il existe un choix réel sur le nombre de 5 à garder (plusieurs
 /// valeurs possibles), pas juste une case techniquement "déclinable" dont la
@@ -1120,7 +1065,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final bustDice = [
       for (final batch in _keptDiceByRoll(turn.keptDiceThisTurn)) _PopupDiceGroup.kept(batch),
       if (turn.pendingRoll case final rolled?)
-        _PopupDiceGroup(values: rolled.faces, states: _classifyDiceForDisplay(rolled, 0)),
+        _PopupDiceGroup(values: rolled.faces, states: classifyDiceForDisplay(rolled, 0)),
     ];
     showDialog<void>(
       context: context,
@@ -1629,7 +1574,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final previewKeep = (!turn.busted && followsSelection)
           ? _selectedKeep
           : _defaultKeepCount(turn, pendingAnalysis, currentTotal: currentTotal);
-      previewStates = _classifyDiceForDisplay(pendingAnalysis, previewKeep);
+      previewStates = classifyDiceForDisplay(pendingAnalysis, previewKeep);
       previewIndices = {
         for (var i = 0; i < previewStates.length; i++)
           if (previewStates[i] == DieVisualState.kept ||
@@ -2319,7 +2264,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
   /// le libellé lui-même, entre parenthèses, une fois [showScore] (les dés
   /// immobilisés, voir `_rollSettled`). `selectedKeep` ne pèse que sur
-  /// l'aperçu visuel (voir `_classifyDiceForDisplay`) : 0 pour l'IA/un
+  /// l'aperçu visuel (voir `classifyDiceForDisplay`) : 0 pour l'IA/un
   /// craque (rien n'est encore "décidé" à afficher), la sélection réelle du
   /// joueur sinon. Les dés d'indice dans [previewIndices] s'effacent en
   /// fondu une fois [previewRevealed] (migration visuelle vers "Main
@@ -2357,7 +2302,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               // réapparaissaient en fondu au lancer suivant au lieu de se
               // montrer en train de rouler.
               : _fittedDiceRow(analysis.faces.length, key: ObjectKey(analysis), (i, size) {
-                  final states = _classifyDiceForDisplay(
+                  final states = classifyDiceForDisplay(
                     analysis,
                     selectedKeep,
                   );

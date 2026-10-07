@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../widgets/app_top_bar.dart';
+import 'tutorial_screen.dart';
 
 /// Écran d'aide expliquant les règles du jeu en langage clair, accessible
 /// depuis le bouton "?" de l'écran d'accueil. Contenu purement statique (pas
@@ -31,6 +32,12 @@ class RulesScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TutorialScreen())),
+                icon: const Icon(Icons.school),
+                label: Text(l10n.tutorialReplayButton),
+              ),
+              const SizedBox(height: 24),
               for (final (title, body) in sections)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24),

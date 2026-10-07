@@ -10,6 +10,7 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 import 'player_edit_screen.dart';
 import 'setup_screen.dart';
+import 'tutorial_screen.dart';
 
 /// Demande son profil à l'utilisateur, au lancement, quand il n'en a pas (voir
 /// `isMyProfileMissing`) : créer sa fiche, ou désigner la sienne parmi celles
@@ -99,7 +100,17 @@ class MyProfileSetupScreen extends ConsumerWidget {
 /// Garde de lancement : l'écran d'accueil, ou d'abord [MyProfileSetupScreen]
 /// si l'utilisateur n'a pas de profil. Rend la page à pousser à la place du
 /// splash.
+///
+/// Au tout premier lancement — pas de profil, pas d'ancien nom de joueur (rien
+/// qui trahisse un utilisateur d'avant) et tutoriel jamais vu — c'est le
+/// tutoriel qui passe en premier, puis la création du profil.
 Future<Widget> launchScreenFor(ProviderContainer container) async {
-  if (await isMyProfileMissing(container)) return const MyProfileSetupScreen();
+  if (await isMyProfileMissing(container)) {
+    final settings = container.read(settingsProvider);
+    if (!settings.tutorialSeen && settings.playerName.isEmpty) {
+      return const TutorialScreen(next: MyProfileSetupScreen());
+    }
+    return const MyProfileSetupScreen();
+  }
   return const SetupScreen();
 }

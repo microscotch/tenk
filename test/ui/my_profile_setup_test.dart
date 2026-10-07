@@ -10,6 +10,7 @@ import 'package:le10000/state/room_link_providers.dart';
 import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/route_observer.dart';
 import 'package:le10000/ui/screens/my_profile_setup_screen.dart';
+import 'package:le10000/ui/screens/tutorial_screen.dart';
 import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/player_edit_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
@@ -67,10 +68,29 @@ void main() {
   }
 
   group('au lancement', () {
-    testWidgets('sans profil, le splash mène à sa création', (tester) async {
+    testWidgets('au tout premier lancement, le splash mène au tutoriel, puis à la création du profil', (tester) async {
+      await launch(tester);
+      expect(find.byType(TutorialScreen), findsOneWidget);
+      expect(find.byType(MyProfileSetupScreen), findsNothing);
+
+      await tester.tap(find.text('Passer'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MyProfileSetupScreen), findsOneWidget);
+      expect(find.byType(TutorialScreen), findsNothing);
+    });
+
+    testWidgets('tutoriel déjà vu, sans profil : directement à la création', (tester) async {
+      SharedPreferences.setMockInitialValues({'settings.tutorialSeen': true});
       await launch(tester);
       expect(find.byType(MyProfileSetupScreen), findsOneWidget);
-      expect(find.byType(SetupScreen), findsNothing);
+      expect(find.byType(TutorialScreen), findsNothing);
+    });
+
+    testWidgets('un utilisateur d\'avant les profils (ancien nom) n\'a pas le tutoriel', (tester) async {
+      SharedPreferences.setMockInitialValues({'settings.playerName': 'Laurent'});
+      await launch(tester);
+      expect(find.byType(MyProfileSetupScreen), findsOneWidget);
+      expect(find.byType(TutorialScreen), findsNothing);
     });
 
     testWidgets('avec un profil, directement à l\'accueil', (tester) async {

@@ -152,6 +152,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   mid-final-round if someone else reaches 10000, via `triggeringWinnerIndex`/`remainingFinalTurns`).
   `startTurn(useFullHand:)` is where a player either continues an inherited hand (score + kept dice
   carried over as a bonus base) or starts fresh with 5 dice.
+- `game/tutorial.dart` — `TutorialSession`/`tutorialSteps`: the first-launch tutorial, a scripted single turn
+  (dice from `ScriptedRandom`, one expected action per step) replayed with the pure turn functions. It is **not a
+  game**: no `GameEngine`, journal, save or statistics. `launchScreenFor` shows `TutorialScreen` (then the profile
+  creation) only with no profile, no legacy `playerName` and `tutorialSeen` false; "Passer" at any time, replayable
+  from the Rules screen. Step texts are `tutorialStep0..9` in the ARBs: changing the scenario means changing them in
+  all 11 languages.
 - `game/dice_off.dart` — separate mini state machine for the pre-game 1-die roll-off that decides
   turn order: everyone rolls at once (`rollAll`), lowest die starts, ties at the lowest re-roll among
   only themselves; `playOrder` gives the seats in play order (see the order rule below). Old journals
