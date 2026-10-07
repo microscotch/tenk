@@ -645,77 +645,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rulesGoalBody =>
-      'Wer als Erster genau 10.000 Punkte erreicht, gewinnt das Spiel. Man muss die Zahl genau treffen: Überschreiten zählt nicht.';
+      'Genau 10.000 Punkte erreichen. Überschreiten zählt nicht.';
 
   @override
   String get rulesTurnTitle => 'Ablauf eines Zuges';
 
   @override
   String get rulesTurnBody =>
-      'In deinem Zug würfelst du mit 5 Würfeln. Manche Augenzahlen bringen Punkte (siehe unten), andere nichts. Du legst mindestens einen punktenden Würfel beiseite und entscheidest dann: die übrigen Würfel erneut werfen, um mehr Punkte zu sammeln, oder aufhören und einlösen, was du in diesem Zug gesammelt hast. Bringt ein Wurf keinen einzigen Punkt, ist es ein Fehlwurf (siehe unten) und du verlierst alles, was du in diesem Zug gesammelt hattest.';
+      'Du würfelst 5 Würfel, legst mindestens einen punktebringenden Würfel beiseite und würfelst dann die übrigen neu oder hörst auf und verbuchst. Bringt ein Wurf nichts, ist es ein Fehlwurf: Du verlierst alles, was du in diesem Zug gesammelt hast.';
 
   @override
   String get rulesScoringTitle => 'Was Punkte bringt';
 
   @override
   String get rulesScoringBody =>
-      '• Eine einzelne 1: 100 Punkte. Eine einzelne 5: 50 Punkte. Andere einzelne Werte (2, 3, 4, 6) bringen nichts.\n• Drei gleiche Würfel: 1000 Punkte für drei 1en, sonst Augenzahl × 100 (drei 4en sind 400 wert, drei 6en 600).\n• Ein vierter Würfel mit derselben Zahl bringt weitere 1000 Punkte.\n• Fünf gleiche Würfel sind Augenzahl × 1000 wert, außer fünf 1en, die direkt 10.000 Punkte bringen: der sofortige Sieg.\n• Eine Straße aus 5 aufeinanderfolgenden Würfeln (1-2-3-4-5 oder 2-3-4-5-6) ist 500 Punkte wert.';
+      '• Eine einzelne 1: 100 Punkte. Eine einzelne 5: 50 Punkte. Andere einzelne Werte (2, 3, 4, 6) bringen nichts.\n• Ein Drilling: Augenzahl × 100 (drei 6en sind 600 wert), außer drei 1en: 1000.\n• Ein Vierling: 1000 Punkte mehr als der passende Drilling (vier 6en sind 1600 wert, vier 1en 2000).\n• Fünf gleiche Würfel sind Augenzahl × 1000 wert. Fünf 1en bringen direkt 10.000 Punkte: der sofortige Sieg.\n• Eine Straße aus 5 aufeinanderfolgenden Würfeln (1-2-3-4-5 oder 2-3-4-5-6) ist 500 Punkte wert.';
 
   @override
-  String get rulesHotDiceTitle => 'Heiße Würfel: eine erzwungene zweite Chance';
-
-  @override
-  String get rulesHotDiceBody =>
-      'Bringen alle Würfel, die du gerade geworfen hast, Punkte, musst du alle 5 Würfel erneut werfen: In genau diesem Moment darfst du nicht aufhören. Das nennt man „heiße Würfel“.';
-
-  @override
-  String get rulesBustTitle => 'Der Fehlwurf';
+  String get rulesBustTitle => 'Fehlwurf und Streichung';
 
   @override
   String get rulesBustBody =>
-      'Bringt ein Wurf überhaupt keine Punkte, endet dein Zug sofort und du verlierst alle in diesem Zug gesammelten Punkte (was du in früheren Zügen eingelöst hast, bleibt dir). Ein Fehlwurf versieht außerdem deine aktuelle Punktezeile mit einem Strich; trug sie schon einen, wird sie gestrichen und deine Punktzahl fällt auf ihren vorigen Wert zurück.';
+      'Ein Fehlwurf setzt einen Strich auf deine aktuelle Punktezeile. Hatte sie schon einen, wird sie gestrichen und du fällst auf deinen vorigen Stand zurück. Erreichst du dieselbe Summe wie ein anderer Spieler, wird dieser gestrichen.';
 
   @override
-  String get rulesEntryTitle => 'Ins Spiel kommen';
+  String get rulesEntryTitle => 'Aufhören';
 
   @override
   String get rulesEntryBody =>
-      'Um Punkte zu schreiben, muss dein allererster erfolgreicher Zug mindestens 500 Punkte bringen. Bist du einmal im Spiel, muss jeder weitere Zug mindestens 200 Punkte bringen, damit du aufhören darfst.';
-
-  @override
-  String get rulesNoFiftyTitle => 'Nie eine Punktzahl, die auf 50 endet';
-
-  @override
-  String get rulesNoFiftyBody =>
-      'Du darfst nie freiwillig bei einer Zugsumme aufhören, die auf 50 endet (etwa 250 oder 450): Du musst weiterwürfeln, bis die Summe gültig ist.';
+      '• Du brauchst mindestens 500 Punkte, um ins Spiel zu kommen, danach mindestens 200 pro Zug.\n• Du darfst nie bei einer Zugsumme aufhören, die auf 50 endet (250, 450…).\n• Bringen alle deine Würfel Punkte („heiße Würfel“), musst du alle 5 neu würfeln.';
 
   @override
   String get rulesExtensionTitle => 'Die Erweiterungsregel';
 
   @override
   String get rulesExtensionBody =>
-      'Hast du einmal einen Drilling oder Vierling eines Wertes eingelöst (zum Beispiel drei 4en), bringt jeder einzelne Würfel dieses Wertes, der später im selben Zug fällt, 100 Punkte statt seines üblichen Werts — auch eine einzelne 5, die dann 100 statt 50 wert ist. Dieser Vorteil verfällt, sobald du heiße Würfel hast.';
+      'Hast du einen Drilling oder Vierling verbucht, ist jeder einzelne Würfel desselben Werts später im Zug 100 wert, auch eine 5. Bei heißen Würfeln entfällt das.';
 
   @override
   String get rulesInheritTitle => 'Die Würfel des vorigen Spielers erben';
 
   @override
   String get rulesInheritBody =>
-      'Hört ein Spieler freiwillig auf, obwohl er noch ungeworfene Würfel hat, kann der nächste Spieler diese restlichen Würfel samt der bereits gesammelten Punkte als Ausgangsbasis übernehmen oder mit 5 neuen Würfeln bei null anfangen. Nach einem Fehlwurf dagegen beginnt der nächste Spieler immer mit 5 neuen Würfeln und erbt nichts.';
+      'Hörst du mit ungeworfenen Würfeln auf, darf der nächste Spieler diese Würfel samt deinem Punktestand als Basis übernehmen oder mit 5 neuen Würfeln beginnen. Nach einem Fehlwurf beginnt er immer mit 5 neuen Würfeln.';
 
   @override
-  String get rulesBarredTitle => 'Strich und gestrichen';
-
-  @override
-  String get rulesBarredBody =>
-      'Ein Fehlwurf setzt einen Warnstrich auf deine aktuelle Punktezeile, falls sie noch keinen hat. Hat sie schon einen, wird die Zeile gestrichen und deine Punktzahl fällt auf ihren vorigen Wert zurück. Erreicht deine Punktzahl genau dieselbe Summe wie die eines anderen Spielers, wird dieser auf dieselbe Weise gestrichen, ob er schon einen Strich hatte oder nicht.';
-
-  @override
-  String get rulesVictoryTitle => 'Wie man gewinnt';
+  String get rulesVictoryTitle => 'Genau 10.000 und Schlussrunde';
 
   @override
   String get rulesVictoryBody =>
-      'Wer als Erster genau 10.000 Punkte erreicht, löst eine Schlussrunde aus: Jeder andere Spieler hat in seinem Zug eine letzte Chance, gleichzuziehen. Sobald ein Wurf genau 10.000 Punkte ermöglicht, erfolgt die Aufnahme automatisch und der Zug endet sofort — ob in der Schlussrunde oder nicht. Während der Schlussrunde darf jedoch niemand freiwillig unter 10.000 aufhören: Man muss weiterwürfeln, bis man diesen Wert erreicht oder einen Fehlwurf macht. Erreicht während dieser Schlussrunde ein anderer Spieler ebenfalls genau 10.000, übernimmt er die Krone und eine neue Schlussrunde beginnt um ihn herum.';
+      'Sobald ein Wurf genau 10.000 ermöglicht, erfolgt die Aufnahme automatisch und der Zug endet. Die anderen Spieler haben dann einen letzten Zug, um gleichzuziehen: Darin darf niemand unter 10.000 aufhören, man muss gleichziehen oder einen Fehlwurf machen. Erreicht ein anderer Spieler ebenfalls genau 10.000, streicht er den ersten und eine neue Schlussrunde beginnt um ihn herum.\nSonderfall: Eine volle Hand, die genau auf 10.000 fällt, ist ein Fehlwurf, da sie zum Weiterwürfeln zwingt. Nur das Ass-Quintett gewinnt.';
 
   @override
   String get onlinePlayButton => 'Online spielen';

@@ -640,78 +640,56 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesGoalTitle => 'Spelets mål';
 
   @override
-  String get rulesGoalBody =>
-      'Den första spelaren som når exakt 10 000 poäng vinner spelet. Du måste pricka talet exakt: att gå över räknas inte.';
+  String get rulesGoalBody => 'Nå exakt 10 000 poäng. Att gå över räknas inte.';
 
   @override
   String get rulesTurnTitle => 'Så spelas en runda';
 
   @override
   String get rulesTurnBody =>
-      'På din tur kastar du 5 tärningar. Vissa värden ger poäng (se nedan), andra ger ingenting. Du lägger undan minst en tärning som ger poäng och väljer sedan: kasta om de återstående tärningarna för att försöka samla fler poäng, eller stanna och notera det du samlat den här rundan. Om ett kast inte ger en enda poäng är det bom (se nedan) och du förlorar allt du samlat den här rundan.';
+      'Du kastar 5 tärningar, lägger undan minst en tärning som ger poäng och kastar sedan resten igen eller stannar och bokför. Om ett kast inte ger något är det en bom: du förlorar allt du samlat den här rundan.';
 
   @override
   String get rulesScoringTitle => 'Vad som ger poäng';
 
   @override
   String get rulesScoringBody =>
-      '• En enstaka etta: 100 poäng. En enstaka femma: 50 poäng. Övriga enstaka värden (2, 3, 4, 6) ger ingenting.\n• Tre likadana tärningar: 1000 poäng för tre ettor, annars tärningens värde × 100 (tre fyror är värda 400, tre sexor 600).\n• En fjärde tärning med samma värde ger ytterligare 1000 poäng.\n• Fem likadana tärningar är värda tärningens värde × 1000, utom fem ettor, som ger 10 000 poäng direkt: omedelbar seger.\n• En stege med 5 tärningar i följd (1-2-3-4-5 eller 2-3-4-5-6) är värd 500 poäng.';
+      '• En enstaka etta: 100 poäng. En enstaka femma: 50 poäng. Övriga enstaka värden (2, 3, 4, 6) ger ingenting.\n• Tre likadana: tärningens värde × 100 (tre sexor är värda 600), utom tre ettor: 1000.\n• Fyra likadana: 1000 poäng mer än motsvarande tre likadana (fyra sexor är värda 1600, fyra ettor 2000).\n• Fem likadana är värda tärningens värde × 1000. Fem ettor ger 10 000 poäng direkt: omedelbar seger.\n• En stege med 5 tärningar i följd (1-2-3-4-5 eller 2-3-4-5-6) är värd 500 poäng.';
 
   @override
-  String get rulesHotDiceTitle => 'Heta tärningar: en tvingad andra chans';
-
-  @override
-  String get rulesHotDiceBody =>
-      'Om alla tärningar du just kastade ger poäng måste du kasta om alla 5 tärningarna: du kan inte stanna just då. Det kallas ”heta tärningar”.';
-
-  @override
-  String get rulesBustTitle => 'Bom';
+  String get rulesBustTitle => 'Bom och struket';
 
   @override
   String get rulesBustBody =>
-      'Om ett kast inte ger några poäng alls slutar din runda omedelbart och du förlorar alla poäng du samlat den här rundan (det du noterat i tidigare rundor behåller du). En bom markerar också din aktuella poängrad med ett streck; hade den redan ett stryks den, och din poäng faller tillbaka till föregående värde.';
+      'En bom sätter ett streck på din aktuella poängrad. Hade den redan ett stryks den och du faller tillbaka till föregående värde. Om du når samma summa som en annan spelare stryks hen.';
 
   @override
-  String get rulesEntryTitle => 'Att komma in i spelet';
+  String get rulesEntryTitle => 'Att stanna';
 
   @override
   String get rulesEntryBody =>
-      'För att börja få poäng måste din allra första lyckade runda ge minst 500 poäng. När du väl är inne i spelet måste varje följande runda ge minst 200 poäng för att du ska få stanna.';
-
-  @override
-  String get rulesNoFiftyTitle => 'Aldrig en poäng som slutar på 50';
-
-  @override
-  String get rulesNoFiftyBody =>
-      'Du får aldrig välja att stanna frivilligt på en rundsumma som slutar på 50 (som 250 eller 450): du måste kasta om tills du får en giltig summa.';
+      '• Du behöver minst 500 poäng för att komma in i spelet, därefter minst 200 per runda.\n• Du kan aldrig stanna på en rundsumma som slutar på 50 (250, 450…).\n• Om alla dina tärningar ger poäng (”heta tärningar”) måste du kasta om alla 5.';
 
   @override
   String get rulesExtensionTitle => 'Utvidgningsregeln';
 
   @override
   String get rulesExtensionBody =>
-      'När du har noterat ett tretal eller fyrtal av ett visst värde (till exempel tre fyror) är varje enstaka tärning med samma värde som kommer senare i samma runda värd 100 poäng i stället för sitt vanliga värde — även en enstaka femma, som då är värd 100 i stället för 50. Fördelen försvinner så snart du får heta tärningar.';
+      'När du har bokfört tre eller fyra likadana är varje enstaka tärning med samma värde senare i rundan värd 100, även en femma. Det försvinner vid heta tärningar.';
 
   @override
   String get rulesInheritTitle => 'Ärva föregående spelares tärningar';
 
   @override
   String get rulesInheritBody =>
-      'När en spelare stannar frivilligt med tärningar kvar att kasta kan nästa spelare välja att ta över de återstående tärningarna tillsammans med den redan samlade poängen som utgångspunkt, eller börja om från noll med 5 nya tärningar. Efter en bom börjar nästa spelare däremot alltid med 5 nya tärningar, utan att ärva något.';
+      'Om du stannar med tärningar som inte kastats kan nästa spelare ta över dem och din poäng som bas, eller börja med 5 nya tärningar. Efter en bom börjar hen alltid med 5 nya tärningar.';
 
   @override
-  String get rulesBarredTitle => 'Streck och struken';
-
-  @override
-  String get rulesBarredBody =>
-      'En bom sätter ett varningsstreck på din aktuella poängrad om den inte redan har ett. Har den redan ett stryks raden, och din poäng faller tillbaka till föregående värde. Om din poäng blir exakt lika med en annan spelares stryks den spelaren på samma sätt, oavsett om hen redan hade ett streck eller inte.';
-
-  @override
-  String get rulesVictoryTitle => 'Så vinner du';
+  String get rulesVictoryTitle => 'Exakt 10 000 och slutrunda';
 
   @override
   String get rulesVictoryBody =>
-      'Den första spelaren som når exakt 10 000 poäng utlöser en slutrunda: varje annan spelare får en sista chans på sin tur att komma ikapp. Så snart ett kast gör det möjligt att nå exakt 10 000 sker det automatiskt och rundan stannar genast, oavsett om det är slutrundan eller inte. Under slutrundan kan däremot ingen stanna frivilligt under 10 000: man måste fortsätta kasta tills man når samma resultat eller bommar. Om en annan spelare också når exakt 10 000 under slutrundan tar hen över kronan och en ny slutrunda börjar runt hen.';
+      'Så snart ett kast gör det möjligt att nå exakt 10 000 sker det automatiskt och rundan stannar. De andra spelarna får då en sista runda för att komma ikapp: i den får ingen stanna under 10 000, man måste jämna ut eller bomma. Om en annan spelare också når exakt 10 000 stryker hen den första och en ny slutrunda börjar runt hen.\nSpecialfall: En full hand som landar exakt på 10 000 är en bom, eftersom den tvingar till nytt kast. Bara ess-femmaren vinner.';
 
   @override
   String get onlinePlayButton => 'Spela online';

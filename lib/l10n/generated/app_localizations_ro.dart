@@ -648,78 +648,56 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get rulesGoalBody =>
-      'Primul jucător care ajunge la exact 10.000 de puncte câștigă jocul. Trebuie să nimerești exact acest număr: depășirea nu contează.';
+      'Atinge exact 10.000 de puncte. Depășirea nu contează.';
 
   @override
   String get rulesTurnTitle => 'Cum se joacă o tură';
 
   @override
   String get rulesTurnBody =>
-      'La tura ta, arunci 5 zaruri. Unele valori aduc puncte (vezi mai jos), altele nu valorează nimic. Pui deoparte cel puțin un zar care punctează, apoi alegi: arunci din nou zarurile rămase ca să aduni mai multe puncte, sau te oprești și încasezi ce ai acumulat în această tură. Dacă o aruncare nu aduce niciun punct, ai ars (vezi mai jos) și pierzi tot ce acumulaseși în această tură.';
+      'Arunci 5 zaruri, pui deoparte cel puțin un zar care aduce puncte, apoi arunci din nou restul sau te oprești și încasezi. Dacă o aruncare nu aduce nimic, este un eșec: pierzi tot ce ai acumulat în această tură.';
 
   @override
   String get rulesScoringTitle => 'Ce aduce puncte';
 
   @override
   String get rulesScoringBody =>
-      '• Un 1 izolat: 100 de puncte. Un 5 izolat: 50 de puncte. Celelalte valori izolate (2, 3, 4, 6) nu aduc nimic.\n• Trei zaruri identice: 1000 de puncte pentru trei de 1, altfel valoarea zarului × 100 (trei de 4 valorează 400, trei de 6 valorează 600).\n• Un al patrulea zar cu aceeași valoare adaugă încă 1000 de puncte.\n• Cinci zaruri identice valorează valoarea zarului × 1000, cu excepția a cinci de 1, care aduc direct 10.000 de puncte: victoria imediată.\n• O suită de 5 zaruri consecutive (1-2-3-4-5 sau 2-3-4-5-6) valorează 500 de puncte.';
+      '• Un 1 izolat: 100 de puncte. Un 5 izolat: 50 de puncte. Celelalte valori izolate (2, 3, 4, 6) nu aduc nimic.\n• Un brelan: valoarea zarului × 100 (trei de 6 valorează 600), cu excepția a trei de 1, care valorează 1000.\n• Un careu: cu 1000 de puncte mai mult decât brelanul corespunzător (patru de 6 valorează 1600, patru de 1 valorează 2000).\n• Cinci zaruri identice valorează valoarea zarului × 1000. Cinci de 1 aduc direct 10.000 de puncte: victoria imediată.\n• O suită de 5 zaruri consecutive (1-2-3-4-5 sau 2-3-4-5-6) valorează 500 de puncte.';
 
   @override
-  String get rulesHotDiceTitle =>
-      'Zaruri fierbinți: o a doua șansă obligatorie';
-
-  @override
-  String get rulesHotDiceBody =>
-      'Dacă toate zarurile pe care tocmai le-ai aruncat aduc puncte, trebuie să arunci din nou toate cele 5 zaruri: nu te poți opri exact în acel moment. Asta se numește „zaruri fierbinți”.';
-
-  @override
-  String get rulesBustTitle => 'Eșecul';
+  String get rulesBustTitle => 'Eșec și tăiere';
 
   @override
   String get rulesBustBody =>
-      'Dacă o aruncare nu aduce absolut niciun punct, tura ta se încheie imediat și pierzi toate punctele acumulate în această tură (ce ai încasat în turele anterioare rămâne câștigat). Un eșec marchează totodată linia ta de scor curentă cu o liniuță; dacă avea deja una, e tăiată și scorul tău revine la valoarea anterioară.';
+      'Un eșec pune o liniuță pe linia ta de scor curentă. Dacă avea deja una, linia este tăiată și scorul tău revine la valoarea anterioară. Dacă ajungi la același total ca alt jucător, acela este tăiat.';
 
   @override
-  String get rulesEntryTitle => 'Intrarea în joc';
+  String get rulesEntryTitle => 'Oprirea';
 
   @override
   String get rulesEntryBody =>
-      'Ca să începi să marchezi, prima ta tură reușită trebuie să aducă cel puțin 500 de puncte. Odată intrat în joc, fiecare tură următoare trebuie să aducă cel puțin 200 de puncte ca să te poți opri.';
-
-  @override
-  String get rulesNoFiftyTitle => 'Niciodată un scor terminat în 50';
-
-  @override
-  String get rulesNoFiftyBody =>
-      'Nu poți alege niciodată să te oprești de bunăvoie la un total de tură terminat în 50 (de exemplu 250 sau 450): trebuie să arunci din nou până obții un total valid.';
+      '• Ai nevoie de cel puțin 500 de puncte ca să intri în joc, apoi de cel puțin 200 pe tură.\n• Nu te poți opri niciodată pe un total de tură care se termină în 50 (250, 450…).\n• Dacă toate zarurile tale aduc puncte („zaruri fierbinți”), trebuie să arunci din nou toate cele 5.';
 
   @override
   String get rulesExtensionTitle => 'Regula extensiei';
 
   @override
   String get rulesExtensionBody =>
-      'Odată ce ai încasat o tripletă sau un careu de o anumită valoare (de exemplu trei de 4), orice zar izolat cu aceeași valoare obținut mai târziu în aceeași tură aduce 100 de puncte în loc de valoarea obișnuită — inclusiv un 5 izolat, care valorează atunci 100 în loc de 50. Acest avantaj dispare de îndată ce obții zaruri fierbinți.';
+      'După ce ai încasat un brelan sau un careu, orice zar izolat de aceeași valoare mai târziu în tură valorează 100, inclusiv un 5. Dispare la zarurile fierbinți.';
 
   @override
   String get rulesInheritTitle => 'Moștenirea zarurilor jucătorului anterior';
 
   @override
   String get rulesInheritBody =>
-      'Când un jucător se oprește de bunăvoie având încă zaruri nearuncate, jucătorul următor poate alege să preia zarurile rămase împreună cu scorul deja acumulat ca bază de pornire, sau să reînceapă de la zero cu 5 zaruri noi. După un eșec, în schimb, jucătorul următor pornește întotdeauna cu 5 zaruri noi, fără să moștenească nimic.';
+      'Dacă te oprești cu zaruri nearuncate, jucătorul următor poate prelua acele zaruri și scorul tău ca bază sau poate relua cu 5 zaruri noi. După un eșec, reia întotdeauna cu 5 zaruri noi.';
 
   @override
-  String get rulesBarredTitle => 'Liniuță și tăiat';
-
-  @override
-  String get rulesBarredBody =>
-      'Un eșec pune o liniuță de avertizare pe linia ta de scor curentă, dacă nu are deja una. Dacă are deja una, linia e tăiată și scorul tău revine la valoarea anterioară. Dacă scorul tău ajunge exact la același total ca al altui jucător, acesta e tăiat în același fel, fie că avea deja o liniuță, fie că nu.';
-
-  @override
-  String get rulesVictoryTitle => 'Cum câștigi';
+  String get rulesVictoryTitle => 'Exact 10.000 și runda finală';
 
   @override
   String get rulesVictoryBody =>
-      'Primul jucător care ajunge la exact 10.000 de puncte declanșează o rundă finală: fiecare dintre ceilalți jucători are o ultimă șansă să-l egaleze la tura sa. De fiecare dată când o aruncare permite atingerea exactă a 10.000, luarea este automată și tura se încheie imediat, fie că e rundă finală sau nu. În runda finală, în schimb, nimeni nu se poate opri voluntar sub 10.000: trebuie să continue să arunce zarurile până egalează acel scor sau eșuează. Dacă în această rundă finală și alt jucător ajunge la exact 10.000, el preia coroana și o nouă rundă finală începe în jurul lui.';
+      'De îndată ce o aruncare permite atingerea exactă a 10.000, luarea este automată și tura se încheie. Ceilalți jucători au atunci o ultimă tură ca să egaleze acel scor: în ea nimeni nu se poate opri sub 10.000, trebuie să-l egaleze sau să eșueze. Dacă și alt jucător ajunge la exact 10.000, îl taie pe primul și o nouă rundă finală începe în jurul lui.\nCaz particular: o mână plină care cade exact pe 10.000 este un eșec, fiindcă obligă la o nouă aruncare. Câștigă doar chinta de ași.';
 
   @override
   String get onlinePlayButton => 'Joacă online';

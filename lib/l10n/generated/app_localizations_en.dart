@@ -640,77 +640,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesGoalBody =>
-      'The first player to reach exactly 10,000 points wins the game. You have to hit that number exactly: going over doesn\'t count.';
+      'Reach exactly 10,000 points. Going over doesn\'t count.';
 
   @override
   String get rulesTurnTitle => 'How a turn works';
 
   @override
   String get rulesTurnBody =>
-      'On your turn, you roll 5 dice. Some values score points (see below), others are worth nothing. You set aside at least one scoring die, then choose: reroll the remaining dice to try to collect more points, or stop and bank what you have accumulated this turn. If a roll scores no points at all, it\'s a bust (see below) and you lose everything you had accumulated this turn.';
+      'You roll 5 dice, set aside at least one scoring die, then reroll the rest or stop and bank. If a roll scores nothing, it\'s a bust: you lose everything you accumulated this turn.';
 
   @override
   String get rulesScoringTitle => 'What scores points';
 
   @override
   String get rulesScoringBody =>
-      '• A single 1: 100 points. A single 5: 50 points. Other single values (2, 3, 4, 6) score nothing.\n• Three identical dice: 1000 points for three 1s, otherwise the die value × 100 (three 4s are worth 400, three 6s 600).\n• A fourth die of the same value adds another 1000 points.\n• Five identical dice are worth the die value × 1000, except five 1s, which score 10,000 points outright: an immediate win.\n• A straight of 5 consecutive dice (1-2-3-4-5 or 2-3-4-5-6) is worth 500 points.';
+      '• A single ace (1): 100 points. A single 5: 50 points. Other single values (2, 3, 4, 6) score nothing.\n• Three of a kind: the die value × 100 (three 6s are worth 600), except three aces, worth 1000.\n• Four of a kind: 1000 more than the matching three of a kind (four 6s are worth 1600, four aces 2000).\n• Five of a kind: the die value × 1000. Five aces (the ace quint) score 10,000 outright: an immediate win.\n• A straight of 5 (ace-2-3-4-5 or 2-3-4-5-6) is worth 500 points.';
 
   @override
-  String get rulesHotDiceTitle => 'Hot dice: a forced second chance';
-
-  @override
-  String get rulesHotDiceBody =>
-      'If every die you just rolled scores points, you must reroll all 5 dice: you can\'t stop at that exact moment. This is called \"hot dice\".';
-
-  @override
-  String get rulesBustTitle => 'The bust';
+  String get rulesBustTitle => 'Bust and barred';
 
   @override
   String get rulesBustBody =>
-      'If a roll scores no points at all, your turn ends immediately and you lose all the points accumulated this turn (what you banked in previous turns is kept). A bust also marks your current score line with a strike; if it already had one, it is crossed out and your score drops back to its previous value.';
+      'A bust puts a dash on your score line. If it already had one, the line is barred and you fall back to your previous score. If you reach the same total as another player, they are barred.';
 
   @override
-  String get rulesEntryTitle => 'Getting into the game';
+  String get rulesEntryTitle => 'To stop';
 
   @override
   String get rulesEntryBody =>
-      'To start scoring, your very first successful turn must bring in at least 500 points. Once you\'re in the game, each following turn must bring in at least 200 points before you can stop.';
-
-  @override
-  String get rulesNoFiftyTitle => 'Never a score ending in 50';
-
-  @override
-  String get rulesNoFiftyBody =>
-      'You can never choose to stop voluntarily on a turn total ending in 50 (such as 250 or 450): you must reroll until you reach a valid total.';
+      '• You need at least 500 points to get into the game, then at least 200 per turn.\n• You can never stop on a turn total ending in 50 (250, 450…).\n• If all your dice score (\"hot dice\"), you must reroll all 5.';
 
   @override
   String get rulesExtensionTitle => 'The extension rule';
 
   @override
   String get rulesExtensionBody =>
-      'Once you have banked three or four of a kind of a given value (for example three 4s), any single die of that same value rolled later in the same turn is worth 100 points instead of its usual value — including a single 5, which is then worth 100 instead of 50. This advantage disappears as soon as you get hot dice.';
+      'Once a three or four of a kind is banked, any single die of the same value later in the turn is worth 100, including a 5. It ends on hot dice.';
 
   @override
   String get rulesInheritTitle => 'Inheriting the previous player\'s dice';
 
   @override
   String get rulesInheritBody =>
-      'When a player stops voluntarily with dice still unrolled, the next player can choose to take over those remaining dice along with the score already accumulated as a starting base, or to start from scratch with 5 fresh dice. After a bust, however, the next player always starts with 5 fresh dice, inheriting nothing.';
+      'If you stop with unrolled dice, the next player may take those dice and your score as a base, or start with 5 fresh dice. After a bust, they always start with 5 fresh dice.';
 
   @override
-  String get rulesBarredTitle => 'Strike and crossed out';
-
-  @override
-  String get rulesBarredBody =>
-      'A bust puts a warning strike on your current score line if it doesn\'t already have one. If it already has one, the line is crossed out and your score drops back to its previous value. If your score reaches exactly the same total as another player\'s, that player is crossed out the same way, whether they already had a strike or not.';
-
-  @override
-  String get rulesVictoryTitle => 'How to win';
+  String get rulesVictoryTitle => 'Exactly 10,000 and the final round';
 
   @override
   String get rulesVictoryBody =>
-      'The first player to reach exactly 10,000 points triggers a final round: every other player gets one last chance to match them on their turn. Whenever a roll makes it possible to land on exactly 10,000, the take happens automatically and the turn stops right away, final round or not. During the final round, though, nobody may voluntarily stop below 10,000: you must keep rolling until you match that score or bust. If another player also reaches exactly 10,000, they take the crown instead and a new final round starts around them.';
+      'As soon as a roll lets you land on exactly 10,000, the take is automatic and the turn ends. The other players then get one last turn to match that score: nobody may stop below 10,000 in it, you must match it or bust. If another player also hits 10,000, they bar the first and a new final round starts around them.\nSpecial case: a full hand landing exactly on 10,000 is a bust, since it forces a reroll. Only the ace quint wins.';
 
   @override
   String get onlinePlayButton => 'Play online';

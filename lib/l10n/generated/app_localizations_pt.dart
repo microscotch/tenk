@@ -642,78 +642,56 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesGoalBody =>
-      'O primeiro jogador a atingir exatamente 10 000 pontos ganha o jogo. É preciso acertar nesse número exato: ultrapassá-lo não conta.';
+      'Atingir exatamente 10 000 pontos. Ultrapassar não conta.';
 
   @override
   String get rulesTurnTitle => 'Como se joga um turno';
 
   @override
   String get rulesTurnBody =>
-      'Na tua vez, lanças 5 dados. Alguns valores dão pontos (ver abaixo), outros não valem nada. Pões de lado pelo menos um dado que pontue e depois escolhes: relançar os dados restantes para tentar juntar mais pontos, ou parar e arrecadar o que acumulaste neste turno. Se um lançamento não der nenhum ponto, é um rebentamento (ver abaixo) e perdes tudo o que tinhas acumulado neste turno.';
+      'Lanças 5 dados, pões de lado pelo menos um dado que pontue e depois relanças os restantes ou paras e registas. Se um lançamento não der nada, é um rebentamento: perdes tudo o que acumulaste neste turno.';
 
   @override
   String get rulesScoringTitle => 'O que dá pontos';
 
   @override
   String get rulesScoringBody =>
-      '• Um 1 isolado: 100 pontos. Um 5 isolado: 50 pontos. Os outros valores isolados (2, 3, 4, 6) não dão nada.\n• Três dados iguais: 1000 pontos por três 1, senão o valor do dado × 100 (três 4 valem 400, três 6 valem 600).\n• Um quarto dado do mesmo valor acrescenta mais 1000 pontos.\n• Cinco dados iguais valem o valor do dado × 1000, exceto cinco 1, que dão diretamente 10 000 pontos: a vitória imediata.\n• Uma sequência de 5 dados seguidos (1-2-3-4-5 ou 2-3-4-5-6) vale 500 pontos.';
+      '• Um 1 isolado: 100 pontos. Um 5 isolado: 50 pontos. Os outros valores isolados (2, 3, 4, 6) não dão nada.\n• Uma trinca: o valor do dado × 100 (três 6 valem 600), exceto três 1, que valem 1000.\n• Uma quadra: mais 1000 pontos do que a trinca correspondente (quatro 6 valem 1600, quatro 1 valem 2000).\n• Cinco dados iguais valem o valor do dado × 1000. Cinco 1 dão diretamente 10 000 pontos: a vitória imediata.\n• Uma sequência de 5 dados seguidos (1-2-3-4-5 ou 2-3-4-5-6) vale 500 pontos.';
 
   @override
-  String get rulesHotDiceTitle =>
-      'Dados quentes: uma segunda oportunidade forçada';
-
-  @override
-  String get rulesHotDiceBody =>
-      'Se todos os dados que acabaste de lançar derem pontos, tens de relançar os 5 dados: não podes parar nesse preciso momento. É o que se chama «dados quentes».';
-
-  @override
-  String get rulesBustTitle => 'O rebentamento';
+  String get rulesBustTitle => 'Rebentamento e riscado';
 
   @override
   String get rulesBustBody =>
-      'Se um lançamento não der rigorosamente nenhum ponto, o teu turno termina de imediato e perdes todos os pontos acumulados neste turno (o que já arrecadaste em turnos anteriores fica garantido). Um rebentamento marca também a tua linha de pontuação atual com um traço; se já tinha um, é riscada e a tua pontuação volta ao valor anterior.';
+      'Um rebentamento põe um traço na tua linha de pontuação atual. Se já tinha um, a linha é riscada e voltas à pontuação anterior. Se atingires o mesmo total de outro jogador, é ele que fica riscado.';
 
   @override
-  String get rulesEntryTitle => 'Entrar no jogo';
+  String get rulesEntryTitle => 'Parar';
 
   @override
   String get rulesEntryBody =>
-      'Para começar a marcar pontos, o teu primeiro turno bem-sucedido tem de render pelo menos 500 pontos. Depois de entrares no jogo, cada turno seguinte tem de render pelo menos 200 pontos para poderes parar.';
-
-  @override
-  String get rulesNoFiftyTitle => 'Nunca uma pontuação que acabe em 50';
-
-  @override
-  String get rulesNoFiftyBody =>
-      'Nunca podes escolher parar voluntariamente num total de turno que acabe em 50 (como 250 ou 450): tens de relançar até obter um total válido.';
+      '• São precisos pelo menos 500 pontos para entrar no jogo e, depois, pelo menos 200 por turno.\n• Nunca podes parar com um total de turno que termine em 50 (250, 450…).\n• Se todos os teus dados pontuarem («dados quentes»), tens de relançar os 5.';
 
   @override
   String get rulesExtensionTitle => 'A regra da extensão';
 
   @override
   String get rulesExtensionBody =>
-      'Depois de arrecadares um trio ou uma quadra de um dado valor (por exemplo três 4), qualquer dado isolado desse mesmo valor que saia mais tarde no mesmo turno vale 100 pontos em vez do seu valor habitual — incluindo um 5 isolado, que passa a valer 100 em vez de 50. Esta vantagem desaparece assim que obtiveres dados quentes.';
+      'Depois de registares uma trinca ou uma quadra, qualquer dado isolado do mesmo valor mais tarde no turno vale 100, incluindo um 5. Desaparece com os dados quentes.';
 
   @override
   String get rulesInheritTitle => 'Herdar os dados do jogador anterior';
 
   @override
   String get rulesInheritBody =>
-      'Quando um jogador para voluntariamente com dados ainda por lançar, o jogador seguinte pode escolher retomar esses dados restantes juntamente com a pontuação já acumulada como base de partida, ou recomeçar do zero com 5 dados novos. Depois de um rebentamento, pelo contrário, o jogador seguinte começa sempre com 5 dados novos, sem herdar nada.';
+      'Se paras com dados por lançar, o jogador seguinte pode ficar com esses dados e com a tua pontuação como base, ou recomeçar com 5 dados novos. Depois de um rebentamento, recomeça sempre com 5 dados novos.';
 
   @override
-  String get rulesBarredTitle => 'Traço e riscado';
-
-  @override
-  String get rulesBarredBody =>
-      'Um rebentamento põe um traço de aviso na tua linha de pontuação atual se ela ainda não tiver um. Se já tiver, a linha é riscada e a tua pontuação volta ao valor anterior. Se a tua pontuação atingir exatamente o mesmo total que a de outro jogador, este é riscado da mesma forma, tenha ou não já um traço.';
-
-  @override
-  String get rulesVictoryTitle => 'Como ganhar';
+  String get rulesVictoryTitle => '10 000 exatos e ronda final';
 
   @override
   String get rulesVictoryBody =>
-      'O primeiro jogador a atingir exatamente 10 000 pontos desencadeia uma ronda final: cada um dos outros jogadores tem uma última oportunidade de o igualar na sua vez. Logo que um lançamento permita atingir exatamente 10 000, a tomada é automática e o turno para de imediato, seja ou não ronda final. Durante a ronda final, porém, ninguém pode parar voluntariamente abaixo de 10 000: é preciso continuar a lançar os dados até igualar essa pontuação ou rebentar. Se outro jogador também atingir exatamente 10 000, fica ele com a coroa e começa uma nova ronda final à sua volta.';
+      'Assim que um lançamento permite atingir exatamente 10 000, a tomada é automática e o turno termina. Os outros jogadores têm então um último turno para igualar essa pontuação: nele ninguém pode parar abaixo de 10 000, é preciso igualá-la ou rebentar. Se outro jogador também atingir exatamente 10 000, risca o primeiro e começa uma nova ronda final à sua volta.\nCaso particular: uma mão cheia que cai exatamente em 10 000 é um rebentamento, porque obriga a relançar. Só a quina de ases ganha.';
 
   @override
   String get onlinePlayButton => 'Jogar online';

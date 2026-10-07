@@ -642,78 +642,56 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rulesGoalBody =>
-      'El primer jugador que alcanza exactamente 10 000 puntos gana la partida. Hay que llegar a esa cifra justa: pasarse no cuenta.';
+      'Alcanzar exactamente 10 000 puntos. Pasarse no cuenta.';
 
   @override
   String get rulesTurnTitle => 'Cómo se juega un turno';
 
   @override
   String get rulesTurnBody =>
-      'En tu turno, tiras 5 dados. Algunos valores dan puntos (ver más abajo), otros no sirven de nada. Apartas al menos un dado que puntúe y luego eliges: volver a tirar los dados restantes para intentar sumar más puntos, o plantarte y anotar lo acumulado en este turno. Si una tirada no da ningún punto, es un pase (ver más abajo) y pierdes todo lo acumulado en este turno.';
+      'Tiras 5 dados, apartas al menos un dado que puntúe y luego vuelves a tirar los restantes o te plantas y anotas. Si una tirada no da nada, es un pase: pierdes todo lo acumulado en este turno.';
 
   @override
   String get rulesScoringTitle => 'Qué da puntos';
 
   @override
   String get rulesScoringBody =>
-      '• Un 1 suelto: 100 puntos. Un 5 suelto: 50 puntos. Los demás valores sueltos (2, 3, 4, 6) no dan nada.\n• Tres dados iguales: 1000 puntos por tres 1, si no el valor del dado × 100 (tres 4 valen 400, tres 6 valen 600).\n• Un cuarto dado del mismo valor añade 1000 puntos más.\n• Cinco dados iguales valen el valor del dado × 1000, salvo cinco 1, que dan directamente 10 000 puntos: la victoria inmediata.\n• Una escalera de 5 dados consecutivos (1-2-3-4-5 o 2-3-4-5-6) vale 500 puntos.';
+      '• Un 1 suelto: 100 puntos. Un 5 suelto: 50 puntos. Los demás valores sueltos (2, 3, 4, 6) no dan nada.\n• Un trío: el valor del dado × 100 (tres 6 valen 600), salvo tres 1, que valen 1000.\n• Un póker: 1000 puntos más que el trío correspondiente (cuatro 6 valen 1600, cuatro 1 valen 2000).\n• Cinco dados iguales valen el valor del dado × 1000. Cinco 1 dan directamente 10 000 puntos: la victoria inmediata.\n• Una escalera de 5 dados consecutivos (1-2-3-4-5 o 2-3-4-5-6) vale 500 puntos.';
 
   @override
-  String get rulesHotDiceTitle =>
-      'Dados calientes: una segunda oportunidad forzada';
-
-  @override
-  String get rulesHotDiceBody =>
-      'Si todos los dados que acabas de tirar dan puntos, debes volver a tirar los 5 dados: no puedes plantarte en ese preciso momento. Es lo que se llama «dados calientes».';
-
-  @override
-  String get rulesBustTitle => 'El pase';
+  String get rulesBustTitle => 'Pase y tachado';
 
   @override
   String get rulesBustBody =>
-      'Si una tirada no da ningún punto, tu turno termina en el acto y pierdes todos los puntos acumulados en este turno (lo que ya anotaste en turnos anteriores se conserva). Un pase marca además tu línea de puntuación actual con un guion; si ya tenía uno, se tacha y tu puntuación vuelve a su valor anterior.';
+      'Un pase pone un guion en tu línea de puntuación actual. Si ya tenía uno, la línea se tacha y vuelves a tu puntuación anterior. Si alcanzas el mismo total que otro jugador, es él quien queda tachado.';
 
   @override
-  String get rulesEntryTitle => 'Entrar en la partida';
+  String get rulesEntryTitle => 'Plantarse';
 
   @override
   String get rulesEntryBody =>
-      'Para empezar a sumar, tu primer turno con éxito debe darte al menos 500 puntos. Una vez dentro de la partida, cada turno siguiente debe darte al menos 200 puntos para poder plantarte.';
-
-  @override
-  String get rulesNoFiftyTitle => 'Nunca una puntuación que acabe en 50';
-
-  @override
-  String get rulesNoFiftyBody =>
-      'Nunca puedes elegir plantarte con un total de turno que acabe en 50 (como 250 o 450): hay que seguir tirando hasta obtener un total válido.';
+      '• Necesitas al menos 500 puntos para entrar en la partida, y después al menos 200 por turno.\n• Nunca puedes plantarte con un total de turno que acabe en 50 (250, 450…).\n• Si todos tus dados puntúan («dados calientes»), debes volver a tirar los 5.';
 
   @override
   String get rulesExtensionTitle => 'La regla de extensión';
 
   @override
   String get rulesExtensionBody =>
-      'Una vez que has anotado un trío o un póquer de un valor (por ejemplo tres 4), cualquier dado suelto de ese mismo valor que salga más tarde en el mismo turno vale 100 puntos en lugar de su valor habitual — incluido un 5 suelto, que entonces vale 100 en lugar de 50. Esta ventaja desaparece en cuanto consigues dados calientes.';
+      'Una vez anotado un trío o un póker, todo dado suelto del mismo valor más adelante en el turno vale 100, incluido un 5. Desaparece con los dados calientes.';
 
   @override
   String get rulesInheritTitle => 'Heredar los dados del jugador anterior';
 
   @override
   String get rulesInheritBody =>
-      'Cuando un jugador se planta con dados aún sin tirar, el siguiente jugador puede elegir retomar esos dados restantes junto con la puntuación ya acumulada como base, o empezar de cero con 5 dados nuevos. Tras un pase, en cambio, el siguiente jugador siempre empieza con 5 dados nuevos, sin heredar nada.';
+      'Si te plantas con dados sin tirar, el siguiente jugador puede quedarse con esos dados y tu puntuación como base, o empezar con 5 dados nuevos. Tras un pase, siempre empieza con 5 dados nuevos.';
 
   @override
-  String get rulesBarredTitle => 'Guion y tachado';
-
-  @override
-  String get rulesBarredBody =>
-      'Un pase coloca un guion de aviso en tu línea de puntuación actual si aún no lo tiene. Si ya lo tiene, la línea se tacha y tu puntuación vuelve a su valor anterior. Si tu puntuación alcanza exactamente el mismo total que la de otro jugador, a este se le tacha de la misma manera, tenga ya un guion o no.';
-
-  @override
-  String get rulesVictoryTitle => 'Cómo ganar';
+  String get rulesVictoryTitle => '10 000 exactos y ronda final';
 
   @override
   String get rulesVictoryBody =>
-      'El primer jugador que alcanza exactamente 10 000 puntos desencadena una ronda final: cada uno de los demás jugadores tiene una última oportunidad de igualarlo en su turno. En cuanto una tirada permite llegar a exactamente 10 000, la toma es automática y el turno se detiene al instante, haya o no ronda final. Durante la ronda final, en cambio, nadie puede plantarse voluntariamente por debajo de 10 000: hay que seguir tirando hasta igualar esa puntuación o fallar la tirada. Si otro jugador alcanza también exactamente 10 000, se queda con la corona y empieza una nueva ronda final a su alrededor.';
+      'En cuanto una tirada permite llegar a exactamente 10 000, la toma es automática y el turno se detiene. Los demás jugadores tienen entonces un último turno para igualar esa puntuación: en él nadie puede plantarse por debajo de 10 000, hay que igualarla o hacer un pase. Si otro jugador también llega a 10 000 justos, tacha al primero y empieza una nueva ronda final a su alrededor.\nCaso particular: una mano llena que cae justo en 10 000 es un pase, porque obliga a volver a tirar. Solo gana la quintilla de ases.';
 
   @override
   String get onlinePlayButton => 'Jugar en línea';

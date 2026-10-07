@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// Texte de la section "but du jeu" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Le premier joueur à atteindre exactement 10 000 points gagne la partie. Il faut viser ce chiffre pile : le dépasser ne compte pas.'**
+  /// **'Atteindre exactement 10 000 points. Dépasser ne compte pas.'**
   String get rulesGoalBody;
 
   /// Titre de la section "déroulement d'un tour" de l'écran des règles.
@@ -1163,7 +1163,7 @@ abstract class AppLocalizations {
   /// Texte de la section "déroulement d'un tour" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'À votre tour, vous lancez 5 dés. Certaines valeurs rapportent des points (voir ci-dessous), d\'autres ne servent à rien. Vous mettez de côté au moins un dé qui rapporte, puis vous choisissez : relancer les dés restants pour tenter d\'engranger plus de points, ou vous arrêter et encaisser ce que vous avez accumulé ce tour. Si un lancer ne rapporte aucun point, c\'est un craque (voir plus bas) et vous perdez tout ce que vous aviez accumulé ce tour.'**
+  /// **'Vous lancez 5 dés, mettez de côté au moins un dé qui rapporte, puis vous relancez les dés restants ou vous vous arrêtez et encaissez. Si un lancer ne rapporte rien, c\'est un craque : vous perdez ce que vous aviez accumulé pendant ce tour.'**
   String get rulesTurnBody;
 
   /// Titre de la section "ce qui rapporte des points" de l'écran des règles.
@@ -1175,56 +1175,32 @@ abstract class AppLocalizations {
   /// Texte de la section "ce qui rapporte des points" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'• Un 1 isolé : 100 points. Un 5 isolé : 50 points. Les autres valeurs isolées (2, 3, 4, 6) ne rapportent rien.\n• Trois dés identiques : 1000 points pour trois 1, sinon la valeur du dé × 100 (trois 4 valent 400, trois 6 valent 600).\n• Un quatrième dé de la même valeur ajoute 1000 points de plus.\n• Les 5 dés identiques valent la valeur du dé × 1000, sauf cinq 1 qui rapportent directement 10 000 points : la victoire immédiate.\n• Une suite de 5 dés qui se suivent (1-2-3-4-5 ou 2-3-4-5-6) vaut 500 points.'**
+  /// **'• Un as isolé : 100 points. Un 5 isolé : 50 points. Les autres valeurs isolées (2, 3, 4, 6) ne rapportent rien.\n• Un brelan : la valeur du dé × 100 (trois 6 valent 600), sauf trois as qui valent 1000.\n• Un carré : 1000 points de plus que le brelan correspondant (quatre 6 valent 1600, quatre as 2000).\n• Cinq dés identiques valent la valeur × 1000. Cinq as (la quinte d\'as) valent directement 10 000 points : la victoire immédiate.\n• Une suite de 5 (as-2-3-4-5 ou 2-3-4-5-6) vaut 500 points.'**
   String get rulesScoringBody;
-
-  /// Titre de la section "dés chauds" de l'écran des règles.
-  ///
-  /// In fr, this message translates to:
-  /// **'Dés chauds : une seconde chance forcée'**
-  String get rulesHotDiceTitle;
-
-  /// Texte de la section "dés chauds" de l'écran des règles.
-  ///
-  /// In fr, this message translates to:
-  /// **'Si tous les dés que vous venez de lancer rapportent des points, vous devez relancer les 5 dés en main : impossible de s\'arrêter à ce moment précis. C\'est ce qu\'on appelle des « dés chauds ».'**
-  String get rulesHotDiceBody;
 
   /// Titre de la section "craque" (bust) de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Le craque'**
+  /// **'Craque et barré'**
   String get rulesBustTitle;
 
   /// Texte de la section "craque" (bust) de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Si un lancer ne rapporte strictement aucun point, votre tour s\'arrête immédiatement et vous perdez tous les points accumulés ce tour (ce que vous aviez déjà encaissé lors des tours précédents reste acquis). Un craque marque aussi votre ligne de score actuelle d\'un tiret ; si elle en portait déjà un, elle est barrée et votre score retombe à sa valeur précédente.'**
+  /// **'Un craque met un tiret sur votre ligne de score. S\'il y en avait déjà un, la ligne est barrée et vous retombez à votre score précédent. Si vous atteignez le même total qu\'un autre joueur, c\'est lui qui est barré.'**
   String get rulesBustBody;
 
   /// Titre de la section "seuil d'entrée" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Entrer dans la partie'**
+  /// **'Pour s\'arrêter'**
   String get rulesEntryTitle;
 
   /// Texte de la section "seuil d'entrée" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Pour commencer à marquer des points, votre tout premier tour réussi doit rapporter au moins 500 points. Une fois entré dans la partie, chaque tour suivant doit rapporter au moins 200 points pour pouvoir s\'arrêter.'**
+  /// **'• Il faut au moins 500 points pour entrer dans la partie, puis au moins 200 par tour.\n• Vous ne pouvez jamais vous arrêter sur un total de tour qui finit par 50 (250, 450…).\n• Si tous vos dés comptent (« dés chauds »), vous devez relancer les 5.'**
   String get rulesEntryBody;
-
-  /// Titre de la section "interdiction de s'arrêter sur 50" de l'écran des règles.
-  ///
-  /// In fr, this message translates to:
-  /// **'Jamais de score finissant par 50'**
-  String get rulesNoFiftyTitle;
-
-  /// Texte de la section "interdiction de s'arrêter sur 50" de l'écran des règles.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous ne pouvez jamais choisir de vous arrêter volontairement sur un total de tour qui finit par 50 (comme 250 ou 450) : il faut relancer les dés jusqu\'à obtenir un total valide.'**
-  String get rulesNoFiftyBody;
 
   /// Titre de la section "règle d'extension" de l'écran des règles.
   ///
@@ -1235,7 +1211,7 @@ abstract class AppLocalizations {
   /// Texte de la section "règle d'extension" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Une fois que vous avez encaissé un brelan ou un carré d\'une valeur donnée (par exemple trois 4), tout dé isolé de cette même valeur obtenu plus tard dans le même tour rapporte 100 points au lieu de sa valeur habituelle — y compris un 5 isolé, qui vaut alors 100 au lieu de 50. Cet avantage disparaît dès que vous obtenez des dés chauds.'**
+  /// **'Une fois un brelan ou un carré encaissé, tout dé isolé de la même valeur plus tard dans le tour vaut 100, y compris un 5. Cela disparaît aux dés chauds.'**
   String get rulesExtensionBody;
 
   /// Titre de la section "héritage des dés" de l'écran des règles.
@@ -1247,31 +1223,19 @@ abstract class AppLocalizations {
   /// Texte de la section "héritage des dés" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Quand un joueur s\'arrête volontairement en ayant encore des dés non lancés, le joueur suivant peut choisir de reprendre ces dés restants ainsi que le score déjà accumulé comme base de départ, ou de repartir à zéro avec 5 dés neufs. En cas de craque, en revanche, le joueur suivant repart toujours avec 5 dés neufs, sans rien hériter.'**
+  /// **'Si vous vous arrêtez avec des dés non lancés, le joueur suivant peut reprendre ces dés et votre score comme base, ou repartir à 5 dés neufs. Après un craque, il repart toujours à 5 dés neufs.'**
   String get rulesInheritBody;
-
-  /// Titre de la section "tiret et barré" de l'écran des règles.
-  ///
-  /// In fr, this message translates to:
-  /// **'Tiret et barré'**
-  String get rulesBarredTitle;
-
-  /// Texte de la section "tiret et barré" de l'écran des règles.
-  ///
-  /// In fr, this message translates to:
-  /// **'Un craque place un tiret d\'avertissement sur votre ligne de score actuelle si elle n\'en a pas déjà un. Si elle en a déjà un, la ligne est barrée et votre score retombe à sa valeur précédente. Si votre score atteint exactement le même total qu\'un autre joueur, ce dernier est barré de la même façon, qu\'il ait déjà un tiret ou non.'**
-  String get rulesBarredBody;
 
   /// Titre de la section "victoire" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Comment gagner'**
+  /// **'10 000 pile et dernier tour'**
   String get rulesVictoryTitle;
 
   /// Texte de la section "victoire" de l'écran des règles.
   ///
   /// In fr, this message translates to:
-  /// **'Le premier joueur à atteindre exactement 10 000 points déclenche un tour final : chaque autre joueur a une dernière chance de l\'égaler à son tour. Dès qu\'un lancer permet d\'atteindre exactement 10 000, la prise est automatique et le tour s\'arrête aussitôt, en tour final ou non. Pendant le tour final, en revanche, personne ne peut s\'arrêter volontairement en dessous de 10 000 : il faut continuer à lancer les dés jusqu\'à égaler ce score ou craquer. Si un autre joueur atteint lui aussi exactement 10 000, il prend la couronne à sa place et un nouveau tour final recommence autour de lui.'**
+  /// **'Dès qu\'un lancer permet d\'atteindre exactement 10 000, la prise est automatique et le tour s\'arrête. Les autres joueurs ont alors un dernier tour pour égaler ce score : on ne peut plus s\'y arrêter sous 10 000, il faut l\'égaler ou craquer. Si un autre joueur atteint aussi 10 000 pile, il barre le premier et un nouveau dernier tour recommence autour de lui.\nCas particulier : une main pleine qui tombe pile sur 10 000 est un craque, car elle oblige à relancer. Seule la quinte d\'as gagne.'**
   String get rulesVictoryBody;
 
   /// Bouton de l'accueil qui ouvre les parties en ligne.

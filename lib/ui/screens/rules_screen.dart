@@ -16,13 +16,10 @@ class RulesScreen extends StatelessWidget {
       (l10n.rulesGoalTitle, l10n.rulesGoalBody),
       (l10n.rulesTurnTitle, l10n.rulesTurnBody),
       (l10n.rulesScoringTitle, l10n.rulesScoringBody),
-      (l10n.rulesHotDiceTitle, l10n.rulesHotDiceBody),
       (l10n.rulesBustTitle, l10n.rulesBustBody),
       (l10n.rulesEntryTitle, l10n.rulesEntryBody),
-      (l10n.rulesNoFiftyTitle, l10n.rulesNoFiftyBody),
       (l10n.rulesExtensionTitle, l10n.rulesExtensionBody),
       (l10n.rulesInheritTitle, l10n.rulesInheritBody),
-      (l10n.rulesBarredTitle, l10n.rulesBarredBody),
       (l10n.rulesVictoryTitle, l10n.rulesVictoryBody),
     ];
 
