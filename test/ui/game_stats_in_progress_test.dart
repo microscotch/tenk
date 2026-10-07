@@ -8,6 +8,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/game_statistics_screen.dart';
+import 'package:le10000/ui/screens/rules_screen.dart';
 import 'package:le10000/ui/screens/settings_screen.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
@@ -53,16 +54,29 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   }
 
-  testWidgets('le menu de la barre porte la grille, la courbe, le bilan de la partie, puis les paramètres', (tester) async {
+  testWidgets('le menu de la barre porte la grille, la courbe, le bilan de la partie, les règles, puis les paramètres', (tester) async {
     await pumpResumedGame(tester);
     await openMenu(tester);
 
     double top(String label) => tester.getTopLeft(find.text(label)).dy;
     expect(top('Grille des scores'), lessThan(top('Évolution des scores')));
     expect(top('Évolution des scores'), lessThan(top('Statistiques de la partie')));
-    expect(top('Statistiques de la partie'), lessThan(top('Paramètres')));
+    expect(top('Statistiques de la partie'), lessThan(top('Règles du jeu')));
+    expect(top('Règles du jeu'), lessThan(top('Paramètres')));
     expect(find.byIcon(Icons.bar_chart), findsOneWidget);
     expect(inAppBar(find.byIcon(Icons.grid_on)), findsNothing, reason: 'plus d\'icônes alignées dans la barre');
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('le menu ouvre les règles du jeu', (tester) async {
+    await pumpResumedGame(tester);
+    await openMenu(tester);
+
+    await tester.tap(find.text('Règles du jeu'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(RulesScreen), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

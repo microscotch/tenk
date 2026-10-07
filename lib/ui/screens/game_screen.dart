@@ -36,6 +36,7 @@ import 'pass_device_screen.dart';
 import 'game_statistics_screen.dart';
 import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
+import 'rules_screen.dart';
 import 'settings_screen.dart';
 
 /// Détermine l'état visuel de chaque dé d'un lancer, en tenant compte du
@@ -1858,7 +1859,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   /// Le menu de la barre du haut (☰) : grille des scores, évolution des
-  /// scores, bilan de la partie et paramètres — trop d'icônes pour les aligner
+  /// scores, bilan de la partie, règles du jeu et paramètres — trop d'icônes pour les aligner
   /// une à une dans la barre.
   List<Widget> _scoreGridAction(List<Player> players) {
     // En mode rejeu, seul le retour compte (retour standard, voir
@@ -1887,6 +1888,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScoreChartScreen()));
           }),
           item(Icons.bar_chart, l10n.gameStatsTitle, () => _openGameStats(context)),
+          item(Icons.help_outline, l10n.helpTooltip, () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RulesScreen()));
+          }),
           item(Icons.settings, l10n.settingsTooltip, () {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
           }),
