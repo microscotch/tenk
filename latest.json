@@ -1,8 +1,8 @@
 {
   "ios": {
     "version": "1.0.0",
-    "build": 99,
-    "availableFrom": "2026-10-07T01:52:51Z"
+    "build": 100,
+    "availableFrom": "2026-10-07T03:01:24Z"
   },
   "android": {
     "version": "1.0.0",
