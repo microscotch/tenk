@@ -642,13 +642,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialSkip => 'Skip';
 
   @override
+  String get tutorialPlayerName => 'You';
+
+  @override
   String get tutorialNext => 'Next';
-
-  @override
-  String get tutorialRoll => 'Roll the dice';
-
-  @override
-  String get tutorialKeep => 'Keep';
 
   @override
   String get tutorialFinish => 'Start playing';
@@ -658,43 +655,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialStep0 =>
-      'Welcome to Le 10000! The goal: reach exactly 10,000 points. We\'ll play one turn together; nothing you do here is saved.';
+      'Welcome to Le 10000! The goal: reach exactly 10,000 points. We\'ll play one turn together on the real game screen: nothing is saved.';
 
   @override
-  String get tutorialStep1 =>
-      'On your turn, you roll 5 dice. Tap “Roll the dice”.';
+  String get tutorialStep1 => 'Tap the roll button to throw the 5 dice.';
 
   @override
   String get tutorialStep2 =>
-      'Only the ace (100 points) and the 5 (50 points) score here. The ace is compulsory; the 5 could be set aside, but let\'s keep it. Tap “Keep”.';
+      'Only the ace (100) and the 5 (50) score here: they\'re kept, the hand is worth 150. You need 500 points to enter the game: reroll the other 3 dice.';
 
   @override
   String get tutorialStep3 =>
-      'The current hand is worth 150 points and 3 dice are left to reroll. To enter the game you need at least 500 points: let\'s reroll.';
+      'Three 3s: 300 points, the hand rises to 450. Every die scored: hot dice! You reroll all 5 dice and can\'t stop.';
 
   @override
   String get tutorialStep4 =>
-      'Three identical dice: three 3s are worth 300 points. Keep them.';
+      'Two 5s, but they\'re optional: this selector chooses how many to keep. With both, 550 would end in 50: you couldn\'t stop. Choose 1.';
 
   @override
   String get tutorialStep5 =>
-      'Every die scored: that\'s hot dice! You must reroll all 5 dice and can\'t stop. The current hand keeps its 450 points.';
+      '500 points: enough to enter, and no 50 at the end. Tap the hand to stop and bank them.';
 
   @override
   String get tutorialStep6 =>
-      'Two aces and a 5: 250 more, so 700. Keeping the 5 matters: stopping on 650 would be forbidden (never a total ending in 50).';
-
-  @override
-  String get tutorialStep7 =>
-      '700 points: over 500, and no 50 at the end. You can stop and bank them. Tap “Stop”.';
-
-  @override
-  String get tutorialStep8 =>
-      '700 points banked! Now let\'s see what happens when the dice score nothing: roll.';
-
-  @override
-  String get tutorialStep9 =>
-      'No die scores: that\'s a bust! The turn is lost and a dash marks your score line; a second bust would bar it. The first player to reach exactly 10,000 triggers a final round for the others. The full rules are in the menu. Have fun!';
+      '500 points banked! The bot takes over; a roll with no points is a bust (turn lost, a dash on the line). The first to reach exactly 10,000 wins. The full rules are in the menu.';
 
   @override
   String get rulesGoalTitle => 'Goal of the game';

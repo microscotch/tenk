@@ -152,12 +152,21 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   mid-final-round if someone else reaches 10000, via `triggeringWinnerIndex`/`remainingFinalTurns`).
   `startTurn(useFullHand:)` is where a player either continues an inherited hand (score + kept dice
   carried over as a bonus base) or starts fresh with 5 dice.
-- `game/tutorial.dart` — `TutorialSession`/`tutorialSteps`: the first-launch tutorial, a scripted single turn
-  (dice from `ScriptedRandom`, one expected action per step) replayed with the pure turn functions. It is **not a
-  game**: no `GameEngine`, journal, save or statistics. `launchScreenFor` shows `TutorialScreen` (then the profile
-  creation) only with no profile, no legacy `playerName` and `tutorialSeen` false; "Passer" at any time, replayable
-  from the Rules screen. Step texts are `tutorialStep0..9` in the ARBs: changing the scenario means changing them in
-  all 11 languages.
+- `game/tutorial.dart` — the first-launch tutorial's script: `tutorialFaces` (the dice, in the order the engine asks
+  for them: `1 5 2 3 6`, `3 3 3` = hot dice at 450, `5 5 2 3 6`) and `tutorialStepFor(engine, …)`, which derives the
+  current `TutorialStep` **from the engine's state** (never a counter). The tutorial is the **real `GameScreen`**
+  (`GameScreen(tutorial: TutorialGuide)`, started by `TutorialScreen`) on a real `GameEngine` — a player against a
+  bot that never plays — driven by `GameNotifier.startTutorial` (a `ScriptedRandom` of those faces, no seed, so
+  `_commit` persists nothing) and cleared by `endTutorial`. Speech bubbles (`TutorialOverlay`) are drawn over the
+  screen from the `GlobalKey` of the control to touch (`rollKey`/`exchangeKey`/`stopKey`, set on the real controls);
+  only that control answers (`_tutorialAllows`), everything else is absorbed. In tutorial mode the screen schedules
+  no AI/auto move, ignores shakes, drops the ☰ menu and the inherited-hand popup, and the system back button means
+  "Passer". Because it overwrites the singleton `GameNotifier`, "Revoir le tutoriel" is offered only by
+  `RulesScreen(canReplayTutorial: true)`, i.e. from the home chip, never from a game's ☰ (a game screen would be
+  stacked underneath). The screen's own default 5s choice aims at the best score, so `tutorialDefaultKeep` pins
+  it for the two scripted rolls with 5s. `launchScreenFor` shows it (then the profile creation) only with no
+  profile, no legacy `playerName` and `tutorialSeen` false. Step texts are `tutorialStep0..6` (+ `tutorialPlayerName`)
+  in the ARBs: changing the scenario means changing them in all 11 languages.
 - `game/dice_off.dart` — separate mini state machine for the pre-game 1-die roll-off that decides
   turn order: everyone rolls at once (`rollAll`), lowest die starts, ties at the lowest re-roll among
   only themselves; `playOrder` gives the seats in play order (see the order rule below). Old journals

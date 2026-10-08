@@ -205,6 +205,38 @@ class GameNotifier extends Notifier<GameEngine?> {
     );
   }
 
+  /// Démarre la partie du tutoriel : [playerName] contre un bot, sur les dés
+  /// d'un scénario ([faces], voir `tutorialFaces`) et non du hasard. Ce n'est
+  /// pas une vraie partie : ni seed, ni sauvegarde, ni archive — `_commit` ne
+  /// persiste rien sans seed — et le bot ne joue jamais (l'écran de jeu en
+  /// mode tutoriel ne le programme pas). Écrase l'état du notifier, qui est
+  /// celui de la partie à l'écran : à ne lancer que si aucun écran de jeu n'est
+  /// empilé (voir [endTutorial]).
+  void startTutorial({required String playerName, required String botName, required List<int> faces}) {
+    _setup = GameSetup(playerNames: [playerName, botName], aiPlayers: const {1: AiDifficulty.prudent});
+    _originalSetup = null;
+    _seed = null;
+    _alias = null;
+    _createdAt = null;
+    _enteredPlayAt = null;
+    _isReplay = false;
+    _replaySource = null;
+    _online = null;
+    _random = ScriptedRandom(faces);
+    _actions.clear();
+    state = GameEngine.newGame([playerName, botName]).startTurn();
+  }
+
+  /// Referme le tutoriel : plus aucune partie à l'écran ni de dés scénarisés,
+  /// pour que rien ne le prenne pour une partie locale en cours
+  /// ([hasLiveLocalGame]) ni que l'accueil affiche ses réglages.
+  void endTutorial() {
+    _setup = null;
+    _random = null;
+    _actions.clear();
+    state = null;
+  }
+
   /// Reprend une partie en pause : rejoue son journal d'actions (voir
   /// `lib/game/game_recording.dart`) pour reconstruire l'état exact où elle
   /// avait été laissée, puis continue de consommer le même flux aléatoire

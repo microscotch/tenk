@@ -31,6 +31,8 @@ import '../widgets/dice_classification.dart';
 import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/replay_controls.dart';
+import '../widgets/tutorial_overlay.dart';
+import '../../game/tutorial.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
 import 'pass_device_screen.dart';
@@ -453,7 +455,14 @@ List<_LogEntry> _logEntriesForStep(
 class GameScreen extends ConsumerStatefulWidget {
   final bool replayMode;
 
-  const GameScreen({super.key, this.replayMode = false});
+  /// Non nul quand l'écran est celui du tutoriel (voir `TutorialScreen`) : la
+  /// vraie partie, sur des dés scénarisés, par-dessus laquelle des bulles
+  /// montrent la commande à toucher. Rien ne joue seul (ni bot, ni auto, ni
+  /// secousse), le menu et la popup de main héritée disparaissent, et seule la
+  /// commande de l'étape répond (voir [_tutorialAllows]).
+  final TutorialGuide? tutorial;
+
+  const GameScreen({super.key, this.replayMode = false, this.tutorial});
 
   /// Combien de temps reste affichée la bulle d'une émotion en ligne.
   static const bubbleDuration = Duration(milliseconds: 3500);
@@ -472,6 +481,26 @@ class _GameScreenState extends ConsumerState<GameScreen>
     with WidgetsBindingObserver {
   /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
   int _selectedKeep = 0;
+
+  /// Tutoriel : « Suivant » de la bulle d'accueil a été touché.
+  bool _tutorialIntroDone = false;
+
+  TutorialStep _tutorialStepOf(GameEngine engine) =>
+      tutorialStepFor(engine, introDone: _tutorialIntroDone, selectedKeep: _selectedKeep);
+
+  /// Tutoriel : le nombre de 5 que le scénario impose d'office à ce lancer
+  /// (voir [tutorialDefaultKeep]) ; nul hors tutoriel.
+  int? _tutorialKeepFor(RollAnalysis roll) => widget.tutorial == null ? null : tutorialDefaultKeep(roll.faces);
+
+  /// Tutoriel : [target] peut-elle répondre à cette étape ? Seule la commande
+  /// que la bulle montre le peut (le sélecteur reste libre une fois le bon
+  /// choix fait, pour qu'on puisse le défaire) ; hors tutoriel, toutes.
+  bool _tutorialAllows(GameEngine engine, TutorialTarget target) {
+    if (widget.tutorial == null) return true;
+    final step = _tutorialStepOf(engine);
+    if (target == TutorialTarget.exchange) return step == TutorialStep.exchange || step == TutorialStep.stop;
+    return step.target == target;
+  }
 
   Timer? _pendingTimer;
   VoidCallback? _pendingAction;
@@ -586,6 +615,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final initialPendingRoll = initialTurn?.pendingRoll;
     _selectedKeep = initialPendingRoll != null
         ? _remoteSelectedKeep(initialEngine!) ??
+            _tutorialKeepFor(initialPendingRoll) ??
             _defaultKeepCount(
               initialTurn!,
               initialPendingRoll,
@@ -1257,6 +1287,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _scheduleAiIfNeeded() {
+    if (widget.tutorial != null) return;
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
@@ -1281,6 +1312,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// interdit/dés chauds obligeant de toute façon à relancer. Un bouton
   /// explicite est affiché dans tous les cas par les méthodes `_build*View`.
   void _scheduleAutoAdvanceIfNeeded() {
+    if (widget.tutorial != null) return;
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
@@ -1469,6 +1501,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // sauf si l'autre joueur en ligne a déjà fait voir sa sélection.
         _selectedKeep = newPendingRoll != null
             ? _remoteSelectedKeep(next) ??
+                _tutorialKeepFor(newPendingRoll) ??
                 _defaultKeepCount(
                   next.activeTurn!,
                   newPendingRoll,
@@ -1611,10 +1644,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // ailleurs : ramener à l'accueil, pas dépiler.
         automaticallyImplyLeading: widget.replayMode,
         leading: (!widget.replayMode &&
+                widget.tutorial == null &&
                 Theme.of(context).platform == TargetPlatform.iOS)
             ? BackButton(onPressed: () => popToHome(context))
             : null,
-        actions: _scoreGridAction(engine.players),
+        actions: widget.tutorial != null ? const [] : _scoreGridAction(engine.players),
       ),
       // Les commandes du rejeu, fixées en bas : hors du corps de l'écran, que
       // l'`AbsorbPointer` ci-dessous rend inerte — elles seules répondent au
@@ -1741,13 +1775,34 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // En rejeu, le retour garde son comportement standard : ce mode
     // spectateur est empilé sur l'écran d'où on l'a lancé, et c'est là qu'il
     // doit ramener, pas à l'accueil.
+    final guide = widget.tutorial;
     return PopScope(
       canPop: widget.replayMode,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        // Le retour système passe le tutoriel : il n'y a pas d'accueil dessous
+        // au premier lancement.
+        if (guide != null) {
+          guide.onExit();
+          return;
+        }
         popToHome(context);
       },
-      child: scaffold,
+      child: guide == null
+          ? scaffold
+          : Stack(
+              children: [
+                scaffold,
+                Positioned.fill(
+                  child: TutorialOverlay(
+                    guide: guide,
+                    step: _tutorialStepOf(engine),
+                    visible: _rollSettled,
+                    onNext: () => setState(() => _tutorialIntroDone = true),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -1904,7 +1959,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// fois cet écran dépilé), donc pas besoin d'attendre un rebuild
   /// supplémentaire dans ce second cas.
   void _maybeShowInheritedHandDialog() {
-    if (!mounted || _coveredByReplay) return;
+    if (!mounted || _coveredByReplay || widget.tutorial != null) return;
     if (ModalRoute.of(context)?.isCurrent != true) return;
     final engine = ref.read(gameProvider);
     if (engine == null || engine.activeTurn != null) return;
@@ -2739,7 +2794,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// [_showInheritedHandDialog]) propose déjà deux actions bien distinctes
   /// entre lesquelles secouer ne permettrait pas de choisir sans ambiguïté.
   void _handleShake() {
-    if (!mounted || widget.replayMode) return;
+    if (!mounted || widget.replayMode || widget.tutorial != null) return;
     if (ModalRoute.of(context)?.isCurrent != true) return;
     final engine = ref.read(gameProvider);
     if (engine == null || engine.gameOver || engine.activeTurn == null) return;
@@ -2850,18 +2905,29 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // d'avance que le lancer marque assez pour s'arrêter — le suspense
           // serait gâché. Sans lancer en attente, `_rollSettled` est déjà
           // vrai : rien ne change pour l'état au repos.
-          leading: _stopButton(
-            onPressed: bankAttempt.success && _rollSettled ? _guarded(onStop) : null,
+          leading: KeyedSubtree(
+            key: widget.tutorial?.stopKey,
+            child: _stopButton(
+              onPressed: bankAttempt.success && _rollSettled && _tutorialAllows(engine, TutorialTarget.stop)
+                  ? _guarded(onStop)
+                  : null,
+            ),
           ),
-          primary: _rollButton(
-            onPressed: !forcedWin ? _guarded(onRoll) : null,
-            label: rollLabel,
+          primary: KeyedSubtree(
+            key: widget.tutorial?.rollKey,
+            child: _rollButton(
+              onPressed: !forcedWin && _tutorialAllows(engine, TutorialTarget.roll) ? _guarded(onRoll) : null,
+              label: rollLabel,
+            ),
           ),
-          trailing: _exchangeControl(
-            enabled: canChoose,
-            value: selectedKeep,
-            minKeep: minKeep,
-            maxKeep: maxKeep,
+          trailing: KeyedSubtree(
+            key: widget.tutorial?.exchangeKey,
+            child: _exchangeControl(
+              enabled: canChoose && _tutorialAllows(engine, TutorialTarget.exchange),
+              value: selectedKeep,
+              minKeep: minKeep,
+              maxKeep: maxKeep,
+            ),
           ),
         ),
       ],

@@ -8,7 +8,12 @@ import 'tutorial_screen.dart';
 /// depuis le bouton "?" de l'écran d'accueil. Contenu purement statique (pas
 /// de provider), une section par règle non-évidente.
 class RulesScreen extends StatelessWidget {
-  const RulesScreen({super.key});
+  /// Offre « Revoir le tutoriel ». Seulement depuis l'accueil : le tutoriel
+  /// joue sur l'état de la partie à l'écran, et écraserait celle d'un écran de
+  /// jeu resté empilé dessous (les règles s'ouvrent aussi depuis son menu).
+  final bool canReplayTutorial;
+
+  const RulesScreen({super.key, this.canReplayTutorial = false});
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +37,14 @@ class RulesScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TutorialScreen())),
-                icon: const Icon(Icons.school),
-                label: Text(l10n.tutorialReplayButton),
-              ),
-              const SizedBox(height: 24),
+              if (canReplayTutorial) ...[
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TutorialScreen())),
+                  icon: const Icon(Icons.school),
+                  label: Text(l10n.tutorialReplayButton),
+                ),
+                const SizedBox(height: 24),
+              ],
               for (final (title, body) in sections)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24),

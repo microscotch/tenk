@@ -1154,23 +1154,17 @@ abstract class AppLocalizations {
   /// **'Passer'**
   String get tutorialSkip;
 
+  /// No description provided for @tutorialPlayerName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous'**
+  String get tutorialPlayerName;
+
   /// Tutoriel du premier lancement : tutorialNext
   ///
   /// In fr, this message translates to:
   /// **'Suivant'**
   String get tutorialNext;
-
-  /// Tutoriel du premier lancement : tutorialRoll
-  ///
-  /// In fr, this message translates to:
-  /// **'Lancer les dés'**
-  String get tutorialRoll;
-
-  /// Tutoriel du premier lancement : tutorialKeep
-  ///
-  /// In fr, this message translates to:
-  /// **'Garder'**
-  String get tutorialKeep;
 
   /// Tutoriel du premier lancement : tutorialFinish
   ///
@@ -1187,62 +1181,44 @@ abstract class AppLocalizations {
   /// Tutoriel du premier lancement : tutorialStep0
   ///
   /// In fr, this message translates to:
-  /// **'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On va jouer un tour ensemble ; rien de ce que vous faites ici n\'est enregistré.'**
+  /// **'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On joue un tour ensemble, sur le vrai écran de jeu : rien n\'est enregistré.'**
   String get tutorialStep0;
 
   /// Tutoriel du premier lancement : tutorialStep1
   ///
   /// In fr, this message translates to:
-  /// **'À votre tour, vous lancez 5 dés. Appuyez sur « Lancer les dés ».'**
+  /// **'Appuyez sur le bouton de lancer pour jeter les 5 dés.'**
   String get tutorialStep1;
 
   /// Tutoriel du premier lancement : tutorialStep2
   ///
   /// In fr, this message translates to:
-  /// **'Seuls l\'as (100 points) et le 5 (50 points) rapportent ici. L\'as est obligatoire ; le 5, on pourrait l\'écarter, mais gardons-le. Appuyez sur « Garder ».'**
+  /// **'Seuls l\'as (100) et le 5 (50) rapportent ici : ils sont gardés, la main vaut 150. Il faut 500 points pour entrer dans la partie : relancez les 3 autres dés.'**
   String get tutorialStep2;
 
   /// Tutoriel du premier lancement : tutorialStep3
   ///
   /// In fr, this message translates to:
-  /// **'La main courante vaut 150 points et il reste 3 dés à relancer. Pour entrer dans la partie, il faut au moins 500 points : on relance.'**
+  /// **'Un brelan de 3 : 300 points, la main monte à 450. Tous les dés ont servi : main pleine ! On relance les 5 dés, sans pouvoir s\'arrêter.'**
   String get tutorialStep3;
 
   /// Tutoriel du premier lancement : tutorialStep4
   ///
   /// In fr, this message translates to:
-  /// **'Trois dés identiques : un brelan de 3 vaut 300 points. Gardez-les.'**
+  /// **'Deux 5, mais ils sont facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.'**
   String get tutorialStep4;
 
   /// Tutoriel du premier lancement : tutorialStep5
   ///
   /// In fr, this message translates to:
-  /// **'Tous les dés ont servi : ce sont des dés chauds ! On doit alors relancer les 5 dés, sans pouvoir s\'arrêter. La main courante garde ses 450 points.'**
+  /// **'500 points : assez pour entrer, et pas de 50 à la fin. Appuyez sur la main pour vous arrêter et les encaisser.'**
   String get tutorialStep5;
 
   /// Tutoriel du premier lancement : tutorialStep6
   ///
   /// In fr, this message translates to:
-  /// **'Deux as et un 5 : 250 points de plus, soit 700. Garder le 5 est utile : s\'arrêter sur 650 serait interdit (jamais de total finissant par 50).'**
+  /// **'500 points encaissés ! Le bot reprend la main ; un lancer sans point est un craque (tour perdu, tiret sur la ligne). Le premier à atteindre exactement 10 000 gagne. Les règles complètes sont dans le menu.'**
   String get tutorialStep6;
-
-  /// Tutoriel du premier lancement : tutorialStep7
-  ///
-  /// In fr, this message translates to:
-  /// **'700 points : plus de 500, et pas de 50 à la fin. On peut s\'arrêter pour les encaisser. Appuyez sur « S\'arrêter ».'**
-  String get tutorialStep7;
-
-  /// Tutoriel du premier lancement : tutorialStep8
-  ///
-  /// In fr, this message translates to:
-  /// **'700 points encaissés ! Voyons maintenant ce qui arrive quand les dés ne rapportent rien : lancez.'**
-  String get tutorialStep8;
-
-  /// Tutoriel du premier lancement : tutorialStep9
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun dé ne rapporte : c\'est un craque ! Le tour est perdu et un tiret marque votre ligne de score ; un second craque la barrerait. Le premier à atteindre exactement 10 000 déclenche un dernier tour pour les autres. Les règles complètes sont dans le menu. Bonne partie !'**
-  String get tutorialStep9;
 
   /// Titre de la section "but du jeu" de l'écran des règles.
   ///

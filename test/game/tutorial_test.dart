@@ -1,72 +1,52 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/dice_roll.dart';
+import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/tutorial.dart';
-import 'package:le10000/game/turn_result.dart';
-import 'package:le10000/game/turn_state.dart';
 
 void main() {
-  TutorialSession play(int steps) {
-    var session = TutorialSession.start();
-    for (var i = 0; i < steps; i++) {
-      session = session.perform(session.current.action);
-    }
-    return session;
-  }
+  final random = ScriptedRandom(tutorialFaces);
+  var engine = GameEngine.newGame(['Vous', 'Bot']).startTurn();
 
-  test('le scénario se joue en suivant l\'action attendue, étape par étape', () {
-    var session = TutorialSession.start();
-    for (var i = 0; i < tutorialSteps.length - 1; i++) {
-      final before = session.step;
-      session = session.perform(session.current.action);
-      expect(session.step, before + 1, reason: 'étape $i');
-    }
-    expect(session.isLast, isTrue);
-    expect(session.current.action, TutorialAction.finish);
-  });
+  TutorialStep step({bool introDone = true, int keep = 0}) =>
+      tutorialStepFor(engine, introDone: introDone, selectedKeep: keep);
 
-  test('une autre action que celle attendue ne fait rien', () {
-    final session = TutorialSession.start();
-    expect(session.perform(TutorialAction.stop), same(session));
-    expect(session.perform(TutorialAction.roll), same(session));
-  });
+  test(
+    'le scénario se joue de bout en bout sur le vrai moteur, un bot en face',
+    () {
+      expect(step(introDone: false), TutorialStep.intro);
+      expect(step(), TutorialStep.rollFirst);
 
-  test('premier lancer : l\'as est obligatoire, le 5 se garde, il reste 3 dés', () {
-    final rolled = play(2); // intro, 1er lancer
-    expect(rolled.turn.pendingRoll!.faces, [1, 5, 2, 3, 6]);
-    final kept = play(3);
-    expect(kept.turn.bankedScore, 150);
-    expect(kept.turn.diceToRoll, 3);
-  });
+      engine = engine.roll(random: random);
+      expect(step(), TutorialStep.rollAgain);
+      // L'as est d'office, le 5 par défaut : 150 points, 3 dés à relancer.
+      engine = engine.applyKeep(declineFivesCount: 0);
+      expect(engine.activeTurn!.bankedScore, 150);
+      expect(engine.activeTurn!.diceToRoll, 3);
 
-  test('le brelan de 3 fait des dés chauds : 450 points, 5 dés neufs obligatoires', () {
-    final kept = play(5);
-    expect(kept.turn.bankedScore, 450);
-    expect(kept.turn.mustContinue, isTrue);
-    expect(kept.turn.diceToRoll, 5);
-  });
+      engine = engine.roll(random: random);
+      expect(step(), TutorialStep.hotDice);
+      engine = engine.applyKeep();
+      expect(engine.activeTurn!.bankedScore, 450);
+      expect(engine.activeTurn!.mustContinue, isTrue);
 
-  test('le dernier lancer du tour porte la main à 700, et 650 n\'était pas permis', () {
-    final kept = play(7);
-    expect(kept.turn.bankedScore, 700);
-    expect(kept.turn.mustContinue, isFalse);
+      engine = engine.roll(random: random);
+      expect(engine.activeTurn!.pendingRoll!.faces, [5, 5, 2, 3, 6]);
+      expect(step(keep: 2), TutorialStep.exchange);
+      expect(step(keep: 1), TutorialStep.stop);
+      random.assertConsumed();
+    },
+  );
 
-    // Écarter le 5 laisserait 650 : s'y arrêter est interdit (fin en 50).
-    final declined = applyKeepDecision(play(6).turn, declineFivesCount: 1);
-    expect(declined.bankedScore, 650);
-    final attempt = tryBank(declined, minimumRequired: 500, currentTotal: 0, isFinalRound: false);
-    expect(attempt.reason, BankFailureReason.endsIn50);
-  });
+  test('garder les deux 5 interdit de s\'arrêter (550), n\'en garder qu\'un le permet (500)', () {
+    final both = engine.applyKeep(declineFivesCount: 0);
+    expect(both.activeTurn!.bankedScore, 550);
+    expect(both.bank().$2.success, isFalse, reason: 'finir en 50 : arrêt interdit');
 
-  test('s\'arrêter encaisse 700 et le tour suivant repart de zéro', () {
-    final stopped = play(8);
-    expect(stopped.total, 700);
-    expect(stopped.turn.bankedScore, 0);
-    expect(stopped.turn.diceToRoll, 5);
-  });
-
-  test('le dernier lancer ne rapporte rien : c\'est un craque, le total reste acquis', () {
-    final busted = play(9);
-    expect(busted.turn.busted, isTrue);
-    expect(busted.total, 700);
-    expect(busted.current.action, TutorialAction.finish);
+    final one = engine.applyKeep(declineFivesCount: 1);
+    expect(one.activeTurn!.bankedScore, 500);
+    final (banked, attempt) = one.bank();
+    expect(attempt.success, isTrue);
+    expect(banked.players[0].totalScore, 500);
+    expect(tutorialStepFor(banked, introDone: true, selectedKeep: 0), TutorialStep.outro);
   });
 }

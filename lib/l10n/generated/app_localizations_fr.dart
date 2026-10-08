@@ -644,13 +644,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialSkip => 'Passer';
 
   @override
+  String get tutorialPlayerName => 'Vous';
+
+  @override
   String get tutorialNext => 'Suivant';
-
-  @override
-  String get tutorialRoll => 'Lancer les dés';
-
-  @override
-  String get tutorialKeep => 'Garder';
 
   @override
   String get tutorialFinish => 'Commencer à jouer';
@@ -660,43 +657,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tutorialStep0 =>
-      'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On va jouer un tour ensemble ; rien de ce que vous faites ici n\'est enregistré.';
+      'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On joue un tour ensemble, sur le vrai écran de jeu : rien n\'est enregistré.';
 
   @override
   String get tutorialStep1 =>
-      'À votre tour, vous lancez 5 dés. Appuyez sur « Lancer les dés ».';
+      'Appuyez sur le bouton de lancer pour jeter les 5 dés.';
 
   @override
   String get tutorialStep2 =>
-      'Seuls l\'as (100 points) et le 5 (50 points) rapportent ici. L\'as est obligatoire ; le 5, on pourrait l\'écarter, mais gardons-le. Appuyez sur « Garder ».';
+      'Seuls l\'as (100) et le 5 (50) rapportent ici : ils sont gardés, la main vaut 150. Il faut 500 points pour entrer dans la partie : relancez les 3 autres dés.';
 
   @override
   String get tutorialStep3 =>
-      'La main courante vaut 150 points et il reste 3 dés à relancer. Pour entrer dans la partie, il faut au moins 500 points : on relance.';
+      'Un brelan de 3 : 300 points, la main monte à 450. Tous les dés ont servi : main pleine ! On relance les 5 dés, sans pouvoir s\'arrêter.';
 
   @override
   String get tutorialStep4 =>
-      'Trois dés identiques : un brelan de 3 vaut 300 points. Gardez-les.';
+      'Deux 5, mais ils sont facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.';
 
   @override
   String get tutorialStep5 =>
-      'Tous les dés ont servi : ce sont des dés chauds ! On doit alors relancer les 5 dés, sans pouvoir s\'arrêter. La main courante garde ses 450 points.';
+      '500 points : assez pour entrer, et pas de 50 à la fin. Appuyez sur la main pour vous arrêter et les encaisser.';
 
   @override
   String get tutorialStep6 =>
-      'Deux as et un 5 : 250 points de plus, soit 700. Garder le 5 est utile : s\'arrêter sur 650 serait interdit (jamais de total finissant par 50).';
-
-  @override
-  String get tutorialStep7 =>
-      '700 points : plus de 500, et pas de 50 à la fin. On peut s\'arrêter pour les encaisser. Appuyez sur « S\'arrêter ».';
-
-  @override
-  String get tutorialStep8 =>
-      '700 points encaissés ! Voyons maintenant ce qui arrive quand les dés ne rapportent rien : lancez.';
-
-  @override
-  String get tutorialStep9 =>
-      'Aucun dé ne rapporte : c\'est un craque ! Le tour est perdu et un tiret marque votre ligne de score ; un second craque la barrerait. Le premier à atteindre exactement 10 000 déclenche un dernier tour pour les autres. Les règles complètes sont dans le menu. Bonne partie !';
+      '500 points encaissés ! Le bot reprend la main ; un lancer sans point est un craque (tour perdu, tiret sur la ligne). Le premier à atteindre exactement 10 000 gagne. Les règles complètes sont dans le menu.';
 
   @override
   String get rulesGoalTitle => 'But du jeu';

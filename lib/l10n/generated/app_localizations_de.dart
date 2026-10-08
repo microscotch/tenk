@@ -647,13 +647,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tutorialSkip => 'Überspringen';
 
   @override
+  String get tutorialPlayerName => 'Du';
+
+  @override
   String get tutorialNext => 'Weiter';
-
-  @override
-  String get tutorialRoll => 'Würfeln';
-
-  @override
-  String get tutorialKeep => 'Behalten';
 
   @override
   String get tutorialFinish => 'Spielen';
@@ -663,43 +660,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialStep0 =>
-      'Willkommen bei Le 10000! Ziel: genau 10.000 Punkte erreichen. Wir spielen gemeinsam einen Zug; nichts, was du hier tust, wird gespeichert.';
+      'Willkommen bei Le 10000! Ziel: genau 10.000 Punkte erreichen. Wir spielen einen Zug gemeinsam auf dem echten Spielbildschirm: nichts wird gespeichert.';
 
   @override
   String get tutorialStep1 =>
-      'Du bist am Zug und würfelst 5 Würfel. Tippe auf „Würfeln“.';
+      'Tippe auf den Würfeln-Knopf, um die 5 Würfel zu werfen.';
 
   @override
   String get tutorialStep2 =>
-      'Nur die 1 (100 Punkte) und die 5 (50 Punkte) bringen hier etwas. Die 1 ist Pflicht; die 5 könnte man beiseitelassen, aber behalten wir sie. Tippe auf „Behalten“.';
+      'Nur die 1 (100) und die 5 (50) zählen hier: sie bleiben liegen, die Hand ist 150 wert. Zum Einstieg braucht man 500 Punkte: wirf die anderen 3 Würfel neu.';
 
   @override
   String get tutorialStep3 =>
-      'Die aktuelle Hand ist 150 Punkte wert, 3 Würfel bleiben zum Neuwurf. Um ins Spiel zu kommen, braucht man mindestens 500 Punkte: also noch einmal würfeln.';
+      'Drei 3en: 300 Punkte, die Hand steigt auf 450. Alle Würfel haben gezählt: heiße Würfel! Du wirfst alle 5 neu und darfst nicht aufhören.';
 
   @override
   String get tutorialStep4 =>
-      'Drei gleiche Würfel: drei 3en sind 300 Punkte wert. Behalte sie.';
+      'Zwei 5en, aber sie sind freiwillig: dieser Wähler bestimmt, wie viele du behältst. Mit beiden würden 550 auf 50 enden: Aufhören wäre unmöglich. Wähle 1.';
 
   @override
   String get tutorialStep5 =>
-      'Alle Würfel haben gezählt: heiße Würfel! Du musst alle 5 Würfel neu werfen und darfst nicht aufhören. Die aktuelle Hand behält ihre 450 Punkte.';
+      '500 Punkte: genug zum Einstieg, und keine 50 am Ende. Tippe auf die Hand, um aufzuhören und sie zu verbuchen.';
 
   @override
   String get tutorialStep6 =>
-      'Zwei Einsen und eine 5: 250 mehr, also 700. Die 5 zu behalten lohnt sich: Bei 650 aufzuhören wäre verboten (nie eine Summe, die auf 50 endet).';
-
-  @override
-  String get tutorialStep7 =>
-      '700 Punkte: über 500 und keine 50 am Ende. Du kannst aufhören und sie verbuchen. Tippe auf „Aufhören“.';
-
-  @override
-  String get tutorialStep8 =>
-      '700 Punkte verbucht! Sehen wir nun, was passiert, wenn die Würfel nichts bringen: würfle.';
-
-  @override
-  String get tutorialStep9 =>
-      'Kein Würfel bringt etwas: ein Fehlwurf! Der Zug ist verloren und ein Strich markiert deine Punktezeile; ein zweiter Fehlwurf würde sie streichen. Wer als Erster genau 10.000 erreicht, löst für die anderen eine Schlussrunde aus. Die vollständigen Regeln findest du im Menü. Viel Spaß!';
+      '500 Punkte verbucht! Der Bot ist dran; ein Wurf ohne Punkte ist ein Fehlwurf (Zug verloren, ein Strich auf der Zeile). Wer als Erster genau 10.000 erreicht, gewinnt. Die vollständigen Regeln stehen im Menü.';
 
   @override
   String get rulesGoalTitle => 'Ziel des Spiels';

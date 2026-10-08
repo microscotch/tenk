@@ -175,7 +175,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                       _MenuChip(Icons.group, l10n.managePlayersButton, _chipRed, () => _open(const PlayersScreen())),
                       _MenuChip(Icons.history, l10n.finishedGamesButton, _chipPurple, () => _open(const FinishedGamesScreen())),
                       _MenuChip(Icons.bar_chart, l10n.statisticsButton, _chipBlack, () => _open(const StatisticsScreen())),
-                      _MenuChip(Icons.help_outline, l10n.helpTooltip, _chipWhite, () => _open(const RulesScreen())),
+                      _MenuChip(Icons.help_outline, l10n.helpTooltip, _chipWhite, () => _open(const RulesScreen(canReplayTutorial: true))),
                       _MenuChip(Icons.settings, l10n.settingsTooltip, _chipGrey, () => _open(const SettingsScreen())),
                       _MenuChip(Icons.info_outline, l10n.aboutTooltip, _chipOrange, () => showAppAboutDialog(context)),
                     ],

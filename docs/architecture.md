@@ -82,13 +82,16 @@ une partie rejouable à l'identique.
   (`playerIds`). C'est ce lien, jamais le nom, qui rattache une partie à un
   joueur : un renommage ne casse rien. `reordered(ordre)` la réordonne dans
   l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
-- **`TutorialSession`** (`lib/game/tutorial.dart`) est le tutoriel du premier lancement : un tour
-  scénarisé (`tutorialSteps`, une action attendue par étape, les dés fournis par `ScriptedRandom`),
-  rejoué avec les fonctions pures `rollTurn` / `applyKeepDecision` / `tryBank`. Il n'est **pas** une
-  partie : pas de `GameEngine`, pas de journal, rien de sauvegardé ni compté dans les statistiques ;
-  `perform` ignore toute action autre que celle attendue. L'écran (`TutorialScreen`) est proposé par
-  `launchScreenFor` seulement quand il n'y a ni profil, ni ancien nom de joueur, ni
-  `AppSettings.tutorialSeen` ; sautable (« Passer ») et rejouable depuis l'écran des règles.
+- **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une classe mais un scénario : `tutorialFaces` (les dés,
+  fournis par un `ScriptedRandom`) et la fonction pure `tutorialStepFor(engine, …)`, qui déduit l'étape **de
+  l'état du moteur** — jamais d'un compteur qui dériverait de ce qu'on voit. Il se joue sur le **vrai**
+  `GameScreen` (`GameScreen(tutorial: …)`, lancé par `TutorialScreen`) et un vrai `GameEngine` : le joueur contre
+  un bot qui ne joue pas. `GameNotifier.startTutorial` pose cette partie (sans seed : `_commit` ne persiste rien,
+  ni sauvegarde ni archive), `endTutorial` la retire. Des bulles (`TutorialOverlay`) partent des vraies commandes
+  — repérées par des `GlobalKey` — et seule la commande de l'étape répond. Comme il écrase l'état du notifier
+  singleton, « Revoir le tutoriel » n'est offert que depuis l'accueil (`RulesScreen.canReplayTutorial`), jamais
+  depuis le menu d'une partie dont l'écran serait resté empilé dessous. Proposé au premier lancement par
+  `launchScreenFor` (ni profil, ni ancien nom, `AppSettings.tutorialSeen` faux), sautable à tout moment.
 - **`DiceOffState`** est le tirage au sort qui fixe l'ordre de jeu : tout le
   monde lance son dé en même temps (`rollAll`), le plus faible commence, les
   ex-aequo au plus bas relancent seuls. `playOrder` donne les sièges dans

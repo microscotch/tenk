@@ -642,13 +642,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get tutorialSkip => 'Hopp over';
 
   @override
+  String get tutorialPlayerName => 'Du';
+
+  @override
   String get tutorialNext => 'Neste';
-
-  @override
-  String get tutorialRoll => 'Kast terningene';
-
-  @override
-  String get tutorialKeep => 'Behold';
 
   @override
   String get tutorialFinish => 'Begynn å spille';
@@ -658,43 +655,31 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get tutorialStep0 =>
-      'Velkommen til Le 10000! Målet: nå nøyaktig 10 000 poeng. Vi spiller en runde sammen; ingenting du gjør her blir lagret.';
+      'Velkommen til Le 10000! Målet: nå nøyaktig 10 000 poeng. Vi spiller en runde sammen på den ekte spillskjermen: ingenting lagres.';
 
   @override
   String get tutorialStep1 =>
-      'På din tur kaster du 5 terninger. Trykk på «Kast terningene».';
+      'Trykk på kastknappen for å kaste de 5 terningene.';
 
   @override
   String get tutorialStep2 =>
-      'Bare enere (100 poeng) og femmere (50 poeng) gir poeng her. Eneren er obligatorisk; femmeren kunne vært lagt til side, men vi beholder den. Trykk på «Behold».';
+      'Bare enere (100) og femmere (50) gir poeng her: de beholdes, hånden er verdt 150. Du trenger 500 poeng for å komme inn i spillet: kast de 3 andre terningene på nytt.';
 
   @override
   String get tutorialStep3 =>
-      'Nåværende hånd er verdt 150 poeng, og 3 terninger gjenstår. For å komme inn i spillet trenger du minst 500 poeng: vi kaster på nytt.';
+      'Tre treere: 300 poeng, hånden stiger til 450. Alle terningene ga poeng: varme terninger! Du kaster alle 5 på nytt og kan ikke stoppe.';
 
   @override
   String get tutorialStep4 =>
-      'Tre like terninger: tre treere er verdt 300 poeng. Behold dem.';
+      'To femmere, men de er valgfrie: denne velgeren bestemmer hvor mange du beholder. Med begge ville 550 ende på 50: du kunne ikke stoppe. Velg 1.';
 
   @override
   String get tutorialStep5 =>
-      'Alle terningene ga poeng: varme terninger! Du må kaste alle 5 på nytt og kan ikke stoppe. Nåværende hånd beholder sine 450 poeng.';
+      '500 poeng: nok til å komme inn, og ingen 50 til slutt. Trykk på hånden for å stoppe og notere dem.';
 
   @override
   String get tutorialStep6 =>
-      'To enere og en femmer: 250 til, altså 700. Det lønner seg å beholde femmeren: å stoppe på 650 er forbudt (aldri en sum som ender på 50).';
-
-  @override
-  String get tutorialStep7 =>
-      '700 poeng: over 500 og ingen 50 til slutt. Du kan stoppe og notere dem. Trykk på «Stopp».';
-
-  @override
-  String get tutorialStep8 =>
-      '700 poeng notert! La oss se hva som skjer når terningene ikke gir noe: kast.';
-
-  @override
-  String get tutorialStep9 =>
-      'Ingen terning gir poeng: en bom! Runden er tapt og en strek markerer poenglinjen din; en ny bom ville stryke den. Den første som når nøyaktig 10 000, utløser en siste runde for de andre. De fullstendige reglene finner du i menyen. Lykke til!';
+      '500 poeng notert! Boten tar over; et kast uten poeng er en bom (runden tapt, en strek på linjen). Den første som når nøyaktig 10 000 vinner. De fullstendige reglene finner du i menyen.';
 
   @override
   String get rulesGoalTitle => 'Målet med spillet';

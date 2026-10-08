@@ -643,13 +643,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get tutorialSkip => 'Ohita';
 
   @override
+  String get tutorialPlayerName => 'Sinä';
+
+  @override
   String get tutorialNext => 'Seuraava';
-
-  @override
-  String get tutorialRoll => 'Heitä nopat';
-
-  @override
-  String get tutorialKeep => 'Pidä';
 
   @override
   String get tutorialFinish => 'Aloita pelaaminen';
@@ -659,43 +656,30 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get tutorialStep0 =>
-      'Tervetuloa Le 10000 -peliin! Tavoite: saavuttaa tasan 10 000 pistettä. Pelaamme yhden vuoron yhdessä; mitään täällä tekemääsi ei tallenneta.';
+      'Tervetuloa Le 10000 -peliin! Tavoite: saavuttaa tasan 10 000 pistettä. Pelaamme yhden vuoron yhdessä oikealla pelinäytöllä: mitään ei tallenneta.';
 
   @override
-  String get tutorialStep1 =>
-      'Omalla vuorollasi heität 5 noppaa. Napauta ”Heitä nopat”.';
+  String get tutorialStep1 => 'Napauta heittopainiketta heittääksesi 5 noppaa.';
 
   @override
   String get tutorialStep2 =>
-      'Tässä pisteitä tuovat vain ykkönen (100 pistettä) ja viitonen (50 pistettä). Ykkönen on pakollinen; viitosen voisi jättää sivuun, mutta pidetään se. Napauta ”Pidä”.';
+      'Tässä pisteitä tuovat vain ykkönen (100) ja viitonen (50): ne pidetään, käsi on 150 pisteen arvoinen. Peliin pääsyyn tarvitaan 500 pistettä: heitä muut 3 noppaa uudelleen.';
 
   @override
   String get tutorialStep3 =>
-      'Nykyinen käsi on 150 pisteen arvoinen ja 3 noppaa on jäljellä heitettäväksi. Peliin pääsyyn tarvitaan vähintään 500 pistettä: heitetään uudelleen.';
+      'Kolme kolmosta: 300 pistettä, käsi nousee 450:een. Kaikki nopat toivat pisteitä: kuumat nopat! Heität kaikki 5 uudelleen etkä voi lopettaa.';
 
   @override
   String get tutorialStep4 =>
-      'Kolme samaa noppaa: kolme kolmosta on 300 pistettä. Pidä ne.';
+      'Kaksi viitosta, mutta ne ovat vapaaehtoisia: tämä valitsin määrää, montako pidät. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Valitse 1.';
 
   @override
   String get tutorialStep5 =>
-      'Kaikki nopat toivat pisteitä: kuumat nopat! Sinun on heitettävä kaikki 5 noppaa uudelleen etkä voi lopettaa. Nykyinen käsi säilyttää 450 pistettään.';
+      '500 pistettä: riittää sisään pääsyyn, eikä lopussa ole 50. Napauta kättä lopettaaksesi ja kirjataksesi ne.';
 
   @override
   String get tutorialStep6 =>
-      'Kaksi ykköstä ja viitonen: 250 lisää, eli 700. Viitosen pitäminen kannattaa: lopettaminen lukuun 650 olisi kiellettyä (ei koskaan summaa, joka päättyy lukuun 50).';
-
-  @override
-  String get tutorialStep7 =>
-      '700 pistettä: yli 500 eikä 50 lopussa. Voit lopettaa ja kirjata ne. Napauta ”Lopeta”.';
-
-  @override
-  String get tutorialStep8 =>
-      '700 pistettä kirjattu! Katsotaan nyt, mitä tapahtuu, kun nopat eivät tuo mitään: heitä.';
-
-  @override
-  String get tutorialStep9 =>
-      'Mikään noppa ei tuo pisteitä: epäonnistuminen! Vuoro menetetään ja viiva merkitsee pisterivisi; toinen epäonnistuminen yliviivaisi sen. Ensimmäinen, joka saavuttaa tasan 10 000, käynnistää muille loppukierroksen. Täydelliset säännöt ovat valikossa. Hauskaa peliä!';
+      '500 pistettä kirjattu! Botti jatkaa; heitto ilman pisteitä on epäonnistuminen (vuoro menetetään, viiva riville). Ensimmäinen, joka saavuttaa tasan 10 000, voittaa. Täydelliset säännöt ovat valikossa.';
 
   @override
   String get rulesGoalTitle => 'Pelin tavoite';

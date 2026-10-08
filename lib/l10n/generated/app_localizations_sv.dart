@@ -643,13 +643,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tutorialSkip => 'Hoppa över';
 
   @override
+  String get tutorialPlayerName => 'Du';
+
+  @override
   String get tutorialNext => 'Nästa';
-
-  @override
-  String get tutorialRoll => 'Kasta tärningarna';
-
-  @override
-  String get tutorialKeep => 'Behåll';
 
   @override
   String get tutorialFinish => 'Börja spela';
@@ -659,43 +656,31 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tutorialStep0 =>
-      'Välkommen till Le 10000! Målet: nå exakt 10 000 poäng. Vi spelar en runda tillsammans; inget du gör här sparas.';
+      'Välkommen till Le 10000! Målet: nå exakt 10 000 poäng. Vi spelar en runda tillsammans på den riktiga spelskärmen: inget sparas.';
 
   @override
   String get tutorialStep1 =>
-      'På din tur kastar du 5 tärningar. Tryck på ”Kasta tärningarna”.';
+      'Tryck på kastknappen för att kasta de 5 tärningarna.';
 
   @override
   String get tutorialStep2 =>
-      'Bara ettan (100 poäng) och femman (50 poäng) ger poäng här. Ettan är obligatorisk; femman kunde läggas undan, men vi behåller den. Tryck på ”Behåll”.';
+      'Bara ettan (100) och femman (50) ger poäng här: de behålls, handen är värd 150. Du behöver 500 poäng för att komma in i spelet: kasta om de andra 3 tärningarna.';
 
   @override
   String get tutorialStep3 =>
-      'Den aktuella handen är värd 150 poäng och 3 tärningar återstår att kasta om. För att komma in i spelet behövs minst 500 poäng: vi kastar om.';
+      'Tre treor: 300 poäng, handen stiger till 450. Alla tärningar gav poäng: heta tärningar! Du kastar om alla 5 och kan inte stanna.';
 
   @override
   String get tutorialStep4 =>
-      'Tre likadana tärningar: tre treor är värda 300 poäng. Behåll dem.';
+      'Två femmor, men de är valfria: den här väljaren bestämmer hur många du behåller. Med båda skulle 550 sluta på 50: du kunde inte stanna. Välj 1.';
 
   @override
   String get tutorialStep5 =>
-      'Alla tärningar gav poäng: heta tärningar! Du måste kasta om alla 5 och kan inte stanna. Den aktuella handen behåller sina 450 poäng.';
+      '500 poäng: nog för att komma in, och ingen 50 på slutet. Tryck på handen för att stanna och bokföra dem.';
 
   @override
   String get tutorialStep6 =>
-      'Två ettor och en femma: 250 till, alltså 700. Det lönar sig att behålla femman: att stanna på 650 är förbjudet (aldrig en summa som slutar på 50).';
-
-  @override
-  String get tutorialStep7 =>
-      '700 poäng: över 500 och ingen 50 på slutet. Du kan stanna och bokföra dem. Tryck på ”Stanna”.';
-
-  @override
-  String get tutorialStep8 =>
-      '700 poäng bokförda! Nu ser vi vad som händer när tärningarna inte ger något: kasta.';
-
-  @override
-  String get tutorialStep9 =>
-      'Ingen tärning ger poäng: en bom! Rundan är förlorad och ett streck markerar din poängrad; en andra bom skulle stryka den. Den första som når exakt 10 000 utlöser en slutrunda för de andra. De fullständiga reglerna finns i menyn. Ha så roligt!';
+      '500 poäng bokförda! Boten tar över; ett kast utan poäng är en bom (rundan förlorad, ett streck på raden). Den första som når exakt 10 000 vinner. De fullständiga reglerna finns i menyn.';
 
   @override
   String get rulesGoalTitle => 'Spelets mål';
