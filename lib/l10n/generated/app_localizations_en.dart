@@ -384,6 +384,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logHotDiceMessage => 'Hot dice!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Hot dice! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Score crossed out:';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Busted! => $score strike';
+  String logBustMessage(int lost) {
+    return '$lost: Busted!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Busted! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Busted! => $score strike';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Busted! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -581,13 +593,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Turn order';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duel between neighbours won by the second: play goes the other way round.';
-
-  @override
   String get gameOverTitle => 'Game over';
 
   @override
@@ -621,6 +626,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tiretTooltip => 'Strike: a second bust will cross out the score';
 
   @override
+  String get radarTargetsTooltip => 'Scores the current hand could strike out';
+
+  @override
+  String get radarGapTooltip => 'Gap to the current hand\'s total';
+
+  @override
   String get previousScoreHadTiretTooltip => 'The previous score had a strike';
 
   @override
@@ -642,6 +653,166 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialSkip => 'Skip';
 
   @override
+  String get tutorialFinalOutro =>
+      'The bot is struck out and must now try for 10,000 itself. You now know all the rules: have a good game!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Three 4s: exactly 10,000! Taking it is automatic.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9,600. In the final round, stopping isn\'t allowed: roll again.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'The bot has reached 10,000: this is the final round. To win, you must match it, which strikes it out. Stopping before that is forbidden.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'The bot is struck out and falls back to 1,500. Reaching any of another player\'s lines, even an old one, strikes it out too.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Two aces: 200. You\'d be at 2,000, the bot\'s score, in red on its radar. Stop to strike it out.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'On the bot\'s line, the radar shows its scores you could strike out: reaching the same total pushes it back.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'After a bust, you always start again with 5 fresh dice. A hand that could no longer be banked is never offered.';
+
+  @override
+  String get tutorialInheritStop => 'An ace: the hand is worth 1,100. Stop.';
+
+  @override
+  String get tutorialInheritTake =>
+      'The bot stopped at 1,000 leaving 2 dice. Take the hand: you start from its 1,000 points, and the 2 dice are rolled at once (you always roll at least once before stopping).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'When a player stops leaving dice, the next one may take them over, with their points as a base.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'The extension lasts the whole turn, even for a 5 (100 instead of 50), and is cleared by hot dice.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'A lone 2 is worth nothing… except here: after your three 2s, it\'s worth 100 (in red). The hand is 300: stop.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Three 2s: 200. Reroll the last 2 dice.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'After three of a kind, a lone die of the same value later in the turn is worth 100 points.';
+
+  @override
+  String get tutorialBustOutro =>
+      'A bust marks the line with a dash; a second one strikes it out. At 0, a bust costs nothing.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Second bust: the 1,500 line is struck out, you fall back to 500, your previous score. Tap ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Your line has a dash: a second bust would strike it out. Roll anyway.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Busted! The hand is lost, and your 1,500 line gets a dash. Tap ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'A roll that scores nothing is a bust: the current hand is lost. You have 1,500 points.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Remember: never stop on a total ending in 50, and hot dice are always rerolled.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: enough to enter, and no 50 at the end. Stop.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Two 5s, but they\'re optional: this selector chooses how many to keep. With both, 550 would end in 50: you couldn\'t stop. Choose 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Three 3s: 300, the hand rises to 450. Every die scored: hot dice! The button shows the total you would have; you reroll all 5 dice and can\'t stop.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'The ace and the 5 are kept: the hand is worth 150. Reroll the other 3 dice.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'When every die scores, that\'s hot dice: you reroll all 5. And a lone 5 is sometimes optional.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 points banked: you\'re in the game! From now on, each turn must score at least 200 points.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Three 6s: three of a kind is worth 100 times its value, here 600 (three aces: 1000). The hand is worth 700, enough to enter: tap the hand to stop.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Only the ace (100) and the 5 (50) score on their own: the ace is set aside. To enter the game you need 500 points in one turn: reroll the other 4 dice.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Welcome to Le 10000! The goal: reach exactly 10,000 points. On each turn, you roll 5 dice and set aside the ones that score.';
+
+  @override
+  String get tutorialLessonFinalRound => 'The final round';
+
+  @override
+  String get tutorialLessonCollision => 'Striking out a player';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Inherited dice';
+
+  @override
+  String get tutorialLessonExtension => 'The extension rule';
+
+  @override
+  String get tutorialLessonBust => 'Busting';
+
+  @override
+  String get tutorialLessonHotDice => 'Hot dice';
+
+  @override
+  String get tutorialLessonBasics => 'The basics';
+
+  @override
+  String get tutorialBotTurn => 'The bot\'s turn: it plays on its own.';
+
+  @override
+  String get tutorialRollPrompt => 'Tap the roll button.';
+
+  @override
+  String get tutorialWholePath => 'The whole tutorial';
+
+  @override
+  String get tutorialLessonsTitle => 'Tutorial lessons';
+
+  @override
+  String get tutorialNextLesson => 'Next lesson';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Lesson $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'You';
 
   @override
@@ -651,34 +822,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialFinish => 'Start playing';
 
   @override
-  String get tutorialReplayButton => 'Watch the tutorial again';
-
-  @override
-  String get tutorialStep0 =>
-      'Welcome to Le 10000! The goal: reach exactly 10,000 points. We\'ll play one turn together on the real game screen: nothing is saved.';
-
-  @override
-  String get tutorialStep1 => 'Tap the roll button to throw the 5 dice.';
-
-  @override
-  String get tutorialStep2 =>
-      'Only the ace (100) and the 5 (50) score here: they\'re kept, the hand is worth 150. You need 500 points to enter the game: reroll the other 3 dice.';
-
-  @override
-  String get tutorialStep3 =>
-      'Three 3s: 300 points, the hand rises to 450. Every die scored: hot dice! You reroll all 5 dice and can\'t stop.';
-
-  @override
-  String get tutorialStep4 =>
-      'Two 5s, but they\'re optional: this selector chooses how many to keep. With both, 550 would end in 50: you couldn\'t stop. Choose 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 points: enough to enter, and no 50 at the end. Tap the hand to stop and bank them.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 points banked! The bot takes over; a roll with no points is a bust (turn lost, a dash on the line). The first to reach exactly 10,000 wins. The full rules are in the menu.';
+  String get tutorialReplayButton => 'Tutorial lessons';
 
   @override
   String get rulesGoalTitle => 'Goal of the game';
@@ -796,6 +940,49 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'In a game that has started, your seat stays empty and the game waits for you to come back.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'You\'re leaving the room: a bot will play in your place until the end of the game.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Waiting for the game to start';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'left the game: a bot is playing in their place';
+
+  @override
+  String get botSeatTooltip => 'Played by a bot (player left)';
+
+  @override
+  String get rematchButton => 'Play again';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name offers a rematch';
+  }
+
+  @override
+  String get rematchWaiting => 'Waiting for the other players…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Accept';
+
+  @override
+  String get rematchRefuse => 'Decline';
+
+  @override
+  String get rematchExcludedNotice => 'You left the room: no rematch for you.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'No rematch: at least two players are needed.';
 
   @override
   String get onlineConnecting => 'Connecting to the server…';
@@ -921,10 +1108,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emotePhraseYes => 'Yes!';
 
   @override
-  String get emotePhraseTooGreedy => 'Too greedy!';
+  String get emotePhraseTooGreedy => 'Greed is an ugly flaw!';
 
   @override
-  String get emotePhraseTooLucky => 'A bit too lucky...';
+  String get emotePhraseTooLucky => 'A bit too much luck...';
 
   @override
   String get emotePhraseDryTenThousand => 'Going for a straight 10000';
@@ -940,6 +1127,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Sorry, but I have to go';
+
+  @override
+  String get emoteAngry => 'Angry';
+
+  @override
+  String get emoteRelieved => 'Relieved';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Now what is this strange choice?';
+
+  @override
+  String get emotePhraseAllByFives => 'All by the fives!';
+
+  @override
+  String get emotePhraseWithPanache => 'With panache!';
+
+  @override
+  String get emotePhraseUnfair => 'That\'s just so unfair';
+
+  @override
+  String get emotePhrasePhew => 'Phew!';
+
+  @override
+  String get emotePhraseAtLast => 'At last!';
+
+  @override
+  String get emotePhraseCloseCall => 'That was close!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Well played';
+
+  @override
+  String get emotePhraseSorry => 'Sorry';
 
   @override
   String get gameHistoryBar => 'History';

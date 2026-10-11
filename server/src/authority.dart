@@ -40,8 +40,13 @@ class GameAuthority {
   List<int>? _playOrder;
   final List<GameAction> _actions = [];
 
-  GameAuthority({required this.names, Random? random, DateTime Function()? now})
+  /// L'ordre de jeu imposé (en sièges), au lieu d'un tirage au sort : celui
+  /// d'une revanche (voir [GameActionType.presetOrder]). Nul : tirage normal.
+  final List<int>? presetOrder;
+
+  GameAuthority({required this.names, Random? random, DateTime Function()? now, this.presetOrder})
       : assert(names.length >= minOnlinePlayers && names.length <= maxOnlinePlayers),
+        assert(presetOrder == null || presetOrder.length == names.length),
         _random = RecordingRandom(random ?? Random.secure()),
         _now = now ?? (() => DateTime.now().toUtc()),
         _diceOff = DiceOffState.start(names.length);
@@ -51,6 +56,13 @@ class GameAuthority {
   bool get isStarted => _actions.isNotEmpty;
   bool get isOver => _engine?.gameOver ?? false;
 
+  /// L'ordre de jeu, en sièges du salon ; null tant que le départage n'est pas
+  /// joué.
+  List<int>? get playOrder => _playOrder;
+
+  /// Le siège qui commence la partie (le premier de [playOrder]).
+  int? get startingSeat => _playOrder?.first;
+
   /// Le siège (celui du salon) qui a la main, ou null hors partie.
   int? get currentSeat {
     final engine = _engine;
@@ -59,10 +71,15 @@ class GameAuthority {
   }
 
   /// Lance la partie : départage (autant de rounds que nécessaire, tout est
-  /// tiré d'un coup), puis démarrage du premier tour. Rend les actions produites.
+  /// tiré d'un coup) — ou l'ordre imposé ([presetOrder]) —, puis démarrage du
+  /// premier tour. Rend les actions produites.
   List<GameAction> start() {
     if (isStarted) throw StateError('la partie a déjà commencé');
     final produced = <GameAction>[];
+    if (presetOrder case final order?) {
+      _diceOff = DiceOffState.preset(names.length, order);
+      produced.add(GameAction.presetOrder(order, at: _now()));
+    }
     while (!_diceOff.isResolved) {
       _random.clear();
       _diceOff = _diceOff.rollAll(random: _random);

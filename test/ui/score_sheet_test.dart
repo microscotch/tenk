@@ -19,12 +19,10 @@ void main() {
 
     await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
 
-    // B n'est qu'à 200 pts au-dessus de A : B risque d'être barré si A
-    // valide un tour minimal. A, lui, est à 200 pts de barrer B.
-    expect(find.descendant(of: _rowOf('B'), matching: find.byIcon(Icons.warning_amber_rounded)),
-        findsOneWidget);
+    // A (joueur courant) est à 200 pts de barrer B. Les indices ne se lisent
+    // que sur la ligne du joueur courant : celle de B montre le radar.
     expect(find.descendant(of: _rowOf('A'), matching: find.byIcon(Icons.gps_fixed)), findsOneWidget);
-    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     expect(find.byIcon(Icons.gps_fixed), findsOneWidget);
   });
 
@@ -40,20 +38,19 @@ void main() {
     expect(find.byIcon(Icons.gps_fixed), findsNothing);
   });
 
-  testWidgets('un joueur encadré par deux écarts de 200 cumule les deux hints', (tester) async {
+  testWidgets('un joueur courant encadré par deux écarts de 200 cumule les deux hints', (tester) async {
     final players = [
       Player(name: 'A', totalScore: 800, hasEntered: true),
       Player(name: 'B', totalScore: 1000, hasEntered: true),
       Player(name: 'C', totalScore: 1200, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
+    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 1)));
 
-    // A (200 sous B) et B (200 sous C) peuvent chacun barrer leur voisin du
-    // dessus ; B (200 au-dessus de A) et C (200 au-dessus de B) risquent
-    // chacun d'être barrés par leur voisin du dessous.
-    expect(find.byIcon(Icons.gps_fixed), findsNWidgets(2), reason: 'A et B peuvent chacun barrer leur voisin');
-    expect(find.byIcon(Icons.warning_amber_rounded), findsNWidgets(2), reason: 'B et C risquent chacun le barrage');
+    // B (courant) est à 200 sous C, qu'il peut barrer, et à 200 au-dessus de
+    // A, qui peut le barrer : les deux indices, sur sa ligne seulement.
+    expect(find.byIcon(Icons.gps_fixed), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
 
     final bIcons = _rowOf('B');
     expect(find.descendant(of: bIcons, matching: find.byIcon(Icons.gps_fixed)), findsOneWidget);
@@ -168,6 +165,61 @@ void main() {
       expect(medalColorIn(tester, 'A'), const Color(0xFFF2C94C));
       expect(medalColorIn(tester, 'B'), const Color(0xFFF2C94C));
       expect(medalColorIn(tester, 'C'), const Color(0xFFC0C0C0), reason: 'le suivant prend l\'argent');
+    });
+  });
+
+  group('liste rotative et radar', () {
+    Future<void> pumpSheet(WidgetTester tester, List<Player> players, {required int current, int? potential}) =>
+        tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ScoreSheet(players: players, currentPlayerIndex: current, potentialTotal: potential)),
+          ),
+        );
+
+    double topOf(WidgetTester tester, String name) => tester.getTopLeft(find.text(name)).dy;
+
+    testWidgets('le joueur dont c\'est le tour est en tête, les suivants dans l\'ordre de jeu', (tester) async {
+      final players = [Player(name: 'A'), Player(name: 'B'), Player(name: 'C')];
+      await pumpSheet(tester, players, current: 1);
+      expect(topOf(tester, 'B'), lessThan(topOf(tester, 'C')));
+      expect(topOf(tester, 'C'), lessThan(topOf(tester, 'A')));
+    });
+
+    testWidgets('un adversaire montre les 3 lignes barrables au-dessus du potentiel, celle qu\'on barre en évidence',
+        (tester) async {
+      final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
+      // Lignes 500, 1500, 2800, 3000, 3100 (courante).
+      final alice = [500, 1000, 1300, 200, 100].fold(Player(name: 'Alice'), (p, v) => p.applySuccessfulTurn(v));
+      await pumpSheet(tester, [me, alice], current: 0, potential: 2800);
+
+      final radar = find.descendant(of: _rowOf('Alice'), matching: find.textContaining('2800 · 3000 · 3100'));
+      expect(radar, findsOneWidget);
+      // La ligne 2800 est celle que la main barrerait en s'arrêtant là.
+      final span = (tester.widget<Text>(radar).textSpan! as TextSpan).children!.first as TextSpan;
+      expect(span.text, '2800');
+      expect(span.style?.color, Colors.redAccent);
+      // Le score précédent entre parenthèses ne vaut que pour le joueur courant.
+      expect(find.descendant(of: _rowOf('Alice'), matching: find.textContaining('(')), findsNothing);
+    });
+
+    testWidgets('sans ligne barrable, l\'adversaire montre l\'écart à la main en cours', (tester) async {
+      final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
+      await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('\u2212950')), findsOneWidget);
+    });
+
+    testWidgets('les indices d\'écart de 200 ne restent que sur la ligne du joueur courant', (tester) async {
+      final players = [
+        Player(name: 'A', totalScore: 800, hasEntered: true),
+        Player(name: 'B', totalScore: 1000, hasEntered: true),
+      ];
+      await pumpSheet(tester, players, current: 1);
+      // B (courant) est à 200 au-dessus de A : danger chez lui ; A n'a plus d'indice.
+      expect(find.descendant(of: _rowOf('B'), matching: find.byIcon(Icons.warning_amber_rounded)), findsOneWidget);
+      expect(find.byIcon(Icons.gps_fixed), findsNothing);
     });
   });
 }

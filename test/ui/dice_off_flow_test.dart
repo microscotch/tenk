@@ -120,7 +120,7 @@ void main() {
     fail('aucune égalité en 30 départages à six joueurs');
   });
 
-  testWidgets('le résultat annonce l\'ordre de jeu, et la partie démarre dans cet ordre', (tester) async {
+  testWidgets('le résultat annonce qui commence, sans l\'ordre de jeu, et la partie démarre dans cet ordre', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     const names = ['A', 'B', 'C', 'D'];
@@ -132,9 +132,10 @@ void main() {
     final state = container.read(diceOffProvider)!;
     final expectedOrder = [for (final i in state.playOrder) names[i]];
     expect(find.textContaining('commence la partie !'), findsOneWidget);
-    expect(find.text('Ordre de jeu'), findsOneWidget);
-    expect(find.text(expectedOrder.join('  →  ')), findsOneWidget);
-    expect(find.textContaining('à rebours'), state.reversesOrder ? findsOneWidget : findsNothing);
+    // L'ordre de jeu n'est plus annoncé : la liste des joueurs de l'écran de
+    // jeu le montre, en tournant autour de celui dont c'est le tour.
+    expect(find.textContaining('→'), findsNothing);
+    expect(find.textContaining('à rebours'), findsNothing);
 
     await tester.tap(find.text('Commencer la partie'));
     await tester.pumpAndSettle();

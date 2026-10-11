@@ -384,6 +384,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get logHotDiceMessage => 'Heta tärningar!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Heta tärningar! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Poäng struken:';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Bom! => $score streck';
+  String logBustMessage(int lost) {
+    return '$lost: Bom!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Bom! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Bom! => $score streck';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Bom! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -582,13 +594,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Spelordning';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duell mellan grannar vunnen av den andra: spelet går åt andra hållet.';
-
-  @override
   String get gameOverTitle => 'Spelet är slut';
 
   @override
@@ -622,6 +627,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tiretTooltip => 'Streck: ett andra bom kommer att stryka poängen';
 
   @override
+  String get radarTargetsTooltip => 'Poäng som den pågående handen kan stryka';
+
+  @override
+  String get radarGapTooltip => 'Avstånd till summan av den pågående handen';
+
+  @override
   String get previousScoreHadTiretTooltip => 'Föregående poäng hade ett streck';
 
   @override
@@ -643,6 +654,166 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tutorialSkip => 'Hoppa över';
 
   @override
+  String get tutorialFinalOutro =>
+      'Boten är struken och måste nu själv försöka nå 10 000. Nu kan du alla regler: ha så roligt!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Tre fyror: exakt 10 000! Det tas automatiskt.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9600. I slutrundan går det inte att stanna: kasta igen.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Boten har nått 10 000: det är slutrundan. För att vinna måste du nå samma, vilket stryker den. Att stanna innan är förbjudet.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Boten är struken och faller tillbaka till 1500. Att nå en rad hos en annan spelare, även en gammal, stryker den också.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Två ettor: 200. Du skulle ha 2000, botens poäng, i rött på dess radar. Stanna för att stryka den.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'På botens rad visar radarn dess poäng som du skulle kunna stryka: att nå samma summa skickar den tillbaka.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Efter en bom börjar man alltid om med 5 nya tärningar. En hand som inte längre skulle kunna bokföras erbjuds aldrig.';
+
+  @override
+  String get tutorialInheritStop => 'En etta: handen är värd 1100. Stanna.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Boten stannade på 1000 och lämnade 2 tärningar. Ta över handen: du börjar från dess 1000 poäng, och de 2 tärningarna kastas direkt (man kastar alltid minst en gång innan man stannar).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'När en spelare stannar och lämnar tärningar kvar kan nästa ta över dem, med dennes poäng som grund.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'Utvidgningen gäller hela turen, även för en femma (100 i stället för 50), och försvinner vid heta tärningar.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'En ensam tvåa är inget värd… utom här: efter dina tre tvåor är den värd 100 (i rött). Handen har 300: stanna.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Tre tvåor: 200. Kasta om de 2 sista tärningarna.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Efter tre lika av ett värde är en ensam tärning med samma värde senare i turen värd 100 poäng.';
+
+  @override
+  String get tutorialBustOutro =>
+      'En bom markerar raden med ett streck; en andra stryker den. På 0 kostar en bom ingenting.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Andra bommen: raden på 1500 är struken, du faller tillbaka till 500, din förra poäng. Tryck på ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Din rad har ett streck: en andra bom skulle stryka den. Kasta ändå.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Bom! Handen är förlorad, och din rad på 1500 får ett streck. Tryck på ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Ett kast utan poäng är en bom: den pågående handen är förlorad. Du har 1500 poäng.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Kom ihåg: stanna aldrig på en summa som slutar på 50, och heta tärningar kastas alltid om.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: nog för att komma in, och ingen 50 på slutet. Stanna.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Två femmor, men valfria: den här väljaren bestämmer hur många du behåller. Med båda skulle 550 sluta på 50: du kunde inte stanna. Välj 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Tre treor: 300, handen stiger till 450. Alla tärningar gav poäng: heta tärningar! Knappen visar summan du skulle ha; du kastar om alla 5 och kan inte stanna.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'Ettan och femman behålls: handen är värd 150. Kasta om de 3 andra tärningarna.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'När alla tärningar ger poäng är det heta tärningar: man kastar om alla 5. Och en ensam femma är ibland valfri.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 poäng bokförda: du är med i spelet! Från och med nu måste varje tur ge minst 200 poäng.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Tre sexor: tre lika är värda 100 gånger sitt värde, här 600 (tre ettor: 1000). Handen är värd 700, nog för att komma in: tryck på handen för att stanna.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Ensamma ger bara ettan (100) och femman (50) poäng: ettan läggs undan. För att komma in i spelet behövs 500 poäng på en tur: kasta om de 4 andra tärningarna.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Välkommen till Le 10000! Målet: nå exakt 10 000 poäng. Varje tur kastar du 5 tärningar och lägger undan dem som ger poäng.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Slutrundan';
+
+  @override
+  String get tutorialLessonCollision => 'Att stryka en spelare';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Den ärvda handen';
+
+  @override
+  String get tutorialLessonExtension => 'Utvidgningsregeln';
+
+  @override
+  String get tutorialLessonBust => 'Bom';
+
+  @override
+  String get tutorialLessonHotDice => 'Heta tärningar';
+
+  @override
+  String get tutorialLessonBasics => 'Grunderna';
+
+  @override
+  String get tutorialBotTurn => 'Botens tur: den spelar själv.';
+
+  @override
+  String get tutorialRollPrompt => 'Tryck på kastknappen.';
+
+  @override
+  String get tutorialWholePath => 'Hela handledningen';
+
+  @override
+  String get tutorialLessonsTitle => 'Handledningens lektioner';
+
+  @override
+  String get tutorialNextLesson => 'Nästa lektion';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Lektion $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Du';
 
   @override
@@ -652,35 +823,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tutorialFinish => 'Börja spela';
 
   @override
-  String get tutorialReplayButton => 'Se handledningen igen';
-
-  @override
-  String get tutorialStep0 =>
-      'Välkommen till Le 10000! Målet: nå exakt 10 000 poäng. Vi spelar en runda tillsammans på den riktiga spelskärmen: inget sparas.';
-
-  @override
-  String get tutorialStep1 =>
-      'Tryck på kastknappen för att kasta de 5 tärningarna.';
-
-  @override
-  String get tutorialStep2 =>
-      'Bara ettan (100) och femman (50) ger poäng här: de behålls, handen är värd 150. Du behöver 500 poäng för att komma in i spelet: kasta om de andra 3 tärningarna.';
-
-  @override
-  String get tutorialStep3 =>
-      'Tre treor: 300 poäng, handen stiger till 450. Alla tärningar gav poäng: heta tärningar! Du kastar om alla 5 och kan inte stanna.';
-
-  @override
-  String get tutorialStep4 =>
-      'Två femmor, men de är valfria: den här väljaren bestämmer hur många du behåller. Med båda skulle 550 sluta på 50: du kunde inte stanna. Välj 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 poäng: nog för att komma in, och ingen 50 på slutet. Tryck på handen för att stanna och bokföra dem.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 poäng bokförda! Boten tar över; ett kast utan poäng är en bom (rundan förlorad, ett streck på raden). Den första som når exakt 10 000 vinner. De fullständiga reglerna finns i menyn.';
+  String get tutorialReplayButton => 'Handledningens lektioner';
 
   @override
   String get rulesGoalTitle => 'Spelets mål';
@@ -796,6 +939,50 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'I ett påbörjat spel förblir din plats tom och spelet väntar på att du kommer tillbaka.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Du lämnar rummet: en bot spelar i ditt ställe tills spelet är slut.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Väntar på att spelet ska börja';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'lämnade spelet: en bot spelar i stället';
+
+  @override
+  String get botSeatTooltip => 'Spelas av en bot (spelaren lämnade)';
+
+  @override
+  String get rematchButton => 'Spela igen';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name föreslår en revansch';
+  }
+
+  @override
+  String get rematchWaiting => 'Väntar på de andra spelarna…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Godta';
+
+  @override
+  String get rematchRefuse => 'Avböj';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Du lämnade rummet: ingen revansch för dig.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Ingen revansch: det behövs minst två spelare.';
 
   @override
   String get onlineConnecting => 'Ansluter till servern…';
@@ -923,10 +1110,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emotePhraseYes => 'Ja!';
 
   @override
-  String get emotePhraseTooGreedy => 'För girig!';
+  String get emotePhraseTooGreedy => 'Girighet är en ful ovana!';
 
   @override
-  String get emotePhraseTooLucky => 'Lite väl turlig...';
+  String get emotePhraseTooLucky => 'Lite väl mycket tur...';
 
   @override
   String get emotePhraseDryTenThousand => 'Raka vägen till 10000';
@@ -942,6 +1129,39 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Förlåt, men jag måste gå';
+
+  @override
+  String get emoteAngry => 'Arg';
+
+  @override
+  String get emoteRelieved => 'Lättad';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Vad är det här för konstigt val?';
+
+  @override
+  String get emotePhraseAllByFives => 'Allt med femmorna!';
+
+  @override
+  String get emotePhraseWithPanache => 'Med bravur!';
+
+  @override
+  String get emotePhraseUnfair => 'Det är verkligen för orättvist';
+
+  @override
+  String get emotePhrasePhew => 'Puh!';
+
+  @override
+  String get emotePhraseAtLast => 'Äntligen!';
+
+  @override
+  String get emotePhraseCloseCall => 'Det var nära ögat!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Bra spelat';
+
+  @override
+  String get emotePhraseSorry => 'Förlåt';
 
   @override
   String get gameHistoryBar => 'Historik';

@@ -734,6 +734,12 @@ abstract class AppLocalizations {
   /// **'Main pleine !'**
   String get logHotDiceMessage;
 
+  /// Libellé du bouton de lancer sur une main pleine, une fois les dés immobilisés : le total que le joueur aurait si cette main était gardée (son score + la main), même si s'arrêter là n'est pas permis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Main pleine ! → {total}'**
+  String rollButtonHotDiceTotal(int total);
+
   /// Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné.
   ///
   /// In fr, this message translates to:
@@ -764,17 +770,23 @@ abstract class AppLocalizations {
   /// **'{score} pts sont repris'**
   String logResumedHandMessage(int score);
 
+  /// Entrée du journal pour un craque sans conséquence sur la grille (score à 0) : les points perdus ({lost}, comme dans la popup de craque), puis « Craqué ! ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{lost} : Craqué !'**
+  String logBustMessage(int lost);
+
   /// Entrée du journal pour un craque qui marque un petit trait (tiret) sur la ligne courante : le score acquis ne bouge pas.
   ///
   /// In fr, this message translates to:
-  /// **'Craqué ! => {score} petit trait'**
-  String logBustTiretMessage(int score);
+  /// **'{lost} : Craqué ! => {score} petit trait'**
+  String logBustTiretMessage(int lost, int score);
 
-  /// Début de l'entrée du journal pour un craque qui barre la ligne courante ; suivi du score barré, puis de logBustBarredReturnMessage.
+  /// Début de l'entrée du journal pour un craque qui barre la ligne courante, précédé des points perdus ({lost}, comme dans la popup de craque) ; suivi du score barré, puis de logBustBarredReturnMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Craqué ! =>'**
-  String get logBustBarredPrefix;
+  /// **'{lost} : Craqué ! =>'**
+  String logBustBarredPrefix(int lost);
 
   /// Fin de l'entrée du journal pour un craque qui barre la ligne courante : score sur lequel le joueur retombe.
   ///
@@ -1046,18 +1058,6 @@ abstract class AppLocalizations {
   /// **'{playerName} commence la partie !'**
   String diceOffWinnerAnnouncement(String playerName);
 
-  /// Intitulé de l'ordre de jeu affiché à l'issue du tirage au sort.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ordre de jeu'**
-  String get diceOffPlayOrderLabel;
-
-  /// Explique pourquoi l'ordre de jeu est inversé : le tirage s'est joué en duel entre deux voisins et le second dans l'ordre de la liste l'a gagné.
-  ///
-  /// In fr, this message translates to:
-  /// **'Duel entre voisins remporté par le second : la partie tourne à rebours.'**
-  String get diceOffReversedNote;
-
   /// Titre de l'écran de fin de partie.
   ///
   /// In fr, this message translates to:
@@ -1112,6 +1112,18 @@ abstract class AppLocalizations {
   /// **'Tiret : un second craque barrera le score'**
   String get tiretTooltip;
 
+  /// Infobulle du radar d'un adversaire dans la liste des joueurs : ses lignes de score que le joueur courant barrerait en s'arrêtant sur elles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scores que la main en cours permettrait de barrer'**
+  String get radarTargetsTooltip;
+
+  /// Infobulle de l'écart affiché pour un adversaire quand le joueur courant ne peut plus barrer aucune de ses lignes (son score − total potentiel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Écart avec le total de la main en cours'**
+  String get radarGapTooltip;
+
   /// Infobulle indiquant que la ligne de score précédente portait un tiret.
   ///
   /// In fr, this message translates to:
@@ -1154,6 +1166,264 @@ abstract class AppLocalizations {
   /// **'Passer'**
   String get tutorialSkip;
 
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bot est barré et doit à son tour tenter les 10 000. Vous connaissez maintenant toutes les règles : bonne partie !'**
+  String get tutorialFinalOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un brelan de 4 : 10 000 pile ! La prise est automatique.'**
+  String get tutorialFinalExact;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'100 : 9600. Dans le dernier tour, pas d\'arrêt possible : relancez.'**
+  String get tutorialFinalNoStop;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bot a atteint 10 000 : c\'est le dernier tour. Pour gagner, il faut l\'égaler, ce qui le barre. S\'arrêter avant est interdit.'**
+  String get tutorialFinalIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bot est barré et retombe à 1500. Atteindre une ligne, même ancienne, d\'un autre joueur la barre aussi.'**
+  String get tutorialCollisionOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux as : 200. Vous seriez à 2000, le score du bot, en rouge dans son radar. Arrêtez-vous pour le barrer.'**
+  String get tutorialCollisionCollide;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur la ligne du bot, le radar montre ses scores que vous pourriez barrer : atteindre le même total le fait reculer.'**
+  String get tutorialCollisionIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Après un craque, on repart toujours à 5 dés neufs. Une main qui ne pourrait plus être encaissée n\'est jamais proposée.'**
+  String get tutorialInheritOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un as : la main vaut 1100. Arrêtez-vous.'**
+  String get tutorialInheritStop;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bot s\'est arrêté à 1000 en laissant 2 dés. Reprenez la main : vous partez de ses 1000 points, et les 2 dés se lancent aussitôt (on lance toujours au moins une fois avant de s\'arrêter).'**
+  String get tutorialInheritTake;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand un joueur s\'arrête en laissant des dés, le suivant peut les reprendre, avec ses points comme base.'**
+  String get tutorialInheritIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'extension vaut pour tout le tour, même pour un 5 (100 au lieu de 50), et s\'efface à la main pleine.'**
+  String get tutorialExtensionOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un 2 seul ne vaut rien… sauf ici : après votre brelan de 2, il vaut 100 (en rouge). La main fait 300 : arrêtez-vous.'**
+  String get tutorialExtensionExtended;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un brelan de 2 : 200. Relancez les 2 derniers dés.'**
+  String get tutorialExtensionBrelan;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Après un brelan d\'une valeur, un dé seul de la même valeur, plus tard dans le tour, vaut 100 points.'**
+  String get tutorialExtensionIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un craque marque la ligne d\'un trait ; un second la barre. À 0, un craque ne coûte rien.'**
+  String get tutorialBustOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Second craque : la ligne 1500 est barrée, vous retombez à 500, votre score précédent. Appuyez sur ✓.'**
+  String get tutorialBustBarred;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre ligne porte un trait : un second craque la barrerait. Lancez quand même.'**
+  String get tutorialBustRollAgain;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Craqué ! La main est perdue, et votre ligne de 1500 reçoit un petit trait. Appuyez sur ✓.'**
+  String get tutorialBustTiret;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un lancer qui ne rapporte rien est un craque : la main en cours est perdue. Vous avez 1500 points.'**
+  String get tutorialBustIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retenez : jamais d\'arrêt sur un total qui finit par 50, et une main pleine se relance toujours.'**
+  String get tutorialHotDiceOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'500 : assez pour entrer, et pas de 50 à la fin. Arrêtez-vous.'**
+  String get tutorialHotDiceStop;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux 5, mais facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.'**
+  String get tutorialHotDiceFives;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le bouton montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s\'arrêter.'**
+  String get tutorialHotDiceFullHand;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'as et le 5 sont gardés : la main vaut 150. Relancez les 3 autres dés.'**
+  String get tutorialHotDiceKept;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand tous les dés rapportent, c\'est la main pleine : on relance les 5. Et un 5 seul est parfois facultatif.'**
+  String get tutorialHotDiceIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'700 points encaissés : vous êtes dans la partie ! Ensuite, chaque tour devra rapporter au moins 200 points.'**
+  String get tutorialBasicsOutro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trois 6 : un brelan vaut 100 fois sa valeur, ici 600 (trois as : 1000). La main vaut 700, assez pour entrer : appuyez sur la main pour vous arrêter.'**
+  String get tutorialBasicsBrelan;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls l\'as (100) et le 5 (50) rapportent seuls : l\'as est mis de côté. Pour entrer dans la partie, il faut 500 points en un tour : relancez les 4 autres dés.'**
+  String get tutorialBasicsAce;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. À chaque tour, on lance 5 dés et on met de côté ceux qui rapportent.'**
+  String get tutorialBasicsIntro;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le dernier tour'**
+  String get tutorialLessonFinalRound;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Barrer un joueur'**
+  String get tutorialLessonCollision;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La main héritée'**
+  String get tutorialLessonInheritedHand;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'extension'**
+  String get tutorialLessonExtension;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le craque'**
+  String get tutorialLessonBust;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La main pleine'**
+  String get tutorialLessonHotDice;
+
+  /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les bases'**
+  String get tutorialLessonBasics;
+
+  /// Bulle du tutoriel pendant que le bot joue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au tour du bot : il joue seul.'**
+  String get tutorialBotTurn;
+
+  /// Bulle du tutoriel sur le bouton de lancer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appuyez sur le bouton de lancer.'**
+  String get tutorialRollPrompt;
+
+  /// Premier choix de la liste des leçons : tout le parcours, leçon après leçon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout le parcours'**
+  String get tutorialWholePath;
+
+  /// Titre de la liste des leçons du tutoriel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leçons du tutoriel'**
+  String get tutorialLessonsTitle;
+
+  /// Bouton de la bulle de fin d'une leçon, quand une autre suit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leçon suivante'**
+  String get tutorialNextLesson;
+
+  /// Titre de l'écran de jeu pendant une leçon du tutoriel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leçon {number}/{total} : {title}'**
+  String tutorialLessonCounter(int number, int total, String title);
+
   /// No description provided for @tutorialPlayerName.
   ///
   /// In fr, this message translates to:
@@ -1175,50 +1445,8 @@ abstract class AppLocalizations {
   /// Tutoriel du premier lancement : tutorialReplayButton
   ///
   /// In fr, this message translates to:
-  /// **'Revoir le tutoriel'**
+  /// **'Leçons du tutoriel'**
   String get tutorialReplayButton;
-
-  /// Tutoriel du premier lancement : tutorialStep0
-  ///
-  /// In fr, this message translates to:
-  /// **'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On joue un tour ensemble, sur le vrai écran de jeu : rien n\'est enregistré.'**
-  String get tutorialStep0;
-
-  /// Tutoriel du premier lancement : tutorialStep1
-  ///
-  /// In fr, this message translates to:
-  /// **'Appuyez sur le bouton de lancer pour jeter les 5 dés.'**
-  String get tutorialStep1;
-
-  /// Tutoriel du premier lancement : tutorialStep2
-  ///
-  /// In fr, this message translates to:
-  /// **'Seuls l\'as (100) et le 5 (50) rapportent ici : ils sont gardés, la main vaut 150. Il faut 500 points pour entrer dans la partie : relancez les 3 autres dés.'**
-  String get tutorialStep2;
-
-  /// Tutoriel du premier lancement : tutorialStep3
-  ///
-  /// In fr, this message translates to:
-  /// **'Un brelan de 3 : 300 points, la main monte à 450. Tous les dés ont servi : main pleine ! On relance les 5 dés, sans pouvoir s\'arrêter.'**
-  String get tutorialStep3;
-
-  /// Tutoriel du premier lancement : tutorialStep4
-  ///
-  /// In fr, this message translates to:
-  /// **'Deux 5, mais ils sont facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.'**
-  String get tutorialStep4;
-
-  /// Tutoriel du premier lancement : tutorialStep5
-  ///
-  /// In fr, this message translates to:
-  /// **'500 points : assez pour entrer, et pas de 50 à la fin. Appuyez sur la main pour vous arrêter et les encaisser.'**
-  String get tutorialStep5;
-
-  /// Tutoriel du premier lancement : tutorialStep6
-  ///
-  /// In fr, this message translates to:
-  /// **'500 points encaissés ! Le bot reprend la main ; un lancer sans point est un craque (tour perdu, tiret sur la ligne). Le premier à atteindre exactement 10 000 gagne. Les règles complètes sont dans le menu.'**
-  String get tutorialStep6;
 
   /// Titre de la section "but du jeu" de l'écran des règles.
   ///
@@ -1424,6 +1652,78 @@ abstract class AppLocalizations {
   /// **'Dans une partie commencée, votre place restera vide et la partie attendra votre retour.'**
   String get onlineLeaveConfirmBody;
 
+  /// Corps de la confirmation de départ d'une partie en ligne en cours, quand le serveur fait reprendre le siège par un bot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous quittez le salon : un bot jouera à votre place jusqu\'à la fin de la partie.'**
+  String get onlineLeaveGameBody;
+
+  /// Bouton inactif du résultat du tirage en ligne, pour les joueurs qui ne commencent pas : ils attendent que le premier joueur lance la partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du début de la partie'**
+  String get onlineDiceOffWaitingStart;
+
+  /// Entrée de l'historique quand un joueur en ligne quitte la partie et qu'un bot du serveur le remplace (précédée du blason du joueur).
+  ///
+  /// In fr, this message translates to:
+  /// **'a quitté la partie : un bot joue à sa place'**
+  String get logPlayerReplacedByBot;
+
+  /// Infobulle de l'icône robot sur la ligne d'un joueur en ligne parti, remplacé par un bot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Joué par un bot (joueur parti)'**
+  String get botSeatTooltip;
+
+  /// Bouton de l'écran de fin d'une partie en ligne : proposer une revanche aux autres joueurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejouer'**
+  String get rematchButton;
+
+  /// Carte de vote de l'écran de fin : qui propose la revanche.
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} propose une revanche'**
+  String rematchProposal(String name);
+
+  /// Carte de vote de l'écran de fin, après ma proposition ou mon acceptation.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente des autres joueurs…'**
+  String get rematchWaiting;
+
+  /// Temps restant pour répondre à la revanche, en secondes.
+  ///
+  /// In fr, this message translates to:
+  /// **'{seconds} s'**
+  String rematchSecondsLeft(int seconds);
+
+  /// Bouton : accepter la revanche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get rematchAccept;
+
+  /// Bouton : refuser la revanche (on quitte alors le salon).
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get rematchRefuse;
+
+  /// Message à l'accueil après avoir refusé la revanche ou ne pas y avoir répondu à temps.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez quitté le salon : pas de revanche pour vous.'**
+  String get rematchExcludedNotice;
+
+  /// Message à l'accueil quand la revanche n'a pas eu lieu, faute d'au moins deux joueurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de revanche : il faut au moins deux joueurs.'**
+  String get rematchCancelledNotice;
+
   /// Affiché pendant l'ouverture de la connexion.
   ///
   /// In fr, this message translates to:
@@ -1604,7 +1904,7 @@ abstract class AppLocalizations {
   /// **'Câlin'**
   String get emoteJoyful;
 
-  /// Phrase de l'émotion dévasté (ex-songeur, identifiant gardé) : on soupçonne un coup de chance trop beau.
+  /// Phrase de l'émotion fâché (d'abord songeur, puis dévasté ; identifiant gardé) : on soupçonne un coup de chance trop beau.
   ///
   /// In fr, this message translates to:
   /// **'Comme de par hasard...'**
@@ -1655,13 +1955,13 @@ abstract class AppLocalizations {
   /// Phrase de l'émotion mort de rire : l'autre a trop tenté sa chance et a tout perdu.
   ///
   /// In fr, this message translates to:
-  /// **'Trop gourmand !'**
+  /// **'La gourmandise est un vilain défaut !'**
   String get emotePhraseTooGreedy;
 
   /// Phrase de l'émotion songeur : on soupçonne une chance trop belle.
   ///
   /// In fr, this message translates to:
-  /// **'Un peu trop chanceux...'**
+  /// **'Un peu trop de chance...'**
   String get emotePhraseTooLucky;
 
   /// Phrase de l'émotion songeur : l'autre semble foncer droit sur les 10000 (« sec » : d'un coup, sans détour).
@@ -1670,7 +1970,7 @@ abstract class AppLocalizations {
   /// **'En mode 10000 sec'**
   String get emotePhraseDryTenThousand;
 
-  /// Phrase de l'émotion dévasté : « veinard, va ! », dit d'un adversaire chanceux.
+  /// Phrase de l'émotion fâché (d'abord dévasté, identifiant gardé) : « veinard, va ! », dit d'un adversaire chanceux.
   ///
   /// In fr, this message translates to:
   /// **'Veinard va !'**
@@ -1693,6 +1993,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Désolé mais je dois partir'**
   String get emotePhraseSorryMustGo;
+
+  /// Nom de l'émotion « fâché » (seconde série, identifiant `angry`).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fâché'**
+  String get emoteAngry;
+
+  /// Nom de l'émotion « soulagé » (seconde série, identifiant `relieved`).
+  ///
+  /// In fr, this message translates to:
+  /// **'Soulagé'**
+  String get emoteRelieved;
+
+  /// Phrase de l'émotion songeur : on ne comprend pas le coup que l'autre vient de jouer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mais quel est ce choix étrange ?'**
+  String get emotePhraseStrangeChoice;
+
+  /// Phrase de l'émotion mort de rire : l'autre ne marque qu'avec des 5.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout par les cinq !'**
+  String get emotePhraseAllByFives;
+
+  /// Phrase de l'émotion mort de rire : un coup joué avec panache (souvent ironique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec panache !'**
+  String get emotePhraseWithPanache;
+
+  /// Phrase de l'émotion dévasté : c'est vraiment trop injuste.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est vraiment trop injuste'**
+  String get emotePhraseUnfair;
+
+  /// Phrase de l'émotion soulagé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouf !'**
+  String get emotePhrasePhew;
+
+  /// Phrase de l'émotion soulagé : enfin !
+  ///
+  /// In fr, this message translates to:
+  /// **'Enfin !'**
+  String get emotePhraseAtLast;
+
+  /// Phrase de l'émotion soulagé : on l'a échappé belle.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'était chaud !'**
+  String get emotePhraseCloseCall;
+
+  /// Phrase de l'émotion câlin : bien joué.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bien joué'**
+  String get emotePhraseWellPlayed;
+
+  /// Phrase de l'émotion câlin : on s'excuse (sans devoir partir).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désolé'**
+  String get emotePhraseSorry;
 
   /// Barre qui ouvre l'historique (le journal) d'une partie en ligne.
   ///

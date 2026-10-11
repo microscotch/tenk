@@ -272,4 +272,16 @@ void main() {
       expect(authority.engine!.players[seat].totalScore, 10000);
     });
   });
+
+  test('une revanche démarre sur l\'ordre imposé, sans tirage', () {
+    final authority = GameAuthority(names: ['A', 'B', 'C'], random: Random(1), presetOrder: [0, 1, 2]);
+    final produced = authority.start();
+    expect(produced.first.type, GameActionType.presetOrder);
+    expect(produced.where((a) => a.type == GameActionType.diceOffRollAll), isEmpty);
+    expect(authority.playOrder, [0, 1, 2]);
+    expect(authority.startingSeat, 0);
+    expect(authority.currentSeat, 0);
+    final replay = replayGame(const GameSetup(playerNames: ['A', 'B', 'C']), 0, authority.actions);
+    expect(replay.engine!.players.map((p) => p.name), ['A', 'B', 'C']);
+  });
 }

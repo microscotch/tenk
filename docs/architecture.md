@@ -82,15 +82,23 @@ une partie rejouable à l'identique.
   (`playerIds`). C'est ce lien, jamais le nom, qui rattache une partie à un
   joueur : un renommage ne casse rien. `reordered(ordre)` la réordonne dans
   l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
-- **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une classe mais un scénario : `tutorialFaces` (les dés,
-  fournis par un `ScriptedRandom`) et la fonction pure `tutorialStepFor(engine, …)`, qui déduit l'étape **de
-  l'état du moteur** — jamais d'un compteur qui dériverait de ce qu'on voit. Il se joue sur le **vrai**
-  `GameScreen` (`GameScreen(tutorial: …)`, lancé par `TutorialScreen`) et un vrai `GameEngine` : le joueur contre
-  un bot qui ne joue pas. `GameNotifier.startTutorial` pose cette partie (sans seed : `_commit` ne persiste rien,
-  ni sauvegarde ni archive), `endTutorial` la retire. Des bulles (`TutorialOverlay`) partent des vraies commandes
-  — repérées par des `GlobalKey` — et seule la commande de l'étape répond. Comme il écrase l'état du notifier
-  singleton, « Revoir le tutoriel » n'est offert que depuis l'accueil (`RulesScreen.canReplayTutorial`), jamais
-  depuis le menu d'une partie dont l'écran serait resté empilé dessous. Proposé au premier lancement par
+- **Le radar** (`lib/game/score_radar.dart`) sert la liste des joueurs de l'écran de jeu, qui tourne autour du
+  joueur dont c'est le tour (`rotatedOrder`). Pour chaque autre joueur, `collisionTargets` donne ses trois premières
+  lignes non barrées au moins égales au total potentiel du joueur courant (son score + sa main en cours) : les lignes
+  qu'un arrêt barrerait encore, puisqu'une collision barre toute ligne non barrée de même valeur. Sans ligne
+  éligible, `radarGap` donne l'écart. Fonctions pures, sans état : l'écran les recalcule à chaque changement de main.
+- **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une partie mais sept leçons (`tutorialLessons`), de la
+  plus simple à la plus subtile : les bases, la main pleine (et les 5 facultatifs, jamais d'arrêt sur un total en
+  50), le craque (trait puis barre), l'extension, la main héritée, la collision, le dernier tour. Chaque
+  `TutorialLesson` prépare sa situation (`setup` : scores, grilles, dernier tour), fournit ses dés (`faces`, ceux du
+  bot compris : le bot prudent ne tire rien au hasard, ses coups découlent des dés) et décrit ses étapes
+  (`TutorialBeat`). L'étape affichée se **déduit de l'état du moteur** et des « Suivant » touchés (`beatFor`),
+  jamais d'un compteur. Un test joue chaque leçon sans écran, sur le vrai moteur et le vrai bot. Côté écran, c'est
+  le **vrai** `GameScreen` (`GameScreen(tutorial: TutorialGuide)`) : `GameNotifier.startTutorial` pose la leçon
+  (sans seed, rien n'est sauvegardé), des bulles (`TutorialOverlay`) partent des vrais éléments — jusque dans les
+  fenêtres de craque et de main héritée, qui reçoivent leur propre couche (`TutorialDialogLayer`) — et seule la
+  commande de l'étape répond. Comme il écrase l'état du notifier singleton, la liste des leçons n'est offerte que
+  depuis l'accueil (`RulesScreen.canReplayTutorial`). Le parcours complet est proposé au premier lancement par
   `launchScreenFor` (ni profil, ni ancien nom, `AppSettings.tutorialSeen` faux), sautable à tout moment.
 - **`DiceOffState`** est le tirage au sort qui fixe l'ordre de jeu : tout le
   monde lance son dé en même temps (`rollAll`), le plus faible commence, les
@@ -156,14 +164,18 @@ compte, pas des données.
 `AiStrategy` est une interface à trois décisions ; trois profils l'implémentent
 (`CautiousAi`, `BalancedAi`, `AggressiveAi`), sélectionnés par `AiDifficulty`.
 La stratégie ne raisonne que sur le tour en cours : elle ignore le score déjà
-acquis, donc le plafond de 10000. C'est `GameNotifier` qui borne ses réponses,
-au seul endroit qui connaît les deux — et par le même calcul que celui affiché à
-l'écran (`previewAiDeclineFives`), pour que l'affiché et le joué ne divergent
-pas. Atteindre exactement 10000 n'est jamais soumis à la stratégie :
-`previewAiDeclineFives` impose la garde gagnante (`winningDeclineFivesCount`)
-avant même de consulter le profil, et `playAiTurnStep` banque sans consulter
-`decideContinue` dès que ce point est atteint — un profil « agressif » ne
-risque donc jamais de relancer depuis une victoire acquise.
+acquis, donc le plafond de 10000. C'est `ai_turn.dart`, en Dart pur, qui borne
+ses réponses, au seul endroit qui connaît les deux : `nextAiMove(engine,
+strategy)` rend le prochain coup (démarrer, acquitter un craque, trancher un
+lancer, s'arrêter ou relancer), avec `aiDeclineFives`, `aiAcceptsInheritedHand`
+et `aiContinues`. `GameNotifier.playAiTurnStep` et ses `previewAi*` (ce que
+l'écran affiche d'avance) l'appellent, et le **bot de siège du serveur** aussi :
+un bot local et un bot en ligne jouent donc exactement la même règle. Atteindre
+exactement 10000 n'est jamais soumis à la stratégie : `aiDeclineFives` impose la
+garde gagnante (`winningDeclineFivesCount`) avant même de consulter le profil, et
+`nextAiMove` banque sans consulter `decideContinue` dès que ce point est atteint
+— un profil « agressif » ne risque donc jamais de relancer depuis une victoire
+acquise.
 
 ## La couche d'état (vert)
 
@@ -265,19 +277,26 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   `checkSelection` ne vérifie que les bornes légales, jamais l'obligation de prendre une garde gagnante sur
   10000 (voir plus haut) : c'est un aperçu, pas un coup, et le curseur reste libre d'explorer — seul le VRAI
   coup (`applyKeep`, dans `_apply`) l'impose, et le refuse sinon.
-- **Les émotions** (un chat contrôlé) : quatre émotions (`Emote`, `lib/game/online/emotes.dart`), chacune avec
+- **Les émotions** (un chat contrôlé) : six émotions (`Emote`, `lib/game/online/emotes.dart`), chacune avec
   quelques phrases courtes, toutes désignées par des noms stables — jamais de texte libre, rien à modérer, et chaque
   appareil affiche la phrase dans sa langue. `OnlineSession.sendEmote` envoie `ClientMessage.emote` ; le salon (`Room`)
   l'ignore sans réponse avant le départ ou à moins de `emoteCooldown` (3 s) de la précédente du même siège, et la
   relaie (`ServerMessage.emote`, avec le siège) à tous ceux qui ont annoncé `emotesFeature`, l'envoyeur compris. **Hors
   du journal** : ni `seq`, ni action, rien d'archivé ni de rejoué. Côté app, `onlineEmotesProvider` garde les dernières
   reçues ; l'écran de jeu en fait une bulle partant du blason du joueur (siège → index par l'ordre de jeu), dessinée dans l'overlay de la page pour pouvoir s'étendre sur plusieurs lignes sans être rognée par la zone qui défile, et une ligne de
-  l'Historique — barre qui remplace le journal en ligne et l'ouvre en panneau. Une émotion illisible (version plus
-  récente) est ignorée, pas resynchronisée.
+  l'historique — la barre du bas de l'écran de jeu, qui le déroule en panneau (en partie locale aussi). Une émotion illisible (version plus
+  récente) est ignorée, pas resynchronisée. Fâché et Soulagé, et les phrases ajoutées ou déplacées avec elles,
+  forment une seconde série (`emotes2Feature`) : le salon la relaie telle quelle à qui l'a annoncée, et une version
+  rétrogradée aux autres (`downgradeForV1` : les phrases de Fâché repartent sous Dévasté, où les anciennes apps les
+  rangent ; une phrase nouvelle se réduit à son émotion ; Soulagé n'est pas envoyé). L'appui long ouvre les phrases
+  dans une bulle de bande dessinée posée sur le bouton.
 - **Fonctions facultatives négociées** plutôt qu'une nouvelle version du protocole, qui couperait les anciens
-  clients : chacun annonce les siennes (`features` de `create`/`join`/`rejoin`, puis de `joined` ; voir
-  `supportedFeatures`) et n'envoie à l'autre que ce qu'il a annoncé. Un client inconnu d'un serveur plus récent
-  ignore un type de message inconnu (`UnknownServerMessage`) au lieu de tout redemander.
+  clients : chacun annonce les siennes (`clientFeatures` dans `create`/`join`/`rejoin`, `serverFeatures` dans
+  `joined` — deux listes, parce que le serveur se déploie avant l'app) et n'envoie à l'autre que ce qu'il a
+  annoncé. Un client d'un serveur plus récent ignore un type de message inconnu (`UnknownServerMessage`) au lieu de
+  tout redemander ; en revanche une **valeur d'énumération inconnue dans un message connu** (`RoomPhase`,
+  `ErrorCode`, `GameActionType`) le ferait boucler en resynchronisation : on n'en ajoute jamais, et un nouveau
+  champ dans un message existant (`SeatInfo.bot`, `room.begun`) ne gêne personne.
 - **Une partie en ligne terminée est archivée** dans `over/`, comme une partie locale (`_archiveOnline`, depuis
   `_commit` sur le coup final, ou depuis `startOnlineGame` quand c'est le journal complet du serveur qui apporte la
   fin). Rien n'est écrit en cours de partie : c'est le serveur qui la garde. Le run est tiré du seul journal
@@ -299,9 +318,24 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   sonder les codes en contournant les limites d'essais infructueux. Côté natif : `Runner.entitlements`
   (`applinks:`) et un `intent-filter` `autoVerify` ; la prise en charge des liens de Flutter est coupée
   (`FlutterDeepLinkingEnabled`, `flutter_deeplinking_enabled`), `app_links` s'en charge seul.
-- **Le serveur ne joue jamais à la place de quelqu'un.** Un joueur déconnecté garde son siège ; au-delà de
-  deux minutes la partie est *suspendue* et attend son retour. Le salon disparaît après 24 h d'inactivité
-  (30 min avant le départ).
+- **Un joueur déconnecté garde son siège** ; au-delà de deux minutes la partie est *suspendue* et attend son
+  retour. Le salon disparaît après 24 h d'inactivité (30 min avant le départ). **Un joueur qui quitte une partie
+  en cours pour de bon** (après confirmation, `OnlineSession.leaveGame`) **cède son siège à un bot du serveur**
+  (`seatBotsFeature`) : `Room._convertToBot` efface son jeton, marque le siège (`SeatInfo.bot`, annoncé connecté
+  pour les anciennes apps) et le bot joue au niveau prudent par `nextAiMove`, au rythme d'un `Scheduler` injecté
+  (vraies minuteries en production, horloge avancée par le test sinon). Un bot ne suspend jamais une partie ; un
+  salon sans plus aucun humain se ferme de lui-même. Côté app, `GameNotifier.isOnlineBot` marque ces joueurs
+  (icône robot dans la liste, entrée d'historique), à part des IA locales : l'IA locale ne joue jamais depuis mon
+  siège.
+- **Le signal de départ** (`startSignalFeature`) : après le tirage, seul le premier joueur a « Jouer » ; il envoie
+  `begin`, le salon diffuse `begun`, et les autres, qui attendaient bouton inactif, entrent dans la partie (ou, à
+  défaut, au premier coup reçu).
+- **La revanche** (`rematchFeature`), à l'écran de fin d'une partie en ligne (`OnlineGameOverPanel`) : la première
+  proposition ouvre un vote de 60 s, qu'un refus, un silence ou une ancienne app valent refus et exclusion. À deux
+  au moins, le salon réordonne ses sièges (`rematchSeatOrder` : l'ordre de la partie précédente, à partir du
+  meilleur score, sans bots ni refus) et démarre sans tirage : le journal commence par `presetOrder`
+  (`DiceOffState.preset`). Sinon chacun rentre et le salon se ferme. L'écran de fin reconnaît la nouvelle partie
+  à `gameSerial` et ouvre un écran de jeu neuf sur l'accueil.
 - **Limites** : connexions et créations de salon par adresse, essais de code infructueux (un code de salon ne
   se devine pas), débit et taille des messages. Le serveur n'a aucun état persistant : les parties vivent en
   mémoire.

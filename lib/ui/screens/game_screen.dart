@@ -259,10 +259,10 @@ String _describeRollGain(
         );
 }
 
-/// Entrées de journal annonçant un craque et sa conséquence réelle sur la
-/// grille : un petit trait sur la ligne courante, son barrage avec repli sur
-/// le score précédent, ou rien du tout à 0 (rien à sanctionner sous le
-/// plancher). [Player.applyBust] étant pure, cette conséquence se calcule
+/// Entrées de journal annonçant un craque — précédé des points qu'il fait
+/// perdre — et sa conséquence réelle sur la grille : un petit trait sur la
+/// ligne courante, son barrage avec repli sur le score précédent, ou rien du
+/// tout à 0 (rien à sanctionner sous le plancher). [Player.applyBust] étant pure, cette conséquence se calcule
 /// d'avance, avant même que le moteur ne l'applique — ce qu'il ne fait qu'une
 /// fois le craque acquitté (voir [GameEngine.endBustedTurn]), bien après que
 /// le message doive s'afficher.
@@ -274,16 +274,19 @@ List<_LogEntry> _bustLogEntries(
 }) {
   final before = engine.currentPlayer;
   final after = before.applyBust();
+  // Les points perdus en tête, les mêmes que ceux de la popup de craque (voir
+  // [bustedHandScore]) : l'historique dit ce que le craque a coûté.
+  final lost = bustedHandScore(turn);
   final entries = <_LogEntry>[
     if (identical(after, before))
-      _LogEntry(at, before.name, l10n.bustedTitle)
+      _LogEntry(at, before.name, l10n.logBustMessage(lost))
     else if (after.hasTiret && !before.hasTiret)
-      _LogEntry(at, before.name, l10n.logBustTiretMessage(before.totalScore))
+      _LogEntry(at, before.name, l10n.logBustTiretMessage(lost, before.totalScore))
     else
       _LogEntry.bustBarred(
         at,
         before.name,
-        l10n.logBustBarredPrefix,
+        l10n.logBustBarredPrefix(lost),
         before.totalScore,
         l10n.logBustBarredReturnMessage(after.totalScore),
       ),
@@ -455,11 +458,12 @@ List<_LogEntry> _logEntriesForStep(
 class GameScreen extends ConsumerStatefulWidget {
   final bool replayMode;
 
-  /// Non nul quand l'écran est celui du tutoriel (voir `TutorialScreen`) : la
-  /// vraie partie, sur des dés scénarisés, par-dessus laquelle des bulles
-  /// montrent la commande à toucher. Rien ne joue seul (ni bot, ni auto, ni
-  /// secousse), le menu et la popup de main héritée disparaissent, et seule la
-  /// commande de l'étape répond (voir [_tutorialAllows]).
+  /// Non nul quand l'écran est celui d'une leçon du tutoriel (voir
+  /// `TutorialScreen`) : la vraie partie, sur des dés scénarisés, par-dessus
+  /// laquelle des bulles montrent la commande à toucher — jusque dans les
+  /// fenêtres de craque et de main héritée. Le bot ne joue que quand la leçon
+  /// le prévoit ([TutorialGuide.botMayPlay]), la secousse et le menu sont
+  /// coupés, et seule la commande de l'étape répond (voir [_tutorialAllows]).
   final TutorialGuide? tutorial;
 
   const GameScreen({super.key, this.replayMode = false, this.tutorial});
@@ -482,24 +486,32 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// Combien de 5 déclinables le joueur choisit de garder (par défaut, tous).
   int _selectedKeep = 0;
 
-  /// Tutoriel : « Suivant » de la bulle d'accueil a été touché.
-  bool _tutorialIntroDone = false;
+  /// Tutoriel : l'étape à montrer (voir [TutorialGuide.beatFor]).
+  TutorialBeat? _tutorialBeat(GameEngine engine) => widget.tutorial?.beatFor(engine, selectedKeep: _selectedKeep);
 
-  TutorialStep _tutorialStepOf(GameEngine engine) =>
-      tutorialStepFor(engine, introDone: _tutorialIntroDone, selectedKeep: _selectedKeep);
+  /// Tutoriel : un « Suivant » touché change l'étape — et peut laisser jouer le
+  /// bot, qui attendait l'introduction.
+  void _onTutorialChanged() {
+    if (!mounted) return;
+    setState(() {});
+    _scheduleAiIfNeeded();
+  }
 
-  /// Tutoriel : le nombre de 5 que le scénario impose d'office à ce lancer
-  /// (voir [tutorialDefaultKeep]) ; nul hors tutoriel.
-  int? _tutorialKeepFor(RollAnalysis roll) => widget.tutorial == null ? null : tutorialDefaultKeep(roll.faces);
+  /// Tutoriel : le nombre de 5 que la leçon impose d'office à ce lancer (voir
+  /// [TutorialLesson.defaultKeep]) ; nul hors tutoriel.
+  int? _tutorialKeepFor(RollAnalysis roll) => widget.tutorial?.lesson.defaultKeep(roll.faces);
 
   /// Tutoriel : [target] peut-elle répondre à cette étape ? Seule la commande
-  /// que la bulle montre le peut (le sélecteur reste libre une fois le bon
-  /// choix fait, pour qu'on puisse le défaire) ; hors tutoriel, toutes.
+  /// que la bulle montre le peut (le sélecteur reste libre à l'étape de l'arrêt
+  /// qui le suit, pour qu'on puisse défaire son choix) ; hors tutoriel, toutes.
   bool _tutorialAllows(GameEngine engine, TutorialTarget target) {
     if (widget.tutorial == null) return true;
-    final step = _tutorialStepOf(engine);
-    if (target == TutorialTarget.exchange) return step == TutorialStep.exchange || step == TutorialStep.stop;
-    return step.target == target;
+    final beat = _tutorialBeat(engine);
+    if (beat == null || beat.needsAck) return false;
+    if (target == TutorialTarget.exchange) {
+      return beat.target == TutorialTarget.exchange || beat.target == TutorialTarget.stop;
+    }
+    return beat.target == target;
   }
 
   Timer? _pendingTimer;
@@ -606,6 +618,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.tutorial?.addListener(_onTutorialChanged);
     _shakeDetector = ShakeDetector(onShake: _handleShake);
     if (!widget.replayMode && ref.read(settingsProvider).shakeToRollEnabled) {
       _shakeDetector.start();
@@ -788,6 +801,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   @override
   void dispose() {
+    widget.tutorial?.removeListener(_onTutorialChanged);
     WidgetsBinding.instance.removeObserver(this);
     _shakeDetector.stop();
     _controlLockTimer?.cancel();
@@ -928,8 +942,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (entry != null) _appendLog(entry);
   }
 
-  /// L'Historique d'une partie en ligne, en panneau : le journal, tenu à jour
-  /// tant qu'il est ouvert.
+  /// L'historique de la partie, en panneau déroulé depuis la barre du bas (voir
+  /// [_historyBar]) : le journal, tenu à jour tant qu'il est ouvert.
   void _openHistory(Map<String, Color> avatarColors) {
     showModalBottomSheet<void>(
       context: context,
@@ -1148,6 +1162,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   const SizedBox(height: 20),
                   _popupDecisionIcon(
                     dialogContext,
+                    key: widget.tutorial?.keyFor(TutorialTarget.bustOk),
                     icon: Icons.check,
                     onPressed: () {
                       if (_controlsLocked) return;
@@ -1172,6 +1187,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// popup se referme par ses propres boutons.
   Widget _trackReplayPopup(BuildContext dialogContext, Widget popup) {
     if (widget.replayMode) _replayPopupContext = dialogContext;
+    // Dans une leçon, les bulles du tutoriel se posent aussi sur la fenêtre.
+    if (widget.tutorial case final guide?) return TutorialDialogLayer(guide: guide, child: popup);
     return popup;
   }
 
@@ -1287,10 +1304,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _scheduleAiIfNeeded() {
-    if (widget.tutorial != null) return;
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
+    // Le bot d'une leçon ne joue que quand elle le prévoit.
+    if (widget.tutorial case final guide? when !guide.botMayPlay(engine)) return;
     if (!notifier.isAiPlayer(engine.currentPlayerIndex)) return;
     var delay = ref.read(settingsProvider).aiMessageDelay;
     // « Craqué ! » n'apparaît qu'une fois les dés immobilisés (voir
@@ -1312,7 +1330,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// interdit/dés chauds obligeant de toute façon à relancer. Un bouton
   /// explicite est affiché dans tous les cas par les méthodes `_build*View`.
   void _scheduleAutoAdvanceIfNeeded() {
-    if (widget.tutorial != null) return;
     final engine = ref.read(gameProvider);
     final notifier = ref.read(gameProvider.notifier);
     if (engine == null || engine.gameOver) return;
@@ -1408,6 +1425,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final engine = ref.read(gameProvider);
       final keep = engine == null ? null : _remoteSelectedKeep(engine);
       if (keep != null && keep != _selectedKeep) setState(() => _selectedKeep = keep);
+    });
+    // Un joueur en ligne est parti, un bot du serveur le remplace : l'historique
+    // le dit (son icône apparaît sur sa ligne, voir [_onlineBotIndices]).
+    ref.listen<List<SeatInfo>>(onlineSessionProvider.select((s) => s.seats), (previous, next) {
+      if (!ref.read(gameProvider.notifier).isOnline || widget.replayMode) return;
+      for (var i = 0; i < next.length; i++) {
+        final was = previous != null && i < previous.length && previous[i].bot;
+        if (next[i].bot && !was) {
+          _appendLog(_LogEntry(DateTime.now(), next[i].name, AppLocalizations.of(context).logPlayerReplacedByBot));
+        }
+      }
     });
     // Une émotion d'un joueur en ligne (moi compris, une fois relayée) : sa
     // bulle, et sa ligne d'Historique.
@@ -1629,7 +1657,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     final scaffold = Scaffold(
       appBar: AppTopBar(
-        title: const AppTitle(),
+        title: widget.tutorial == null
+            ? const AppTitle()
+            : Text(
+                AppLocalizations.of(context).tutorialLessonCounter(
+                  widget.tutorial!.number,
+                  widget.tutorial!.total,
+                  tutorialLessonTitle(AppLocalizations.of(context), widget.tutorial!.lesson.id),
+                ),
+              ),
         // Aucune sortie dans la barre pendant une partie : ni flèche de
         // retour, ni "quitter" — c'est le retour système qui ramène à
         // l'accueil (voir le PopScope en fin de méthode). En rejeu, la sortie
@@ -1646,21 +1682,26 @@ class _GameScreenState extends ConsumerState<GameScreen>
         leading: (!widget.replayMode &&
                 widget.tutorial == null &&
                 Theme.of(context).platform == TargetPlatform.iOS)
-            ? BackButton(onPressed: () => popToHome(context))
+            ? BackButton(onPressed: _exitGame)
             : null,
         actions: widget.tutorial != null ? const [] : _scoreGridAction(engine.players),
       ),
-      // Les commandes du rejeu, fixées en bas : hors du corps de l'écran, que
-      // l'`AbsorbPointer` ci-dessous rend inerte — elles seules répondent au
-      // doigt du spectateur.
-      bottomNavigationBar: widget.replayMode
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: ReplayControls(onSeek: _seekReplay),
-              ),
-            )
-          : null,
+      // En bas de l'écran : la barre d'historique, qui déroule le journal de
+      // la partie, puis en rejeu les commandes du rejeu. Hors du corps de
+      // l'écran, que l'`AbsorbPointer` ci-dessous rend inerte en rejeu — elles
+      // seules répondent alors au doigt du spectateur.
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _historyBar(assignAvatarColors(engine.players.map((p) => p.name))),
+              if (widget.replayMode) ReplayControls(onSeek: _seekReplay),
+            ],
+          ),
+        ),
+      ),
       body: AbsorbPointer(
         absorbing: widget.replayMode,
         child: GestureDetector(
@@ -1686,10 +1727,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       onTapPlayer: _openPlayerGrid,
                       displayNames: ref.watch(displayNamesProvider),
                       bubbles: _bubbles,
+                      botIndices: _onlineBotIndices(engine),
+                      // Le radar des autres joueurs suit la main en direct,
+                      // sélection de 5 comprise.
+                      potentialTotal: engine.currentPlayer.totalScore + liveScore,
+                      rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                     ),
                     const SizedBox(height: 12),
                     if (engine.isInFinalRound)
                       Padding(
+                        key: widget.tutorial?.keyFor(TutorialTarget.finalBanner),
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
                           l10n.finalRoundBanner,
@@ -1739,26 +1786,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       ? const SizedBox.shrink()
                                       : _buildHumanControlRow(engine, turn))),
                     ),
-                    const SizedBox(height: 12),
                     // En ligne, quand le serveur relaie les émotions : leurs
-                    // boutons, et le journal replié en une barre « Historique »
-                    // pour leur faire de la place. Ailleurs (partie locale,
-                    // rejeu), le journal tel quel.
+                    // boutons. L'historique, lui, est replié dans la barre du
+                    // bas (voir [_historyBar]), en partie locale comme en ligne.
                     if (_emotesShown) ...[
+                      const SizedBox(height: 12),
                       EmoteBar(
+                        v2: ref.watch(onlineSessionProvider.select((s) => s.emotes2Enabled)),
                         onSend: (emote, phrase) =>
                             ref.read(onlineSessionProvider.notifier).sendEmote(emote, phrase: phrase),
                       ),
-                      const SizedBox(height: 12),
-                      _historyBar(assignAvatarColors(engine.players.map((p) => p.name))),
-                    ] else
-                      SizedBox(
-                        // Le journal cède aux commandes du rejeu la place
-                        // qu'elles prennent : l'ensemble garde la hauteur qu'il
-                        // a en partie jouée.
-                        height: widget.replayMode ? 240 - ReplayControls.height : 240,
-                        child: _buildGameLog(assignAvatarColors(engine.players.map((p) => p.name))),
-                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1786,7 +1824,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           guide.onExit();
           return;
         }
-        popToHome(context);
+        _exitGame();
       },
       child: guide == null
           ? scaffold
@@ -1794,16 +1832,51 @@ class _GameScreenState extends ConsumerState<GameScreen>
               children: [
                 scaffold,
                 Positioned.fill(
-                  child: TutorialOverlay(
-                    guide: guide,
-                    step: _tutorialStepOf(engine),
-                    visible: _rollSettled,
-                    onNext: () => setState(() => _tutorialIntroDone = true),
-                  ),
+                  child: TutorialOverlay(guide: guide, beat: _tutorialBeat(engine), visible: _rollSettled),
                 ),
               ],
             ),
     );
+  }
+
+  /// Les joueurs d'une partie en ligne repris par un bot du serveur. Suit les
+  /// sièges du salon : la ligne d'un joueur parti prend son icône dès que le
+  /// serveur l'annonce.
+  Set<int> _onlineBotIndices(GameEngine engine) {
+    if (!ref.watch(gameProvider.notifier).isOnline) return const {};
+    ref.watch(onlineSessionProvider.select((s) => s.seats));
+    final notifier = ref.read(gameProvider.notifier);
+    return {for (var i = 0; i < engine.players.length; i++) if (notifier.isOnlineBot(i)) i};
+  }
+
+  /// Quitte l'écran de jeu pour l'accueil. En ligne, c'est quitter le salon :
+  /// après confirmation, pour de bon — un bot du serveur reprend ma place (voir
+  /// `OnlineSession.leaveGame`). Une partie locale, déjà sauvegardée après
+  /// chaque coup, se quitte sans rien demander.
+  Future<void> _exitGame() async {
+    final online = ref.read(gameProvider.notifier).isOnline;
+    final over = ref.read(gameProvider)?.gameOver ?? true;
+    if (!online || widget.replayMode || over) {
+      popToHome(context);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final session = ref.read(onlineSessionProvider);
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.onlineLeaveConfirmTitle),
+        content: Text(session.seatBotsEnabled ? l10n.onlineLeaveGameBody : l10n.onlineLeaveConfirmBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancelButton)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.onlineLeaveButton)),
+        ],
+      ),
+    );
+    if (leave != true || !mounted) return;
+    // L'écran part d'abord : la session vide ensuite la partie qu'il montrait.
+    popToHome(context);
+    await ref.read(onlineSessionProvider.notifier).leaveGame();
   }
 
   /// Vrai quand l'écran montre les boutons d'émotion et la barre Historique :
@@ -1814,20 +1887,43 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ref.watch(gameProvider.notifier).isOnline &&
       ref.watch(onlineSessionProvider.select((s) => s.emotesEnabled));
 
-  /// La barre « Historique » qui remplace le journal en ligne : un tap l'ouvre
+  /// La barre d'historique, en bas de l'écran : la dernière entrée du journal
+  /// sur une ligne (ou « Historique » tant qu'il est vide), et une flèche vers
+  /// le haut. Un tap, ou un glissement vers le haut, déroule tout le journal
   /// (voir [_openHistory]).
   Widget _historyBar(Map<String, Color> avatarColors) {
     final l10n = AppLocalizations.of(context);
-    return OutlinedButton(
-      onPressed: () => _openHistory(avatarColors),
-      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
-      child: Row(
-        children: [
-          const Icon(Icons.history, size: 20),
-          const SizedBox(width: 8),
-          Expanded(child: Text(l10n.gameHistoryBar)),
-          const Icon(Icons.expand_less, size: 20),
-        ],
+    return GestureDetector(
+      onVerticalDragEnd: (details) {
+        if ((details.primaryVelocity ?? 0) < 0) _openHistory(avatarColors);
+      },
+      child: OutlinedButton(
+        key: const ValueKey('history-bar'),
+        onPressed: () => _openHistory(avatarColors),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(44),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        child: ValueListenableBuilder<int>(
+          valueListenable: _logRevision,
+          builder: (_, _, _) {
+            final latest = _log.isEmpty ? null : _log.last;
+            return Row(
+              children: [
+                if (latest == null) ...[
+                  const Icon(Icons.history, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(l10n.gameHistoryBar)),
+                ] else ...[
+                  PlayerAvatarWidget(name: latest.playerName, size: 18, color: avatarColors[latest.playerName]),
+                  const SizedBox(width: 6),
+                  Expanded(child: _buildLogWhatCell(latest, avatarColors, oneLine: true)),
+                ],
+                const Icon(Icons.keyboard_arrow_up, size: 22),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1959,7 +2055,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// fois cet écran dépilé), donc pas besoin d'attendre un rebuild
   /// supplémentaire dans ce second cas.
   void _maybeShowInheritedHandDialog() {
-    if (!mounted || _coveredByReplay || widget.tutorial != null) return;
+    if (!mounted || _coveredByReplay) return;
     if (ModalRoute.of(context)?.isCurrent != true) return;
     final engine = ref.read(gameProvider);
     if (engine == null || engine.activeTurn != null) return;
@@ -2142,6 +2238,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// pleines de l'option que le joueur avait choisie.
   Widget _popupDecisionIcon(
     BuildContext dialogContext, {
+    Key? key,
     required IconData icon,
     required VoidCallback? onPressed,
     required Color background,
@@ -2155,6 +2252,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
+          // [key] : là où une bulle du tutoriel peut pointer.
+          key: key,
           onPressed: onPressed,
           tooltip: tooltip,
           iconSize: 30,
@@ -2242,6 +2341,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           for (final decision in [
             _popupDecisionIcon(
               dialogContext,
+              key: widget.tutorial?.keyFor(TutorialTarget.inheritTake),
               icon: Icons.check,
               // Reprise impossible : l'icône reste visible mais inerte, plutôt
               // que de disparaître en recentrant l'autre.
@@ -2590,11 +2690,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// entrée de collision de score ([_LogEntry.scoreBarred]), qui affiche en
   /// plus le score barré (barré visuellement) suivi du blason du joueur
   /// concerné.
-  Widget _buildLogWhatCell(_LogEntry entry, Map<String, Color> avatarColors) {
+  /// [oneLine] : sur une seule ligne, coupée au besoin (l'aperçu de la barre
+  /// d'historique, voir [_historyBar]).
+  Widget _buildLogWhatCell(_LogEntry entry, Map<String, Color> avatarColors, {bool oneLine = false}) {
+    final maxLines = oneLine ? 1 : null;
+    final overflow = oneLine ? TextOverflow.ellipsis : null;
     if (entry.barredScore == null) {
-      return Text(': ${entry.text}', style: const TextStyle(fontSize: 13));
+      return Text(': ${entry.text}', style: const TextStyle(fontSize: 13), maxLines: maxLines, overflow: overflow);
     }
     return Text.rich(
+      maxLines: maxLines,
+      overflow: overflow,
       TextSpan(
         style: const TextStyle(fontSize: 13, color: Colors.white),
         children: [
@@ -2867,9 +2973,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // choix réel, la décision de garde n'a pas encore été appliquée côté
     // moteur, donc `turn.mustContinue` est toujours celui d'AVANT ce lancer
     // (un tour de retard sur les dés chauds qui viennent d'être complétés).
-    final rollLabel = effective.mustContinue
-        ? l10n.logHotDiceMessage
-        : _rollLabel(effective.diceToRoll, effective.extendedValues);
+    //
+    // Sur une main pleine, le libellé montre le total qu'aurait le joueur si
+    // cette main était gardée — son score + la main — même quand s'arrêter
+    // n'est pas permis (relancer est obligatoire) : c'est ce qu'il met en jeu.
+    // Seulement une fois les dés immobilisés, comme les autres scores, pour ne
+    // pas trahir le lancer avant qu'on l'ait vu.
+    final rollLabel = !effective.mustContinue
+        ? _rollLabel(effective.diceToRoll, effective.extendedValues)
+        : _rollSettled
+            ? l10n.rollButtonHotDiceTotal(currentTotal + effective.bankedScore)
+            : l10n.logHotDiceMessage;
 
     void onRoll() => _rollForHumanTurn(engine, turn);
 
@@ -2906,7 +3020,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           // serait gâché. Sans lancer en attente, `_rollSettled` est déjà
           // vrai : rien ne change pour l'état au repos.
           leading: KeyedSubtree(
-            key: widget.tutorial?.stopKey,
+            key: widget.tutorial?.keyFor(TutorialTarget.stop),
             child: _stopButton(
               onPressed: bankAttempt.success && _rollSettled && _tutorialAllows(engine, TutorialTarget.stop)
                   ? _guarded(onStop)
@@ -2914,14 +3028,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           ),
           primary: KeyedSubtree(
-            key: widget.tutorial?.rollKey,
+            key: widget.tutorial?.keyFor(TutorialTarget.roll),
             child: _rollButton(
               onPressed: !forcedWin && _tutorialAllows(engine, TutorialTarget.roll) ? _guarded(onRoll) : null,
               label: rollLabel,
             ),
           ),
           trailing: KeyedSubtree(
-            key: widget.tutorial?.exchangeKey,
+            key: widget.tutorial?.keyFor(TutorialTarget.exchange),
             child: _exchangeControl(
               enabled: canChoose && _tutorialAllows(engine, TutorialTarget.exchange),
               value: selectedKeep,

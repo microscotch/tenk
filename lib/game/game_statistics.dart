@@ -138,6 +138,7 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
     case GameActionType.diceOffRoll:
     case GameActionType.diceOffRollAll:
     case GameActionType.diceOffResolveRound:
+    case GameActionType.presetOrder:
     case GameActionType.resume:
       // Une reprise n'est pas un coup : `replayGame` ne la transmet même pas
       // ici. Le cas est listé pour que le switch reste exhaustif.

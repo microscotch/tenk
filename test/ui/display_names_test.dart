@@ -189,11 +189,9 @@ void main() {
     }
     await tester.pump(DieWidget.maxRollDuration);
 
-    expect(
-      find.byWidgetPredicate((w) => w is Text && w.data != null && w.data!.contains('→') && w.data!.contains('Mimi')),
-      findsOneWidget,
-      reason: "l'ordre de jeu aussi",
-    );
+    // Le résultat n'annonce plus l'ordre de jeu, seulement qui commence :
+    // le surnom reste le seul nom montré, sous le dé comme dans l'annonce.
+    expect(find.textContaining('Mimi'), findsWidgets);
     expect(find.textContaining('Marie Curie'), findsNothing);
   });
 

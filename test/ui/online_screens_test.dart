@@ -12,6 +12,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/online_providers.dart';
 import 'package:le10000/state/online_transport.dart';
 import 'package:le10000/state/player_store.dart';
+import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/online_dice_off_screen.dart';
 import 'package:le10000/ui/screens/online_entry_screen.dart';
@@ -25,6 +26,7 @@ import '../test_helpers/fake_online.dart';
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/my_profile.dart';
 import '../test_helpers/scripted_game.dart';
+import '../test_helpers/history.dart';
 
 const _token = 'abcdef0123456789abcdef0123456789';
 
@@ -253,9 +255,12 @@ void main() {
       expect(find.text('Reprendre la partie en ligne'), findsNothing);
     });
 
-    testWidgets('quitter une partie commencée garde sa place, comme le dit la fenêtre', (tester) async {
+    testWidgets('face à un serveur sans bots, quitter une partie commencée garde sa place, comme le dit la fenêtre',
+        (tester) async {
       await container.read(onlineSessionProvider.notifier).create('Anna');
-      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(
+        ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0, features: const [keepSelectionFeature, emotesFeature]),
+      );
       transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
       transport.current.serverSends(ServerMessage.room(
         code: 'ABCDE',
@@ -277,6 +282,33 @@ void main() {
       expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isFalse);
       expect(container.read(onlineSessionProvider).inRoom, isFalse);
       expect(find.text('Reprendre la partie en ligne'), findsOneWidget, reason: 'et on peut la retrouver');
+    });
+
+    testWidgets('quitter une partie commencée la quitte pour de bon : un bot prend la place, comme le dit la fenêtre',
+        (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await pump(tester, const OnlineEntryScreen());
+
+      await tester.tap(find.text('Quitter'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('un bot jouera à votre place'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Quitter'));
+      await tester.pumpAndSettle();
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pumpAndSettle();
+
+      expect(credentials.saved, isNull, reason: 'la place ne se reprend plus');
+      expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isTrue);
+      expect(find.text('Reprendre la partie en ligne'), findsNothing);
     });
 
     testWidgets('une partie en cours se retrouve ou se quitte, sans en ouvrir une seconde', (tester) async {
@@ -424,9 +456,13 @@ void main() {
     List<GameAction> start(List<GameAction> full) =>
         full.sublist(0, full.indexWhere((a) => a.type == GameActionType.startTurn) + 1);
 
-    Future<void> gameStarted(WidgetTester tester, List<GameAction> actions) async {
-      await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
-      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+    /// Le serveur d'avant le signal de départ : tout le monde a « Jouer ».
+    const v1Server = [keepSelectionFeature, emotesFeature];
+
+    Future<void> gameStarted(WidgetTester tester, List<GameAction> actions,
+        {int seat = 0, List<String> features = v1Server}) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', names[seat]);
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: seat, features: features));
       transport.current.serverSends(ServerMessage.room(
         code: 'ABCDE',
         phase: RoomPhase.playing,
@@ -464,6 +500,47 @@ void main() {
       await tester.tapAt(const Offset(20, 300));
       await tester.pump();
       expect(find.text('Jouer'), findsOneWidget);
+    });
+
+    group('avec le signal de départ', () {
+      int starterOf(List<GameAction> actions) => replayGame(setup, 0, actions).playOrder!.first;
+
+      testWidgets('le premier joueur a « Jouer » : il lance la partie pour tous', (tester) async {
+        final actions = start(journal());
+        await gameStarted(tester, actions, seat: starterOf(actions), features: serverFeatures);
+        await pump(tester, const OnlineDiceOffScreen());
+        await tester.tapAt(const Offset(20, 300));
+        await tester.pump();
+
+        await tester.tap(find.text('Jouer'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(transport.current.sent.last.type, ClientMessageType.begin);
+        expect(find.byType(GameScreen), findsOneWidget);
+      });
+
+      testWidgets('les autres attendent, bouton inactif, et entrent quand le serveur annonce le départ', (tester) async {
+        final actions = start(journal());
+        await gameStarted(tester, actions, seat: 1 - starterOf(actions), features: serverFeatures);
+        await pump(tester, const OnlineDiceOffScreen());
+        await tester.tapAt(const Offset(20, 300));
+        await tester.pump();
+
+        final button = find.widgetWithText(FilledButton, 'En attente du début de la partie');
+        expect(button, findsOneWidget);
+        expect(tester.widget<FilledButton>(button).onPressed, isNull);
+
+        transport.current.serverSends(ServerMessage.room(
+          code: 'ABCDE',
+          phase: RoomPhase.playing,
+          seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+          hostSeat: 0,
+          begun: true,
+        ));
+        await tester.pump(const Duration(milliseconds: 20));
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(find.byType(GameScreen), findsOneWidget);
+      });
     });
 
     testWidgets('une partie déjà entamée saute le tirage', (tester) async {
@@ -620,7 +697,7 @@ void main() {
       throw StateError('aucun tirage qui inverse les sièges');
     }
 
-    Future<void> joined(WidgetTester tester, {List<String> features = supportedFeatures}) async {
+    Future<void> joined(WidgetTester tester, {List<String> features = serverFeatures}) async {
       await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
       transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0, features: features));
       transport.current.serverSends(ServerMessage.room(
@@ -660,26 +737,27 @@ void main() {
       expect(tester.getSize(find.byType(SpeechBubble)).width, lessThanOrEqualTo(240));
     });
 
-    testWidgets('en ligne : quatre boutons d\'émotion et une barre Historique, à la place du journal', (tester) async {
+    testWidgets('en ligne : quatre boutons d\'émotion, et l\'historique dans la barre du bas', (tester) async {
       await joined(tester);
 
       for (final name in ['Songeur', 'Mort de rire', 'Dévasté', 'Câlin']) {
         expect(emoteButton(name), findsOneWidget, reason: name);
       }
-      expect(find.text('Historique'), findsOneWidget);
+      expect(find.byKey(const ValueKey('history-bar')), findsOneWidget);
       expect(find.text('🤣'), findsOneWidget);
     });
 
-    testWidgets('un serveur qui ne relaie pas les émotions : ni boutons, ni barre, le journal reste', (tester) async {
+    testWidgets('un serveur qui ne relaie pas les émotions : pas de boutons, l\'historique reste dans sa barre', (tester) async {
       await joined(tester, features: const [keepSelectionFeature]);
 
       expect(emoteButton('Mort de rire'), findsNothing);
-      expect(find.text('Historique'), findsNothing);
+      expect(find.byKey(const ValueKey('history-bar')), findsOneWidget);
     });
 
     testWidgets('un tap envoie l\'émoji ; les boutons restent grisés 3 secondes', (tester) async {
       await joined(tester);
 
+      await tester.ensureVisible(emoteButton('Mort de rire'));
       await tester.tap(emoteButton('Mort de rire'));
       await tester.pump();
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).toList();
@@ -698,12 +776,13 @@ void main() {
     testWidgets('un appui long ouvre les phrases de l\'émotion ; en choisir une l\'envoie à la place de l\'émoji', (tester) async {
       await joined(tester);
 
+      await tester.ensureVisible(emoteButton('Mort de rire'));
       await tester.longPress(emoteButton('Mort de rire'));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Cinq qui colle !'), findsOneWidget);
       expect(find.text('Main pleine, main vaine !'), findsOneWidget);
       expect(find.text('On ne reprend jamais sur un 1000 !'), findsOneWidget);
-      expect(find.text('Trop gourmand !'), findsOneWidget);
+      expect(find.text('La gourmandise est un vilain défaut !'), findsOneWidget);
 
       await tester.tap(find.text('Main pleine, main vaine !'));
       await tester.pump(const Duration(milliseconds: 400));
@@ -715,6 +794,7 @@ void main() {
     testWidgets('une phrase retirée du menu n\'y est plus proposée, mais s\'affiche encore quand on la reçoit', (tester) async {
       await joined(tester);
 
+      await tester.ensureVisible(emoteButton('Câlin'));
       await tester.longPress(emoteButton('Câlin'));
       await tester.pump(const Duration(milliseconds: 400));
       for (final phrase in ['Salut !', 'Bonne chance !', 'Merci', 'Désolé mais je dois partir']) {
@@ -751,11 +831,185 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(SpeechBubble), findsNothing, reason: 'la bulle s\'efface');
 
-      await tester.ensureVisible(find.text('Historique'));
-      await tester.tap(find.text('Historique'));
+      await tester.tap(find.byKey(const ValueKey('history-bar')));
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.byType(BottomSheet), findsOneWidget, reason: 'l\'Historique s\'ouvre');
-      expect(find.textContaining('Cinq qui colle !', findRichText: true), findsOneWidget, reason: 'elle reste dans l\'Historique');
+      expect(find.byType(BottomSheet), findsOneWidget, reason: 'l\'historique se déroule');
+      expect(inHistory(find.textContaining('Cinq qui colle !', findRichText: true)), findsOneWidget,
+          reason: 'elle reste dans l\'historique');
+    });
+  });
+
+  group('fin de partie en ligne', () {
+    const names = ['Anna', 'Bob'];
+    const setup = GameSetup(playerNames: names);
+    const seats = [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)];
+
+    void room(RoomPhase phase, {bool begun = true}) => transport.current.serverSends(
+          ServerMessage.room(code: 'ABCDE', phase: phase, seats: seats, hostSeat: 0, begun: begun),
+        );
+
+    /// Une partie en ligne finie, à l'écran de fin, sur l'accueil.
+    Future<void> finished(WidgetTester tester) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      room(RoomPhase.playing);
+      final full = journalWithFaces(setup, 5, playScriptedGame(setup, 5).actions);
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: full));
+      room(RoomPhase.over);
+      await tester.pump(const Duration(milliseconds: 20));
+      final engine = container.read(gameProvider)!;
+      expect(engine.gameOver, isTrue);
+      await pump(
+        tester,
+        Navigator(
+          onGenerateRoute: (_) => MaterialPageRoute<void>(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => GameOverScreen(players: engine.players, winnerIndex: engine.winnerIndex!),
+                )),
+                child: const Text('accueil'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('accueil'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('« Rejouer » propose la revanche ; la barre d\'émotions est là', (tester) async {
+      await finished(tester);
+      expect(find.bySemanticsLabel('Fâché'), findsOneWidget, reason: 'seconde série : le serveur la connaît');
+
+      await tester.ensureVisible(find.byKey(const ValueKey('rematch-propose')));
+      await tester.tap(find.byKey(const ValueKey('rematch-propose')));
+      await tester.pump();
+      final sent = transport.current.sent.last;
+      expect((sent.type, sent.rematchAnswer), (ClientMessageType.rematch, RematchAnswer.propose));
+    });
+
+    testWidgets('la revanche d\'un autre : l\'accepter, puis la nouvelle partie s\'ouvre', (tester) async {
+      await finished(tester);
+      transport.current.serverSends(ServerMessage.rematch(status: RematchStatus.pending, proposerSeat: 1, remainingMs: 45000, answers: const {1: true}));
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(find.text('Bob propose une revanche'), findsOneWidget);
+      expect(find.text('45 s'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Accepter'));
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+      expect(transport.current.sent.last.rematchAnswer, RematchAnswer.accept);
+
+      // Le serveur lance la revanche : nouveau siège, journal sans tirage.
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 1));
+      transport.current.serverSends(ServerMessage.snapshot(
+        names: const ['Bob', 'Anna'],
+        actions: [GameAction.presetOrder(const [0, 1]), GameAction.startTurn(useFullHand: false)],
+      ));
+      room(RoomPhase.playing);
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(GameScreen), findsOneWidget);
+      expect(find.byType(GameOverScreen), findsNothing);
+      expect(container.read(gameProvider)!.gameOver, isFalse);
+    });
+
+    testWidgets('refuser la revanche ramène à l\'accueil, hors du salon', (tester) async {
+      await finished(tester);
+      transport.current.serverSends(ServerMessage.rematch(status: RematchStatus.pending, proposerSeat: 1, remainingMs: 45000));
+      await tester.pump(const Duration(milliseconds: 20));
+
+      await tester.ensureVisible(find.text('Refuser'));
+      await tester.tap(find.text('Refuser'));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pumpAndSettle();
+      expect(find.text('accueil'), findsOneWidget);
+      expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.rematch && m.rematchAnswer == RematchAnswer.refuse), isTrue);
+      expect(container.read(onlineSessionProvider).inRoom, isFalse);
+    });
+
+    testWidgets('une revanche abandonnée ramène à l\'accueil en le disant', (tester) async {
+      await finished(tester);
+      transport.current.serverSends(ServerMessage.rematch(status: RematchStatus.cancelled));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pumpAndSettle();
+      expect(find.text('accueil'), findsOneWidget);
+      expect(find.text('Pas de revanche : il faut au moins deux joueurs.'), findsOneWidget);
+    });
+  });
+
+  group('quitter une partie en ligne en cours', () {
+    testWidgets('le retour demande confirmation ; confirmé, on quitte le salon et un bot prend la place', (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+        begun: true,
+      ));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GameScreen(),
+        ),
+      ));
+      await tester.pump(const Duration(seconds: 1));
+
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('un bot jouera à votre place'), findsOneWidget);
+      await tester.tap(find.text('Annuler'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(transport.current.sent.any((m) => m.type == ClientMessageType.leave), isFalse, reason: 'annulé : on reste');
+
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.widgetWithText(FilledButton, 'Quitter'));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isTrue);
+      expect(container.read(onlineSessionProvider).inRoom, isFalse);
+    });
+
+    testWidgets('un joueur remplacé par un bot : icône sur sa ligne, et l\'historique le dit', (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GameScreen(),
+        ),
+      ));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.smart_toy_outlined), findsNothing);
+
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true, bot: true)],
+        hostSeat: 0,
+      ));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pump();
+      expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
+      expect(find.textContaining('un bot joue à sa place'), findsOneWidget, reason: 'dernière entrée, dans la barre');
     });
   });
 }

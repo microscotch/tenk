@@ -137,7 +137,7 @@ class _DiceOffScreenState extends ConsumerState<DiceOffScreen> {
                 child: DiceOffBoard(
                   state: state,
                   shownName: _shownName,
-                  onStart: state.isResolved ? _startGame : null,
+                  startButton: state.isResolved ? (label: l10n.startGameButton, onPressed: _startGame) : null,
                 ),
               ),
             ),

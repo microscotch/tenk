@@ -84,10 +84,14 @@ void main() {
 
   Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
 
+  /// Les fonctions d'un serveur d'avant les bots de siège, le signal de départ
+  /// et la revanche.
+  const v1Server = [keepSelectionFeature, emotesFeature];
+
   /// Entre dans un salon en tant que [seat] et reçoit le journal.
-  Future<void> joinedAndStarted(int seat, List<GameAction> journal) async {
+  Future<void> joinedAndStarted(int seat, List<GameAction> journal, {List<String> features = serverFeatures}) async {
     await session().join('abcde', names[seat]);
-    transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: seat));
+    transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: token, seat: seat, features: features));
     transport.current.serverSends(ServerMessage.snapshot(names: names, actions: journal));
     await settle();
   }
@@ -741,8 +745,8 @@ void main() {
       expect(transport.current.sent.single.type, ClientMessageType.rejoin);
     });
 
-    test('une partie finie efface le jeton : il n\'y a plus rien à retrouver', () async {
-      await joinedAndStarted(0, serverJournal());
+    test('une partie finie efface le jeton : il n\'y a plus rien à retrouver (serveur sans revanche)', () async {
+      await joinedAndStarted(0, serverJournal(), features: v1Server);
       expect(credentials.saved, isNotNull);
 
       transport.current.serverSends(ServerMessage.room(
@@ -754,6 +758,23 @@ void main() {
       await settle();
 
       expect(credentials.saved, isNull);
+    });
+
+    test('une partie finie garde le jeton tant qu\'une revanche peut s\'y jouer', () async {
+      await joinedAndStarted(0, serverJournal());
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.over,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await settle();
+      expect(credentials.saved, isNotNull);
+
+      // La quitter (retour à l'accueil) l'efface.
+      await session().leaveFinishedGame();
+      expect(credentials.saved, isNull);
+      expect(transport.channels.first.sent.last.type, ClientMessageType.leave);
     });
   });
 
@@ -831,8 +852,8 @@ void main() {
       expect(transport.channels.length, 1);
     });
 
-    test('une partie finie ne cherche plus à se reconnecter', () async {
-      await joinedAndStarted(0, serverJournal());
+    test('une partie finie ne cherche plus à se reconnecter (serveur sans revanche)', () async {
+      await joinedAndStarted(0, serverJournal(), features: v1Server);
       transport.current.serverSends(ServerMessage.room(
         code: 'ABCDE',
         phase: RoomPhase.over,

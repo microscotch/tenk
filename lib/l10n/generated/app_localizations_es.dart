@@ -384,6 +384,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logHotDiceMessage => '¡Dados calientes!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return '¡Dados calientes! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Puntuación tachada:';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return '¡Te has pasado! => $score guion';
+  String logBustMessage(int lost) {
+    return '$lost: ¡Te has pasado!';
   }
 
   @override
-  String get logBustBarredPrefix => '¡Te has pasado! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: ¡Te has pasado! => $score guion';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: ¡Te has pasado! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -582,13 +594,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Orden de juego';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duelo entre vecinos ganado por el segundo: la partida gira en sentido contrario.';
-
-  @override
   String get gameOverTitle => 'Fin de la partida';
 
   @override
@@ -622,6 +627,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tiretTooltip => 'Guion: un segundo pase tachará la puntuación';
 
   @override
+  String get radarTargetsTooltip =>
+      'Puntuaciones que la mano en curso podría tachar';
+
+  @override
+  String get radarGapTooltip => 'Diferencia con el total de la mano en curso';
+
+  @override
   String get previousScoreHadTiretTooltip =>
       'La puntuación anterior tenía un guion';
 
@@ -644,6 +656,166 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tutorialSkip => 'Saltar';
 
   @override
+  String get tutorialFinalOutro =>
+      'El bot queda tachado y ahora debe intentar los 10 000. Ya conoces todas las reglas: ¡buena partida!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Tres 4: ¡10 000 justos! Se toma automáticamente.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9600. En la ronda final no se puede plantar: vuelve a tirar.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'El bot ha alcanzado 10 000: es la ronda final. Para ganar hay que igualarlo, lo que lo tacha. Plantarse antes está prohibido.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'El bot queda tachado y vuelve a 1500. Alcanzar una línea de otro jugador, aunque sea antigua, también la tacha.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Dos 1: 200. Estarías en 2000, la puntuación del bot, en rojo en su radar. Plántate para tacharla.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'En la línea del bot, el radar muestra las puntuaciones que podrías tacharle: alcanzar el mismo total le hace retroceder.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Tras un pase, siempre se empieza con 5 dados nuevos. Nunca se ofrece una mano que ya no se podría anotar.';
+
+  @override
+  String get tutorialInheritStop => 'Un 1: la mano vale 1100. Plántate.';
+
+  @override
+  String get tutorialInheritTake =>
+      'El bot se plantó en 1000 dejando 2 dados. Retoma la mano: partes de sus 1000 puntos y los 2 dados se tiran enseguida (siempre se tira al menos una vez antes de plantarse).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Cuando un jugador se planta dejando dados, el siguiente puede retomarlos, con sus puntos como base.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'La extensión dura todo el turno, incluso para un 5 (100 en vez de 50), y se borra con los dados calientes.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Un 2 solo no vale nada… salvo aquí: tras tu trío de 2, vale 100 (en rojo). La mano suma 300: plántate.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Tres 2: 200. Vuelve a tirar los 2 últimos dados.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Tras un trío de un valor, un dado solo del mismo valor, más adelante en el turno, vale 100 puntos.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Un pase marca la línea con un guion; un segundo la tacha. Con 0, un pase no cuesta nada.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Segundo pase: la línea de 1500 queda tachada, vuelves a 500, tu puntuación anterior. Pulsa ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Tu línea tiene un guion: un segundo pase la tacharía. Tira de todos modos.';
+
+  @override
+  String get tutorialBustTiret =>
+      '¡Pase! La mano se pierde, y tu línea de 1500 recibe un guion. Pulsa ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Una tirada que no puntúa es un pase: la mano en curso se pierde. Tienes 1500 puntos.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Recuerda: nunca te plantes en un total que acabe en 50, y los dados calientes siempre se vuelven a tirar.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: suficiente para entrar, y sin 50 al final. Plántate.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Dos 5, pero opcionales: este selector elige cuántos guardar. Con los dos, 550 acabaría en 50: no podrías plantarte. Elige 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Tres 3: 300, la mano sube a 450. Todos los dados han puntuado: ¡dados calientes! El botón muestra el total que tendrías; se vuelven a tirar los 5 dados, sin poder plantarse.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'El 1 y el 5 se guardan: la mano vale 150. Vuelve a tirar los otros 3 dados.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Cuando todos los dados puntúan, son dados calientes: se vuelven a tirar los 5. Y un 5 solo a veces es opcional.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 puntos anotados: ¡estás en la partida! A partir de ahora, cada turno debe dar al menos 200 puntos.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Tres 6: un trío vale 100 veces su valor, aquí 600 (tres 1: 1000). La mano vale 700, suficiente para entrar: pulsa la mano para plantarte.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Solos, solo puntúan el 1 (100) y el 5 (50): el 1 se aparta. Para entrar en la partida hacen falta 500 puntos en un turno: vuelve a tirar los otros 4 dados.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      '¡Bienvenido a Le 10000! El objetivo: alcanzar exactamente 10 000 puntos. En cada turno se tiran 5 dados y se apartan los que puntúan.';
+
+  @override
+  String get tutorialLessonFinalRound => 'La ronda final';
+
+  @override
+  String get tutorialLessonCollision => 'Tachar a un jugador';
+
+  @override
+  String get tutorialLessonInheritedHand => 'La mano heredada';
+
+  @override
+  String get tutorialLessonExtension => 'La regla de extensión';
+
+  @override
+  String get tutorialLessonBust => 'El pase';
+
+  @override
+  String get tutorialLessonHotDice => 'Dados calientes';
+
+  @override
+  String get tutorialLessonBasics => 'Lo básico';
+
+  @override
+  String get tutorialBotTurn => 'Turno del bot: juega solo.';
+
+  @override
+  String get tutorialRollPrompt => 'Pulsa el botón de tirar.';
+
+  @override
+  String get tutorialWholePath => 'Todo el tutorial';
+
+  @override
+  String get tutorialLessonsTitle => 'Lecciones del tutorial';
+
+  @override
+  String get tutorialNextLesson => 'Lección siguiente';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Lección $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Tú';
 
   @override
@@ -653,35 +825,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tutorialFinish => 'Empezar a jugar';
 
   @override
-  String get tutorialReplayButton => 'Ver el tutorial de nuevo';
-
-  @override
-  String get tutorialStep0 =>
-      '¡Bienvenido a Le 10000! El objetivo: alcanzar exactamente 10 000 puntos. Jugamos un turno juntos en la pantalla de juego real: no se guarda nada.';
-
-  @override
-  String get tutorialStep1 =>
-      'Pulsa el botón de tirar para lanzar los 5 dados.';
-
-  @override
-  String get tutorialStep2 =>
-      'Aquí solo puntúan el 1 (100) y el 5 (50): se guardan, la mano vale 150. Hacen falta 500 puntos para entrar en la partida: vuelve a tirar los otros 3 dados.';
-
-  @override
-  String get tutorialStep3 =>
-      'Tres 3: 300 puntos, la mano sube a 450. Todos los dados han puntuado: ¡dados calientes! Se vuelven a tirar los 5 dados, sin poder plantarse.';
-
-  @override
-  String get tutorialStep4 =>
-      'Dos 5, pero son opcionales: este selector elige cuántos guardar. Con los dos, 550 acabaría en 50: no podrías plantarte. Elige 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 puntos: suficiente para entrar, y sin 50 al final. Pulsa la mano para plantarte y anotarlos.';
-
-  @override
-  String get tutorialStep6 =>
-      '¡500 puntos anotados! Juega el bot; una tirada sin puntos es un pase (turno perdido, un guion en la línea). El primero en alcanzar exactamente 10 000 gana. Las reglas completas están en el menú.';
+  String get tutorialReplayButton => 'Lecciones del tutorial';
 
   @override
   String get rulesGoalTitle => 'Objetivo del juego';
@@ -799,6 +943,50 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'En una partida ya empezada, tu sitio quedará vacío y la partida esperará a que vuelvas.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Sales de la sala: un bot jugará en tu lugar hasta el final de la partida.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Esperando el inicio de la partida';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'ha dejado la partida: un bot juega en su lugar';
+
+  @override
+  String get botSeatTooltip => 'Jugado por un bot (jugador ausente)';
+
+  @override
+  String get rematchButton => 'Volver a jugar';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name propone una revancha';
+  }
+
+  @override
+  String get rematchWaiting => 'Esperando a los demás jugadores…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Aceptar';
+
+  @override
+  String get rematchRefuse => 'Rechazar';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Has salido de la sala: no hay revancha para ti.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'No hay revancha: hacen falta al menos dos jugadores.';
 
   @override
   String get onlineConnecting => 'Conectando con el servidor…';
@@ -925,10 +1113,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emotePhraseYes => '¡Sí!';
 
   @override
-  String get emotePhraseTooGreedy => '¡Demasiado codicioso!';
+  String get emotePhraseTooGreedy => '¡La codicia es un mal defecto!';
 
   @override
-  String get emotePhraseTooLucky => 'Un poco demasiado suertudo...';
+  String get emotePhraseTooLucky => 'Un poco demasiada suerte...';
 
   @override
   String get emotePhraseDryTenThousand => 'A por los 10000 de golpe';
@@ -944,6 +1132,40 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Lo siento, pero tengo que irme';
+
+  @override
+  String get emoteAngry => 'Enfadado';
+
+  @override
+  String get emoteRelieved => 'Aliviado';
+
+  @override
+  String get emotePhraseStrangeChoice =>
+      '¿Pero qué elección tan extraña es esta?';
+
+  @override
+  String get emotePhraseAllByFives => '¡Todo con los cincos!';
+
+  @override
+  String get emotePhraseWithPanache => '¡Con estilo!';
+
+  @override
+  String get emotePhraseUnfair => 'Es realmente muy injusto';
+
+  @override
+  String get emotePhrasePhew => '¡Uf!';
+
+  @override
+  String get emotePhraseAtLast => '¡Por fin!';
+
+  @override
+  String get emotePhraseCloseCall => '¡Ha estado cerca!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Bien jugado';
+
+  @override
+  String get emotePhraseSorry => 'Lo siento';
 
   @override
   String get gameHistoryBar => 'Historial';

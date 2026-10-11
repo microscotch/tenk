@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
+import '../../game/score_radar.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_providers.dart';
 import 'emotes.dart';
@@ -21,8 +22,21 @@ class ScoreSheet extends StatelessWidget {
 
   /// Les bulles à montrer, par index de joueur : ce qu'il vient d'exprimer en
   /// ligne (voir `EmoteBar`). Une bulle part du blason du joueur et s'étend à
-  /// sa droite, sur plusieurs lignes s'il le faut (voir [_AvatarWithBubble]).
+  /// sa droite, sur plusieurs lignes s'il le faut (voir [AvatarWithBubble]).
   final Map<int, String> bubbles;
+
+  /// Le total qu'aurait le joueur courant s'il s'arrêtait maintenant (son score
+  /// + sa main courante, sélection de 5 comprise) : c'est depuis lui que se lit
+  /// le radar des autres joueurs (voir [collisionTargets]). Nul : son score seul.
+  final int? potentialTotal;
+
+  /// Les joueurs (index) d'une partie en ligne partis en cours de partie, dont
+  /// un bot du serveur a repris le siège : leur ligne porte une icône de robot.
+  final Set<int> botIndices;
+
+  /// Des clés à poser sur certaines lignes (par index de joueur) : là où une
+  /// bulle du tutoriel peut pointer.
+  final Map<int, Key> rowKeys;
 
   const ScoreSheet({
     super.key,
@@ -31,24 +45,37 @@ class ScoreSheet extends StatelessWidget {
     this.onTapPlayer,
     this.displayNames = const {},
     this.bubbles = const {},
+    this.potentialTotal,
+    this.botIndices = const {},
+    this.rowKeys = const {},
   });
 
   @override
   Widget build(BuildContext context) {
     final avatarColors = assignAvatarColors(players.map((p) => p.name));
     final ranks = podiumRanks(players);
+    final potential = potentialTotal ?? players[currentPlayerIndex].totalScore;
+    // La liste tourne : le joueur dont c'est le tour en tête, les suivants dans
+    // l'ordre de jeu. Chaque ligne est clée par son joueur, pour que son état
+    // (la bulle d'émotion en cours) la suive d'une place à l'autre.
     return Column(
       children: [
-        for (var i = 0; i < players.length; i++)
-          _PlayerRow(
-            displayName: displayNameOf(displayNames, players[i].name),
-            player: players[i],
-            isCurrent: i == currentPlayerIndex,
-            gaps: _scoreGaps(players, i),
-            onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
-            avatarColor: avatarColors[players[i].name],
-            podiumRank: ranks[i],
-            bubble: bubbles[i],
+        for (final i in rotatedOrder(players.length, currentPlayerIndex))
+          KeyedSubtree(
+            key: rowKeys[i] ?? ValueKey('row-${players[i].name}'),
+            child: _PlayerRow(
+              key: ValueKey(players[i].name),
+              displayName: displayNameOf(displayNames, players[i].name),
+              player: players[i],
+              isCurrent: i == currentPlayerIndex,
+              gaps: _scoreGaps(players, i),
+              potentialTotal: potential,
+              onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
+              avatarColor: avatarColors[players[i].name],
+              podiumRank: ranks[i],
+              bubble: bubbles[i],
+              isBot: botIndices.contains(i),
+            ),
           ),
       ],
     );
@@ -58,13 +85,13 @@ class ScoreSheet extends StatelessWidget {
 /// Teintes des trois médailles, assez saturées pour rester lisibles sur le
 /// fond sombre des lignes de joueur.
 Color _medalColor(int podiumRank) => switch (podiumRank) {
-      // Or volontairement clair : la ligne du joueur courant a un fond ambré,
-      // sur lequel un or plus sombre passait à ~2,9:1 de contraste. Cette
-      // teinte tient au-dessus de 5:1 sur les deux fonds de ligne.
-      1 => const Color(0xFFF2C94C), // or
-      2 => const Color(0xFFC0C0C0), // argent
-      _ => const Color(0xFFCD7F32), // bronze
-    };
+  // Or volontairement clair : la ligne du joueur courant a un fond ambré,
+  // sur lequel un or plus sombre passait à ~2,9:1 de contraste. Cette
+  // teinte tient au-dessus de 5:1 sur les deux fonds de ligne.
+  1 => const Color(0xFFF2C94C), // or
+  2 => const Color(0xFFC0C0C0), // argent
+  _ => const Color(0xFFCD7F32), // bronze
+};
 
 /// Rang sur le podium (1 = or, 2 = argent, 3 = bronze, null = pas de
 /// médaille) de chaque joueur, dans l'ordre de [players].
@@ -129,8 +156,18 @@ class _PlayerRow extends StatelessWidget {
   final String displayName;
   final String? bubble;
 
+  /// Voir [ScoreSheet.potentialTotal] : sert au radar des lignes qui ne sont
+  /// pas celle du joueur courant.
+  final int potentialTotal;
+
+  /// Voir [ScoreSheet.botIndices].
+  final bool isBot;
+
   const _PlayerRow({
+    this.isBot = false,
+    super.key,
     required this.player,
+    required this.potentialTotal,
     required this.displayName,
     this.bubble,
     required this.isCurrent,
@@ -166,90 +203,116 @@ class _PlayerRow extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _AvatarWithBubble(
-                        bubble: bubble,
-                        child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
-                      ),
-                    ),
-                    Text(displayName,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    if (podiumRank != null)
+                // Le nom cède la place (points de suspension) au score et au
+                // radar, qui ne doivent jamais être rognés.
+                Expanded(
+                  child: Row(
+                    children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: Tooltip(
-                          message: switch (podiumRank!) {
-                            1 => l10n.rankFirstTooltip,
-                            2 => l10n.rankSecondTooltip,
-                            _ => l10n.rankThirdTooltip,
-                          },
-                          child: Icon(Icons.military_tech, size: 18, color: _medalColor(podiumRank!)),
+                        padding: const EdgeInsets.only(right: 8),
+                        child: AvatarWithBubble(
+                          bubble: bubble,
+                          child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
                         ),
                       ),
-                    if (!player.hasEntered)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Text(l10n.notEnteredLabel, style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
+                      Flexible(
+                        child: Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
-                  ],
+                      if (isBot)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Tooltip(
+                            message: l10n.botSeatTooltip,
+                            child: Icon(Icons.smart_toy_outlined, size: 18, color: Colors.grey.shade400),
+                          ),
+                        ),
+                      if (podiumRank != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Tooltip(
+                            message: switch (podiumRank!) {
+                              1 => l10n.rankFirstTooltip,
+                              2 => l10n.rankSecondTooltip,
+                              _ => l10n.rankThirdTooltip,
+                            },
+                            child: Icon(Icons.military_tech, size: 18, color: _medalColor(podiumRank!)),
+                          ),
+                        ),
+                      if (!player.hasEntered)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(
+                            l10n.notEnteredLabel,
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                Row(
-                  children: [
-                    if (opportunityAbove)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: Tooltip(
-                          message: l10n.opportunityTooltip,
-                          child: const Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
+                const SizedBox(width: 8),
+                // La ligne du joueur courant garde son affichage : score, puis
+                // le précédent entre parenthèses, et les indices d'écart de 200.
+                if (isCurrent)
+                  Row(
+                    children: [
+                      if (opportunityAbove)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Tooltip(
+                            message: l10n.opportunityTooltip,
+                            child: const Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
+                          ),
                         ),
-                      ),
-                    if (dangerBelow)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: Tooltip(
-                          message: l10n.dangerTooltip,
-                          child: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
+                      if (dangerBelow)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Tooltip(
+                            message: l10n.dangerTooltip,
+                            child: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
+                          ),
                         ),
-                      ),
-                    if (player.hasTiret)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: Tooltip(
-                          message: l10n.tiretTooltip,
-                          child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                      if (player.hasTiret)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Tooltip(
+                            message: l10n.tiretTooltip,
+                            child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                          ),
                         ),
-                      ),
-                    Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 4),
-                    // Le tiret est DANS la parenthèse : il qualifie ce score
-                    // précédent, pas le total courant qui le précède à
-                    // l'écran. D'où le WidgetSpan plutôt qu'une icône posée
-                    // après la parenthèse fermante.
-                    Text.rich(
-                      TextSpan(
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-                        children: [
-                          TextSpan(text: '(${previousEntry?.value ?? 0}'),
-                          if (previousEntry?.hasTiret ?? false)
-                            WidgetSpan(
-                              alignment: PlaceholderAlignment.middle,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 2),
-                                child: Tooltip(
-                                  message: l10n.previousScoreHadTiretTooltip,
-                                  child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
+                      Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 4),
+                      // Le tiret est DANS la parenthèse : il qualifie ce score
+                      // précédent, pas le total courant qui le précède à
+                      // l'écran. D'où le WidgetSpan plutôt qu'une icône posée
+                      // après la parenthèse fermante.
+                      Text.rich(
+                        TextSpan(
+                          style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                          children: [
+                            TextSpan(text: '(${previousEntry?.value ?? 0}'),
+                            if (previousEntry?.hasTiret ?? false)
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                                  child: Tooltip(
+                                    message: l10n.previousScoreHadTiretTooltip,
+                                    child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
+                                  ),
                                 ),
                               ),
-                            ),
-                          const TextSpan(text: ')'),
-                        ],
+                            const TextSpan(text: ')'),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                if (!isCurrent) _radar(context),
               ],
             ),
           ),
@@ -258,7 +321,55 @@ class _PlayerRow extends StatelessWidget {
     );
     return row;
   }
+
+  /// Ce qu'une ligne d'adversaire montre à droite : son score, puis le radar —
+  /// les lignes qu'il a encore et que le joueur courant pourrait barrer, vues
+  /// depuis son total potentiel (voir [collisionTargets]), celle qu'il barre
+  /// déjà mise en évidence — ou, s'il n'y en a plus, l'écart entre les deux.
+  Widget _radar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final targets = collisionTargets(player, potentialTotal);
+    final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
+    return Row(
+      children: [
+        if (player.hasTiret)
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Tooltip(
+              message: l10n.tiretTooltip,
+              child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
+            ),
+          ),
+        Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 8),
+        Tooltip(
+          message: targets.isEmpty ? l10n.radarGapTooltip : l10n.radarTargetsTooltip,
+          child: targets.isEmpty
+              ? Text(_signed(radarGap(player, potentialTotal)), style: muted)
+              : Text.rich(
+                  TextSpan(
+                    style: muted,
+                    children: [
+                      for (var k = 0; k < targets.length; k++) ...[
+                        if (k > 0) const TextSpan(text: ' · '),
+                        TextSpan(
+                          text: '${targets[k]}',
+                          style: targets[k] == potentialTotal
+                              ? const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)
+                              : null,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
 }
+
+/// Un écart signé, le moins typographique (−950) plutôt que le trait d'union.
+String _signed(int value) => value < 0 ? '\u2212${-value}' : '+$value';
 
 /// Le blason d'un joueur, et la bulle de ce qu'il vient d'exprimer, quand il y
 /// en a une : pointe sur le bord droit du blason, centrée sur lui.
@@ -267,17 +378,17 @@ class _PlayerRow extends StatelessWidget {
 /// [CompositedTransformFollower] suit son [CompositedTransformTarget]) : elle
 /// peut ainsi dépasser la hauteur de la ligne, sans être rognée par la zone qui
 /// défile, tout en suivant la ligne quand elle défile.
-class _AvatarWithBubble extends StatefulWidget {
+class AvatarWithBubble extends StatefulWidget {
   final String? bubble;
   final Widget child;
 
-  const _AvatarWithBubble({required this.bubble, required this.child});
+  const AvatarWithBubble({super.key, required this.bubble, required this.child});
 
   @override
-  State<_AvatarWithBubble> createState() => _AvatarWithBubbleState();
+  State<AvatarWithBubble> createState() => AvatarWithBubbleState();
 }
 
-class _AvatarWithBubbleState extends State<_AvatarWithBubble> {
+class AvatarWithBubbleState extends State<AvatarWithBubble> {
   final _link = LayerLink();
   final _portal = OverlayPortalController();
 
@@ -291,8 +402,8 @@ class _AvatarWithBubbleState extends State<_AvatarWithBubble> {
   }
 
   @override
-  void didUpdateWidget(_AvatarWithBubble old) {
-    super.didUpdateWidget(old);
+  void didUpdateWidget(AvatarWithBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
     _sync();
   }
 

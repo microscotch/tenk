@@ -6,13 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/ai/ai_profiles.dart';
 import '../game/ai/ai_strategy.dart';
+import '../game/ai/ai_turn.dart';
 import '../game/game_engine.dart';
 import '../game/game_recording.dart';
 import '../game/dice_roll.dart';
 import '../game/game_setup.dart';
-import '../game/player.dart' show winningScore;
 import '../game/turn_result.dart';
 import '../game/turn_state.dart';
+import '../game/tutorial.dart';
 import 'game_save_store.dart';
 import 'player_statistics.dart';
 
@@ -205,14 +206,14 @@ class GameNotifier extends Notifier<GameEngine?> {
     );
   }
 
-  /// Démarre la partie du tutoriel : [playerName] contre un bot, sur les dés
-  /// d'un scénario ([faces], voir `tutorialFaces`) et non du hasard. Ce n'est
-  /// pas une vraie partie : ni seed, ni sauvegarde, ni archive — `_commit` ne
-  /// persiste rien sans seed — et le bot ne joue jamais (l'écran de jeu en
-  /// mode tutoriel ne le programme pas). Écrase l'état du notifier, qui est
-  /// celui de la partie à l'écran : à ne lancer que si aucun écran de jeu n'est
-  /// empilé (voir [endTutorial]).
-  void startTutorial({required String playerName, required String botName, required List<int> faces}) {
+  /// Démarre une leçon du tutoriel ([lesson]) : [playerName] contre un bot,
+  /// dans la situation que la leçon prépare, sur ses dés et non du hasard. Ce
+  /// n'est pas une vraie partie : ni seed, ni sauvegarde, ni archive — `_commit`
+  /// ne persiste rien sans seed. Le bot, prudent, ne joue que quand la leçon le
+  /// prévoit (voir `TutorialLesson.botMayPlay`, appliqué par l'écran de jeu).
+  /// Écrase l'état du notifier, qui est celui de la partie à l'écran : à ne
+  /// lancer que si aucun autre écran de jeu n'est empilé (voir [endTutorial]).
+  void startTutorial(TutorialLesson lesson, {required String playerName, required String botName}) {
     _setup = GameSetup(playerNames: [playerName, botName], aiPlayers: const {1: AiDifficulty.prudent});
     _originalSetup = null;
     _seed = null;
@@ -222,9 +223,9 @@ class GameNotifier extends Notifier<GameEngine?> {
     _isReplay = false;
     _replaySource = null;
     _online = null;
-    _random = ScriptedRandom(faces);
+    _random = ScriptedRandom(lesson.faces);
     _actions.clear();
-    state = GameEngine.newGame([playerName, botName]).startTurn();
+    state = lesson.setup(playerName, botName);
   }
 
   /// Referme le tutoriel : plus aucune partie à l'écran ni de dés scénarisés,
@@ -442,6 +443,7 @@ class GameNotifier extends Notifier<GameEngine?> {
     final replay = replayGame(original, 0, actions);
     final engine = replay.engine;
     if (engine == null) throw StateError('le serveur n\'a pas envoyé de partie commencée');
+    _onlineBots = const {};
     _online = OnlineGameLink(
       mySeat: mySeat,
       playOrder: replay.playOrder!,
@@ -461,6 +463,23 @@ class GameNotifier extends Notifier<GameEngine?> {
     state = engine;
     if (engine.gameOver) _archiveOnline();
   }
+
+  /// Les joueurs (index du moteur) d'une partie en ligne repris par un bot du
+  /// serveur après leur départ (voir `seatBotsFeature`). À part de
+  /// `_setup.aiPlayers` : ce sont des joueurs distants comme les autres — le
+  /// serveur joue pour eux, jamais cet appareil.
+  Set<int> _onlineBots = const {};
+
+  /// Les sièges du salon repris par un bot (voir [isOnlineBot]).
+  void setOnlineBotSeats(Set<int> seats) {
+    final link = _online;
+    if (link == null) return;
+    _onlineBots = {for (final seat in seats) if (link.playOrder.contains(seat)) link.playOrder.indexOf(seat)};
+  }
+
+  /// Vrai quand le joueur d'index [index] d'une partie en ligne est joué par un
+  /// bot du serveur.
+  bool isOnlineBot(int index) => _online != null && _onlineBots.contains(index);
 
   /// En ligne, à mon tour, fait voir aux autres joueurs le nombre de 5 que je
   /// m'apprête à écarter sur le lancer en attente : leur écran suit ma
@@ -605,110 +624,40 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// appels avec un délai pour créer un effet de "réflexion" de l'IA,
   /// jusqu'à ce que la main passe à un autre joueur.
   void playAiTurnStep() {
-    final engine = state!;
-
-    if (engine.activeTurn == null) {
-      startTurn(useFullHand: !previewAiAcceptInheritedHand());
-      return;
-    }
-
-    final turn = engine.activeTurn!;
-
-    if (turn.busted) {
-      endBustedTurn();
-      return;
-    }
-
-    if (turn.pendingRoll != null) {
-      applyKeep(declineFivesCount: previewAiDeclineFives(turn));
-      return;
-    }
-
-    if (!turn.mustContinue) {
-      final attempt = tryBank(
-        turn,
-        minimumRequired: engine.minimumForCurrentPlayer,
-        currentTotal: engine.currentPlayer.totalScore,
-        isFinalRound: engine.isInFinalRound,
-      );
-      // Pile sur 10000 : la seule prise sensée, jamais une question de
-      // stratégie — on ne consulte pas previewAiContinue dans ce cas (voir
-      // winningDeclineFivesCount, déjà appliqué par previewAiDeclineFives
-      // juste au-dessus pour en arriver là).
-      final reachedTarget = engine.currentPlayer.totalScore + turn.bankedScore == winningScore;
-      if (attempt.success && (reachedTarget || !previewAiContinue(turn))) {
+    // Le coup lui-même est choisi en Dart pur (voir [nextAiMove]), le même
+    // calcul que celui du bot de siège du serveur.
+    final move = nextAiMove(state!, _currentStrategy());
+    switch (move.type) {
+      case GameActionType.startTurn:
+        startTurn(useFullHand: move.params['useFullHand'] as bool);
+      case GameActionType.endBustedTurn:
+        endBustedTurn();
+      case GameActionType.applyKeep:
+        applyKeep(declineFivesCount: move.params['declineFivesCount'] as int);
+      case GameActionType.bank:
         bank();
-        return;
-      }
+      case GameActionType.roll:
+        roll();
+      default:
+        throw StateError('coup d\'IA inattendu : ${move.type}');
     }
-
-    roll();
   }
 
   /// Prévisualise, sans rien modifier, si l'IA du joueur courant accepterait
-  /// la main héritée en attente (score de base déjà au-delà de 10000, ou
-  /// risque trop élevé pour son profil sinon). Utilisé à la fois par
-  /// [playAiTurnStep] et par l'UI pour afficher un libellé de bouton explicite
-  /// avant que la décision ne s'exécute.
-  bool previewAiAcceptInheritedHand() {
-    final engine = state!;
-    if (engine.inheritedHandCannotBank) return false;
-    return _currentStrategy().decideAcceptInheritedHand(
-      diceCount: engine.nextTurnDice,
-      extendedValues: engine.inheritedExtendedValues,
-      inheritedScore: engine.inheritedScore,
-      currentTotalScore: engine.currentPlayer.totalScore,
-    );
-  }
+  /// la main héritée en attente (voir [aiAcceptsInheritedHand]). Utilisé à la
+  /// fois par [playAiTurnStep] et par l'UI pour afficher un libellé de bouton
+  /// explicite avant que la décision ne s'exécute.
+  bool previewAiAcceptInheritedHand() => aiAcceptsInheritedHand(state!, _currentStrategy());
 
   /// Nombre de 5 que l'IA du joueur courant déclinerait sur le lancer en
-  /// attente de [turn]. Même rôle que [previewAiAcceptInheritedHand] pour
-  /// cette décision-ci : l'UI peut afficher à l'avance ce que
-  /// [playAiTurnStep] appliquera — et par le MÊME calcul, appelé par les
-  /// deux, pour que l'affiché et le joué ne puissent pas diverger.
-  ///
-  /// La stratégie raisonne sur le seul tour en cours : elle ignore le score
-  /// déjà acquis par le joueur, et donc le plafond de 10000. On borne donc
-  /// sa réponse ici, au seul endroit qui connaît les deux — exactement les
-  /// mêmes bornes que celles proposées à un joueur humain (voir
-  /// `_buildHumanControlRow`), pour que les deux jouent la même règle.
-  int previewAiDeclineFives(TurnState turn) {
-    final engine = state!;
-    final analysis = turn.pendingRoll!;
-    // Atteindre exactement 10000 est automatique, pas une décision de
-    // stratégie : si ce lancer le permet, c'est la seule prise sensée,
-    // imposée avant même de consulter le profil d'IA (voir
-    // winningDeclineFivesCount).
-    final winningDecline = winningDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore);
-    if (winningDecline != null) return winningDecline;
-    final fives = analysis.declinableFives?.diceCount ?? 0;
-    final minKeep = minKeepableFives(analysis);
-    final maxKeep = maxKeepableFives(
-      turn,
-      analysis,
-      currentTotal: engine.currentPlayer.totalScore,
-    );
-    final wantedKeep = fives - _currentStrategy().decideDeclineFives(analysis, turn);
-    final keep = wantedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
-    return fives - keep;
-  }
+  /// attente de [turn] (voir [aiDeclineFives]) : l'UI peut afficher à l'avance
+  /// ce que [playAiTurnStep] appliquera — par le MÊME calcul, pour que
+  /// l'affiché et le joué ne puissent pas diverger.
+  int previewAiDeclineFives(TurnState turn) => aiDeclineFives(state!, turn, _currentStrategy());
 
-  /// Prévisualise si l'IA du joueur courant choisirait de continuer à
-  /// lancer plutôt que de s'arrêter sur [turn] (l'appelant garantit que
-  /// s'arrêter y est déjà légal). Même rôle que [previewAiAcceptInheritedHand]
-  /// pour cette autre décision.
-  bool previewAiContinue(TurnState turn) {
-    final player = state!.currentPlayer;
-    return _currentStrategy().decideContinue(
-      state: turn,
-      minimumRequired: state!.minimumForCurrentPlayer,
-      currentTotalScore: player.totalScore,
-      // Ligne courante déjà tiretée : un nouveau craque la barrerait,
-      // retombant sur le score précédent plutôt que de juste marquer un
-      // second tiret (voir Player.applyBust).
-      barLossIfBusted: player.hasTiret ? player.totalScore - player.previousScore : 0,
-    );
-  }
+  /// Prévisualise si l'IA du joueur courant choisirait de continuer à lancer
+  /// plutôt que de s'arrêter sur [turn] (voir [aiContinues]).
+  bool previewAiContinue(TurnState turn) => aiContinues(state!, turn, _currentStrategy());
 
   AiStrategy _currentStrategy() {
     final difficulty = _setup!.aiPlayers[state!.currentPlayerIndex]!;

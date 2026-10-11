@@ -19,6 +19,9 @@ import '../src/server.dart';
 /// liens d'invitation l'ouvrent (voir `LinkConfig`). `TENK_LATEST_BUILDS_URL` :
 /// où relire le dernier build de chaque store, relayé sur `/latest-build` (par
 /// défaut, le `latest.json` de la branche `store-builds` ; vide : route coupée).
+/// `TENK_BOT_DELAY_MS` et `TENK_REMATCH_WINDOW_MS` : le temps de réflexion d'un
+/// bot de siège et la fenêtre de réponse à une revanche (voir `ServerConfig`) —
+/// les tests de bout en bout les raccourcissent.
 Future<void> main() async {
   final port = int.tryParse(Platform.environment['PORT'] ?? '') ?? 8080;
   final host = Platform.environment['HOST'] ?? '0.0.0.0';
@@ -28,7 +31,18 @@ Future<void> main() async {
   final latestSource = Platform.environment['TENK_LATEST_BUILDS_URL'] ?? defaultLatestBuildsSource;
   final latestBuild = latestSource.isEmpty ? null : (LatestBuildRelay.http(Uri.parse(latestSource))..start());
 
-  final manager = RoomManager(config: const ServerConfig());
+  Duration? millis(String name) {
+    final value = int.tryParse(Platform.environment[name] ?? '');
+    return value == null ? null : Duration(milliseconds: value);
+  }
+
+  const defaults = ServerConfig();
+  final manager = RoomManager(
+    config: ServerConfig(
+      botActionDelay: millis('TENK_BOT_DELAY_MS') ?? defaults.botActionDelay,
+      rematchWindow: millis('TENK_REMATCH_WINDOW_MS') ?? defaults.rematchWindow,
+    ),
+  );
   final server = await shelf_io.serve(
     buildHandler(manager, trustProxy: trustProxy, links: links, latestBuild: latestBuild),
     host,

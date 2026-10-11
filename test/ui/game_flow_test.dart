@@ -19,6 +19,7 @@ import 'package:le10000/ui/widgets/dice3d/dice_face_texture.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
 
+import '../test_helpers/history.dart';
 import '../test_helpers/scripted_game.dart';
 
 /// Ces scénarios (craque, victoire) sont difficiles à obtenir de façon
@@ -886,7 +887,8 @@ void main() {
     // contextuels). Le journal annonce en plus la sanction encourue — ici un
     // petit trait, le score acquis restant intact.
     expect(find.textContaining('Craqué'), findsWidgets);
-    expect(find.textContaining('Craqué ! => 700 petit trait'), findsOneWidget);
+    // Précédé des points perdus, comme dans la popup : 0 + 2 + 3 + 4.
+    expect(find.textContaining('9 : Craqué ! => 700 petit trait'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Continuer'));
     await tester.pumpAndSettle();
@@ -1303,7 +1305,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Avant le banquage de B : A affiche 2000 avec son tiret, B affiche 1500.
-    expect(find.text('2000'), findsOneWidget);
+    // La main de B le porterait à 2000 : le radar de A montre cette ligne,
+    // celle qu'il barrerait en s'arrêtant (d'où deux « 2000 »).
+    expect(find.text('2000'), findsNWidgets(2));
     expect(find.text('1500'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
 
@@ -1320,14 +1324,20 @@ void main() {
     expect(find.text('2000'), findsOneWidget); // B
     expect(find.text('1800'), findsOneWidget); // A, barré
 
-    // Le journal de partie mentionne le score barré de A par collision.
-    expect(find.textContaining('Score barré'), findsOneWidget,
-        reason: 'la collision de score doit apparaître dans le journal de partie');
     expect(find.byIcon(Icons.priority_high), findsNothing);
+
+    // Le journal de partie mentionne le score barré de A par collision. A
+    // hérite des 3 dés de B : sa popup de reprise de main est ouverte, on
+    // repart d'une main neuve pour pouvoir dérouler l'historique.
+    await tester.tap(find.byTooltip('Nouvelle main'));
+    await tester.pumpAndSettle();
+    await openHistory(tester);
+    expect(inHistory(find.textContaining('Score barré')), findsOneWidget,
+        reason: 'la collision de score doit apparaître dans le journal de partie');
 
     // ... précédée par l'annonce de la prise de mise de B elle-même (score
     // encaissé + nouveau total).
-    expect(find.textContaining('500 pts sont pris => 2000 pts'), findsOneWidget,
+    expect(inHistory(find.textContaining('500 pts sont pris => 2000 pts')), findsOneWidget,
         reason: 'la prise de mise de B doit annoncer le score encaissé et son nouveau total');
 
     final after = container.read(gameProvider)!;
@@ -2010,7 +2020,43 @@ void main() {
     expect(find.textContaining("brelan d'as : 1000, main pleine => 1000 pts"), findsOneWidget);
     // "Main pleine !" reste le libellé du bouton Lancer, mais n'a plus
     // d'entrée de journal à lui tout seul : le résumé du lancer le dit déjà.
-    expect(find.widgetWithText(FilledButton, 'Main pleine !'), findsOneWidget);
+    // Il porte le total qu'aurait le joueur en gardant cette main (0 + 1000).
+    expect(find.widgetWithText(FilledButton, 'Main pleine ! → 1000'), findsOneWidget);
+  });
+
+  testWidgets('main pleine en attente : le bouton montre le total potentiel, une fois les dés immobilisés',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 2300, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(diceToRoll: 3, bankedScore: 150, hasRolledThisTurn: true),
+    );
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Un brelan de 3 sur les 3 derniers dés : main pleine, la garde n'est pas
+    // encore appliquée — le total potentiel est 2300 + 150 + 300.
+    notifier.debugLoadState(
+      engine.copyWith(activeTurn: engine.activeTurn!.copyWith(pendingRoll: analyzeRoll([3, 3, 3]))),
+      const GameSetup(playerNames: ['A', 'B']),
+    );
+    await tester.pump();
+    expect(find.widgetWithText(FilledButton, 'Main pleine !'), findsOneWidget, reason: 'les dés roulent encore');
+    // L'immobilisation des dés est une minuterie : `pumpAndSettle` seul ne
+    // l'attendrait pas.
+    await tester.pump(DieWidget.maxRollDuration + const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(FilledButton, 'Main pleine ! → 2750'), findsOneWidget);
   });
 
   testWidgets('le bouton Stop reste caché tant que les dés du lancer n\'ont pas fini de rouler', (tester) async {

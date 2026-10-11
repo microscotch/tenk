@@ -389,6 +389,11 @@ class AppLocalizationsRo extends AppLocalizations {
   String get logHotDiceMessage => 'Zaruri fierbinți!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Zaruri fierbinți! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Scor tăiat:';
 
   @override
@@ -419,12 +424,19 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Ai ars! => $score liniuță';
+  String logBustMessage(int lost) {
+    return '$lost: Ai ars!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Ai ars! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Ai ars! => $score liniuță';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Ai ars! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -589,13 +601,6 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordinea de joc';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duel între vecini câștigat de al doilea: jocul se desfășoară în sens invers.';
-
-  @override
   String get gameOverTitle => 'Sfârșitul jocului';
 
   @override
@@ -629,6 +634,13 @@ class AppLocalizationsRo extends AppLocalizations {
   String get tiretTooltip => 'Liniuță: un al doilea eșec va anula scorul';
 
   @override
+  String get radarTargetsTooltip =>
+      'Scoruri pe care mâna curentă le-ar putea tăia';
+
+  @override
+  String get radarGapTooltip => 'Diferența față de totalul mâinii curente';
+
+  @override
   String get previousScoreHadTiretTooltip => 'Scorul anterior avea o liniuță';
 
   @override
@@ -650,6 +662,165 @@ class AppLocalizationsRo extends AppLocalizations {
   String get tutorialSkip => 'Sari peste';
 
   @override
+  String get tutorialFinalOutro =>
+      'Botul e tăiat și trebuie acum să încerce el 10.000. Acum cunoști toate regulile: joc plăcut!';
+
+  @override
+  String get tutorialFinalExact => 'Trei de 4: fix 10.000! Se ia automat.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9.600. În runda finală nu te poți opri: aruncă din nou.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Botul a atins 10.000: e runda finală. Ca să câștigi trebuie să-l egalezi, ceea ce îl taie. Oprirea înainte e interzisă.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Botul e tăiat și revine la 1.500. Atingerea unei linii a altui jucător, chiar și veche, o taie și pe ea.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Doi de 1: 200. Ai ajunge la 2.000, scorul botului, cu roșu în radarul lui. Oprește-te ca să-l tai.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'Pe linia botului, radarul arată scorurile lui pe care le-ai putea tăia: atingerea aceluiași total îl trimite înapoi.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'După un eșec, se pornește mereu cu 5 zaruri noi. O mână care n-ar mai putea fi încasată nu e propusă niciodată.';
+
+  @override
+  String get tutorialInheritStop => 'Un 1: mâna valorează 1.100. Oprește-te.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Botul s-a oprit la 1.000 lăsând 2 zaruri. Preia mâna: pornești de la cele 1.000 de puncte ale lui, iar cele 2 zaruri se aruncă imediat (se aruncă mereu cel puțin o dată înainte de oprire).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Când un jucător se oprește lăsând zaruri, următorul le poate prelua, cu punctele lui ca bază.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'Extensia ține toată tura, chiar și pentru un 5 (100 în loc de 50), și se șterge la zarurile fierbinți.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Un 2 singur nu valorează nimic… în afară de aici: după cei trei de 2, valorează 100 (cu roșu). Mâna face 300: oprește-te.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Trei de 2: 200. Aruncă din nou ultimele 2 zaruri.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'După trei la fel de o valoare, un zar singur de aceeași valoare, mai târziu în tură, valorează 100 de puncte.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Un eșec marchează linia cu o liniuță; al doilea o taie. La 0, un eșec nu costă nimic.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Al doilea eșec: linia de 1.500 e tăiată, revii la 500, scorul tău anterior. Apasă pe ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Linia ta are o liniuță: un al doilea eșec ar tăia-o. Aruncă totuși.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Ai ars! Mâna e pierdută, iar linia ta de 1.500 primește o liniuță. Apasă pe ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'O aruncare fără puncte e un eșec: mâna curentă se pierde. Ai 1.500 de puncte.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Reține: niciodată nu te oprești pe un total care se termină în 50, iar zarurile fierbinți se aruncă mereu din nou.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: destul ca să intri, și fără 50 la final. Oprește-te.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Doi de 5, dar opționali: acest selector alege câți păstrezi. Cu amândoi, 550 s-ar termina în 50: nu te-ai putea opri. Alege 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Trei de 3: 300, mâna urcă la 450. Toate zarurile au contat: zaruri fierbinți! Butonul arată totalul pe care l-ai avea; se aruncă din nou toate 5, fără să te poți opri.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'Zarurile 1 și 5 se păstrează: mâna valorează 150. Aruncă din nou celelalte 3 zaruri.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Când toate zarurile aduc puncte, sunt zaruri fierbinți: se aruncă din nou toate 5. Iar un 5 singur e uneori opțional.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 de puncte încasate: ești în joc! De acum, fiecare tură trebuie să aducă cel puțin 200 de puncte.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Trei de 6: trei la fel valorează de 100 de ori valoarea lor, aici 600 (trei de 1: 1000). Mâna valorează 700, destul ca să intri: apasă pe mână ca să te oprești.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Singure, aduc puncte doar 1 (100) și 5 (50): zarul de 1 e pus deoparte. Ca să intri în joc ai nevoie de 500 de puncte într-o tură: aruncă din nou celelalte 4 zaruri.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Bun venit în Le 10000! Scopul: să atingi exact 10.000 de puncte. La fiecare tură arunci 5 zaruri și pui deoparte pe cele care aduc puncte.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Runda finală';
+
+  @override
+  String get tutorialLessonCollision => 'Tăierea unui jucător';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Mâna moștenită';
+
+  @override
+  String get tutorialLessonExtension => 'Regula extensiei';
+
+  @override
+  String get tutorialLessonBust => 'Eșecul';
+
+  @override
+  String get tutorialLessonHotDice => 'Zaruri fierbinți';
+
+  @override
+  String get tutorialLessonBasics => 'Elementele de bază';
+
+  @override
+  String get tutorialBotTurn => 'Rândul botului: joacă singur.';
+
+  @override
+  String get tutorialRollPrompt => 'Apasă butonul de aruncare.';
+
+  @override
+  String get tutorialWholePath => 'Tot tutorialul';
+
+  @override
+  String get tutorialLessonsTitle => 'Lecțiile tutorialului';
+
+  @override
+  String get tutorialNextLesson => 'Lecția următoare';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Lecția $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Tu';
 
   @override
@@ -659,35 +830,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get tutorialFinish => 'Începe să joci';
 
   @override
-  String get tutorialReplayButton => 'Revezi tutorialul';
-
-  @override
-  String get tutorialStep0 =>
-      'Bun venit în Le 10000! Scopul: să atingi exact 10.000 de puncte. Jucăm o tură împreună pe ecranul real de joc: nu se salvează nimic.';
-
-  @override
-  String get tutorialStep1 =>
-      'Apasă butonul de aruncare ca să arunci cele 5 zaruri.';
-
-  @override
-  String get tutorialStep2 =>
-      'Aici aduc puncte doar 1 (100) și 5 (50): se păstrează, mâna valorează 150. Ai nevoie de 500 de puncte ca să intri în joc: aruncă din nou celelalte 3 zaruri.';
-
-  @override
-  String get tutorialStep3 =>
-      'Trei de 3: 300 de puncte, mâna urcă la 450. Toate zarurile au contat: zaruri fierbinți! Se aruncă din nou toate cele 5 zaruri, fără să te poți opri.';
-
-  @override
-  String get tutorialStep4 =>
-      'Doi de 5, dar sunt opționali: acest selector alege câți păstrezi. Cu amândoi, 550 s-ar termina în 50: nu te-ai putea opri. Alege 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 de puncte: destul ca să intri, și fără 50 la final. Apasă pe mână ca să te oprești și să îi încasezi.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 de puncte încasate! Urmează botul; o aruncare fără puncte este un eșec (tura pierdută, o liniuță pe linie). Primul care atinge exact 10.000 câștigă. Regulile complete sunt în meniu.';
+  String get tutorialReplayButton => 'Lecțiile tutorialului';
 
   @override
   String get rulesGoalTitle => 'Scopul jocului';
@@ -805,6 +948,50 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'Într-un joc început, locul tău rămâne gol, iar jocul așteaptă întoarcerea ta.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Părăsești camera: un bot va juca în locul tău până la finalul jocului.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Se așteaptă începerea jocului';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'a părăsit jocul: un bot joacă în locul său';
+
+  @override
+  String get botSeatTooltip => 'Jucat de un bot (jucător plecat)';
+
+  @override
+  String get rematchButton => 'Joacă din nou';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name propune o revanșă';
+  }
+
+  @override
+  String get rematchWaiting => 'Se așteaptă ceilalți jucători…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Acceptă';
+
+  @override
+  String get rematchRefuse => 'Refuză';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Ai părăsit camera: nu e revanșă pentru tine.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Nu e revanșă: e nevoie de cel puțin doi jucători.';
 
   @override
   String get onlineConnecting => 'Conectare la server…';
@@ -932,10 +1119,10 @@ class AppLocalizationsRo extends AppLocalizations {
   String get emotePhraseYes => 'Da!';
 
   @override
-  String get emotePhraseTooGreedy => 'Prea lacom!';
+  String get emotePhraseTooGreedy => 'Lăcomia e un defect urât!';
 
   @override
-  String get emotePhraseTooLucky => 'Cam prea norocos...';
+  String get emotePhraseTooLucky => 'Cam prea mult noroc...';
 
   @override
   String get emotePhraseDryTenThousand => 'Direct la 10000';
@@ -951,6 +1138,40 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Scuze, dar trebuie să plec';
+
+  @override
+  String get emoteAngry => 'Supărat';
+
+  @override
+  String get emoteRelieved => 'Ușurat';
+
+  @override
+  String get emotePhraseStrangeChoice =>
+      'Dar ce alegere ciudată mai e și asta?';
+
+  @override
+  String get emotePhraseAllByFives => 'Totul pe cinci!';
+
+  @override
+  String get emotePhraseWithPanache => 'Cu panaș!';
+
+  @override
+  String get emotePhraseUnfair => 'E chiar prea nedrept';
+
+  @override
+  String get emotePhrasePhew => 'Uf!';
+
+  @override
+  String get emotePhraseAtLast => 'În sfârșit!';
+
+  @override
+  String get emotePhraseCloseCall => 'A fost cât pe ce!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Bine jucat';
+
+  @override
+  String get emotePhraseSorry => 'Scuze';
 
   @override
   String get gameHistoryBar => 'Istoric';

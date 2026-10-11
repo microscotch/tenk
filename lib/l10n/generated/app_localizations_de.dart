@@ -386,6 +386,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logHotDiceMessage => 'Heiße Würfel!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Heiße Würfel! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Punktzahl gestrichen:';
 
   @override
@@ -415,12 +420,19 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Fehlwurf! => $score Strich';
+  String logBustMessage(int lost) {
+    return '$lost: Fehlwurf!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Fehlwurf! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Fehlwurf! => $score Strich';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Fehlwurf! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -584,13 +596,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Spielreihenfolge';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duell zwischen Nachbarn, vom Zweiten gewonnen: Es wird andersherum gespielt.';
-
-  @override
   String get gameOverTitle => 'Spielende';
 
   @override
@@ -625,6 +630,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Strich: Ein zweiter Fehlwurf streicht die Punktzahl';
 
   @override
+  String get radarTargetsTooltip =>
+      'Punktestände, die die laufende Hand streichen könnte';
+
+  @override
+  String get radarGapTooltip => 'Abstand zur Summe der laufenden Hand';
+
+  @override
   String get previousScoreHadTiretTooltip =>
       'Die vorige Punktzahl trug einen Strich';
 
@@ -647,6 +659,166 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tutorialSkip => 'Überspringen';
 
   @override
+  String get tutorialFinalOutro =>
+      'Der Bot ist gestrichen und muss nun selbst die 10.000 versuchen. Jetzt kennst du alle Regeln: Viel Spaß!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Drei 4en: genau 10.000! Das wird automatisch genommen.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9.600. In der Schlussrunde darfst du nicht aufhören: Wirf weiter.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Der Bot hat 10.000 erreicht: Das ist die Schlussrunde. Um zu gewinnen, musst du gleichziehen, was ihn streicht. Vorher aufzuhören ist verboten.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Der Bot ist gestrichen und fällt auf 1.500 zurück. Auch eine ältere Zeile eines anderen Spielers wird gestrichen, wenn du sie erreichst.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Zwei Einsen: 200. Du hättest 2.000, den Stand des Bots, rot in seinem Radar. Hör auf, um ihn zu streichen.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'Auf der Zeile des Bots zeigt das Radar seine Punktestände, die du streichen könntest: Dieselbe Summe zu erreichen wirft ihn zurück.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Nach einem Fehlwurf beginnt man immer mit 5 neuen Würfeln. Eine Hand, die nicht mehr verbucht werden könnte, wird nie angeboten.';
+
+  @override
+  String get tutorialInheritStop => 'Eine 1: Die Hand ist 1.100 wert. Hör auf.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Übernimm die Hand: Du startest mit seinen 1.000 Punkten, und die 2 Würfel werden sofort geworfen (vor dem Aufhören wirft man immer mindestens einmal).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Wenn ein Spieler aufhört und Würfel übrig lässt, darf der nächste sie übernehmen, mit seinen Punkten als Basis.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'Die Erweiterung gilt den ganzen Zug, sogar für eine 5 (100 statt 50), und verfällt bei heißen Würfeln.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Eine einzelne 2 zählt nichts… außer hier: Nach deinem Drilling aus 2en ist sie 100 wert (in Rot). Die Hand hat 300: Hör auf.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Drei 2en: 200. Wirf die letzten 2 Würfel neu.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Nach einem Drilling zählt ein einzelner Würfel desselben Werts später im Zug 100 Punkte.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Ein Fehlwurf markiert die Zeile mit einem Strich; ein zweiter streicht sie. Bei 0 kostet ein Fehlwurf nichts.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Zweiter Fehlwurf: Die Zeile 1.500 ist gestrichen, du fällst auf 500 zurück, deinen vorherigen Stand. Tippe auf ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Deine Zeile hat einen Strich: Ein zweiter Fehlwurf würde sie streichen. Wirf trotzdem.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Fehlwurf! Die Hand ist verloren, und deine Zeile mit 1.500 bekommt einen Strich. Tippe auf ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Ein Wurf ohne Punkte ist ein Fehlwurf: Die laufende Hand ist verloren. Du hast 1.500 Punkte.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Merke: Nie bei einer Summe aufhören, die auf 50 endet, und heiße Würfel werden immer neu geworfen.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: genug zum Einstieg, und keine 50 am Ende. Hör auf.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Zwei 5en, aber freiwillig: Dieser Wähler bestimmt, wie viele du behältst. Mit beiden würden 550 auf 50 enden: Aufhören wäre unmöglich. Wähle 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Drei 3en: 300, die Hand steigt auf 450. Alle Würfel haben gezählt: heiße Würfel! Der Knopf zeigt deine mögliche Summe; du wirfst alle 5 neu und darfst nicht aufhören.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'Die 1 und die 5 bleiben liegen: Die Hand ist 150 wert. Wirf die anderen 3 Würfel neu.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Wenn alle Würfel zählen, sind es heiße Würfel: Man wirft alle 5 neu. Und eine einzelne 5 ist manchmal freiwillig.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 Punkte verbucht: Du bist im Spiel! Ab jetzt muss jeder Zug mindestens 200 Punkte bringen.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Drei 6en: Ein Drilling zählt das Hundertfache seines Werts, hier 600 (drei Einsen: 1000). Die Hand ist 700 wert, genug zum Einstieg: Tippe auf die Hand, um aufzuhören.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Allein zählen nur die 1 (100) und die 5 (50): Die 1 wird beiseitegelegt. Zum Einstieg braucht man 500 Punkte in einem Zug: Wirf die anderen 4 Würfel neu.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Willkommen bei Le 10000! Ziel: genau 10.000 Punkte erreichen. In jedem Zug wirfst du 5 Würfel und legst die zählenden beiseite.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Die Schlussrunde';
+
+  @override
+  String get tutorialLessonCollision => 'Einen Spieler streichen';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Die geerbte Hand';
+
+  @override
+  String get tutorialLessonExtension => 'Die Erweiterungsregel';
+
+  @override
+  String get tutorialLessonBust => 'Der Fehlwurf';
+
+  @override
+  String get tutorialLessonHotDice => 'Heiße Würfel';
+
+  @override
+  String get tutorialLessonBasics => 'Die Grundlagen';
+
+  @override
+  String get tutorialBotTurn => 'Der Bot ist dran: Er spielt allein.';
+
+  @override
+  String get tutorialRollPrompt => 'Tippe auf den Würfeln-Knopf.';
+
+  @override
+  String get tutorialWholePath => 'Das ganze Tutorial';
+
+  @override
+  String get tutorialLessonsTitle => 'Tutorial-Lektionen';
+
+  @override
+  String get tutorialNextLesson => 'Nächste Lektion';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Lektion $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Du';
 
   @override
@@ -656,35 +828,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tutorialFinish => 'Spielen';
 
   @override
-  String get tutorialReplayButton => 'Tutorial noch einmal ansehen';
-
-  @override
-  String get tutorialStep0 =>
-      'Willkommen bei Le 10000! Ziel: genau 10.000 Punkte erreichen. Wir spielen einen Zug gemeinsam auf dem echten Spielbildschirm: nichts wird gespeichert.';
-
-  @override
-  String get tutorialStep1 =>
-      'Tippe auf den Würfeln-Knopf, um die 5 Würfel zu werfen.';
-
-  @override
-  String get tutorialStep2 =>
-      'Nur die 1 (100) und die 5 (50) zählen hier: sie bleiben liegen, die Hand ist 150 wert. Zum Einstieg braucht man 500 Punkte: wirf die anderen 3 Würfel neu.';
-
-  @override
-  String get tutorialStep3 =>
-      'Drei 3en: 300 Punkte, die Hand steigt auf 450. Alle Würfel haben gezählt: heiße Würfel! Du wirfst alle 5 neu und darfst nicht aufhören.';
-
-  @override
-  String get tutorialStep4 =>
-      'Zwei 5en, aber sie sind freiwillig: dieser Wähler bestimmt, wie viele du behältst. Mit beiden würden 550 auf 50 enden: Aufhören wäre unmöglich. Wähle 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 Punkte: genug zum Einstieg, und keine 50 am Ende. Tippe auf die Hand, um aufzuhören und sie zu verbuchen.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 Punkte verbucht! Der Bot ist dran; ein Wurf ohne Punkte ist ein Fehlwurf (Zug verloren, ein Strich auf der Zeile). Wer als Erster genau 10.000 erreicht, gewinnt. Die vollständigen Regeln stehen im Menü.';
+  String get tutorialReplayButton => 'Tutorial-Lektionen';
 
   @override
   String get rulesGoalTitle => 'Ziel des Spiels';
@@ -802,6 +946,50 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'In einem begonnenen Spiel bleibt dein Platz leer und das Spiel wartet auf deine Rückkehr.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Du verlässt den Raum: Ein Bot spielt bis zum Ende der Partie an deiner Stelle.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Warten auf den Spielbeginn';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'hat die Partie verlassen: Ein Bot spielt an seiner Stelle';
+
+  @override
+  String get botSeatTooltip => 'Von einem Bot gespielt (Spieler gegangen)';
+
+  @override
+  String get rematchButton => 'Nochmal spielen';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name schlägt eine Revanche vor';
+  }
+
+  @override
+  String get rematchWaiting => 'Warten auf die anderen Spieler…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Annehmen';
+
+  @override
+  String get rematchRefuse => 'Ablehnen';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Du hast den Raum verlassen: keine Revanche für dich.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Keine Revanche: Es braucht mindestens zwei Spieler.';
 
   @override
   String get onlineConnecting => 'Verbindung zum Server …';
@@ -930,7 +1118,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get emotePhraseYes => 'Ja!';
 
   @override
-  String get emotePhraseTooGreedy => 'Zu gierig!';
+  String get emotePhraseTooGreedy => 'Gier ist eine hässliche Schwäche!';
 
   @override
   String get emotePhraseTooLucky => 'Ein bisschen zu viel Glück...';
@@ -949,6 +1137,40 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Sorry, aber ich muss los';
+
+  @override
+  String get emoteAngry => 'Verärgert';
+
+  @override
+  String get emoteRelieved => 'Erleichtert';
+
+  @override
+  String get emotePhraseStrangeChoice =>
+      'Was ist denn das für eine seltsame Wahl?';
+
+  @override
+  String get emotePhraseAllByFives => 'Alles mit den Fünfen!';
+
+  @override
+  String get emotePhraseWithPanache => 'Mit Bravour!';
+
+  @override
+  String get emotePhraseUnfair => 'Das ist echt total unfair';
+
+  @override
+  String get emotePhrasePhew => 'Puh!';
+
+  @override
+  String get emotePhraseAtLast => 'Endlich!';
+
+  @override
+  String get emotePhraseCloseCall => 'Das war knapp!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Gut gespielt';
+
+  @override
+  String get emotePhraseSorry => 'Tut mir leid';
 
   @override
   String get gameHistoryBar => 'Verlauf';

@@ -10,6 +10,8 @@ String emoteEmoji(Emote emote) => switch (emote) {
       Emote.thoughtful => '🤔',
       Emote.mocking => '🤣',
       Emote.devastated => '😭',
+      Emote.angry => '😠',
+      Emote.relieved => '😌',
       Emote.joyful => '🤗',
     };
 
@@ -18,6 +20,8 @@ String emoteName(AppLocalizations l10n, Emote emote) => switch (emote) {
       Emote.thoughtful => l10n.emoteThoughtful,
       Emote.mocking => l10n.emoteMocking,
       Emote.devastated => l10n.emoteDevastated,
+      Emote.angry => l10n.emoteAngry,
+      Emote.relieved => l10n.emoteRelieved,
       Emote.joyful => l10n.emoteJoyful,
     };
 
@@ -39,6 +43,15 @@ String? emotePhrase(AppLocalizations l10n, String phrase) => switch (phrase) {
       'goodLuck' => l10n.emotePhraseGoodLuck,
       'thanks' => l10n.emotePhraseThanks,
       'sorryMustGo' => l10n.emotePhraseSorryMustGo,
+      'strangeChoice' => l10n.emotePhraseStrangeChoice,
+      'allByFives' => l10n.emotePhraseAllByFives,
+      'withPanache' => l10n.emotePhraseWithPanache,
+      'unfair' => l10n.emotePhraseUnfair,
+      'phew' => l10n.emotePhrasePhew,
+      'atLast' => l10n.emotePhraseAtLast,
+      'closeCall' => l10n.emotePhraseCloseCall,
+      'wellPlayed' => l10n.emotePhraseWellPlayed,
+      'sorry' => l10n.emotePhraseSorry,
       _ => null,
     };
 
@@ -54,7 +67,12 @@ String emoteText(AppLocalizations l10n, Emote emote, String? phrase) =>
 class EmoteBar extends StatefulWidget {
   final void Function(Emote emote, String? phrase) onSend;
 
-  const EmoteBar({super.key, required this.onSend});
+  /// Vrai quand le serveur connaît la seconde série d'émotions (voir
+  /// [emotes2Feature]) : sans elle, seules la première série et ses phrases
+  /// d'alors sont proposées — un serveur d'avant refuserait le reste.
+  final bool v2;
+
+  const EmoteBar({super.key, required this.onSend, this.v2 = false});
 
   @override
   State<EmoteBar> createState() => _EmoteBarState();
@@ -79,20 +97,22 @@ class _EmoteBarState extends State<EmoteBar> {
         }));
   }
 
+  /// Ouvre les phrases de [emote] dans une bulle de bande dessinée posée
+  /// au-dessus de son bouton, la pointe vers lui (voir [_PhraseBubbleRoute]).
   Future<void> _openPhrases(BuildContext buttonContext, Emote emote) async {
     if (_coolingDown) return;
     final l10n = AppLocalizations.of(context);
     final box = buttonContext.findRenderObject()! as RenderBox;
-    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
-    final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
-    final phrase = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(origin & box.size, Offset.zero & overlay.size),
-      items: [
-        for (final phrase in emote.phrases)
-          PopupMenuItem(value: phrase, child: Text(emotePhrase(l10n, phrase) ?? phrase)),
+    final navigator = Navigator.of(context);
+    final overlay = navigator.overlay!.context.findRenderObject()! as RenderBox;
+    final anchor = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+    final phrase = await navigator.push<String>(_PhraseBubbleRoute(
+      anchor: anchor,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      phrases: [
+        for (final id in emote.phrasesFor(v2: widget.v2)) (id: id, text: emotePhrase(l10n, id) ?? id),
       ],
-    );
+    ));
     if (phrase != null && mounted) _send(emote, phrase);
   }
 
@@ -103,7 +123,7 @@ class _EmoteBarState extends State<EmoteBar> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        for (final emote in Emote.values)
+        for (final emote in emotesFor(v2: widget.v2))
           Builder(
             builder: (buttonContext) => Semantics(
               button: true,
@@ -113,20 +133,21 @@ class _EmoteBarState extends State<EmoteBar> {
               child: InkResponse(
                 onTap: enabled ? () => _send(emote, null) : null,
                 onLongPress: enabled ? () => _openPhrases(buttonContext, emote) : null,
-                radius: 28,
+                radius: 25,
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 150),
                   opacity: enabled ? 1 : 0.35,
                   child: Container(
-                    width: 52,
-                    height: 52,
+                    // Six boutons tiennent sur un écran de 360 points de large.
+                    width: 46,
+                    height: 46,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
                     ),
-                    child: Text(emoteEmoji(emote), style: const TextStyle(fontSize: 26)),
+                    child: Text(emoteEmoji(emote), style: const TextStyle(fontSize: 23)),
                   ),
                 ),
               ),
@@ -212,4 +233,125 @@ class _BubblePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BubblePainter old) => old.fill != fill || old.outline != outline || old.tail != tail;
+}
+
+/// Les phrases d'une émotion, dans une bulle de bande dessinée posée au-dessus
+/// du bouton qui l'ouvre ([anchor], dans le repère de la page), sa pointe vers
+/// lui. Un tap sur une phrase la rend ; un tap à côté, ou le retour système,
+/// referme la bulle sans rien rendre.
+class _PhraseBubbleRoute extends PopupRoute<String> {
+  final Rect anchor;
+  final List<({String id, String text})> phrases;
+
+  @override
+  final String barrierLabel;
+
+  _PhraseBubbleRoute({required this.anchor, required this.phrases, required this.barrierLabel});
+
+  static const _margin = 8.0;
+  static const _maxWidth = 280.0;
+
+  @override
+  Color? get barrierColor => Colors.black26;
+
+  @override
+  bool get barrierDismissible => true;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 150);
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+    final screen = MediaQuery.sizeOf(context);
+    final width = (screen.width - 2 * _margin).clamp(0.0, _maxWidth);
+    final left = (anchor.center.dx - width / 2).clamp(_margin, screen.width - _margin - width);
+    final tailX = (anchor.center.dx - left).clamp(24.0, width - 24.0);
+    return Stack(
+      children: [
+        Positioned(
+          left: left,
+          bottom: screen.height - anchor.top + 2,
+          width: width,
+          child: ScaleTransition(
+            scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+            alignment: Alignment(((tailX / width) * 2) - 1, 1),
+            child: CustomPaint(
+              painter: _DownBubblePainter(
+                fill: SpeechBubble._paper,
+                outline: SpeechBubble._outline,
+                tail: SpeechBubble.tail,
+                tailX: tailX,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(4, 6, 4, SpeechBubble.tail + 6),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final phrase in phrases)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () => Navigator.of(context).pop(phrase.id),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                            child: Text(
+                              phrase.text,
+                              style: const TextStyle(color: SpeechBubble._ink, fontWeight: FontWeight.w700, fontSize: 15),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// La bulle des phrases : le même papier et le même trait que [SpeechBubble],
+/// mais la pointe en bas, à [tailX] du bord gauche, vers le bouton.
+class _DownBubblePainter extends CustomPainter {
+  final Color fill;
+  final Color outline;
+  final double tail;
+  final double tailX;
+
+  const _DownBubblePainter({required this.fill, required this.outline, required this.tail, required this.tailX});
+
+  Path _shape(Size size) {
+    const radius = 14.0;
+    final bottom = size.height - tail;
+    final body = Path()..addRRect(RRect.fromRectAndRadius(Rect.fromLTRB(0, 0, size.width, bottom), const Radius.circular(radius)));
+    const halfBase = 11.0;
+    final pointer = Path()
+      ..moveTo(tailX - halfBase, bottom - radius)
+      ..quadraticBezierTo(tailX - halfBase * 0.25, bottom + tail * 0.45, tailX + 3, size.height)
+      ..quadraticBezierTo(tailX + halfBase * 0.55, bottom + tail * 0.25, tailX + halfBase, bottom - radius)
+      ..close();
+    return Path.combine(PathOperation.union, body, pointer);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shape = _shape(size);
+    canvas.drawShadow(shape, Colors.black, 4, false);
+    canvas.drawPath(shape, Paint()..color = fill);
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..color = outline
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DownBubblePainter old) =>
+      old.fill != fill || old.outline != outline || old.tail != tail || old.tailX != tailX;
 }

@@ -39,7 +39,7 @@ class RulesScreen extends StatelessWidget {
             children: [
               if (canReplayTutorial) ...[
                 OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TutorialScreen())),
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TutorialLessonsScreen())),
                   icon: const Icon(Icons.school),
                   label: Text(l10n.tutorialReplayButton),
                 ),

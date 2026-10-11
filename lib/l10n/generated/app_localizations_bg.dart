@@ -383,6 +383,11 @@ class AppLocalizationsBg extends AppLocalizations {
   String get logHotDiceMessage => 'Горещи зарове!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Горещи зарове! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Зачеркнат резултат:';
 
   @override
@@ -412,12 +417,19 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Изгоря! => $score черта';
+  String logBustMessage(int lost) {
+    return '$lost: Изгоря!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Изгоря! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Изгоря! => $score черта';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Изгоря! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -581,13 +593,6 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ред на игра';
-
-  @override
-  String get diceOffReversedNote =>
-      'Дуел между съседи, спечелен от втория: играта върви в обратна посока.';
-
-  @override
   String get gameOverTitle => 'Край на играта';
 
   @override
@@ -621,6 +626,13 @@ class AppLocalizationsBg extends AppLocalizations {
   String get tiretTooltip => 'Черта: втори провал ще зачеркне резултата';
 
   @override
+  String get radarTargetsTooltip =>
+      'Резултати, които текущата ръка може да зачеркне';
+
+  @override
+  String get radarGapTooltip => 'Разлика до сбора на текущата ръка';
+
+  @override
   String get previousScoreHadTiretTooltip => 'Предишният резултат имаше черта';
 
   @override
@@ -642,6 +654,166 @@ class AppLocalizationsBg extends AppLocalizations {
   String get tutorialSkip => 'Пропусни';
 
   @override
+  String get tutorialFinalOutro =>
+      'Ботът е зачеркнат и сега трябва сам да опита за 10 000. Вече знаете всички правила: приятна игра!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Три четворки: точно 10 000! Взема се автоматично.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9600. Във финалния кръг не може да се спре: хвърлете отново.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Ботът достигна 10 000: това е финалният кръг. За да спечелите, трябва да го изравните, което го зачерква. Спирането преди това е забранено.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Ботът е зачеркнат и се връща на 1500. Достигането на ред на друг играч, дори стар, също го зачерква.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Две единици: 200. Бихте имали 2000, резултата на бота, в червено в радара му. Спрете, за да го зачеркнете.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'На реда на бота радарът показва резултатите му, които бихте могли да зачеркнете: достигането на същия сбор го връща назад.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'След провал винаги се започва с 5 нови зара. Ръка, която вече не би могла да се запише, никога не се предлага.';
+
+  @override
+  String get tutorialInheritStop => 'Единица: ръката струва 1100. Спрете.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Ботът спря на 1000 и остави 2 зара. Поемете ръката: започвате от неговите 1000 точки, а двата зара се хвърлят веднага (преди спиране винаги се хвърля поне веднъж).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Когато играч спре и остави зарове, следващият може да ги поеме, с неговите точки като основа.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'Разширението важи през целия ход, дори за петица (100 вместо 50), и изчезва при горещи зарове.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Една двойка не струва нищо… освен тук: след трите ви двойки тя струва 100 (в червено). Ръката е 300: спрете.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Три двойки: 200. Хвърлете отново последните 2 зара.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'След три еднакви от дадена стойност, един зар със същата стойност по-късно в хода струва 100 точки.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Провалът отбелязва реда с черта; вторият го зачерква. При 0 провалът не струва нищо.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Втори провал: редът от 1500 е зачеркнат, връщате се на 500, предишния ви резултат. Натиснете ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Редът ви има черта: втори провал би го зачеркнал. Хвърлете въпреки това.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Изгоря! Ръката е загубена, а редът ви от 1500 получава черта. Натиснете ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Хвърляне без точки е провал: текущата ръка се губи. Имате 1500 точки.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Запомнете: никога не спирайте на сбор, завършващ на 50, а горещите зарове винаги се хвърлят отново.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: достатъчно за влизане и без 50 накрая. Спрете.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Две петици, но по избор: този избирател определя колко да запазите. С двете 550 би завършило на 50: не бихте могли да спрете. Изберете 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Три тройки: 300, ръката става 450. Всички зарове донесоха точки: горещи зарове! Бутонът показва сбора, който бихте имали; хвърлят се отново и петте, без да можете да спрете.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'Единицата и петицата се пазят: ръката струва 150. Хвърлете отново другите 3 зара.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Когато всички зарове носят точки, това са горещи зарове: хвърлят се отново и петте. А една петица понякога е по избор.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 точки записани: вие сте в играта! Отсега всеки ход трябва да носи поне 200 точки.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Три шестици: три еднакви струват 100 пъти стойността си, тук 600 (три единици: 1000). Ръката струва 700, достатъчно за влизане: натиснете ръката, за да спрете.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Сами точки носят само единицата (100) и петицата (50): единицата се отделя. За да влезете в играта, трябват 500 точки за един ход: хвърлете отново другите 4 зара.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Добре дошли в Le 10000! Целта: да достигнете точно 10 000 точки. На всеки ход хвърляте 5 зара и отделяте тези, които носят точки.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Финалният кръг';
+
+  @override
+  String get tutorialLessonCollision => 'Зачеркване на играч';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Наследената ръка';
+
+  @override
+  String get tutorialLessonExtension => 'Правилото за разширение';
+
+  @override
+  String get tutorialLessonBust => 'Провалът';
+
+  @override
+  String get tutorialLessonHotDice => 'Горещи зарове';
+
+  @override
+  String get tutorialLessonBasics => 'Основите';
+
+  @override
+  String get tutorialBotTurn => 'Ред на бота: играе сам.';
+
+  @override
+  String get tutorialRollPrompt => 'Натиснете бутона за хвърляне.';
+
+  @override
+  String get tutorialWholePath => 'Цялото ръководство';
+
+  @override
+  String get tutorialLessonsTitle => 'Уроци от ръководството';
+
+  @override
+  String get tutorialNextLesson => 'Следващ урок';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Урок $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Вие';
 
   @override
@@ -651,35 +823,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get tutorialFinish => 'Започни да играеш';
 
   @override
-  String get tutorialReplayButton => 'Виж урока отново';
-
-  @override
-  String get tutorialStep0 =>
-      'Добре дошли в Le 10000! Целта: да достигнете точно 10 000 точки. Играем един ход заедно на истинския екран на играта: нищо не се записва.';
-
-  @override
-  String get tutorialStep1 =>
-      'Натиснете бутона за хвърляне, за да хвърлите петте зара.';
-
-  @override
-  String get tutorialStep2 =>
-      'Тук точки носят само единицата (100) и петицата (50): те се пазят, ръката струва 150. Трябват 500 точки, за да влезете в играта: хвърлете отново другите 3 зара.';
-
-  @override
-  String get tutorialStep3 =>
-      'Три тройки: 300 точки, ръката става 450. Всички зарове донесоха точки: горещи зарове! Хвърлят се отново и петте зара, без да можете да спрете.';
-
-  @override
-  String get tutorialStep4 =>
-      'Две петици, но са по избор: този избирател определя колко да запазите. С двете 550 би завършило на 50: не бихте могли да спрете. Изберете 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 точки: достатъчно за влизане и без 50 накрая. Натиснете ръката, за да спрете и да ги запишете.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 точки записани! На ход е ботът; хвърляне без точки е провал (ходът е загубен, черта на реда). Първият, достигнал точно 10 000, печели. Пълните правила са в менюто.';
+  String get tutorialReplayButton => 'Уроци от ръководството';
 
   @override
   String get rulesGoalTitle => 'Цел на играта';
@@ -796,6 +940,48 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'В започната игра мястото ви остава празно и играта чака да се върнете.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Напускате стаята: бот ще играе вместо вас до края на играта.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Изчаква се началото на играта';
+
+  @override
+  String get logPlayerReplacedByBot => 'напусна играта: бот играе вместо него';
+
+  @override
+  String get botSeatTooltip => 'Играно от бот (играчът напусна)';
+
+  @override
+  String get rematchButton => 'Играй пак';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name предлага реванш';
+  }
+
+  @override
+  String get rematchWaiting => 'Изчакват се другите играчи…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String get rematchAccept => 'Приеми';
+
+  @override
+  String get rematchRefuse => 'Откажи';
+
+  @override
+  String get rematchExcludedNotice => 'Напуснахте стаята: няма реванш за вас.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Няма реванш: нужни са поне двама играчи.';
 
   @override
   String get onlineConnecting => 'Свързване със сървъра…';
@@ -922,7 +1108,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get emotePhraseYes => 'Да!';
 
   @override
-  String get emotePhraseTooGreedy => 'Прекалено алчен!';
+  String get emotePhraseTooGreedy => 'Алчността е грозен порок!';
 
   @override
   String get emotePhraseTooLucky => 'Малко прекалено голям късмет...';
@@ -941,6 +1127,39 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Съжалявам, но трябва да тръгвам';
+
+  @override
+  String get emoteAngry => 'Ядосан';
+
+  @override
+  String get emoteRelieved => 'Облекчен';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Но какъв е този странен избор?';
+
+  @override
+  String get emotePhraseAllByFives => 'Всичко с петиците!';
+
+  @override
+  String get emotePhraseWithPanache => 'С финес!';
+
+  @override
+  String get emotePhraseUnfair => 'Това е наистина много несправедливо';
+
+  @override
+  String get emotePhrasePhew => 'Уф!';
+
+  @override
+  String get emotePhraseAtLast => 'Най-сетне!';
+
+  @override
+  String get emotePhraseCloseCall => 'На косъм беше!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Добре изиграно';
+
+  @override
+  String get emotePhraseSorry => 'Съжалявам';
 
   @override
   String get gameHistoryBar => 'История';

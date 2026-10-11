@@ -18,7 +18,13 @@ import 'game_screen.dart';
 /// l'autre, à partir du journal reçu, puis mène à la partie.
 ///
 /// Une partie déjà entamée (on y revient après une coupure) saute directement
-/// au jeu.
+/// au jeu, comme une revanche (pas de tirage : l'ordre est imposé).
+///
+/// Face à un serveur qui connaît le signal de départ ([startSignalFeature]),
+/// seul le joueur qui commence a le bouton « Jouer » : il lance la partie pour
+/// tous ([OnlineSession.begin]). Les autres attendent, bouton inactif, et
+/// entrent dans la partie dès que le serveur l'annonce (`begun`) — ou, à
+/// défaut, dès que son premier coup arrive.
 class OnlineDiceOffScreen extends ConsumerStatefulWidget {
   const OnlineDiceOffScreen({super.key});
 
@@ -50,8 +56,11 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
     final actions = game.actions;
     final diceOffCount = diceOffActionCount(actions);
     // Un journal qui va déjà bien au-delà du premier tour : la partie est en
-    // cours, le tirage n'a plus rien à raconter.
-    if (actions.length > diceOffCount + 1) {
+    // cours, le tirage n'a plus rien à raconter. Pareil pour un ordre imposé
+    // (une revanche) ou une partie déjà lancée par son premier joueur.
+    if (actions.length > diceOffCount + 1 ||
+        (actions.isNotEmpty && actions.first.type == GameActionType.presetOrder) ||
+        ref.read(onlineSessionProvider).begun) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _play());
       return;
     }
@@ -90,9 +99,18 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
     setState(() => _shown = _steps.length - 1);
   }
 
+  var _left = false;
+
   void _play() {
-    if (!mounted) return;
+    if (!mounted || _left) return;
+    _left = true;
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const GameScreen()));
+  }
+
+  /// Le premier joueur lance la partie, pour lui et pour tous.
+  void _begin() {
+    ref.read(onlineSessionProvider.notifier).begin();
+    _play();
   }
 
   @override
@@ -102,6 +120,19 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
     final seats = ref.watch(onlineSessionProvider).seats;
     String nameOf(int seat) => seat < seats.length ? seats[seat].name : '${seat + 1}';
     final state = _steps[_shown];
+
+    // Le signal de départ du premier joueur, ou à défaut son premier coup : les
+    // autres entrent dans la partie.
+    ref.listen<bool>(onlineSessionProvider.select((s) => s.begun), (_, begun) {
+      if (begun) _play();
+    });
+    ref.listen(gameProvider, (_, _) {
+      final actions = ref.read(gameProvider.notifier).actions;
+      if (actions.length > diceOffActionCount(actions) + 1) _play();
+    });
+    final session = ref.watch(onlineSessionProvider);
+    final link = ref.read(gameProvider.notifier).onlineLink;
+    final waits = session.startSignalEnabled && link != null && link.playOrder.first != link.mySeat;
 
     return Scaffold(
       appBar: AppTopBar(title: Text(l10n.diceOffTitle)),
@@ -116,8 +147,11 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
                 child: DiceOffBoard(
                   state: state,
                   shownName: nameOf,
-                  onStart: state.isResolved ? _play : null,
-                  startLabel: l10n.onlineDiceOffContinue,
+                  startButton: !state.isResolved
+                      ? null
+                      : waits
+                          ? (label: l10n.onlineDiceOffWaitingStart, onPressed: null)
+                          : (label: l10n.onlineDiceOffContinue, onPressed: _begin),
                 ),
               ),
             ),

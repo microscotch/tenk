@@ -35,6 +35,10 @@ class DiceOffState {
   /// distingue un départage au format actuel d'un ancien journal.
   final bool simultaneous;
 
+  /// L'ordre de jeu imposé sans tirage (voir [DiceOffState.preset]) ; nul pour
+  /// un vrai tirage au sort.
+  final List<int>? presetOrder;
+
   const DiceOffState({
     required this.activeIndices,
     required this.playerCount,
@@ -42,7 +46,22 @@ class DiceOffState {
     this.roundHistory = const [],
     this.winnerIndex,
     this.simultaneous = false,
+    this.presetOrder,
   });
+
+  /// Un « tirage » déjà tranché, sans dés : l'ordre de jeu est [order] (en
+  /// index de la configuration d'origine), son premier joueur commence. C'est
+  /// celui d'une revanche en ligne, qui reprend l'ordre de la partie
+  /// précédente au lieu de retirer au sort (voir `GameActionType.presetOrder`).
+  factory DiceOffState.preset(int playerCount, List<int> order) {
+    assert(order.length == playerCount && order.toSet().length == playerCount);
+    return DiceOffState(
+      activeIndices: [order.first],
+      playerCount: playerCount,
+      winnerIndex: order.first,
+      presetOrder: List.unmodifiable(order),
+    );
+  }
 
   factory DiceOffState.start(int playerCount) {
     assert(playerCount >= 2);
@@ -130,6 +149,7 @@ class DiceOffState {
   /// d'abord, puis dans le sens de la liste — ou à rebours, voir
   /// [reversesOrder].
   List<int> get playOrder {
+    if (presetOrder case final order?) return order;
     final w = winnerIndex!;
     final step = reversesOrder ? -1 : 1;
     return [for (var k = 0; k < playerCount; k++) (w + step * k) % playerCount];

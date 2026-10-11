@@ -60,9 +60,16 @@ enum GameActionType {
   endBustedTurn,
   bank,
   resume,
-  diceOffRollAll;
+  diceOffRollAll,
 
-  bool get isDiceOff => this == diceOffRoll || this == diceOffRollAll || this == diceOffResolveRound;
+  /// L'ordre de jeu imposé, sans tirage au sort : celui d'une revanche en
+  /// ligne (voir [DiceOffState.preset]). Compte comme une action de départage.
+  /// N'apparaît que dans une partie dont tous les joueurs ont annoncé la
+  /// revanche (`rematchFeature`) : une app d'avant ne saurait pas la lire.
+  presetOrder;
+
+  bool get isDiceOff =>
+      this == diceOffRoll || this == diceOffRollAll || this == diceOffResolveRound || this == presetOrder;
 }
 
 /// Une transition journalisée : son type, l'instant où elle a eu lieu (pour
@@ -88,6 +95,11 @@ class GameAction {
 
   factory GameAction.diceOffResolveRound({DateTime? at}) =>
       GameAction(type: GameActionType.diceOffResolveRound, at: at ?? DateTime.now());
+
+  /// Voir [GameActionType.presetOrder] : [order] est l'ordre de jeu, en index
+  /// de la configuration d'origine.
+  factory GameAction.presetOrder(List<int> order, {DateTime? at}) =>
+      GameAction(type: GameActionType.presetOrder, at: at ?? DateTime.now(), params: {'order': order});
 
   factory GameAction.startTurn({required bool useFullHand, DateTime? at}) => GameAction(
         type: GameActionType.startTurn,
@@ -200,6 +212,12 @@ ReplayResult replayGame(
           orderedSetup = setup.reordered(playOrder);
           engine = GameEngine.newGame(orderedSetup.playerNames);
         }
+      case GameActionType.presetOrder:
+        final order = (action.params['order'] as List).cast<int>();
+        diceOff = DiceOffState.preset(setup.playerNames.length, order);
+        playOrder = order;
+        orderedSetup = setup.reordered(order);
+        engine = GameEngine.newGame(orderedSetup.playerNames);
       case GameActionType.resume:
         // Une reprise n'est pas un coup : ni le moteur ni [onGameAction] ne
         // doivent la voir. Seules les durées s'y intéressent.
@@ -299,6 +317,7 @@ GameEngine applyGameAction(GameEngine engine, GameAction action, Random random) 
     case GameActionType.diceOffRoll:
     case GameActionType.diceOffRollAll:
     case GameActionType.diceOffResolveRound:
+    case GameActionType.presetOrder:
       throw ArgumentError('${action.type} concerne le départage, pas la partie principale');
   }
 }

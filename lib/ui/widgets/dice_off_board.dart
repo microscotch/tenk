@@ -8,20 +8,22 @@ import '../dice_colors.dart';
 import 'die_widget.dart';
 
 /// Ce que montre le tirage au sort : un dé par joueur, puis l'annonce de qui
-/// commence et dans quel ordre on joue. Partagé par le tirage local
-/// (`DiceOffScreen`) et par celui d'une partie en ligne, où le serveur a déjà
-/// tout tranché et l'écran ne fait que le raconter.
+/// commence. L'ordre de jeu, lui, n'est plus annoncé : la liste des joueurs de
+/// l'écran de jeu le montre de toute façon, en tournant autour de celui dont
+/// c'est le tour. Partagé par le tirage local (`DiceOffScreen`) et par celui
+/// d'une partie en ligne, où le serveur a déjà tout tranché et l'écran ne fait
+/// que le raconter.
 ///
-/// [shownName] donne le nom affiché d'un siège (surnom compris). [onStart],
-/// quand fourni, ajoute le bouton qui lance la partie une fois le résultat
-/// connu ; [startLabel] en est le libellé.
+/// [shownName] donne le nom affiché d'un siège (surnom compris).
+/// [startButton], quand fourni, ajoute sous le résultat le bouton qui lance la
+/// partie : son libellé, et son action — nulle, le bouton est affiché inerte
+/// (un joueur en ligne qui attend que celui qui commence lance la partie).
 class DiceOffBoard extends ConsumerWidget {
   final DiceOffState state;
   final String Function(int seat) shownName;
-  final VoidCallback? onStart;
-  final String? startLabel;
+  final ({String label, VoidCallback? onPressed})? startButton;
 
-  const DiceOffBoard({super.key, required this.state, required this.shownName, this.onStart, this.startLabel});
+  const DiceOffBoard({super.key, required this.state, required this.shownName, this.startButton});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -58,25 +60,9 @@ class DiceOffBoard extends ConsumerWidget {
           style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 16),
-        Text(l10n.diceOffPlayOrderLabel, style: theme.textTheme.labelLarge),
-        const SizedBox(height: 4),
-        Text(
-          state.playOrder.map(shownName).join('  →  '),
-          style: theme.textTheme.titleMedium,
-          textAlign: TextAlign.center,
-        ),
-        if (state.reversesOrder) ...[
-          const SizedBox(height: 8),
-          Text(
-            l10n.diceOffReversedNote,
-            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade400),
-            textAlign: TextAlign.center,
-          ),
-        ],
-        if (onStart != null) ...[
+        if (startButton case final button?) ...[
           const SizedBox(height: 32),
-          FilledButton(onPressed: onStart, child: Text(startLabel ?? l10n.startGameButton)),
+          FilledButton(onPressed: button.onPressed, child: Text(button.label)),
         ],
       ],
     );

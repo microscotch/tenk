@@ -10,23 +10,7 @@ import '../../lib/game/turn_state.dart';
 import '../src/limits.dart';
 import '../src/room.dart';
 import '../src/room_manager.dart';
-
-class FakeConnection implements Connection {
-  final List<ServerMessage> received = [];
-  bool closed = false;
-
-  @override
-  void send(ServerMessage message) => received.add(message);
-
-  @override
-  void close() => closed = true;
-
-  Iterable<ServerMessage> of(ServerMessageType type) => received.where((m) => m.type == type);
-  ServerMessage get lastRoom => of(ServerMessageType.room).last;
-  ErrorCode? get lastError => of(ServerMessageType.error).isEmpty ? null : of(ServerMessageType.error).last.errorCode;
-  String get token => of(ServerMessageType.joined).last.token;
-  int get seat => of(ServerMessageType.joined).last.seat;
-}
+import 'fake_connection.dart';
 
 void main() {
   late DateTime clock;

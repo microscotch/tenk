@@ -12,6 +12,7 @@ import 'package:le10000/ui/widgets/replay_controls.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/scripted_game.dart';
+import '../test_helpers/history.dart';
 
 /// Les commandes du rejeu, en bas de l'écran : pause / lecture, curseur de
 /// tour, vitesse.
@@ -148,7 +149,9 @@ void main() {
 
     await tapSliderAt(tester, 0.6);
 
-    expect(find.textContaining(' pts'), findsWidgets, reason: 'les tours déjà joués figurent au journal');
+    await openHistory(tester);
+    expect(inHistory(find.textContaining(' pts')), findsWidgets, reason: 'les tours déjà joués figurent au journal');
+    await closeHistory(tester);
 
     // Aller quelque part ne relance pas la lecture : le rejeu était en pause.
     final apresSaut = container.read(gameProvider);

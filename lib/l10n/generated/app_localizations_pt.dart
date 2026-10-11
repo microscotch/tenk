@@ -384,6 +384,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get logHotDiceMessage => 'Dados quentes!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Dados quentes! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Pontuação riscada:';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Rebentou! => $score traço';
+  String logBustMessage(int lost) {
+    return '$lost: Rebentou!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Rebentou! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Rebentou! => $score traço';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Rebentou! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -582,13 +594,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordem de jogo';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duelo entre vizinhos ganho pelo segundo: o jogo segue no sentido inverso.';
-
-  @override
   String get gameOverTitle => 'Fim do jogo';
 
   @override
@@ -622,6 +627,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tiretTooltip => 'Traço: um segundo rebentamento risca a pontuação';
 
   @override
+  String get radarTargetsTooltip =>
+      'Pontuações que a mão em curso poderia riscar';
+
+  @override
+  String get radarGapTooltip => 'Diferença para o total da mão em curso';
+
+  @override
   String get previousScoreHadTiretTooltip =>
       'A pontuação anterior tinha um traço';
 
@@ -644,6 +656,166 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tutorialSkip => 'Saltar';
 
   @override
+  String get tutorialFinalOutro =>
+      'O bot ficou riscado e agora tem de tentar os 10 000. Já conheces todas as regras: bom jogo!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Três 4: 10 000 certos! É registado automaticamente.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9600. Na ronda final não se pode parar: relança.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'O bot atingiu 10 000: é a ronda final. Para ganhar é preciso igualá-lo, o que o risca. Parar antes é proibido.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'O bot fica riscado e volta a 1500. Atingir uma linha de outro jogador, mesmo antiga, também a risca.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Dois 1: 200. Ficarias com 2000, a pontuação do bot, a vermelho no radar dele. Para para o riscar.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'Na linha do bot, o radar mostra as pontuações dele que poderias riscar: atingir o mesmo total fá-lo recuar.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Depois de um rebentamento recomeça-se sempre com 5 dados novos. Nunca se propõe uma mão que já não se poderia registar.';
+
+  @override
+  String get tutorialInheritStop => 'Um 1: a mão vale 1100. Para.';
+
+  @override
+  String get tutorialInheritTake =>
+      'O bot parou nos 1000 deixando 2 dados. Retoma a mão: partes dos 1000 pontos dele, e os 2 dados são lançados logo (lança-se sempre pelo menos uma vez antes de parar).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Quando um jogador para deixando dados, o seguinte pode retomá-los, com os pontos dele como base.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'A extensão vale para todo o turno, até para um 5 (100 em vez de 50), e apaga-se com os dados quentes.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Um 2 sozinho não vale nada… exceto aqui: depois do teu trio de 2, vale 100 (a vermelho). A mão soma 300: para.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Três 2: 200. Relança os 2 últimos dados.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Depois de um trio de um valor, um dado sozinho do mesmo valor, mais tarde no turno, vale 100 pontos.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Um rebentamento marca a linha com um traço; um segundo risca-a. Com 0, um rebentamento não custa nada.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Segundo rebentamento: a linha de 1500 fica riscada, voltas a 500, a tua pontuação anterior. Toca em ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'A tua linha tem um traço: um segundo rebentamento riscá-la-ia. Lança mesmo assim.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Rebentou! A mão perde-se, e a tua linha de 1500 recebe um traço. Toca em ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Um lançamento que não pontua é um rebentamento: a mão em curso perde-se. Tens 1500 pontos.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Lembra-te: nunca parar num total que termine em 50, e os dados quentes relançam-se sempre.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: chega para entrar, e sem 50 no fim. Para.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Dois 5, mas opcionais: este seletor escolhe quantos manter. Com os dois, 550 terminaria em 50: não poderias parar. Escolhe 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Três 3: 300, a mão sobe para 450. Todos os dados pontuaram: dados quentes! O botão mostra o total que terias; relançam-se os 5 dados, sem poder parar.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'O 1 e o 5 ficam guardados: a mão vale 150. Relança os outros 3 dados.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Quando todos os dados pontuam são dados quentes: relançam-se os 5. E um 5 sozinho às vezes é opcional.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 pontos registados: estás no jogo! A partir de agora, cada turno tem de render pelo menos 200 pontos.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Três 6: um trio vale 100 vezes o seu valor, aqui 600 (três 1: 1000). A mão vale 700, chega para entrar: toca na mão para parar.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Sozinhos, só pontuam o 1 (100) e o 5 (50): o 1 fica de lado. Para entrar no jogo são precisos 500 pontos num turno: relança os outros 4 dados.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Bem-vindo ao Le 10000! O objetivo: atingir exatamente 10 000 pontos. Em cada turno lançam-se 5 dados e põem-se de lado os que pontuam.';
+
+  @override
+  String get tutorialLessonFinalRound => 'A ronda final';
+
+  @override
+  String get tutorialLessonCollision => 'Riscar um jogador';
+
+  @override
+  String get tutorialLessonInheritedHand => 'A mão herdada';
+
+  @override
+  String get tutorialLessonExtension => 'A regra da extensão';
+
+  @override
+  String get tutorialLessonBust => 'O rebentamento';
+
+  @override
+  String get tutorialLessonHotDice => 'Dados quentes';
+
+  @override
+  String get tutorialLessonBasics => 'O básico';
+
+  @override
+  String get tutorialBotTurn => 'Vez do bot: joga sozinho.';
+
+  @override
+  String get tutorialRollPrompt => 'Toca no botão de lançar.';
+
+  @override
+  String get tutorialWholePath => 'Todo o tutorial';
+
+  @override
+  String get tutorialLessonsTitle => 'Lições do tutorial';
+
+  @override
+  String get tutorialNextLesson => 'Lição seguinte';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Lição $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Tu';
 
   @override
@@ -653,34 +825,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tutorialFinish => 'Começar a jogar';
 
   @override
-  String get tutorialReplayButton => 'Rever o tutorial';
-
-  @override
-  String get tutorialStep0 =>
-      'Bem-vindo ao Le 10000! O objetivo: atingir exatamente 10 000 pontos. Jogamos um turno juntos no ecrã de jogo real: nada é guardado.';
-
-  @override
-  String get tutorialStep1 => 'Toca no botão de lançar para lançar os 5 dados.';
-
-  @override
-  String get tutorialStep2 =>
-      'Aqui só pontuam o 1 (100) e o 5 (50): ficam guardados, a mão vale 150. São precisos 500 pontos para entrar no jogo: relança os outros 3 dados.';
-
-  @override
-  String get tutorialStep3 =>
-      'Três 3: 300 pontos, a mão sobe para 450. Todos os dados pontuaram: dados quentes! Relançam-se os 5 dados, sem poder parar.';
-
-  @override
-  String get tutorialStep4 =>
-      'Dois 5, mas são opcionais: este seletor escolhe quantos manter. Com os dois, 550 terminaria em 50: não poderias parar. Escolhe 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 pontos: chega para entrar, e sem 50 no fim. Toca na mão para parar e registá-los.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 pontos registados! O bot joga; um lançamento sem pontos é um rebentamento (turno perdido, um traço na linha). O primeiro a atingir exatamente 10 000 ganha. As regras completas estão no menu.';
+  String get tutorialReplayButton => 'Lições do tutorial';
 
   @override
   String get rulesGoalTitle => 'Objetivo do jogo';
@@ -798,6 +943,49 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'Num jogo já começado, o seu lugar ficará vazio e o jogo aguardará o seu regresso.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Vais sair da sala: um bot jogará no teu lugar até ao fim do jogo.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'À espera do início do jogo';
+
+  @override
+  String get logPlayerReplacedByBot => 'saiu do jogo: um bot joga no seu lugar';
+
+  @override
+  String get botSeatTooltip => 'Jogado por um bot (jogador saiu)';
+
+  @override
+  String get rematchButton => 'Jogar outra vez';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name propõe uma desforra';
+  }
+
+  @override
+  String get rematchWaiting => 'À espera dos outros jogadores…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Aceitar';
+
+  @override
+  String get rematchRefuse => 'Recusar';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Saíste da sala: não há desforra para ti.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Não há desforra: são precisos pelo menos dois jogadores.';
 
   @override
   String get onlineConnecting => 'A ligar ao servidor…';
@@ -925,10 +1113,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get emotePhraseYes => 'Sim!';
 
   @override
-  String get emotePhraseTooGreedy => 'Ganancioso demais!';
+  String get emotePhraseTooGreedy => 'A gula é um feio defeito!';
 
   @override
-  String get emotePhraseTooLucky => 'Um pouco sortudo demais...';
+  String get emotePhraseTooLucky => 'Um pouco de sorte a mais...';
 
   @override
   String get emotePhraseDryTenThousand => 'Direto aos 10000';
@@ -944,6 +1132,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Desculpem, mas tenho de ir';
+
+  @override
+  String get emoteAngry => 'Zangado';
+
+  @override
+  String get emoteRelieved => 'Aliviado';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Mas que escolha estranha é esta?';
+
+  @override
+  String get emotePhraseAllByFives => 'Tudo pelos cincos!';
+
+  @override
+  String get emotePhraseWithPanache => 'Com estilo!';
+
+  @override
+  String get emotePhraseUnfair => 'Isto é mesmo muito injusto';
+
+  @override
+  String get emotePhrasePhew => 'Ufa!';
+
+  @override
+  String get emotePhraseAtLast => 'Finalmente!';
+
+  @override
+  String get emotePhraseCloseCall => 'Foi por pouco!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Bem jogado';
+
+  @override
+  String get emotePhraseSorry => 'Desculpa';
 
   @override
   String get gameHistoryBar => 'Histórico';

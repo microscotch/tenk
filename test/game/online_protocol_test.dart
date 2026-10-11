@@ -7,10 +7,10 @@ ClientMessage roundTrip(ClientMessage m) => ClientMessage.fromJson(m.toJson());
 void main() {
   group('messages du client', () {
     test('chaque message survit à un aller-retour JSON', () {
-      expect(roundTrip(ClientMessage.create(name: 'Anna')).params, {'name': 'Anna', 'features': supportedFeatures});
+      expect(roundTrip(ClientMessage.create(name: 'Anna')).params, {'name': 'Anna', 'features': clientFeatures});
       expect(roundTrip(ClientMessage.join(code: 'ab3cd', name: 'Bob')).params,
-          {'code': 'AB3CD', 'name': 'Bob', 'features': supportedFeatures});
-      expect(roundTrip(ClientMessage.rejoin(token: 'a' * 32)).params, {'token': 'a' * 32, 'features': supportedFeatures});
+          {'code': 'AB3CD', 'name': 'Bob', 'features': clientFeatures});
+      expect(roundTrip(ClientMessage.rejoin(token: 'a' * 32)).params, {'token': 'a' * 32, 'features': clientFeatures});
       expect(roundTrip(ClientMessage.reorder([1, 0, 2])).params, {'order': [1, 0, 2]});
       expect(roundTrip(ClientMessage.start()).type, ClientMessageType.start);
       expect(roundTrip(ClientMessage.leave()).type, ClientMessageType.leave);
@@ -107,7 +107,7 @@ void main() {
     test('joined, room, action, snapshot et error survivent à un aller-retour JSON', () {
       final joined = roundTripServer(ServerMessage.joined(code: 'ABCDE', token: 'a' * 32, seat: 2));
       expect((joined.roomCode, joined.token, joined.seat), ('ABCDE', 'a' * 32, 2));
-      expect(joined.features, supportedFeatures);
+      expect(joined.features, serverFeatures);
       final legacyJoined = ServerMessage.fromJson({
         'v': onlineProtocolVersion,
         'type': 'joined',
@@ -171,13 +171,17 @@ void main() {
   });
 
   group('émotions', () {
-    test('le catalogue : quatre émotions, chacune avec ses phrases, sous des noms stables', () {
-      expect(Emote.values.map((e) => e.name), ['thoughtful', 'mocking', 'devastated', 'joyful']);
-      expect(Emote.mocking.phrases, ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy']);
-      expect(Emote.thoughtful.phrases, ['tooLucky', 'dryTenThousand']);
-      expect(Emote.devastated.phrases, ['noWay', 'coincidence', 'lucky', 'argh']);
-      expect(Emote.joyful.phrases, ['hello', 'goodLuck', 'thanks', 'sorryMustGo']);
-      expect(supportedFeatures, contains(emotesFeature));
+    test('le catalogue : six émotions, chacune avec ses phrases, sous des noms stables', () {
+      expect(Emote.values.map((e) => e.name), ['thoughtful', 'mocking', 'devastated', 'angry', 'relieved', 'joyful']);
+      expect(Emote.mocking.phrases,
+          ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy', 'allByFives', 'withPanache']);
+      expect(Emote.thoughtful.phrases, ['tooLucky', 'dryTenThousand', 'strangeChoice']);
+      expect(Emote.devastated.phrases, ['noWay', 'unfair', 'argh']);
+      expect(Emote.angry.phrases, ['coincidence', 'lucky']);
+      expect(Emote.relieved.phrases, ['phew', 'atLast', 'closeCall']);
+      expect(Emote.joyful.phrases, ['hello', 'goodLuck', 'thanks', 'sorryMustGo', 'wellPlayed', 'sorry']);
+      expect(clientFeatures, contains(emotesFeature));
+      expect(serverFeatures, containsAll([emotesFeature, emotes2Feature]));
     });
 
     test('une émotion, seule ou avec l\'une de ses phrases, fait l\'aller-retour dans les deux sens', () {
@@ -207,6 +211,50 @@ void main() {
       expect(() => parse({'emote': 'joyful', 'phrase': 1}), throwsFormatException);
       expect(() => ServerMessage.fromJson({'v': onlineProtocolVersion, 'type': 'emote', 'params': {'seat': 0, 'emote': 'x'}}).emote,
           throwsFormatException);
+    });
+  });
+
+  group('seconde série du protocole (bots, départ, revanche)', () {
+    ServerMessage serverRoundTrip(ServerMessage m) => ServerMessage.fromJson(m.toJson());
+
+    test('un siège de bot : le champ voyage, et un message d\'avant (sans lui) se lit encore', () {
+      const bot = SeatInfo(name: 'Anna', connected: true, bot: true);
+      expect(SeatInfo.fromJson(bot.toJson()), bot);
+      expect(SeatInfo.fromJson({'name': 'Bob', 'connected': true}).bot, isFalse);
+      expect(const SeatInfo(name: 'Bob', connected: true).toJson().containsKey('bot'), isFalse);
+    });
+
+    test('`room` annonce le lancement de la partie, et ne l\'écrit que s\'il a eu lieu', () {
+      final room = ServerMessage.room(code: 'AB3CD', phase: RoomPhase.playing, seats: const [], hostSeat: 0, begun: true);
+      expect(serverRoundTrip(room).begun, isTrue);
+      expect(ServerMessage.room(code: 'AB3CD', phase: RoomPhase.playing, seats: const [], hostSeat: 0).params.containsKey('begun'), isFalse);
+    });
+
+    test('`begin` et `rematch` côté client', () {
+      expect(roundTrip(ClientMessage.begin()).type, ClientMessageType.begin);
+      expect(roundTrip(ClientMessage.rematch(RematchAnswer.refuse)).rematchAnswer, RematchAnswer.refuse);
+      expect(() => ClientMessage.fromJson({'v': onlineProtocolVersion, 'type': 'rematch', 'params': {'answer': 'maybe'}}),
+          throwsFormatException);
+    });
+
+    test('`rematch` côté serveur : étape, proposeur, temps restant, réponses', () {
+      final m = serverRoundTrip(ServerMessage.rematch(
+        status: RematchStatus.pending,
+        proposerSeat: 2,
+        remainingMs: 45000,
+        answers: const {2: true, 0: false},
+      ));
+      expect(m.rematchStatus, RematchStatus.pending);
+      expect(m.proposerSeat, 2);
+      expect(m.remaining, const Duration(seconds: 45));
+      expect(m.rematchAnswers, {2: true, 0: false});
+      final bare = serverRoundTrip(ServerMessage.rematch(status: RematchStatus.cancelled));
+      expect((bare.proposerSeat, bare.remaining, bare.rematchAnswers), (null, null, const <int, bool>{}));
+    });
+
+    test('le serveur annonce plus que l\'app : l\'app n\'annonce que ce qu\'elle gère', () {
+      expect(serverFeatures, containsAll([seatBotsFeature, startSignalFeature, rematchFeature, emotes2Feature]));
+      expect(serverFeatures, containsAll(clientFeatures));
     });
   });
 }

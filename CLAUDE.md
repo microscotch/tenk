@@ -152,21 +152,27 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   mid-final-round if someone else reaches 10000, via `triggeringWinnerIndex`/`remainingFinalTurns`).
   `startTurn(useFullHand:)` is where a player either continues an inherited hand (score + kept dice
   carried over as a bonus base) or starts fresh with 5 dice.
-- `game/tutorial.dart` — the first-launch tutorial's script: `tutorialFaces` (the dice, in the order the engine asks
-  for them: `1 5 2 3 6`, `3 3 3` = hot dice at 450, `5 5 2 3 6`) and `tutorialStepFor(engine, …)`, which derives the
-  current `TutorialStep` **from the engine's state** (never a counter). The tutorial is the **real `GameScreen`**
-  (`GameScreen(tutorial: TutorialGuide)`, started by `TutorialScreen`) on a real `GameEngine` — a player against a
-  bot that never plays — driven by `GameNotifier.startTutorial` (a `ScriptedRandom` of those faces, no seed, so
-  `_commit` persists nothing) and cleared by `endTutorial`. Speech bubbles (`TutorialOverlay`) are drawn over the
-  screen from the `GlobalKey` of the control to touch (`rollKey`/`exchangeKey`/`stopKey`, set on the real controls);
-  only that control answers (`_tutorialAllows`), everything else is absorbed. In tutorial mode the screen schedules
-  no AI/auto move, ignores shakes, drops the ☰ menu and the inherited-hand popup, and the system back button means
-  "Passer". Because it overwrites the singleton `GameNotifier`, "Revoir le tutoriel" is offered only by
-  `RulesScreen(canReplayTutorial: true)`, i.e. from the home chip, never from a game's ☰ (a game screen would be
-  stacked underneath). The screen's own default 5s choice aims at the best score, so `tutorialDefaultKeep` pins
-  it for the two scripted rolls with 5s. `launchScreenFor` shows it (then the profile creation) only with no
-  profile, no legacy `playerName` and `tutorialSeen` false. Step texts are `tutorialStep0..6` (+ `tutorialPlayerName`)
-  in the ARBs: changing the scenario means changing them in all 11 languages.
+- `game/tutorial.dart` — the tutorial: 7 lessons, simplest to subtlest (`tutorialLessons`: basics → hot dice and
+  optional 5s / never stop on 50 → bust, dash then barred → extension rule → inherited hand → striking a player out
+  by collision → final round and the automatic exact-10000 take). A `TutorialLesson` has a prepared `setup`
+  (scores, grids, final-round state), its `faces` in global roll order (the bot's included — the prudent bot is
+  deterministic given the dice, so its moves are scripted by the faces alone), its `beats` and `finished`. The beat
+  on screen is derived (`beatFor`) from the engine state plus the "Suivant" already pressed — never a counter; each
+  beat names a `TutorialTarget` (a control to touch, or an element to look at with its own "Suivant").
+  `test/game/tutorial_test.dart` plays every lesson headless through the real engine and bot and checks every face
+  is consumed: **any change to a lesson's dice or setup must keep that test green**. The UI is the **real
+  `GameScreen`** (`GameScreen(tutorial: TutorialGuide)`, started by `TutorialScreen`, chained or one lesson) on a real
+  `GameEngine` (`GameNotifier.startTutorial(lesson, …)`: `ScriptedRandom`, no seed, so `_commit` persists nothing;
+  `endTutorial` clears it). `TutorialOverlay` draws a comic bubble from the `GlobalKey` of the element (keys on the
+  real controls, the bot's score row, the final-round banner, and the ✓ / "take" buttons of the bust and
+  inherited-hand dialogs — dialogs are routes, so `TutorialDialogLayer` puts a second overlay inside them), lets
+  the finger through to that control only (`_tutorialAllows`), and scrolls the target into view. The bot plays only
+  when the lesson says so (`TutorialGuide.botMayPlay`); the forced exact-10000 take and the inherited-hand dialog
+  work as in a real game. Because it overwrites the singleton `GameNotifier`, the lesson list
+  (`TutorialLessonsScreen`) is offered only by `RulesScreen(canReplayTutorial: true)`, i.e. from the home chip, never
+  from a game's ☰. `launchScreenFor` runs the whole path (then the profile creation) only with no profile, no
+  legacy `playerName` and `tutorialSeen` false. Texts: `tutorial<Lesson><Beat>`, `tutorialLesson<Id>` titles,
+  `tutorialRollPrompt` / `tutorialBotTurn` shared, in all 11 ARBs.
 - `game/dice_off.dart` — separate mini state machine for the pre-game 1-die roll-off that decides
   turn order: everyone rolls at once (`rollAll`), lowest die starts, ties at the lowest re-roll among
   only themselves; `playOrder` gives the seats in play order (see the order rule below). Old journals
@@ -186,7 +192,15 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   journal left it), `applyGameAction`, `replayTurnStarts` (where each turn begins — bounds the
   replay slider), `diceOffActionCount`, active-duration helpers. `ReplayResult.playOrder` maps each
   engine index back to its original seat (`GameStatistics` relies on it); a `diceOffRollAll` action in
-  a journal is what marks it as using the current order rule.
+  a journal is what marks it as using the current order rule. `presetOrder` (an online rematch) is a roll-off
+  action too: the play order imposed without dice (`DiceOffState.preset`); it only appears in games where every
+  participant announced `rematchFeature`, since an older app couldn't parse it.
+- `game/score_radar.dart` — the game screen's player list: `rotatedOrder` (the active player on top, then play
+  order) and the "radar" shown on every *other* player's row: `collisionTargets(other, potentialTotal)` = that player's
+  first 3 non-barred grid lines ≥ the current player's potential total (their score + live hand), i.e. the lines a
+  stop right now could still bar (a collision bars any non-barred line, not just the current one); when there are
+  none, `radarGap` (always negative then: no line is ever above its player's score). The current player's row keeps
+  its previous-score parenthesis and 200-gap hints; other rows drop them for the radar.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.
@@ -195,7 +209,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   Statistics are never migrated: they are recomputed from the archived games (see
   `syncPlayerStatistics` below).
 - `game/ai/` — `AiStrategy` interface plus three difficulty profiles (`ai_profiles.dart`) built on a
-  shared `bustProbability()` calculation.
+  shared `bustProbability()` calculation. `ai_turn.dart` is the pure turn logic on top of a strategy:
+  `nextAiMove(engine, strategy)` returns the next single `GameAction` (start turn / end bust / keep / bank /
+  roll), with `aiAcceptsInheritedHand`, `aiDeclineFives` (forced exact-10000 keep + human keep bounds) and
+  `aiContinues`. `GameNotifier.playAiTurnStep` / `previewAi*` and the server's seat bot both call it, so a
+  local bot and a server bot can never play by different rules.
 
 ### State layer (`lib/state/`)
 
@@ -228,9 +246,17 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   **`GameNotifier` is one singleton shared with local play, so `OnlineSession` must never write into a local
   game**: it applies actions and ends the game only when `isOnline`, and a snapshot replaces a live local
   game (`hasLiveLocalGame`) only if the player asked (`tryResume`, `reopenGame`, `start`) or was waiting in
-  the lobby. `leave()` frees the seat and forgets the token (lobby, finished game); `disconnect()` keeps
-  the token and the seat — what "Quitter" does in a started game, since the game then waits for the player.
-  There is no way to *forfeit* a started game in v1 (it needs server-side semantics or bots).
+  the lobby. `leave()` frees the seat and forgets the token; `disconnect()` keeps the token and the seat.
+  "Quitter" in a started game (`leaveGame()`, after a confirmation dialog on the game screen and the entry
+  screen) is `leave()` when the server announces `seatBotsFeature` — the seat goes to a server bot for good —
+  and `disconnect()` against an older server (the game would wait for the player). `OnlineState` carries the
+  server's features (`serverFeatures`, `seatBotsEnabled`, `startSignalEnabled`, `rematchEnabled`,
+  `emotes2Enabled`), `begun` (start signal), the pending `rematch` vote and `gameSerial` (bumped when a snapshot
+  starts a new game in the same room — a rematch — only after the previous one was `over`). Rematch
+  exclusion/cancellation is reported through `onlineNoticeProvider` (the session itself is reset by then). With
+  `rematchFeature`, the token is kept in phase `over` (a drop during the 60 s vote must be able to reconnect);
+  without it, as before, `over` clears it. `GameNotifier.setOnlineBotSeats` / `isOnlineBot(i)` mark seats a
+  server bot plays — kept apart from `_setup.aiPlayers` on purpose: the local AI must never play from my seat.
 - `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
   file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
   config of the game **being shown**, linking by profile id, never by name — so an archived game
@@ -288,6 +314,14 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     the face: `dieFacePlacement` picks, per face, the rotation that puts the image's bottom toward the face's bottom,
     and `DiceFaceTextures` draws every texture mirrored horizontally to cancel the reflection — checked
     numerically in `test/ui/die_scene_placement_test.dart` (no GPU in tests, so never seen rendered there).
+  - **The game log is a bottom bar in every mode** (local, online, replay): `_historyBar`, in
+    `Scaffold.bottomNavigationBar` (above `ReplayControls` in a replay), shows the latest entry on one line and an
+    up arrow; a tap or an upward swipe unrolls the whole log in a bottom sheet (`_openHistory`). Tests that assert
+    on older log entries open it with `test/test_helpers/history.dart` (`openHistory`, `inHistory` — the bar repeats
+    the latest entry, so scope finders to the sheet). A bust entry starts with the points it cost
+    (`bustedHandScore`, the same number as the bust dialog): "1250 : Craqué ! => 3000 petit trait".
+  - On a full hand, once the dice have settled, the roll button reads "Main pleine ! → {total}": the player's total
+    if that hand were kept (`rollButtonHotDiceTotal`), shown even though stopping isn't allowed there.
   - Widget test states are built with `debugLoadState` snapshots; because of the auto-advance behavior,
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.
@@ -299,14 +333,35 @@ generator (clients never learn the seed — they would predict the dice), runs t
 move against the real `GameEngine` and returns the actions to broadcast, each `roll` with its faces.
 `Room` holds the seats, the phase (lobby / playing / suspended / over) and the connections; `RoomManager`
 is the front door (per-address connection, room-creation and failed-join limits, message rate and size,
-sweep of expired rooms).
+sweep of expired rooms). Every delayed action of a room (seat-bot moves, the rematch deadline) goes through an
+injected `Scheduler` (`server/src/scheduler.dart`; `TimerScheduler` in production, `FakeScheduler` in tests,
+which advances the test clock), never a bare `Timer`.
 
 - **The engine is shared by relative path, not as a package**: the app package depends on the Flutter SDK,
   so a Dart-only server cannot depend on it. Code that imports `../../lib/game/**` therefore lives in
   `server/src/` (not `server/lib/`: a file under a package's `lib/` is `package:` and cannot import out of
   it). `lib/game` must keep importing nothing from Flutter, or the server stops compiling.
-- **The server never plays for anyone.** A disconnected player keeps their seat (reconnect token); past 2
-  minutes the room is *suspended* and waits. Rooms expire after 24 h idle (30 min in the lobby).
+- **A disconnected player keeps their seat** (reconnect token); past 2 minutes the room is *suspended* and waits.
+  Rooms expire after 24 h idle (30 min in the lobby). **A player who *leaves* a started game for good** (`leave`
+  while playing/suspended — older apps never send it there, they disconnect) **hands the seat to a server bot**
+  (`seatBotsFeature`): `Room._convertToBot` erases the token (the seat can't be retaken), flags `SeatInfo.bot`
+  (sent with `connected: true`, so older clients don't show the seat as absent), and the bot plays via
+  `nextAiMove` at the prudent level, paced by the injected `Scheduler` (`botActionDelay` 1.5 s, + `botBustExtraDelay`
+  after a bust; `TENK_BOT_DELAY_MS` overrides it, the e2e test uses 50 ms). Bots never suspend a game. When no
+  human holds a seat any more (`Room.isAbandoned`; a merely disconnected human still does), the room closes itself
+  through `onClose`. Never rename a bot seat: `onlineGameId` hashes the names.
+- **Start signal** (`startSignalFeature`): after the roll-off, only the starter's "Jouer" is active; it sends
+  `begin`, the room sets `begun` and rebroadcasts `room`; the others' disabled "En attente du début de la partie"
+  turns into navigation on `begun` (fallback: the first game action). The starter's first move also sets it (an
+  older starter app never says `begin`), and a bot starter begins at once.
+- **Rematch** (`rematchFeature`), on the online game-over screen (`OnlineGameOverPanel`): the first `propose`
+  opens a `rematchWindow` (60 s) vote, a later `propose` counts as accept, `refuse` excludes at once (`rematch`
+  `excluded`), silence / an older client / a disconnected seat count as refusals. With ≥ 2 acceptors the room
+  reorders its seats with `rematchSeatOrder` (previous play order, starting with the best previous score, bots
+  and refusers dropped), re-sends `joined`, starts a `GameAuthority(presetOrder: identity)` — the journal starts
+  with `GameActionType.presetOrder` (a dice-off action, `DiceOffState.preset`; no new roll-off) — and sends a
+  snapshot; otherwise `cancelled` to everyone and the room closes. No new `RoomPhase`: the vote runs inside
+  `over`.
 - **No persistent state**: games live in memory. The privacy policy (`docs/privacy-policy.html`) states
   exactly that — pseudo, random token and moves, in memory only, IP used in memory for limits and not
   recorded. Hosting must keep to it: **no access logs** on the reverse proxy that terminates TLS.
@@ -363,18 +418,30 @@ sweep of expired rooms).
   is linked to my seat (`playerIds`), so an online game counts for it even under a nickname.
 - **The active player's 5s choice is shown live to the others** (`select` → `selection`, not a move: checked by
   `GameAuthority.checkSelection`, kept by the room until the next action). New protocol messages go behind a
-  **feature negotiation** (`supportedFeatures`, announced in `create`/`join`/`rejoin` and `joined`), never behind a
-  new `onlineProtocolVersion`, which would lock out every installed client.
-- **Emotes (a controlled chat)**: 4 emotions × a few short phrases (`lib/game/online/emotes.dart`), sent by **stable
-  string ids**, never free text nor indexes; each device shows the phrase in its own language. They are **outside the
+  **feature negotiation**, never behind a new `onlineProtocolVersion`, which would lock out every installed client.
+  Two lists: `serverFeatures` (announced in `joined`) and `clientFeatures` (announced in `create`/`join`/`rejoin`) —
+  the server ships first and may announce what an installed app can't handle yet; each side only sends what the
+  other announced. **Never add a value to an enum carried by an existing message** (`RoomPhase`, `ErrorCode`,
+  `GameActionType` in `action`/`snapshot`): an older client fails to parse it and resyncs in a loop. A new field in
+  an existing message is safe (`SeatInfo.bot`, `room.begun`); a new message type is ignored by older clients.
+- **Emotes (a controlled chat)**: 6 emotions × a few short phrases (`lib/game/online/emotes.dart`), sent by **stable
+  string ids**, never free text nor indexes; each device shows the phrase in its own language. The second series
+  (Fâché `angry`, Soulagé `relieved`, and the phrases added or moved with them) is `emotes2Feature`: the room sends it
+  as is to sessions that announced it and a `downgradeForV1` version to the others (Fâché's phrases go back under
+  Dévasté, where older apps have them; a new phrase becomes its bare emotion; Soulagé is dropped). The app offers
+  `emotesFor(v2:)` / `Emote.phrasesFor(v2:)` depending on the server. "Comme de par hasard..." and "Veinard va !"
+  now live under Fâché but stay in Dévasté's `retired` (older apps send them there). Long press opens the phrases
+  in a comic speech bubble anchored on the button (`_PhraseBubbleRoute`), not a popup menu. They are **outside the
   game journal** (no seq, never archived/replayed). The room relays them to every session that announced
   `emotesFeature` (sender included), silently drops one within `emoteCooldown` (3 s) of the same seat's previous one,
   and ignores them before the start. Adding or rewording a phrase is safe (an installed app silently ignores a phrase id it doesn't know); a phrase
   taken out of a menu moves to `Emote.retired` instead of being deleted (an older app may still send it, and the server
   would refuse an unknown one). Removing or renaming an *emotion* means a new feature name (`emotes2`), not editing `emotes`.
   New phrases need the server redeployed before the app ships: the running server refuses ids it doesn't know.
-  Online only: the game screen swaps its log for an "Historique" bar and shows the emote buttons and bubbles.
-- Not in v1: bots and mixed local players in online games; forfeiting a started game.
+  Online only: the game screen and the game-over screen show the emote buttons and bubbles (the history is the
+  bottom bar, as in every mode).
+- Not supported: mixed local players in an online game; bots chosen at setup (only server bots replacing a player
+  who left).
 
 ## Design documents — keep them current
 

@@ -30,7 +30,9 @@ void main() {
     await probe.close();
 
     server = await Process.start('dart', ['run', 'bin/server.dart'],
-        workingDirectory: 'server', environment: {'PORT': '$port', 'HOST': '127.0.0.1', 'TENK_LATEST_BUILDS_URL': ''});
+        workingDirectory: 'server',
+        // Un bot de siège qui ne réfléchit pas 1,5 s par coup : le test n'attend pas.
+        environment: {'PORT': '$port', 'HOST': '127.0.0.1', 'TENK_LATEST_BUILDS_URL': '', 'TENK_BOT_DELAY_MS': '50'});
     final ready = Completer<void>();
     server.stdout.transform(utf8.decoder).listen((line) {
       if (line.contains('à l\'écoute') && !ready.isCompleted) ready.complete();
@@ -135,6 +137,58 @@ void main() {
       [for (final p in bobBack.read(gameProvider)!.players) p.totalScore],
       [for (final p in anna.read(gameProvider)!.players) p.totalScore],
     );
+  }, timeout: const Timeout(Duration(seconds: 120)));
+
+  test('seul le premier joueur lance la partie ; un joueur qui part est remplacé par un bot qui joue ses tours', () async {
+    final anna = newClient(FakeCredentialsStore());
+    final bob = newClient(FakeCredentialsStore());
+    await anna.read(onlineSessionProvider.notifier).create('Anna');
+    await until(() => anna.read(onlineSessionProvider).phase == RoomPhase.lobby, 'salon créé');
+    await bob.read(onlineSessionProvider.notifier).join(anna.read(onlineSessionProvider).roomCode!, 'Bob');
+    await until(() => bob.read(onlineSessionProvider).mySeat != null, 'siège reçu par Bob');
+    anna.read(onlineSessionProvider.notifier).start();
+    await until(
+      () => anna.read(onlineSessionProvider).gameStarted && bob.read(onlineSessionProvider).gameStarted,
+      'partie commencée chez les deux',
+    );
+    expect(anna.read(onlineSessionProvider).startSignalEnabled, isTrue);
+    expect(anna.read(onlineSessionProvider).begun, isFalse);
+
+    // Le signal de départ, du premier joueur seulement.
+    final clients = [anna, bob];
+    final starter = clients.firstWhere((c) => c.read(gameProvider.notifier).isMyOnlineTurn);
+    final other = clients.firstWhere((c) => c != starter);
+    starter.read(onlineSessionProvider.notifier).begin();
+    await until(() => other.read(onlineSessionProvider).begun, 'départ annoncé à l\'autre joueur');
+
+    // Bob part pour de bon : un bot du serveur reprend son siège.
+    await bob.read(onlineSessionProvider.notifier).leaveGame();
+    await until(() => anna.read(onlineSessionProvider).seats[1].bot, 'siège de Bob repris par un bot');
+    final game = anna.read(gameProvider.notifier);
+    final bobIndex = game.onlineLink!.playOrder.indexOf(1);
+    expect(game.isOnlineBot(bobIndex), isTrue);
+
+    // Anna joue ses tours ; le bot joue les siens, jusqu'à un tour complet de
+    // bot (il a eu la main, puis l'a rendue).
+    var botPlayed = false;
+    for (var step = 0; step < 200 && !(anna.read(gameProvider)?.gameOver ?? false); step++) {
+      final engine = anna.read(gameProvider)!;
+      if (engine.currentPlayerIndex == bobIndex) {
+        final before = game.onlineActionCount;
+        await until(() => game.onlineActionCount > before, 'un coup du bot');
+        botPlayed = true;
+        continue;
+      }
+      if (botPlayed) break; // la main est revenue à Anna après le tour du bot
+      final before = game.onlineActionCount;
+      playOneMove(game);
+      await until(() => game.onlineActionCount > before, 'coup d\'Anna reçu');
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+    }
+    expect(botPlayed, isTrue);
+    // Le journal reçu se rejoue à l'identique : le bot a joué des coups légaux.
+    final replayed = replayGame(GameSetup(playerNames: game.originalSetup!.playerNames), 0, game.actions).engine!;
+    expect([for (final p in replayed.players) p.totalScore], [for (final p in anna.read(gameProvider)!.players) p.totalScore]);
   }, timeout: const Timeout(Duration(seconds: 120)));
 
   test('l\'hôte dont l\'app a été tuée revient par le code : il reprend sa place, pas un « Anna 2 »', () async {

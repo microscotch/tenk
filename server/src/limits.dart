@@ -67,6 +67,19 @@ class ServerConfig {
   final Duration gameIdleTtl;
   final Duration finishedTtl;
 
+  /// Le temps que prend un bot de siège (qui joue pour un joueur parti, voir
+  /// `seatBotsFeature`) avant chacun de ses coups, comme un joueur qui réfléchit
+  /// — et pour que les autres aient le temps de voir les dés rouler.
+  final Duration botActionDelay;
+
+  /// Ce qu'un bot attend en plus quand son tour vient de craquer : le temps que
+  /// les dés s'immobilisent chez les clients et que le craque se lise.
+  final Duration botBustExtraDelay;
+
+  /// Le temps laissé aux joueurs pour répondre à une revanche : sans réponse,
+  /// c'est un refus.
+  final Duration rematchWindow;
+
   const ServerConfig({
     this.maxRooms = 500,
     this.maxConnectionsPerIp = 12,
@@ -82,5 +95,8 @@ class ServerConfig {
     this.lobbyIdleTtl = const Duration(minutes: 30),
     this.gameIdleTtl = const Duration(hours: 24),
     this.finishedTtl = const Duration(minutes: 10),
+    this.botActionDelay = const Duration(milliseconds: 1500),
+    this.botBustExtraDelay = const Duration(milliseconds: 1100),
+    this.rematchWindow = const Duration(seconds: 60),
   });
 }

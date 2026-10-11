@@ -358,6 +358,11 @@
 
   "logHotDiceMessage": "Main pleine !",
   "@logHotDiceMessage": {"description": "Entrée du journal de partie quand un lancer déclenche des dés chauds (tous les dés ont scoré)."},
+  "rollButtonHotDiceTotal": "Main pleine ! → {total}",
+  "@rollButtonHotDiceTotal": {
+    "description": "Libellé du bouton de lancer sur une main pleine, une fois les dés immobilisés : le total que le joueur aurait si cette main était gardée (son score + la main), même si s'arrêter là n'est pas permis.",
+    "placeholders": {"total": {"type": "int"}}
+  },
 
   "logScoreCollisionMessage": "Score barré :",
   "@logScoreCollisionMessage": {"description": "Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné."},
@@ -395,14 +400,23 @@
     "placeholders": {"score": {"type": "int"}}
   },
 
-  "logBustTiretMessage": "Craqué ! => {score} petit trait",
-  "@logBustTiretMessage": {
-    "description": "Entrée du journal pour un craque qui marque un petit trait (tiret) sur la ligne courante : le score acquis ne bouge pas.",
-    "placeholders": {"score": {"type": "int"}}
+  "logBustMessage": "{lost} : Craqué !",
+  "@logBustMessage": {
+    "description": "Entrée du journal pour un craque sans conséquence sur la grille (score à 0) : les points perdus ({lost}, comme dans la popup de craque), puis « Craqué ! ».",
+    "placeholders": {"lost": {"type": "int"}}
   },
 
-  "logBustBarredPrefix": "Craqué ! =>",
-  "@logBustBarredPrefix": {"description": "Début de l'entrée du journal pour un craque qui barre la ligne courante ; suivi du score barré, puis de logBustBarredReturnMessage."},
+  "logBustTiretMessage": "{lost} : Craqué ! => {score} petit trait",
+  "@logBustTiretMessage": {
+    "description": "Entrée du journal pour un craque qui marque un petit trait (tiret) sur la ligne courante : le score acquis ne bouge pas.",
+    "placeholders": {"lost": {"type": "int"}, "score": {"type": "int"}}
+  },
+
+  "logBustBarredPrefix": "{lost} : Craqué ! =>",
+  "@logBustBarredPrefix": {
+    "description": "Début de l'entrée du journal pour un craque qui barre la ligne courante, précédé des points perdus ({lost}, comme dans la popup de craque) ; suivi du score barré, puis de logBustBarredReturnMessage.",
+    "placeholders": {"lost": {"type": "int"}}
+  },
 
   "logBustBarredReturnMessage": "retour à {score}",
   "@logBustBarredReturnMessage": {
@@ -551,11 +565,7 @@
     "placeholders": {"playerName": {"type": "String"}}
   },
 
-  "diceOffPlayOrderLabel": "Ordre de jeu",
-  "@diceOffPlayOrderLabel": {"description": "Intitulé de l'ordre de jeu affiché à l'issue du tirage au sort."},
 
-  "diceOffReversedNote": "Duel entre voisins remporté par le second : la partie tourne à rebours.",
-  "@diceOffReversedNote": {"description": "Explique pourquoi l'ordre de jeu est inversé : le tirage s'est joué en duel entre deux voisins et le second dans l'ordre de la liste l'a gagné."},
 
   "gameOverTitle": "Fin de la partie",
   "@gameOverTitle": {"description": "Titre de l'écran de fin de partie."},
@@ -592,6 +602,10 @@
 
   "tiretTooltip": "Tiret : un second craque barrera le score",
   "@tiretTooltip": {"description": "Infobulle expliquant la sanction \"tiret\" sur la ligne de score courante."},
+  "radarTargetsTooltip": "Scores que la main en cours permettrait de barrer",
+  "@radarTargetsTooltip": {"description": "Infobulle du radar d'un adversaire dans la liste des joueurs : ses lignes de score que le joueur courant barrerait en s'arrêtant sur elles."},
+  "radarGapTooltip": "Écart avec le total de la main en cours",
+  "@radarGapTooltip": {"description": "Infobulle de l'écart affiché pour un adversaire quand le joueur courant ne peut plus barrer aucune de ses lignes (son score − total potentiel)."},
 
   "previousScoreHadTiretTooltip": "Le score précédent portait un tiret",
   "@previousScoreHadTiretTooltip": {"description": "Infobulle indiquant que la ligne de score précédente portait un tiret."},
@@ -611,27 +625,99 @@
   "@tutorialTitle": {"description": "Tutoriel du premier lancement : tutorialTitle"},
   "tutorialSkip": "Passer",
   "@tutorialSkip": {"description": "Tutoriel du premier lancement : tutorialSkip"},
+  "tutorialFinalOutro": "Le bot est barré et doit à son tour tenter les 10 000. Vous connaissez maintenant toutes les règles : bonne partie !",
+  "@tutorialFinalOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialFinalExact": "Un brelan de 4 : 10 000 pile ! La prise est automatique.",
+  "@tutorialFinalExact": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialFinalNoStop": "100 : 9600. Dans le dernier tour, pas d'arrêt possible : relancez.",
+  "@tutorialFinalNoStop": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialFinalIntro": "Le bot a atteint 10 000 : c'est le dernier tour. Pour gagner, il faut l'égaler, ce qui le barre. S'arrêter avant est interdit.",
+  "@tutorialFinalIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialCollisionOutro": "Le bot est barré et retombe à 1500. Atteindre une ligne, même ancienne, d'un autre joueur la barre aussi.",
+  "@tutorialCollisionOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialCollisionCollide": "Deux as : 200. Vous seriez à 2000, le score du bot, en rouge dans son radar. Arrêtez-vous pour le barrer.",
+  "@tutorialCollisionCollide": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialCollisionIntro": "Sur la ligne du bot, le radar montre ses scores que vous pourriez barrer : atteindre le même total le fait reculer.",
+  "@tutorialCollisionIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialInheritOutro": "Après un craque, on repart toujours à 5 dés neufs. Une main qui ne pourrait plus être encaissée n'est jamais proposée.",
+  "@tutorialInheritOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialInheritStop": "Un as : la main vaut 1100. Arrêtez-vous.",
+  "@tutorialInheritStop": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialInheritTake": "Le bot s'est arrêté à 1000 en laissant 2 dés. Reprenez la main : vous partez de ses 1000 points, et les 2 dés se lancent aussitôt (on lance toujours au moins une fois avant de s'arrêter).",
+  "@tutorialInheritTake": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialInheritIntro": "Quand un joueur s'arrête en laissant des dés, le suivant peut les reprendre, avec ses points comme base.",
+  "@tutorialInheritIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialExtensionOutro": "L'extension vaut pour tout le tour, même pour un 5 (100 au lieu de 50), et s'efface à la main pleine.",
+  "@tutorialExtensionOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialExtensionExtended": "Un 2 seul ne vaut rien… sauf ici : après votre brelan de 2, il vaut 100 (en rouge). La main fait 300 : arrêtez-vous.",
+  "@tutorialExtensionExtended": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialExtensionBrelan": "Un brelan de 2 : 200. Relancez les 2 derniers dés.",
+  "@tutorialExtensionBrelan": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialExtensionIntro": "Après un brelan d'une valeur, un dé seul de la même valeur, plus tard dans le tour, vaut 100 points.",
+  "@tutorialExtensionIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBustOutro": "Un craque marque la ligne d'un trait ; un second la barre. À 0, un craque ne coûte rien.",
+  "@tutorialBustOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBustBarred": "Second craque : la ligne 1500 est barrée, vous retombez à 500, votre score précédent. Appuyez sur ✓.",
+  "@tutorialBustBarred": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBustRollAgain": "Votre ligne porte un trait : un second craque la barrerait. Lancez quand même.",
+  "@tutorialBustRollAgain": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBustTiret": "Craqué ! La main est perdue, et votre ligne de 1500 reçoit un petit trait. Appuyez sur ✓.",
+  "@tutorialBustTiret": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBustIntro": "Un lancer qui ne rapporte rien est un craque : la main en cours est perdue. Vous avez 1500 points.",
+  "@tutorialBustIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialHotDiceOutro": "Retenez : jamais d'arrêt sur un total qui finit par 50, et une main pleine se relance toujours.",
+  "@tutorialHotDiceOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialHotDiceStop": "500 : assez pour entrer, et pas de 50 à la fin. Arrêtez-vous.",
+  "@tutorialHotDiceStop": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialHotDiceFives": "Deux 5, mais facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s'arrêter. Choisissez 1.",
+  "@tutorialHotDiceFives": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialHotDiceFullHand": "Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le bouton montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s'arrêter.",
+  "@tutorialHotDiceFullHand": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialHotDiceKept": "L'as et le 5 sont gardés : la main vaut 150. Relancez les 3 autres dés.",
+  "@tutorialHotDiceKept": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialHotDiceIntro": "Quand tous les dés rapportent, c'est la main pleine : on relance les 5. Et un 5 seul est parfois facultatif.",
+  "@tutorialHotDiceIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBasicsOutro": "700 points encaissés : vous êtes dans la partie ! Ensuite, chaque tour devra rapporter au moins 200 points.",
+  "@tutorialBasicsOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBasicsBrelan": "Trois 6 : un brelan vaut 100 fois sa valeur, ici 600 (trois as : 1000). La main vaut 700, assez pour entrer : appuyez sur la main pour vous arrêter.",
+  "@tutorialBasicsBrelan": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBasicsAce": "Seuls l'as (100) et le 5 (50) rapportent seuls : l'as est mis de côté. Pour entrer dans la partie, il faut 500 points en un tour : relancez les 4 autres dés.",
+  "@tutorialBasicsAce": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBasicsIntro": "Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. À chaque tour, on lance 5 dés et on met de côté ceux qui rapportent.",
+  "@tutorialBasicsIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonFinalRound": "Le dernier tour",
+  "@tutorialLessonFinalRound": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonCollision": "Barrer un joueur",
+  "@tutorialLessonCollision": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonInheritedHand": "La main héritée",
+  "@tutorialLessonInheritedHand": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonExtension": "L'extension",
+  "@tutorialLessonExtension": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonBust": "Le craque",
+  "@tutorialLessonBust": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonHotDice": "La main pleine",
+  "@tutorialLessonHotDice": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialLessonBasics": "Les bases",
+  "@tutorialLessonBasics": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
+  "tutorialBotTurn": "Au tour du bot : il joue seul.",
+  "@tutorialBotTurn": {"description": "Bulle du tutoriel pendant que le bot joue."},
+  "tutorialRollPrompt": "Appuyez sur le bouton de lancer.",
+  "@tutorialRollPrompt": {"description": "Bulle du tutoriel sur le bouton de lancer."},
+  "tutorialWholePath": "Tout le parcours",
+  "@tutorialWholePath": {"description": "Premier choix de la liste des leçons : tout le parcours, leçon après leçon."},
+  "tutorialLessonsTitle": "Leçons du tutoriel",
+  "@tutorialLessonsTitle": {"description": "Titre de la liste des leçons du tutoriel."},
+  "tutorialNextLesson": "Leçon suivante",
+  "@tutorialNextLesson": {"description": "Bouton de la bulle de fin d'une leçon, quand une autre suit."},
+  "tutorialLessonCounter": "Leçon {number}/{total} : {title}",
+  "@tutorialLessonCounter": {"description": "Titre de l'écran de jeu pendant une leçon du tutoriel.", "placeholders": {"number": {"type": "int"}, "total": {"type": "int"}, "title": {"type": "String"}}},
   "tutorialPlayerName": "Vous",
   "tutorialNext": "Suivant",
   "@tutorialNext": {"description": "Tutoriel du premier lancement : tutorialNext"},
   "tutorialFinish": "Commencer à jouer",
   "@tutorialFinish": {"description": "Tutoriel du premier lancement : tutorialFinish"},
-  "tutorialReplayButton": "Revoir le tutoriel",
+  "tutorialReplayButton": "Leçons du tutoriel",
   "@tutorialReplayButton": {"description": "Tutoriel du premier lancement : tutorialReplayButton"},
-  "tutorialStep0": "Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On joue un tour ensemble, sur le vrai écran de jeu : rien n'est enregistré.",
-  "@tutorialStep0": {"description": "Tutoriel du premier lancement : tutorialStep0"},
-  "tutorialStep1": "Appuyez sur le bouton de lancer pour jeter les 5 dés.",
-  "@tutorialStep1": {"description": "Tutoriel du premier lancement : tutorialStep1"},
-  "tutorialStep2": "Seuls l'as (100) et le 5 (50) rapportent ici : ils sont gardés, la main vaut 150. Il faut 500 points pour entrer dans la partie : relancez les 3 autres dés.",
-  "@tutorialStep2": {"description": "Tutoriel du premier lancement : tutorialStep2"},
-  "tutorialStep3": "Un brelan de 3 : 300 points, la main monte à 450. Tous les dés ont servi : main pleine ! On relance les 5 dés, sans pouvoir s'arrêter.",
-  "@tutorialStep3": {"description": "Tutoriel du premier lancement : tutorialStep3"},
-  "tutorialStep4": "Deux 5, mais ils sont facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s'arrêter. Choisissez 1.",
-  "@tutorialStep4": {"description": "Tutoriel du premier lancement : tutorialStep4"},
-  "tutorialStep5": "500 points : assez pour entrer, et pas de 50 à la fin. Appuyez sur la main pour vous arrêter et les encaisser.",
-  "@tutorialStep5": {"description": "Tutoriel du premier lancement : tutorialStep5"},
-  "tutorialStep6": "500 points encaissés ! Le bot reprend la main ; un lancer sans point est un craque (tour perdu, tiret sur la ligne). Le premier à atteindre exactement 10 000 gagne. Les règles complètes sont dans le menu.",
-  "@tutorialStep6": {"description": "Tutoriel du premier lancement : tutorialStep6"},
 
   "rulesGoalTitle": "But du jeu",
   "@rulesGoalTitle": {"description": "Titre de la section \"but du jeu\" de l'écran des règles."},
@@ -712,6 +798,42 @@
   "@onlineLeaveConfirmTitle": {"description": "Titre de la confirmation avant de quitter."},
   "onlineLeaveConfirmBody": "Dans une partie commencée, votre place restera vide et la partie attendra votre retour.",
   "@onlineLeaveConfirmBody": {"description": "Corps de la confirmation avant de quitter."},
+
+  "onlineLeaveGameBody": "Vous quittez le salon : un bot jouera à votre place jusqu'à la fin de la partie.",
+  "@onlineLeaveGameBody": {"description": "Corps de la confirmation de départ d'une partie en ligne en cours, quand le serveur fait reprendre le siège par un bot."},
+
+  "onlineDiceOffWaitingStart": "En attente du début de la partie",
+  "@onlineDiceOffWaitingStart": {"description": "Bouton inactif du résultat du tirage en ligne, pour les joueurs qui ne commencent pas : ils attendent que le premier joueur lance la partie."},
+
+  "logPlayerReplacedByBot": "a quitté la partie : un bot joue à sa place",
+  "@logPlayerReplacedByBot": {"description": "Entrée de l'historique quand un joueur en ligne quitte la partie et qu'un bot du serveur le remplace (précédée du blason du joueur)."},
+
+  "botSeatTooltip": "Joué par un bot (joueur parti)",
+  "@botSeatTooltip": {"description": "Infobulle de l'icône robot sur la ligne d'un joueur en ligne parti, remplacé par un bot."},
+
+  "rematchButton": "Rejouer",
+  "@rematchButton": {"description": "Bouton de l'écran de fin d'une partie en ligne : proposer une revanche aux autres joueurs."},
+
+  "rematchProposal": "{name} propose une revanche",
+  "@rematchProposal": {"description": "Carte de vote de l'écran de fin : qui propose la revanche.", "placeholders": {"name": {"type": "String"}}},
+
+  "rematchWaiting": "En attente des autres joueurs…",
+  "@rematchWaiting": {"description": "Carte de vote de l'écran de fin, après ma proposition ou mon acceptation."},
+
+  "rematchSecondsLeft": "{seconds} s",
+  "@rematchSecondsLeft": {"description": "Temps restant pour répondre à la revanche, en secondes.", "placeholders": {"seconds": {"type": "int"}}},
+
+  "rematchAccept": "Accepter",
+  "@rematchAccept": {"description": "Bouton : accepter la revanche."},
+
+  "rematchRefuse": "Refuser",
+  "@rematchRefuse": {"description": "Bouton : refuser la revanche (on quitte alors le salon)."},
+
+  "rematchExcludedNotice": "Vous avez quitté le salon : pas de revanche pour vous.",
+  "@rematchExcludedNotice": {"description": "Message à l'accueil après avoir refusé la revanche ou ne pas y avoir répondu à temps."},
+
+  "rematchCancelledNotice": "Pas de revanche : il faut au moins deux joueurs.",
+  "@rematchCancelledNotice": {"description": "Message à l'accueil quand la revanche n'a pas eu lieu, faute d'au moins deux joueurs."},
   "onlineConnecting": "Connexion au serveur…",
   "@onlineConnecting": {"description": "Affiché pendant l'ouverture de la connexion."},
   "onlineReconnecting": "Connexion perdue, reconnexion…",
@@ -791,7 +913,7 @@
   "@emoteJoyful": {"description": "Nom de l'émotion « câlin » (identifiant `joyful`, gardé pour le protocole)."},
 
   "emotePhraseCoincidence": "Comme de par hasard...",
-  "@emotePhraseCoincidence": {"description": "Phrase de l'émotion dévasté (ex-songeur, identifiant gardé) : on soupçonne un coup de chance trop beau."},
+  "@emotePhraseCoincidence": {"description": "Phrase de l'émotion fâché (d'abord songeur, puis dévasté ; identifiant gardé) : on soupçonne un coup de chance trop beau."},
 
   "emotePhraseStickyFive": "Cinq qui colle !",
   "@emotePhraseStickyFive": {"description": "Phrase moqueuse : un 5 seul qu'on est obligé de garder."},
@@ -814,17 +936,17 @@
   "emotePhraseYes": "Yes !",
   "@emotePhraseYes": {"description": "Cri de joie de l'émotion câlin, retiré du menu : seulement affiché quand une app plus ancienne l'envoie."},
 
-  "emotePhraseTooGreedy": "Trop gourmand !",
+  "emotePhraseTooGreedy": "La gourmandise est un vilain défaut !",
   "@emotePhraseTooGreedy": {"description": "Phrase de l'émotion mort de rire : l'autre a trop tenté sa chance et a tout perdu."},
 
-  "emotePhraseTooLucky": "Un peu trop chanceux...",
+  "emotePhraseTooLucky": "Un peu trop de chance...",
   "@emotePhraseTooLucky": {"description": "Phrase de l'émotion songeur : on soupçonne une chance trop belle."},
 
   "emotePhraseDryTenThousand": "En mode 10000 sec",
   "@emotePhraseDryTenThousand": {"description": "Phrase de l'émotion songeur : l'autre semble foncer droit sur les 10000 (« sec » : d'un coup, sans détour)."},
 
   "emotePhraseLucky": "Veinard va !",
-  "@emotePhraseLucky": {"description": "Phrase de l'émotion dévasté : « veinard, va ! », dit d'un adversaire chanceux."},
+  "@emotePhraseLucky": {"description": "Phrase de l'émotion fâché (d'abord dévasté, identifiant gardé) : « veinard, va ! », dit d'un adversaire chanceux."},
 
   "emotePhraseGoodLuck": "Bonne chance !",
   "@emotePhraseGoodLuck": {"description": "Souhait de l'émotion câlin."},
@@ -834,6 +956,39 @@
 
   "emotePhraseSorryMustGo": "Désolé mais je dois partir",
   "@emotePhraseSorryMustGo": {"description": "Phrase de l'émotion câlin : on s'excuse de devoir quitter la partie."},
+
+  "emoteAngry": "Fâché",
+  "@emoteAngry": {"description": "Nom de l'émotion « fâché » (seconde série, identifiant `angry`)."},
+
+  "emoteRelieved": "Soulagé",
+  "@emoteRelieved": {"description": "Nom de l'émotion « soulagé » (seconde série, identifiant `relieved`)."},
+
+  "emotePhraseStrangeChoice": "Mais quel est ce choix étrange ?",
+  "@emotePhraseStrangeChoice": {"description": "Phrase de l'émotion songeur : on ne comprend pas le coup que l'autre vient de jouer."},
+
+  "emotePhraseAllByFives": "Tout par les cinq !",
+  "@emotePhraseAllByFives": {"description": "Phrase de l'émotion mort de rire : l'autre ne marque qu'avec des 5."},
+
+  "emotePhraseWithPanache": "Avec panache !",
+  "@emotePhraseWithPanache": {"description": "Phrase de l'émotion mort de rire : un coup joué avec panache (souvent ironique)."},
+
+  "emotePhraseUnfair": "C'est vraiment trop injuste",
+  "@emotePhraseUnfair": {"description": "Phrase de l'émotion dévasté : c'est vraiment trop injuste."},
+
+  "emotePhrasePhew": "Ouf !",
+  "@emotePhrasePhew": {"description": "Phrase de l'émotion soulagé."},
+
+  "emotePhraseAtLast": "Enfin !",
+  "@emotePhraseAtLast": {"description": "Phrase de l'émotion soulagé : enfin !"},
+
+  "emotePhraseCloseCall": "C'était chaud !",
+  "@emotePhraseCloseCall": {"description": "Phrase de l'émotion soulagé : on l'a échappé belle."},
+
+  "emotePhraseWellPlayed": "Bien joué",
+  "@emotePhraseWellPlayed": {"description": "Phrase de l'émotion câlin : bien joué."},
+
+  "emotePhraseSorry": "Désolé",
+  "@emotePhraseSorry": {"description": "Phrase de l'émotion câlin : on s'excuse (sans devoir partir)."},
 
   "gameHistoryBar": "Historique",
   "@gameHistoryBar": {"description": "Barre qui ouvre l'historique (le journal) d'une partie en ligne."},

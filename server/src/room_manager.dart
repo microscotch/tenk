@@ -4,6 +4,7 @@ import 'dart:math';
 import '../../lib/game/online/protocol.dart';
 import 'limits.dart';
 import 'room.dart';
+import 'scheduler.dart';
 
 /// Tous les salons du serveur, et la porte d'entrée de chaque message : limite
 /// de débit, validation, puis aiguillage vers le bon salon.
@@ -12,6 +13,9 @@ class RoomManager {
   final DateTime Function() now;
   final Random _secure;
   final Random Function() _authorityRandom;
+
+  /// Passé à chaque salon (voir [Room.scheduler]).
+  final Scheduler scheduler;
 
   final Map<String, Room> _rooms = {};
   final Map<String, Room> _roomByToken = {};
@@ -26,6 +30,7 @@ class RoomManager {
     DateTime Function()? now,
     Random? secure,
     Random Function()? authorityRandom,
+    this.scheduler = const TimerScheduler(),
   })  : now = now ?? DateTime.now,
         _secure = secure ?? Random.secure(),
         _authorityRandom = authorityRandom ?? Random.secure;
@@ -117,6 +122,8 @@ class RoomManager {
       case ClientMessageType.play:
       case ClientMessageType.select:
       case ClientMessageType.emote:
+      case ClientMessageType.begin:
+      case ClientMessageType.rematch:
         session.connection.send(ServerMessage.error(ErrorCode.badRequest, 'pas dans un salon'));
     }
   }
@@ -136,6 +143,8 @@ class RoomManager {
       config: config,
       tokenRandom: _secure,
       authorityRandom: _authorityRandom,
+      scheduler: scheduler,
+      onClose: _forget,
     );
     _rooms[room.code] = room;
     _register(room, room.join(name, session).token);
@@ -159,6 +168,13 @@ class RoomManager {
   }
 
   void _register(Room room, String token) => _roomByToken[token] = room;
+
+  /// Un salon fermé de lui-même (voir `Room.onClose`) : on l'oublie, jetons
+  /// compris.
+  void _forget(Room room) {
+    if (_rooms[room.code] == room) _rooms.remove(room.code);
+    _roomByToken.removeWhere((_, r) => r == room);
+  }
 
   /// Un essai raté (code ou jeton inconnu) coûte un jeton à l'adresse ; à sec,
   /// elle n'obtient plus qu'un « trop vite » — même pour un bon code.

@@ -29,23 +29,72 @@ const Set<GameActionType> playIntents = {
 /// sélection de 5 en cours (`select` → `selection`), avant de la valider.
 const String keepSelectionFeature = 'keepSelection';
 
-/// Les fonctions facultatives que cette version sait gérer. Client et serveur
-/// s'annoncent les leurs (`create`/`join`/`rejoin`, puis `joined`) et n'envoient
-/// à l'autre que ce qu'il a annoncé : un client ou un serveur d'avant, qui
-/// n'annonce rien, ne reçoit jamais un message qu'il prendrait pour un journal
-/// abîmé. C'est ce qui évite de changer [onlineProtocolVersion], qui couperait
-/// les anciens clients.
-const List<String> supportedFeatures = [keepSelectionFeature, emotesFeature];
+/// Fonction facultative : un joueur qui quitte une partie en cours pour de bon
+/// (`leave`) cède son siège à un bot du serveur, qui joue à sa place jusqu'à la
+/// fin ([SeatInfo.bot]). Sans elle, quitter laisse le siège vide et la partie
+/// attend.
+const String seatBotsFeature = 'seatBots';
+
+/// Fonction facultative : après le tirage au sort, seul le joueur qui commence
+/// lance la partie (`begin`) ; les autres attendent que `room` l'annonce
+/// ([ServerMessage.begun]).
+const String startSignalFeature = 'startSignal';
+
+/// Fonction facultative : la revanche, proposée à l'écran de fin d'une partie
+/// en ligne (`rematch` dans les deux sens).
+const String rematchFeature = 'rematch';
+
+/// Les fonctions facultatives que ce serveur sait gérer, annoncées dans
+/// `joined`. Client et serveur s'annoncent les leurs et n'envoient à l'autre que
+/// ce qu'il a annoncé : un client ou un serveur d'avant, qui n'annonce rien, ne
+/// reçoit jamais un message qu'il prendrait pour un journal abîmé. C'est ce qui
+/// évite de changer [onlineProtocolVersion], qui couperait les anciens clients.
+///
+/// Deux listes distinctes, parce que le serveur se déploie avant l'app : il
+/// peut annoncer une fonction que cette version de l'app ne sait pas encore
+/// gérer, et l'app n'annonce ([clientFeatures]) que celles qu'elle gère.
+const List<String> serverFeatures = [
+  keepSelectionFeature,
+  emotesFeature,
+  emotes2Feature,
+  seatBotsFeature,
+  startSignalFeature,
+  rematchFeature,
+];
+
+/// Les fonctions facultatives que l'app sait gérer, annoncées dans
+/// `create`/`join`/`rejoin` (voir [serverFeatures]).
+const List<String> clientFeatures = [
+  keepSelectionFeature,
+  emotesFeature,
+  emotes2Feature,
+  seatBotsFeature,
+  startSignalFeature,
+  rematchFeature,
+];
 
 const int _maxFeatures = 16;
 const int _maxFeatureLength = 32;
 
-enum ClientMessageType { create, join, rejoin, reorder, start, leave, play, select, emote }
+enum ClientMessageType { create, join, rejoin, reorder, start, leave, play, select, emote, begin, rematch }
 
-enum ServerMessageType { joined, room, action, snapshot, error, selection, emote }
+enum ServerMessageType { joined, room, action, snapshot, error, selection, emote, rematch }
 
-/// Étape d'un salon.
+/// Étape d'un salon. Pas de nouvelle valeur ici : un client d'avant ne saurait
+/// pas la lire, et redemanderait tout en boucle (la revanche se joue donc dans
+/// [over], par ses propres messages).
 enum RoomPhase { lobby, playing, suspended, over }
+
+/// La réponse d'un joueur à une revanche (voir [rematchFeature]) : la proposer
+/// (la première proposition seule compte ; une suivante vaut acceptation),
+/// l'accepter ou la refuser.
+enum RematchAnswer { propose, accept, refuse }
+
+/// Où en est une revanche, côté serveur : un vote en cours, une revanche
+/// abandonnée (pas assez de joueurs l'acceptent : tout le monde rentre), ou
+/// l'exclusion du joueur qui l'a refusée (ou n'a pas répondu à temps). Son
+/// départ effectif, lui, s'annonce par `joined` puis `snapshot`.
+enum RematchStatus { pending, cancelled, excluded }
 
 enum ErrorCode {
   badRequest,
@@ -70,14 +119,14 @@ class ClientMessage {
 
   const ClientMessage._(this.type, [this.params = const {}]);
 
-  /// [features] : ce que ce client sait gérer (voir [supportedFeatures]).
-  factory ClientMessage.create({required String name, List<String> features = supportedFeatures}) =>
+  /// [features] : ce que ce client sait gérer (voir [clientFeatures]).
+  factory ClientMessage.create({required String name, List<String> features = clientFeatures}) =>
       ClientMessage._(ClientMessageType.create, {'name': name, 'features': features});
 
-  factory ClientMessage.join({required String code, required String name, List<String> features = supportedFeatures}) =>
+  factory ClientMessage.join({required String code, required String name, List<String> features = clientFeatures}) =>
       ClientMessage._(ClientMessageType.join, {'code': code, 'name': name, 'features': features});
 
-  factory ClientMessage.rejoin({required String token, List<String> features = supportedFeatures}) =>
+  factory ClientMessage.rejoin({required String token, List<String> features = clientFeatures}) =>
       ClientMessage._(ClientMessageType.rejoin, {'token': token, 'features': features});
 
   /// Nouvel ordre des sièges : `order[k]` est le siège actuel qui passe en position k.
@@ -103,6 +152,17 @@ class ClientMessage {
     assert(emote.accepts(phrase));
     return ClientMessage._(ClientMessageType.emote, {'emote': emote.name, 'phrase': ?phrase});
   }
+
+  /// Le joueur qui commence, une fois le tirage au sort raconté, lance la partie
+  /// pour tous (voir [startSignalFeature]).
+  factory ClientMessage.begin() => const ClientMessage._(ClientMessageType.begin);
+
+  /// Ma réponse à une revanche (voir [rematchFeature]).
+  factory ClientMessage.rematch(RematchAnswer answer) =>
+      ClientMessage._(ClientMessageType.rematch, {'answer': answer.name});
+
+  /// La réponse d'un message `rematch`.
+  RematchAnswer get rematchAnswer => RematchAnswer.values.byName(params['answer'] as String);
 
   /// L'intention d'un message `play`.
   GameActionType get intent => GameActionType.values.byName(params['intent'] as String);
@@ -151,6 +211,10 @@ class ClientMessage {
       case ClientMessageType.emote:
         final (emote, phrase) = _emote(raw);
         return ClientMessage.emote(emote, phrase: phrase);
+      case ClientMessageType.begin:
+        return ClientMessage.begin();
+      case ClientMessageType.rematch:
+        return ClientMessage.rematch(_enumByName(RematchAnswer.values, raw['answer'], 'answer'));
     }
   }
 }
@@ -160,20 +224,31 @@ class SeatInfo {
   final String name;
   final bool connected;
 
-  const SeatInfo({required this.name, required this.connected});
+  /// Vrai quand le joueur est parti pour de bon et qu'un bot du serveur joue à
+  /// sa place (voir [seatBotsFeature]). Un siège de bot est aussi annoncé
+  /// [connected] : un client d'avant, qui ignore ce champ, ne le montre donc pas
+  /// comme absent.
+  final bool bot;
 
-  Map<String, dynamic> toJson() => {'name': name, 'connected': connected};
+  const SeatInfo({required this.name, required this.connected, this.bot = false});
+
+  Map<String, dynamic> toJson() => {'name': name, 'connected': connected, if (bot) 'bot': true};
 
   factory SeatInfo.fromJson(Object? json) {
     final map = _map(json, 'seat');
-    return SeatInfo(name: _string(map, 'name', min: 1, max: maxPlayerNameLength), connected: _bool(map, 'connected'));
+    return SeatInfo(
+      name: _string(map, 'name', min: 1, max: maxPlayerNameLength),
+      connected: _bool(map, 'connected'),
+      bot: map['bot'] == true,
+    );
   }
 
   @override
-  bool operator ==(Object other) => other is SeatInfo && other.name == name && other.connected == connected;
+  bool operator ==(Object other) =>
+      other is SeatInfo && other.name == name && other.connected == connected && other.bot == bot;
 
   @override
-  int get hashCode => Object.hash(name, connected);
+  int get hashCode => Object.hash(name, connected, bot);
 }
 
 /// Ce que le serveur envoie aux clients.
@@ -184,27 +259,31 @@ class ServerMessage {
   const ServerMessage._(this.type, this.params);
 
   /// Réponse à `create`/`join`/`rejoin` : le siège, le jeton qui permet d'y
-  /// revenir, et les fonctions facultatives de ce serveur (voir [supportedFeatures]).
+  /// revenir, et les fonctions facultatives de ce serveur (voir [serverFeatures]).
   factory ServerMessage.joined({
     required String code,
     required String token,
     required int seat,
-    List<String> features = supportedFeatures,
+    List<String> features = serverFeatures,
   }) =>
       ServerMessage._(ServerMessageType.joined, {'code': code, 'token': token, 'seat': seat, 'features': features});
 
   /// L'état du salon, rediffusé à chaque arrivée, départ ou changement d'étape.
+  /// [begun] : le joueur qui commence a lancé la partie (voir
+  /// [startSignalFeature]) ; écrit seulement quand il est vrai.
   factory ServerMessage.room({
     required String code,
     required RoomPhase phase,
     required List<SeatInfo> seats,
     required int hostSeat,
+    bool begun = false,
   }) =>
       ServerMessage._(ServerMessageType.room, {
         'code': code,
         'phase': phase.name,
         'seats': [for (final s in seats) s.toJson()],
         'hostSeat': hostSeat,
+        if (begun) 'begun': true,
       });
 
   /// Une action de plus au journal : [seq] est son rang, pour repérer un trou.
@@ -230,6 +309,23 @@ class ServerMessage {
   factory ServerMessage.emote({required int seat, required Emote emote, String? phrase}) =>
       ServerMessage._(ServerMessageType.emote, {'seat': seat, 'emote': emote.name, 'phrase': ?phrase});
 
+  /// Où en est une revanche (voir [rematchFeature]) : [proposerSeat] l'a
+  /// proposée ; [remainingMs], le temps qui reste pour répondre (une durée, pas
+  /// une heure : les horloges des appareils ne sont pas celle du serveur) ;
+  /// [answers], qui a déjà accepté (vrai) ou refusé (faux), par siège.
+  factory ServerMessage.rematch({
+    required RematchStatus status,
+    int? proposerSeat,
+    int? remainingMs,
+    Map<int, bool> answers = const {},
+  }) =>
+      ServerMessage._(ServerMessageType.rematch, {
+        'status': status.name,
+        'proposerSeat': ?proposerSeat,
+        'remainingMs': ?remainingMs,
+        if (answers.isNotEmpty) 'answers': {for (final e in answers.entries) '${e.key}': e.value},
+      });
+
   factory ServerMessage.error(ErrorCode code, [String message = '']) =>
       ServerMessage._(ServerMessageType.error, {'code': code.name, if (message.isNotEmpty) 'message': message});
 
@@ -247,6 +343,35 @@ class ServerMessage {
   /// L'émotion d'un message `emote`, et sa phrase (nulle : l'émotion seule).
   /// Lève une [FormatException] pour une émotion ou une phrase inconnue.
   (Emote, String?) get emote => _emote(params);
+
+  /// Le joueur qui commence a lancé la partie (`room`, voir [startSignalFeature]).
+  bool get begun => params['begun'] == true;
+
+  /// L'étape d'une revanche (`rematch`).
+  RematchStatus get rematchStatus => _enumByName(RematchStatus.values, params['status'], 'status');
+
+  /// Qui a proposé la revanche (`rematch`), s'il est dit.
+  int? get proposerSeat => params.containsKey('proposerSeat') ? _int(params, 'proposerSeat', min: 0, max: maxOnlinePlayers - 1) : null;
+
+  /// Le temps qui reste pour répondre à la revanche, s'il est dit.
+  Duration? get remaining =>
+      params.containsKey('remainingMs') ? Duration(milliseconds: _int(params, 'remainingMs', min: 0, max: 1 << 30)) : null;
+
+  /// Les réponses déjà reçues à la revanche, par siège.
+  Map<int, bool> get rematchAnswers {
+    final raw = params['answers'];
+    if (raw == null) return const {};
+    if (raw is! Map || raw.length > maxOnlinePlayers) throw const FormatException('answers: objet attendu');
+    final answers = <int, bool>{};
+    for (final e in raw.entries) {
+      final seat = int.tryParse('${e.key}');
+      if (seat == null || seat < 0 || seat >= maxOnlinePlayers || e.value is! bool) {
+        throw const FormatException('answers: siège → booléen attendu');
+      }
+      answers[seat] = e.value as bool;
+    }
+    return answers;
+  }
 
   /// Les fonctions annoncées par `joined` ; vide pour un serveur d'avant.
   List<String> get features => params.containsKey('features') ? _features(params) : const [];

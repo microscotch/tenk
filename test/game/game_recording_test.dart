@@ -248,4 +248,21 @@ void main() {
       expect(current.roundHistory, legacy.roundHistory);
     });
   });
+
+  test('un journal de revanche commence par l\'ordre imposé, sans tirage : il se rejoue sans seed', () {
+    const setup = GameSetup(playerNames: ['A', 'B', 'C']);
+    final actions = [
+      GameAction.presetOrder([2, 0, 1]),
+      GameAction.startTurn(useFullHand: false),
+      GameAction.roll(faces: [1, 5, 2, 3, 6]),
+    ];
+    final replay = replayGame(setup, 0, actions);
+    expect(replay.playOrder, [2, 0, 1]);
+    expect(replay.diceOff.isResolved, isTrue);
+    expect(replay.diceOff.playOrder, [2, 0, 1]);
+    expect(replay.engine!.players.map((p) => p.name), ['C', 'A', 'B']);
+    expect(replay.engine!.activeTurn!.pendingRoll!.faces, [1, 5, 2, 3, 6]);
+    expect(diceOffActionCount(actions), 1);
+    expect(() => applyGameAction(replay.engine!, actions.first, Random(0)), throwsArgumentError);
+  });
 }

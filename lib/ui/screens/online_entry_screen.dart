@@ -82,11 +82,16 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
 
   Future<void> _confirmLeave() async {
     final l10n = AppLocalizations.of(context);
+    final before = ref.read(onlineSessionProvider);
+    final inGame = before.gameStarted && before.phase != RoomPhase.over;
     final leave = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.onlineLeaveConfirmTitle),
-        content: Text(l10n.onlineLeaveConfirmBody),
+        // Dans une partie commencée, le serveur fait reprendre ma place par un
+        // bot (voir seatBotsFeature) ; un serveur d'avant la laisse vide et
+        // attend mon retour.
+        content: Text(inGame && before.seatBotsEnabled ? l10n.onlineLeaveGameBody : l10n.onlineLeaveConfirmBody),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancelButton)),
           FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.onlineLeaveButton)),
@@ -96,10 +101,11 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
     if (leave != true) return;
     final online = ref.read(onlineSessionProvider);
     final session = ref.read(onlineSessionProvider.notifier);
-    // Une partie commencée garde la place du joueur (elle l'attend, comme le dit
-    // la fenêtre) ; un salon qui n'a pas commencé, ou une partie finie, se quitte.
+    // Une partie commencée se quitte comme le dit la fenêtre (pour de bon, un
+    // bot prenant la place ; ou en la gardant, face à un serveur d'avant) ; un
+    // salon qui n'a pas commencé, ou une partie finie, se quitte tout court.
     if (online.gameStarted && online.phase != RoomPhase.over) {
-      await session.disconnect();
+      await session.leaveGame();
     } else {
       await session.leave();
     }

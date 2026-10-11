@@ -12,7 +12,7 @@ import 'game_providers.dart';
 import 'online_transport.dart';
 import 'settings_providers.dart';
 
-export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo, Emote, emoteCooldown;
+export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo, Emote, emoteCooldown, emotesFor;
 
 /// L'adresse du serveur des parties en ligne. Celle de production par défaut
 /// (chiffrée : le TLS se termine sur le reverse proxy du serveur) ; pour jouer
@@ -39,6 +39,17 @@ final onlineReconnectDelayProvider = Provider<Duration Function(int attempt)>((r
 });
 
 enum OnlineStatus { offline, connecting, online }
+
+/// Un vote de revanche en cours (voir [rematchFeature]) : qui l'a proposée,
+/// jusqu'à quand on peut répondre (heure de l'appareil, calculée à réception),
+/// et qui a déjà répondu quoi, par siège.
+class RematchView {
+  final int proposerSeat;
+  final DateTime deadline;
+  final Map<int, bool> answers;
+
+  const RematchView({required this.proposerSeat, required this.deadline, this.answers = const {}});
+}
 
 /// Ce que l'écran sait de la session en ligne.
 class OnlineState {
@@ -70,6 +81,19 @@ class OnlineState {
   /// de jeu propose alors ses boutons d'émotion.
   final bool emotesEnabled;
 
+  /// Les fonctions facultatives annoncées par le serveur (voir [serverFeatures]).
+  final List<String> serverFeatures;
+
+  /// Le joueur qui commence a lancé la partie (voir [startSignalFeature]).
+  final bool begun;
+
+  /// Le vote de revanche en cours, s'il y en a un.
+  final RematchView? rematch;
+
+  /// Change à chaque nouvelle partie dans le même salon (une revanche) : l'écran
+  /// de fin s'y reconnaît pour ouvrir la nouvelle partie.
+  final int gameSerial;
+
   const OnlineState({
     this.status = OnlineStatus.offline,
     this.roomCode,
@@ -83,10 +107,19 @@ class OnlineState {
     this.errorSerial = 0,
     this.unreachable = false,
     this.emotesEnabled = false,
+    this.serverFeatures = const [],
+    this.begun = false,
+    this.rematch,
+    this.gameSerial = 0,
   });
 
   bool get inRoom => roomCode != null;
   bool get isHost => mySeat != null && mySeat == hostSeat;
+
+  bool get emotes2Enabled => serverFeatures.contains(emotes2Feature);
+  bool get seatBotsEnabled => serverFeatures.contains(seatBotsFeature);
+  bool get startSignalEnabled => serverFeatures.contains(startSignalFeature);
+  bool get rematchEnabled => serverFeatures.contains(rematchFeature);
 
   OnlineState copyWith({
     OnlineStatus? status,
@@ -101,6 +134,11 @@ class OnlineState {
     int? errorSerial,
     bool? unreachable,
     bool? emotesEnabled,
+    List<String>? serverFeatures,
+    bool? begun,
+    RematchView? rematch,
+    bool clearRematch = false,
+    int? gameSerial,
   }) {
     return OnlineState(
       status: status ?? this.status,
@@ -115,11 +153,33 @@ class OnlineState {
       errorSerial: errorSerial ?? this.errorSerial,
       unreachable: unreachable ?? this.unreachable,
       emotesEnabled: emotesEnabled ?? this.emotesEnabled,
+      serverFeatures: serverFeatures ?? this.serverFeatures,
+      begun: begun ?? this.begun,
+      rematch: clearRematch ? null : (rematch ?? this.rematch),
+      gameSerial: gameSerial ?? this.gameSerial,
     );
   }
 }
 
 final onlineSessionProvider = NotifierProvider<OnlineSession, OnlineState>(OnlineSession.new);
+
+/// Ce qui renvoie un joueur à l'accueil depuis l'écran de fin d'une partie en
+/// ligne : il a refusé la revanche (ou n'a pas répondu à temps), ou elle n'a
+/// pas eu lieu, faute de joueurs.
+enum OnlineNotice { rematchExcluded, rematchCancelled }
+
+/// La dernière [OnlineNotice], avec un numéro qui change à chacune : la
+/// session, elle, est déjà remise à zéro quand l'écran la lit.
+final onlineNoticeProvider = NotifierProvider<OnlineNoticeNotifier, ({OnlineNotice notice, int serial})?>(
+  OnlineNoticeNotifier.new,
+);
+
+class OnlineNoticeNotifier extends Notifier<({OnlineNotice notice, int serial})?> {
+  @override
+  ({OnlineNotice notice, int serial})? build() => null;
+
+  void raise(OnlineNotice notice) => state = (notice: notice, serial: (state?.serial ?? 0) + 1);
+}
 
 /// Relie la session en ligne au cycle de vie de l'app (voir
 /// [OnlineSession.appPaused] / [OnlineSession.appResumed]). Regardé par la
@@ -222,7 +282,7 @@ class OnlineSession extends Notifier<OnlineState> {
   /// Un jeton reçu du serveur, en attente d'être associé à l'adresse utilisée.
   String? _pendingUrl;
 
-  /// Les fonctions facultatives du serveur (voir `supportedFeatures`), apprises
+  /// Les fonctions facultatives du serveur (voir [serverFeatures]), apprises
   /// par `joined`.
   List<String> _serverFeatures = const [];
 
@@ -310,11 +370,41 @@ class OnlineSession extends Notifier<OnlineState> {
     _send(ClientMessage.emote(emote, phrase: phrase));
   }
 
-  /// Quitte le salon pour de bon : le siège est libéré (ou, en partie, laissé
-  /// vide) et le jeton oublié. Pour partir d'une partie commencée en gardant sa
-  /// place, c'est [disconnect].
-  Future<void> leave() async {
-    _send(ClientMessage.leave());
+  /// Le joueur qui commence lance la partie pour tous (voir
+  /// [startSignalFeature]) ; sans effet face à un serveur qui ne le connaît pas.
+  void begin() {
+    if (!state.startSignalEnabled) return;
+    _send(ClientMessage.begin());
+  }
+
+  /// Propose une revanche (ou, si un vote est déjà en cours, l'accepte).
+  void proposeRematch() {
+    if (!state.rematchEnabled) return;
+    _send(ClientMessage.rematch(RematchAnswer.propose));
+  }
+
+  /// Répond à la revanche proposée. La refuser, c'est quitter le salon : on
+  /// rentre aussitôt, sans attendre que le serveur le confirme.
+  Future<void> answerRematch({required bool accept}) async {
+    if (!state.rematchEnabled) return;
+    _send(ClientMessage.rematch(accept ? RematchAnswer.accept : RematchAnswer.refuse));
+    if (!accept) await leave(tellServer: false);
+  }
+
+  /// Quitte la partie en ligne en cours, après confirmation du joueur : pour de
+  /// bon quand le serveur fait reprendre le siège par un bot (voir
+  /// [seatBotsFeature]) — la partie continue sans moi —, en gardant sa place
+  /// sinon (voir [disconnect]) : la partie m'attendrait, il faut pouvoir y
+  /// revenir.
+  Future<void> leaveGame() => state.seatBotsEnabled ? leave() : disconnect();
+
+  /// Quitte le salon pour de bon : le siège est libéré (en partie, repris par
+  /// un bot du serveur, ou laissé vide par un serveur d'avant) et le jeton
+  /// oublié. Pour partir d'une partie commencée en gardant sa place, c'est
+  /// [disconnect]. [tellServer] : faux quand le serveur nous a déjà retirés du
+  /// salon (revanche refusée ou abandonnée).
+  Future<void> leave({bool tellServer = true}) async {
+    if (tellServer) _send(ClientMessage.leave());
     _credentials = null;
     // La connexion cesse d'écouter tout de suite (rien de ce qui arriverait
     // encore ne doit repeupler l'état), mais l'état n'attend pas qu'elle soit
@@ -378,7 +468,7 @@ class OnlineSession extends Notifier<OnlineState> {
     if (!_inBackground) return;
     _inBackground = false;
     final credentials = _credentials;
-    if (_channel != null || _closingOnPurpose || credentials == null || state.phase == RoomPhase.over) return;
+    if (_channel != null || _closingOnPurpose || credentials == null || _finishedForGood) return;
     _attempt = 0;
     unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url, automatic: true));
   }
@@ -434,20 +524,27 @@ class OnlineSession extends Notifier<OnlineState> {
     }
     try {
       switch (message.type) {
+        case ServerMessageType.rematch:
+          _onRematch(message);
         case ServerMessageType.joined:
           _onJoined(message);
         case ServerMessageType.room:
-          // Partie finie : rien à retrouver, le jeton ne sert plus.
-          if (message.phase == RoomPhase.over) {
+          // Partie finie : rien à retrouver, le jeton ne sert plus — sauf quand
+          // une revanche peut encore s'y jouer : il faut alors pouvoir revenir
+          // dans le salon après une coupure.
+          if (message.phase == RoomPhase.over && !state.rematchEnabled) {
             _credentials = null;
             unawaited(ref.read(onlineCredentialsStoreProvider).clear());
           }
+          final seats = message.seats;
           state = state.copyWith(
             roomCode: message.roomCode,
             phase: message.phase,
-            seats: message.seats,
+            seats: seats,
             hostSeat: message.hostSeat,
+            begun: message.begun,
           );
+          if (_game.isOnline) _game.setOnlineBotSeats({for (var i = 0; i < seats.length; i++) if (seats[i].bot) i});
         case ServerMessageType.snapshot:
           _onSnapshot(message);
         case ServerMessageType.action:
@@ -470,7 +567,7 @@ class OnlineSession extends Notifier<OnlineState> {
     final credentials = OnlineCredentials(url: _pendingUrl ?? ref.read(onlineServerUrlProvider), code: message.roomCode, token: message.token);
     _credentials = credentials;
     _serverFeatures = message.features;
-    state = state.copyWith(emotesEnabled: _serverFeatures.contains(emotesFeature));
+    state = state.copyWith(emotesEnabled: _serverFeatures.contains(emotesFeature), serverFeatures: _serverFeatures);
     unawaited(ref.read(onlineCredentialsStoreProvider).save(credentials));
     state = state.copyWith(roomCode: message.roomCode, mySeat: message.seat);
   }
@@ -485,14 +582,23 @@ class OnlineSession extends Notifier<OnlineState> {
     final invited = state.phase == RoomPhase.lobby || _takeover;
     if (!_game.isOnline && _game.hasLiveLocalGame && !invited) return;
     _takeover = false;
+    final names = message.names;
+    final actions = message.actions;
+    // Une nouvelle partie dans le même salon (une revanche, qui ne se joue
+    // qu'une fois la précédente finie) : son journal ne commence pas comme
+    // celui de la partie à l'écran.
+    final current = _game.isOnline && _game.actions.isNotEmpty ? _game.actions.first : null;
+    final newGame = state.gameStarted &&
+        state.phase == RoomPhase.over &&
+        current != null &&
+        actions.isNotEmpty &&
+        (current.type != actions.first.type || current.at != actions.first.at);
     // Un journal neuf : une sélection gardée d'avant (autre partie, autre
     // lancer) n'a plus cours. Celle du lancer en attente, s'il y en a une, suit.
     ref.read(onlineKeepSelectionProvider.notifier).clear();
     // Les émotions d'une autre partie n'ont rien à faire dans celle-ci ; celles
     // de cette partie restent quand on y revient après une coupure.
-    if (!state.gameStarted) ref.read(onlineEmotesProvider.notifier).clear();
-    final names = message.names;
-    final actions = message.actions;
+    if (!state.gameStarted || newGame) ref.read(onlineEmotesProvider.notifier).clear();
     _game.startOnlineGame(
       names: names,
       actions: actions,
@@ -501,8 +607,14 @@ class OnlineSession extends Notifier<OnlineState> {
       myProfileId: ref.read(settingsProvider).myProfileId,
       sendSelection: select,
     );
+    _game.setOnlineBotSeats({for (var i = 0; i < state.seats.length; i++) if (state.seats[i].bot) i});
     final diceOff = replayGame(GameSetup(playerNames: names), 0, actions.sublist(0, diceOffActionCount(actions))).diceOff;
-    state = state.copyWith(gameStarted: true, diceOff: diceOff);
+    state = state.copyWith(
+      gameStarted: true,
+      diceOff: diceOff,
+      clearRematch: newGame,
+      gameSerial: newGame ? state.gameSerial + 1 : null,
+    );
     _reopening?.complete(true);
     _reopening = null;
   }
@@ -547,6 +659,40 @@ class OnlineSession extends Notifier<OnlineState> {
     }
     ref.read(onlineEmotesProvider.notifier).add(seat: seat, emote: emote, phrase: phrase);
   }
+
+  /// Où en est la revanche. Illisible (une version plus récente) : ignoré —
+  /// rien qui vaille de redemander tout le journal.
+  void _onRematch(ServerMessage message) {
+    final RematchStatus status;
+    try {
+      status = message.rematchStatus;
+      switch (status) {
+        case RematchStatus.pending:
+          final proposer = message.proposerSeat;
+          if (proposer == null) return;
+          state = state.copyWith(
+            rematch: RematchView(
+              proposerSeat: proposer,
+              deadline: DateTime.now().add(message.remaining ?? Duration.zero),
+              answers: message.rematchAnswers,
+            ),
+          );
+        case RematchStatus.excluded:
+        case RematchStatus.cancelled:
+          // Le serveur m'a déjà retiré du salon : je rentre.
+          ref.read(onlineNoticeProvider.notifier).raise(
+                status == RematchStatus.excluded ? OnlineNotice.rematchExcluded : OnlineNotice.rematchCancelled,
+              );
+          unawaited(leave(tellServer: false));
+      }
+    } on FormatException {
+      return;
+    }
+  }
+
+  /// Vrai quand le salon n'a plus rien à offrir après une coupure : une partie
+  /// finie, sans revanche possible.
+  bool get _finishedForGood => state.phase == RoomPhase.over && !state.rematchEnabled;
 
   void _onError(ErrorCode code) {
     if (code == ErrorCode.badToken) {
@@ -595,7 +741,7 @@ class OnlineSession extends Notifier<OnlineState> {
 
   void _scheduleReconnect() {
     final credentials = _credentials;
-    if (credentials == null || state.phase == RoomPhase.over || _inBackground) return;
+    if (credentials == null || _finishedForGood || _inBackground) return;
     _reconnectTimer?.cancel();
     final delay = ref.read(onlineReconnectDelayProvider)(_attempt++);
     _reconnectTimer = Timer(delay, () {

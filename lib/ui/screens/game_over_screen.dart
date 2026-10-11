@@ -1,17 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/game_providers.dart';
 import '../../state/game_save_store.dart';
+import '../../state/online_providers.dart';
 import '../../state/player_providers.dart';
 import '../navigation.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/emotes.dart';
+import '../widgets/player_avatar.dart';
+import '../widgets/score_sheet.dart' show AvatarWithBubble;
+import 'game_screen.dart';
 import 'game_statistics_screen.dart';
+import 'online_game_over_panel.dart';
 import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
 
-class GameOverScreen extends ConsumerWidget {
+class GameOverScreen extends ConsumerStatefulWidget {
   final List<Player> players;
   final int winnerIndex;
 
@@ -36,8 +45,72 @@ class GameOverScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GameOverScreen> createState() => _GameOverScreenState();
+}
+
+class _GameOverScreenState extends ConsumerState<GameOverScreen> {
+  /// Les bulles d'émotion en cours, par nom de joueur (partie en ligne).
+  final Map<String, String> _bubbles = {};
+  final Map<String, Timer> _bubbleTimers = {};
+
+  /// La dernière émotion déjà montrée : celles d'avant l'ouverture de l'écran
+  /// ne refont pas de bulle.
+  int _lastEmoteId = -1;
+
+  /// Vrai pour l'écran de fin d'une partie en ligne qu'on vient de jouer : il
+  /// propose la revanche et les émotions.
+  late final bool _online = !widget.archived && ref.read(gameProvider.notifier).isOnline;
+
+  @override
+  void initState() {
+    super.initState();
+    final emotes = ref.read(onlineEmotesProvider);
+    if (emotes.isNotEmpty) _lastEmoteId = emotes.last.id;
+  }
+
+  @override
+  void dispose() {
+    for (final timer in _bubbleTimers.values) {
+      timer.cancel();
+    }
+    super.dispose();
+  }
+
+  void _showEmote(EmoteEvent event) {
+    final seats = ref.read(onlineSessionProvider).seats;
+    if (event.seat >= seats.length) return;
+    final name = seats[event.seat].name;
+    final text = emoteText(AppLocalizations.of(context), event.emote, event.phrase);
+    setState(() => _bubbles[name] = text);
+    _bubbleTimers[name]?.cancel();
+    _bubbleTimers[name] = Timer(GameScreen.bubbleDuration, () {
+      if (mounted) setState(() => _bubbles.remove(name));
+    });
+  }
+
+  /// Quitte l'écran de fin : retour à l'accueil. En ligne, c'est aussi quitter
+  /// le salon (et donc refuser une revanche en cours).
+  void _leave() {
+    popToHome(context);
+    if (_online) unawaited(ref.read(onlineSessionProvider.notifier).leaveFinishedGame());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final players = widget.players;
+    final winnerIndex = widget.winnerIndex;
+    final record = widget.record;
+    final archived = widget.archived;
     final l10n = AppLocalizations.of(context);
+    if (_online) {
+      ref.listen<List<EmoteEvent>>(onlineEmotesProvider, (previous, next) {
+        for (final event in next) {
+          if (event.id <= _lastEmoteId) continue;
+          _lastEmoteId = event.id;
+          _showEmote(event);
+        }
+      });
+    }
     // Le surnom prime sur le nom, ici comme partout où le joueur est nommé.
     // Un siège non rattaché à une fiche — un bot, une partie antérieure à la
     // base — garde le nom sous lequel la partie l'a enregistré.
@@ -58,7 +131,7 @@ class GameOverScreen extends ConsumerWidget {
       canPop: archived,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        popToHome(context);
+        _leave();
       },
       child: Scaffold(
         appBar: AppTopBar(
@@ -78,7 +151,7 @@ class GameOverScreen extends ConsumerWidget {
           // Android, où le retour système suffit).
           automaticallyImplyLeading: archived,
           leading: !archived && Theme.of(context).platform == TargetPlatform.iOS
-              ? BackButton(onPressed: () => popToHome(context))
+              ? BackButton(onPressed: _leave)
               : null,
         ),
         body: SafeArea(
@@ -102,11 +175,31 @@ class GameOverScreen extends ConsumerWidget {
                   for (final p in sorted)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        l10n.playerScoreLine(displayNameOf(displayNames, p.name), p.totalScore),
-                        style: Theme.of(context).textTheme.titleMedium,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // En ligne, le blason porte la bulle de ce que le
+                          // joueur exprime (voir la barre d'émotions plus bas).
+                          if (_online) ...[
+                            AvatarWithBubble(
+                              bubble: _bubbles[p.name],
+                              child: PlayerAvatarWidget(name: p.name, size: 24),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Text(
+                              l10n.playerScoreLine(displayNameOf(displayNames, p.name), p.totalScore),
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                  if (_online) ...[
+                    const SizedBox(height: 24),
+                    const OnlineGameOverPanel(),
+                  ],
                   const SizedBox(height: 32),
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(

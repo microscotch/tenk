@@ -384,6 +384,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Main pleine ! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Score barré :';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Craqué ! => $score petit trait';
+  String logBustMessage(int lost) {
+    return '$lost : Craqué !';
   }
 
   @override
-  String get logBustBarredPrefix => 'Craqué ! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost : Craqué ! => $score petit trait';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost : Craqué ! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -582,13 +594,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Ordre de jeu';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duel entre voisins remporté par le second : la partie tourne à rebours.';
-
-  @override
   String get gameOverTitle => 'Fin de la partie';
 
   @override
@@ -622,6 +627,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tiretTooltip => 'Tiret : un second craque barrera le score';
 
   @override
+  String get radarTargetsTooltip =>
+      'Scores que la main en cours permettrait de barrer';
+
+  @override
+  String get radarGapTooltip => 'Écart avec le total de la main en cours';
+
+  @override
   String get previousScoreHadTiretTooltip =>
       'Le score précédent portait un tiret';
 
@@ -644,6 +656,166 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialSkip => 'Passer';
 
   @override
+  String get tutorialFinalOutro =>
+      'Le bot est barré et doit à son tour tenter les 10 000. Vous connaissez maintenant toutes les règles : bonne partie !';
+
+  @override
+  String get tutorialFinalExact =>
+      'Un brelan de 4 : 10 000 pile ! La prise est automatique.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100 : 9600. Dans le dernier tour, pas d\'arrêt possible : relancez.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Le bot a atteint 10 000 : c\'est le dernier tour. Pour gagner, il faut l\'égaler, ce qui le barre. S\'arrêter avant est interdit.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Le bot est barré et retombe à 1500. Atteindre une ligne, même ancienne, d\'un autre joueur la barre aussi.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Deux as : 200. Vous seriez à 2000, le score du bot, en rouge dans son radar. Arrêtez-vous pour le barrer.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'Sur la ligne du bot, le radar montre ses scores que vous pourriez barrer : atteindre le même total le fait reculer.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Après un craque, on repart toujours à 5 dés neufs. Une main qui ne pourrait plus être encaissée n\'est jamais proposée.';
+
+  @override
+  String get tutorialInheritStop => 'Un as : la main vaut 1100. Arrêtez-vous.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Le bot s\'est arrêté à 1000 en laissant 2 dés. Reprenez la main : vous partez de ses 1000 points, et les 2 dés se lancent aussitôt (on lance toujours au moins une fois avant de s\'arrêter).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Quand un joueur s\'arrête en laissant des dés, le suivant peut les reprendre, avec ses points comme base.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'L\'extension vaut pour tout le tour, même pour un 5 (100 au lieu de 50), et s\'efface à la main pleine.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Un 2 seul ne vaut rien… sauf ici : après votre brelan de 2, il vaut 100 (en rouge). La main fait 300 : arrêtez-vous.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Un brelan de 2 : 200. Relancez les 2 derniers dés.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Après un brelan d\'une valeur, un dé seul de la même valeur, plus tard dans le tour, vaut 100 points.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Un craque marque la ligne d\'un trait ; un second la barre. À 0, un craque ne coûte rien.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Second craque : la ligne 1500 est barrée, vous retombez à 500, votre score précédent. Appuyez sur ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Votre ligne porte un trait : un second craque la barrerait. Lancez quand même.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Craqué ! La main est perdue, et votre ligne de 1500 reçoit un petit trait. Appuyez sur ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Un lancer qui ne rapporte rien est un craque : la main en cours est perdue. Vous avez 1500 points.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Retenez : jamais d\'arrêt sur un total qui finit par 50, et une main pleine se relance toujours.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500 : assez pour entrer, et pas de 50 à la fin. Arrêtez-vous.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Deux 5, mais facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le bouton montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s\'arrêter.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'L\'as et le 5 sont gardés : la main vaut 150. Relancez les 3 autres dés.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Quand tous les dés rapportent, c\'est la main pleine : on relance les 5. Et un 5 seul est parfois facultatif.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 points encaissés : vous êtes dans la partie ! Ensuite, chaque tour devra rapporter au moins 200 points.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Trois 6 : un brelan vaut 100 fois sa valeur, ici 600 (trois as : 1000). La main vaut 700, assez pour entrer : appuyez sur la main pour vous arrêter.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Seuls l\'as (100) et le 5 (50) rapportent seuls : l\'as est mis de côté. Pour entrer dans la partie, il faut 500 points en un tour : relancez les 4 autres dés.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. À chaque tour, on lance 5 dés et on met de côté ceux qui rapportent.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Le dernier tour';
+
+  @override
+  String get tutorialLessonCollision => 'Barrer un joueur';
+
+  @override
+  String get tutorialLessonInheritedHand => 'La main héritée';
+
+  @override
+  String get tutorialLessonExtension => 'L\'extension';
+
+  @override
+  String get tutorialLessonBust => 'Le craque';
+
+  @override
+  String get tutorialLessonHotDice => 'La main pleine';
+
+  @override
+  String get tutorialLessonBasics => 'Les bases';
+
+  @override
+  String get tutorialBotTurn => 'Au tour du bot : il joue seul.';
+
+  @override
+  String get tutorialRollPrompt => 'Appuyez sur le bouton de lancer.';
+
+  @override
+  String get tutorialWholePath => 'Tout le parcours';
+
+  @override
+  String get tutorialLessonsTitle => 'Leçons du tutoriel';
+
+  @override
+  String get tutorialNextLesson => 'Leçon suivante';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Leçon $number/$total : $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Vous';
 
   @override
@@ -653,35 +825,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialFinish => 'Commencer à jouer';
 
   @override
-  String get tutorialReplayButton => 'Revoir le tutoriel';
-
-  @override
-  String get tutorialStep0 =>
-      'Bienvenue dans Le 10000 ! Le but : atteindre exactement 10 000 points. On joue un tour ensemble, sur le vrai écran de jeu : rien n\'est enregistré.';
-
-  @override
-  String get tutorialStep1 =>
-      'Appuyez sur le bouton de lancer pour jeter les 5 dés.';
-
-  @override
-  String get tutorialStep2 =>
-      'Seuls l\'as (100) et le 5 (50) rapportent ici : ils sont gardés, la main vaut 150. Il faut 500 points pour entrer dans la partie : relancez les 3 autres dés.';
-
-  @override
-  String get tutorialStep3 =>
-      'Un brelan de 3 : 300 points, la main monte à 450. Tous les dés ont servi : main pleine ! On relance les 5 dés, sans pouvoir s\'arrêter.';
-
-  @override
-  String get tutorialStep4 =>
-      'Deux 5, mais ils sont facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 points : assez pour entrer, et pas de 50 à la fin. Appuyez sur la main pour vous arrêter et les encaisser.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 points encaissés ! Le bot reprend la main ; un lancer sans point est un craque (tour perdu, tiret sur la ligne). Le premier à atteindre exactement 10 000 gagne. Les règles complètes sont dans le menu.';
+  String get tutorialReplayButton => 'Leçons du tutoriel';
 
   @override
   String get rulesGoalTitle => 'But du jeu';
@@ -799,6 +943,50 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'Dans une partie commencée, votre place restera vide et la partie attendra votre retour.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Vous quittez le salon : un bot jouera à votre place jusqu\'à la fin de la partie.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'En attente du début de la partie';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'a quitté la partie : un bot joue à sa place';
+
+  @override
+  String get botSeatTooltip => 'Joué par un bot (joueur parti)';
+
+  @override
+  String get rematchButton => 'Rejouer';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name propose une revanche';
+  }
+
+  @override
+  String get rematchWaiting => 'En attente des autres joueurs…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Accepter';
+
+  @override
+  String get rematchRefuse => 'Refuser';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Vous avez quitté le salon : pas de revanche pour vous.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Pas de revanche : il faut au moins deux joueurs.';
 
   @override
   String get onlineConnecting => 'Connexion au serveur…';
@@ -925,10 +1113,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emotePhraseYes => 'Yes !';
 
   @override
-  String get emotePhraseTooGreedy => 'Trop gourmand !';
+  String get emotePhraseTooGreedy => 'La gourmandise est un vilain défaut !';
 
   @override
-  String get emotePhraseTooLucky => 'Un peu trop chanceux...';
+  String get emotePhraseTooLucky => 'Un peu trop de chance...';
 
   @override
   String get emotePhraseDryTenThousand => 'En mode 10000 sec';
@@ -944,6 +1132,39 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Désolé mais je dois partir';
+
+  @override
+  String get emoteAngry => 'Fâché';
+
+  @override
+  String get emoteRelieved => 'Soulagé';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Mais quel est ce choix étrange ?';
+
+  @override
+  String get emotePhraseAllByFives => 'Tout par les cinq !';
+
+  @override
+  String get emotePhraseWithPanache => 'Avec panache !';
+
+  @override
+  String get emotePhraseUnfair => 'C\'est vraiment trop injuste';
+
+  @override
+  String get emotePhrasePhew => 'Ouf !';
+
+  @override
+  String get emotePhraseAtLast => 'Enfin !';
+
+  @override
+  String get emotePhraseCloseCall => 'C\'était chaud !';
+
+  @override
+  String get emotePhraseWellPlayed => 'Bien joué';
+
+  @override
+  String get emotePhraseSorry => 'Désolé';
 
   @override
   String get gameHistoryBar => 'Historique';

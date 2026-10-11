@@ -384,6 +384,11 @@ class AppLocalizationsFi extends AppLocalizations {
   String get logHotDiceMessage => 'Kuumat nopat!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Kuumat nopat! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Pisteet yliviivattu:';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Meni pieleen! => $score viiva';
+  String logBustMessage(int lost) {
+    return '$lost: Meni pieleen!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Meni pieleen! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Meni pieleen! => $score viiva';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Meni pieleen! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -582,13 +594,6 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Pelijärjestys';
-
-  @override
-  String get diceOffReversedNote =>
-      'Naapureiden kaksintaistelun voitti jälkimmäinen: peli kiertää toiseen suuntaan.';
-
-  @override
   String get gameOverTitle => 'Peli päättyi';
 
   @override
@@ -622,6 +627,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get tiretTooltip => 'Viiva: toinen epäonnistuminen viivaa pisteet yli';
 
   @override
+  String get radarTargetsTooltip =>
+      'Pisteet, jotka käynnissä oleva käsi voisi yliviivata';
+
+  @override
+  String get radarGapTooltip => 'Ero käynnissä olevan käden summaan';
+
+  @override
   String get previousScoreHadTiretTooltip => 'Edellisissä pisteissä oli viiva';
 
   @override
@@ -643,6 +655,167 @@ class AppLocalizationsFi extends AppLocalizations {
   String get tutorialSkip => 'Ohita';
 
   @override
+  String get tutorialFinalOutro =>
+      'Botti on yliviivattu ja sen on nyt yritettävä 10 000:ta. Nyt osaat kaikki säännöt: hauskaa peliä!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Kolme nelosta: tasan 10 000! Se otetaan automaattisesti.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9600. Viimeisellä kierroksella ei voi lopettaa: heitä uudelleen.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Botti on saavuttanut 10 000: tämä on viimeinen kierros. Voittaaksesi sinun on tasattava se, mikä yliviivaa sen. Lopettaminen ennen sitä on kielletty.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Botti on yliviivattu ja putoaa takaisin 1500:aan. Toisen pelaajan rivin saavuttaminen, vanhankin, yliviivaa myös sen.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'Kaksi ykköstä: 200. Olisit 2000:ssa, botin tuloksessa, punaisella sen tutkassa. Lopeta yliviivataksesi sen.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'Botin rivillä tutka näyttää sen tulokset, jotka voisit yliviivata: saman summan saavuttaminen pudottaa sen takaisin.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Epäonnistumisen jälkeen aloitetaan aina 5 uudella nopalla. Kättä, jota ei enää voisi kirjata, ei koskaan tarjota.';
+
+  @override
+  String get tutorialInheritStop =>
+      'Ykkönen: käsi on 1100 pisteen arvoinen. Lopeta.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Botti lopetti 1000:een jättäen 2 noppaa. Ota käsi: aloitat sen 1000 pisteestä, ja 2 noppaa heitetään heti (ennen lopettamista heitetään aina vähintään kerran).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Kun pelaaja lopettaa jättäen noppia, seuraava voi ottaa ne, hänen pisteensä pohjana.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'Laajennus kestää koko vuoron, myös viitoselle (100 eikä 50), ja häviää kuumissa nopissa.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'Yksittäinen kakkonen ei ole minkään arvoinen… paitsi tässä: kolmen kakkosesi jälkeen se on 100 pisteen arvoinen (punaisella). Käsi on 300: lopeta.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Kolme kakkosta: 200. Heitä 2 viimeistä noppaa uudelleen.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Kolmen saman jälkeen yksittäinen samanarvoinen noppa myöhemmin samalla vuorolla on 100 pisteen arvoinen.';
+
+  @override
+  String get tutorialBustOutro =>
+      'Epäonnistuminen merkitsee rivin viivalla; toinen yliviivaa sen. Nollassa epäonnistuminen ei maksa mitään.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Toinen epäonnistuminen: 1500:n rivi on yliviivattu, putoat takaisin 500:aan, edelliseen tulokseesi. Napauta ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Rivilläsi on viiva: toinen epäonnistuminen yliviivaisi sen. Heitä silti.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Meni pieleen! Käsi menetetään, ja 1500 pisteen rivisi saa viivan. Napauta ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Heitto ilman pisteitä on epäonnistuminen: käynnissä oleva käsi menetetään. Sinulla on 1500 pistettä.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Muista: älä koskaan lopeta summaan, joka päättyy lukuun 50, ja kuumat nopat heitetään aina uudelleen.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: riittää sisään, eikä lopussa ole 50. Lopeta.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'Kaksi viitosta, mutta vapaaehtoisia: tämä valitsin määrää, montako pidät. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Valitse 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Kolme kolmosta: 300, käsi nousee 450:een. Kaikki nopat toivat pisteitä: kuumat nopat! Painike näyttää summan, joka sinulla olisi; kaikki 5 heitetään uudelleen etkä voi lopettaa.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'Ykkönen ja viitonen pidetään: käsi on 150 pisteen arvoinen. Heitä muut 3 noppaa uudelleen.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Kun kaikki nopat tuovat pisteitä, ne ovat kuumat nopat: kaikki 5 heitetään uudelleen. Ja yksittäinen viitonen on joskus vapaaehtoinen.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 pistettä kirjattu: olet pelissä! Tästä lähtien jokaisen vuoron on tuotava vähintään 200 pistettä.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Kolme kuutosta: kolme samaa on 100 kertaa silmäluvun arvoinen, tässä 600 (kolme ykköstä: 1000). Käsi on 700 pisteen arvoinen, riittää sisään: napauta kättä lopettaaksesi.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Yksinään pisteitä tuovat vain ykkönen (100) ja viitonen (50): ykkönen pannaan sivuun. Peliin pääsyyn tarvitaan 500 pistettä yhdellä vuorolla: heitä muut 4 noppaa uudelleen.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Tervetuloa Le 10000 -peliin! Tavoite: saavuttaa tasan 10 000 pistettä. Joka vuorolla heitetään 5 noppaa ja pisteitä tuovat nopat pannaan sivuun.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Viimeinen kierros';
+
+  @override
+  String get tutorialLessonCollision => 'Pelaajan yliviivaaminen';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Peritty käsi';
+
+  @override
+  String get tutorialLessonExtension => 'Laajennussääntö';
+
+  @override
+  String get tutorialLessonBust => 'Epäonnistuminen';
+
+  @override
+  String get tutorialLessonHotDice => 'Kuumat nopat';
+
+  @override
+  String get tutorialLessonBasics => 'Perusteet';
+
+  @override
+  String get tutorialBotTurn => 'Botin vuoro: se pelaa itse.';
+
+  @override
+  String get tutorialRollPrompt => 'Napauta heittopainiketta.';
+
+  @override
+  String get tutorialWholePath => 'Koko opastus';
+
+  @override
+  String get tutorialLessonsTitle => 'Opastuksen oppitunnit';
+
+  @override
+  String get tutorialNextLesson => 'Seuraava oppitunti';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Oppitunti $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Sinä';
 
   @override
@@ -652,34 +825,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get tutorialFinish => 'Aloita pelaaminen';
 
   @override
-  String get tutorialReplayButton => 'Katso opastus uudelleen';
-
-  @override
-  String get tutorialStep0 =>
-      'Tervetuloa Le 10000 -peliin! Tavoite: saavuttaa tasan 10 000 pistettä. Pelaamme yhden vuoron yhdessä oikealla pelinäytöllä: mitään ei tallenneta.';
-
-  @override
-  String get tutorialStep1 => 'Napauta heittopainiketta heittääksesi 5 noppaa.';
-
-  @override
-  String get tutorialStep2 =>
-      'Tässä pisteitä tuovat vain ykkönen (100) ja viitonen (50): ne pidetään, käsi on 150 pisteen arvoinen. Peliin pääsyyn tarvitaan 500 pistettä: heitä muut 3 noppaa uudelleen.';
-
-  @override
-  String get tutorialStep3 =>
-      'Kolme kolmosta: 300 pistettä, käsi nousee 450:een. Kaikki nopat toivat pisteitä: kuumat nopat! Heität kaikki 5 uudelleen etkä voi lopettaa.';
-
-  @override
-  String get tutorialStep4 =>
-      'Kaksi viitosta, mutta ne ovat vapaaehtoisia: tämä valitsin määrää, montako pidät. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Valitse 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 pistettä: riittää sisään pääsyyn, eikä lopussa ole 50. Napauta kättä lopettaaksesi ja kirjataksesi ne.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 pistettä kirjattu! Botti jatkaa; heitto ilman pisteitä on epäonnistuminen (vuoro menetetään, viiva riville). Ensimmäinen, joka saavuttaa tasan 10 000, voittaa. Täydelliset säännöt ovat valikossa.';
+  String get tutorialReplayButton => 'Opastuksen oppitunnit';
 
   @override
   String get rulesGoalTitle => 'Pelin tavoite';
@@ -797,6 +943,50 @@ class AppLocalizationsFi extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'Aloitetussa pelissä paikkasi jää tyhjäksi ja peli odottaa paluutasi.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Poistut huoneesta: botti pelaa puolestasi pelin loppuun asti.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Odotetaan pelin alkua';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'poistui pelistä: botti pelaa hänen puolestaan';
+
+  @override
+  String get botSeatTooltip => 'Botin pelaama (pelaaja poistui)';
+
+  @override
+  String get rematchButton => 'Pelaa uudelleen';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name ehdottaa revanssia';
+  }
+
+  @override
+  String get rematchWaiting => 'Odotetaan muita pelaajia…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Hyväksy';
+
+  @override
+  String get rematchRefuse => 'Hylkää';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Poistuit huoneesta: ei revanssia sinulle.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Ei revanssia: tarvitaan vähintään kaksi pelaajaa.';
 
   @override
   String get onlineConnecting => 'Yhdistetään palvelimeen…';
@@ -923,10 +1113,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get emotePhraseYes => 'Jes!';
 
   @override
-  String get emotePhraseTooGreedy => 'Liian ahne!';
+  String get emotePhraseTooGreedy => 'Ahneus on ruma vika!';
 
   @override
-  String get emotePhraseTooLucky => 'Vähän liian onnekas...';
+  String get emotePhraseTooLucky => 'Vähän liikaa onnea...';
 
   @override
   String get emotePhraseDryTenThousand => 'Suoraan 10000:een';
@@ -942,6 +1132,39 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Sori, mutta minun täytyy lähteä';
+
+  @override
+  String get emoteAngry => 'Vihainen';
+
+  @override
+  String get emoteRelieved => 'Helpottunut';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Mikä ihmeen outo valinta tämä on?';
+
+  @override
+  String get emotePhraseAllByFives => 'Kaikki viitosilla!';
+
+  @override
+  String get emotePhraseWithPanache => 'Tyylillä!';
+
+  @override
+  String get emotePhraseUnfair => 'Tämä on todella epäreilua';
+
+  @override
+  String get emotePhrasePhew => 'Huh!';
+
+  @override
+  String get emotePhraseAtLast => 'Vihdoinkin!';
+
+  @override
+  String get emotePhraseCloseCall => 'Olipa täpärällä!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Hyvin pelattu';
+
+  @override
+  String get emotePhraseSorry => 'Anteeksi';
 
   @override
   String get gameHistoryBar => 'Historia';

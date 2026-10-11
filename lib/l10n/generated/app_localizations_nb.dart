@@ -384,6 +384,11 @@ class AppLocalizationsNb extends AppLocalizations {
   String get logHotDiceMessage => 'Varme terninger!';
 
   @override
+  String rollButtonHotDiceTotal(int total) {
+    return 'Varme terninger! → $total';
+  }
+
+  @override
   String get logScoreCollisionMessage => 'Poengsum strøket:';
 
   @override
@@ -413,12 +418,19 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
-  String logBustTiretMessage(int score) {
-    return 'Bom! => $score strek';
+  String logBustMessage(int lost) {
+    return '$lost: Bom!';
   }
 
   @override
-  String get logBustBarredPrefix => 'Bom! =>';
+  String logBustTiretMessage(int lost, int score) {
+    return '$lost: Bom! => $score strek';
+  }
+
+  @override
+  String logBustBarredPrefix(int lost) {
+    return '$lost: Bom! =>';
+  }
 
   @override
   String logBustBarredReturnMessage(int score) {
@@ -581,13 +593,6 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
-  String get diceOffPlayOrderLabel => 'Spillrekkefølge';
-
-  @override
-  String get diceOffReversedNote =>
-      'Duell mellom naboer vunnet av den andre: spillet går motsatt vei.';
-
-  @override
   String get gameOverTitle => 'Spillet er over';
 
   @override
@@ -621,6 +626,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get tiretTooltip => 'Strek: en ny bom vil stryke poengsummen';
 
   @override
+  String get radarTargetsTooltip =>
+      'Poengsummer den pågående hånden kan stryke';
+
+  @override
+  String get radarGapTooltip => 'Avstand til summen av den pågående hånden';
+
+  @override
   String get previousScoreHadTiretTooltip => 'Forrige poengsum hadde en strek';
 
   @override
@@ -642,6 +654,166 @@ class AppLocalizationsNb extends AppLocalizations {
   String get tutorialSkip => 'Hopp over';
 
   @override
+  String get tutorialFinalOutro =>
+      'Boten er strøket og må nå selv prøve å nå 10 000. Nå kan du alle reglene: lykke til!';
+
+  @override
+  String get tutorialFinalExact =>
+      'Tre firere: nøyaktig 10 000! Det tas automatisk.';
+
+  @override
+  String get tutorialFinalNoStop =>
+      '100: 9600. I siste runde kan du ikke stoppe: kast igjen.';
+
+  @override
+  String get tutorialFinalIntro =>
+      'Boten har nådd 10 000: dette er siste runde. For å vinne må du nå det samme, som stryker den. Å stoppe før er forbudt.';
+
+  @override
+  String get tutorialCollisionOutro =>
+      'Boten er strøket og faller tilbake til 1500. Å nå en linje hos en annen spiller, selv en gammel, stryker den også.';
+
+  @override
+  String get tutorialCollisionCollide =>
+      'To enere: 200. Du ville vært på 2000, botens poengsum, i rødt på radaren. Stopp for å stryke den.';
+
+  @override
+  String get tutorialCollisionIntro =>
+      'På botens linje viser radaren poengsummene dens som du kunne strøket: å nå samme sum setter den tilbake.';
+
+  @override
+  String get tutorialInheritOutro =>
+      'Etter en bom starter man alltid med 5 nye terninger. En hånd som ikke lenger kan noteres, blir aldri tilbudt.';
+
+  @override
+  String get tutorialInheritStop => 'En ener: hånden er verdt 1100. Stopp.';
+
+  @override
+  String get tutorialInheritTake =>
+      'Boten stoppet på 1000 og etterlot 2 terninger. Overta hånden: du starter fra dens 1000 poeng, og de 2 terningene kastes med en gang (man kaster alltid minst én gang før man stopper).';
+
+  @override
+  String get tutorialInheritIntro =>
+      'Når en spiller stopper og etterlater terninger, kan den neste overta dem, med poengene som utgangspunkt.';
+
+  @override
+  String get tutorialExtensionOutro =>
+      'Utvidelsen gjelder hele turen, selv for en femmer (100 i stedet for 50), og forsvinner ved varme terninger.';
+
+  @override
+  String get tutorialExtensionExtended =>
+      'En enslig toer er verdt ingenting… unntatt her: etter dine tre toere er den verdt 100 (i rødt). Hånden er på 300: stopp.';
+
+  @override
+  String get tutorialExtensionBrelan =>
+      'Tre toere: 200. Kast de 2 siste terningene på nytt.';
+
+  @override
+  String get tutorialExtensionIntro =>
+      'Etter tre like av en verdi er en enslig terning med samme verdi senere i turen verdt 100 poeng.';
+
+  @override
+  String get tutorialBustOutro =>
+      'En bom merker linjen med en strek; en til stryker den. På 0 koster en bom ingenting.';
+
+  @override
+  String get tutorialBustBarred =>
+      'Andre bom: linjen på 1500 er strøket, du faller tilbake til 500, forrige poengsum. Trykk på ✓.';
+
+  @override
+  String get tutorialBustRollAgain =>
+      'Linjen din har en strek: en ny bom ville stryke den. Kast likevel.';
+
+  @override
+  String get tutorialBustTiret =>
+      'Bom! Hånden er tapt, og linjen din på 1500 får en strek. Trykk på ✓.';
+
+  @override
+  String get tutorialBustIntro =>
+      'Et kast uten poeng er en bom: den pågående hånden er tapt. Du har 1500 poeng.';
+
+  @override
+  String get tutorialHotDiceOutro =>
+      'Husk: aldri stopp på en sum som ender på 50, og varme terninger kastes alltid på nytt.';
+
+  @override
+  String get tutorialHotDiceStop =>
+      '500: nok til å komme inn, og ingen 50 til slutt. Stopp.';
+
+  @override
+  String get tutorialHotDiceFives =>
+      'To femmere, men valgfrie: denne velgeren bestemmer hvor mange du beholder. Med begge ville 550 ende på 50: du kunne ikke stoppe. Velg 1.';
+
+  @override
+  String get tutorialHotDiceFullHand =>
+      'Tre treere: 300, hånden stiger til 450. Alle terningene ga poeng: varme terninger! Knappen viser summen du ville hatt; du kaster alle 5 på nytt og kan ikke stoppe.';
+
+  @override
+  String get tutorialHotDiceKept =>
+      'Eneren og femmeren beholdes: hånden er verdt 150. Kast de 3 andre terningene på nytt.';
+
+  @override
+  String get tutorialHotDiceIntro =>
+      'Når alle terningene gir poeng, er det varme terninger: man kaster alle 5 på nytt. Og en enslig femmer er noen ganger valgfri.';
+
+  @override
+  String get tutorialBasicsOutro =>
+      '700 poeng notert: du er med i spillet! Fra nå må hver tur gi minst 200 poeng.';
+
+  @override
+  String get tutorialBasicsBrelan =>
+      'Tre seksere: tre like er verdt 100 ganger verdien, her 600 (tre enere: 1000). Hånden er verdt 700, nok til å komme inn: trykk på hånden for å stoppe.';
+
+  @override
+  String get tutorialBasicsAce =>
+      'Alene gir bare eneren (100) og femmeren (50) poeng: eneren legges til side. For å komme inn i spillet trengs 500 poeng på én tur: kast de 4 andre terningene på nytt.';
+
+  @override
+  String get tutorialBasicsIntro =>
+      'Velkommen til Le 10000! Målet: nå nøyaktig 10 000 poeng. Hver tur kaster du 5 terninger og legger til side dem som gir poeng.';
+
+  @override
+  String get tutorialLessonFinalRound => 'Siste runde';
+
+  @override
+  String get tutorialLessonCollision => 'Å stryke en spiller';
+
+  @override
+  String get tutorialLessonInheritedHand => 'Den arvede hånden';
+
+  @override
+  String get tutorialLessonExtension => 'Utvidelsesregelen';
+
+  @override
+  String get tutorialLessonBust => 'Bom';
+
+  @override
+  String get tutorialLessonHotDice => 'Varme terninger';
+
+  @override
+  String get tutorialLessonBasics => 'Det grunnleggende';
+
+  @override
+  String get tutorialBotTurn => 'Botens tur: den spiller selv.';
+
+  @override
+  String get tutorialRollPrompt => 'Trykk på kastknappen.';
+
+  @override
+  String get tutorialWholePath => 'Hele veiledningen';
+
+  @override
+  String get tutorialLessonsTitle => 'Veiledningens leksjoner';
+
+  @override
+  String get tutorialNextLesson => 'Neste leksjon';
+
+  @override
+  String tutorialLessonCounter(int number, int total, String title) {
+    return 'Leksjon $number/$total: $title';
+  }
+
+  @override
   String get tutorialPlayerName => 'Du';
 
   @override
@@ -651,35 +823,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get tutorialFinish => 'Begynn å spille';
 
   @override
-  String get tutorialReplayButton => 'Se veiledningen igjen';
-
-  @override
-  String get tutorialStep0 =>
-      'Velkommen til Le 10000! Målet: nå nøyaktig 10 000 poeng. Vi spiller en runde sammen på den ekte spillskjermen: ingenting lagres.';
-
-  @override
-  String get tutorialStep1 =>
-      'Trykk på kastknappen for å kaste de 5 terningene.';
-
-  @override
-  String get tutorialStep2 =>
-      'Bare enere (100) og femmere (50) gir poeng her: de beholdes, hånden er verdt 150. Du trenger 500 poeng for å komme inn i spillet: kast de 3 andre terningene på nytt.';
-
-  @override
-  String get tutorialStep3 =>
-      'Tre treere: 300 poeng, hånden stiger til 450. Alle terningene ga poeng: varme terninger! Du kaster alle 5 på nytt og kan ikke stoppe.';
-
-  @override
-  String get tutorialStep4 =>
-      'To femmere, men de er valgfrie: denne velgeren bestemmer hvor mange du beholder. Med begge ville 550 ende på 50: du kunne ikke stoppe. Velg 1.';
-
-  @override
-  String get tutorialStep5 =>
-      '500 poeng: nok til å komme inn, og ingen 50 til slutt. Trykk på hånden for å stoppe og notere dem.';
-
-  @override
-  String get tutorialStep6 =>
-      '500 poeng notert! Boten tar over; et kast uten poeng er en bom (runden tapt, en strek på linjen). Den første som når nøyaktig 10 000 vinner. De fullstendige reglene finner du i menyen.';
+  String get tutorialReplayButton => 'Veiledningens leksjoner';
 
   @override
   String get rulesGoalTitle => 'Målet med spillet';
@@ -797,6 +941,50 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get onlineLeaveConfirmBody =>
       'I et spill som har startet, blir plassen din stående tom, og spillet venter på at du kommer tilbake.';
+
+  @override
+  String get onlineLeaveGameBody =>
+      'Du forlater rommet: en bot spiller i ditt sted til spillet er slutt.';
+
+  @override
+  String get onlineDiceOffWaitingStart => 'Venter på at spillet skal starte';
+
+  @override
+  String get logPlayerReplacedByBot =>
+      'forlot spillet: en bot spiller i stedet';
+
+  @override
+  String get botSeatTooltip => 'Spilt av en bot (spilleren forlot)';
+
+  @override
+  String get rematchButton => 'Spill igjen';
+
+  @override
+  String rematchProposal(String name) {
+    return '$name foreslår en revansj';
+  }
+
+  @override
+  String get rematchWaiting => 'Venter på de andre spillerne…';
+
+  @override
+  String rematchSecondsLeft(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get rematchAccept => 'Godta';
+
+  @override
+  String get rematchRefuse => 'Avslå';
+
+  @override
+  String get rematchExcludedNotice =>
+      'Du forlot rommet: ingen revansj for deg.';
+
+  @override
+  String get rematchCancelledNotice =>
+      'Ingen revansj: det trengs minst to spillere.';
 
   @override
   String get onlineConnecting => 'Kobler til serveren…';
@@ -924,10 +1112,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emotePhraseYes => 'Ja!';
 
   @override
-  String get emotePhraseTooGreedy => 'For grådig!';
+  String get emotePhraseTooGreedy => 'Grådighet er en stygg uvane!';
 
   @override
-  String get emotePhraseTooLucky => 'Litt vel heldig...';
+  String get emotePhraseTooLucky => 'Litt vel mye flaks...';
 
   @override
   String get emotePhraseDryTenThousand => 'Rett til 10000';
@@ -943,6 +1131,39 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get emotePhraseSorryMustGo => 'Beklager, men jeg må gå';
+
+  @override
+  String get emoteAngry => 'Sint';
+
+  @override
+  String get emoteRelieved => 'Lettet';
+
+  @override
+  String get emotePhraseStrangeChoice => 'Hva slags merkelig valg er nå dette?';
+
+  @override
+  String get emotePhraseAllByFives => 'Alt med femmerne!';
+
+  @override
+  String get emotePhraseWithPanache => 'Med stil!';
+
+  @override
+  String get emotePhraseUnfair => 'Det er altfor urettferdig';
+
+  @override
+  String get emotePhrasePhew => 'Puh!';
+
+  @override
+  String get emotePhraseAtLast => 'Endelig!';
+
+  @override
+  String get emotePhraseCloseCall => 'Det var nære på!';
+
+  @override
+  String get emotePhraseWellPlayed => 'Godt spilt';
+
+  @override
+  String get emotePhraseSorry => 'Beklager';
 
   @override
   String get gameHistoryBar => 'Historikk';
