@@ -607,10 +607,10 @@ void main() {
           keep * (fives.points ~/ fives.diceCount);
     }
 
-    /// Le liseré de la main : « Main courante 350 (>500) » sous le minimum,
+    /// Le liseré de la main : « Main courante 350 (<500) » sous le minimum,
     /// « Main courante 650 → 3150 » au-delà.
     Finder showsHandScore(int score) => find.byWidgetPredicate(
-          (w) => w is RichText && RegExp('Main courante $score( \\(>| →)').hasMatch(w.text.toPlainText()),
+          (w) => w is RichText && RegExp('Main courante $score( \\(<| →)').hasMatch(w.text.toPlainText()),
         );
 
     Future<void> joined(WidgetTester tester, int seat, List<GameAction> journal) async {

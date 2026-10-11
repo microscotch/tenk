@@ -1743,6 +1743,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       // Le radar des autres joueurs suit la main en direct,
                       // sélection de 5 comprise.
                       potentialTotal: engine.currentPlayer.totalScore + liveScore,
+                      reachFrom: radarReachFrom(
+                        currentTotal: engine.currentPlayer.totalScore,
+                        minimum: engine.minimumForCurrentPlayer,
+                        potentialTotal: engine.currentPlayer.totalScore + liveScore,
+                      ),
                       rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                     ),
                     const SizedBox(height: 12),
@@ -2569,7 +2574,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // Sous le minimum, seul le minimum à atteindre compte ; au-delà, le
         // total que donnerait cette main (voir `potentialColor` dans [build]).
         if (liveScore < minimum)
-          TextSpan(text: ' (>$minimum)', style: const TextStyle(color: Colors.redAccent))
+          TextSpan(text: ' (<$minimum)', style: const TextStyle(color: Colors.redAccent))
         else
           TextSpan(text: ' → $potentialTotal', style: TextStyle(color: potentialColor)),
         ..._extensionSpans(extendedValues, glyphSize: 13),

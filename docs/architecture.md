@@ -84,9 +84,10 @@ une partie rejouable à l'identique.
   l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
 - **Le radar** (`lib/game/score_radar.dart`) sert la liste des joueurs de l'écran de jeu, qui tourne autour du
   joueur dont c'est le tour (`rotatedOrder`). Pour chaque autre joueur, `collisionTargets` donne ses trois premières
-  lignes atteignables : non barrées, hors son score courant (déjà affiché), à 200 au moins au-dessus du total
-  potentiel du joueur courant (son score + sa main en cours) — puisqu'une collision barre toute ligne non barrée de
-  même valeur. Sans ligne atteignable, `radarGaps` donne jusqu'à trois écarts avec ses plus hautes lignes.
+  lignes encore atteignables ce tour-ci : non barrées, hors son score courant (déjà affiché), à partir de
+  `radarReachFrom` — le score du joueur courant plus le minimum d'un tour, jamais sous son total potentiel (son
+  score + sa main en cours) —, puisqu'une collision barre toute ligne non barrée de même valeur. Celle qui égale le
+  potentiel est en rouge. Sans ligne atteignable, `radarGap` donne l'écart entre son score et ce potentiel.
   `barsAnotherPlayer` dit si s'arrêter sur le potentiel barrerait quelqu'un (le vert du liseré de la main). Fonctions pures, sans état : l'écran les recalcule à chaque changement de main.
 - **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une partie mais sept leçons (`tutorialLessons`), de la
   plus simple à la plus subtile : les bases, la main pleine (et les 5 facultatifs, jamais d'arrêt sur un total en

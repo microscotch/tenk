@@ -187,25 +187,26 @@ void main() {
       expect(topOf(tester, 'C'), lessThan(topOf(tester, 'A')));
     });
 
-    testWidgets('un adversaire montre ses lignes atteignables, hors son score, à 200 au moins du potentiel',
+    testWidgets('un adversaire montre ses lignes atteignables, hors son score ; celle qu\'on barrerait en rouge',
         (tester) async {
-      final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
-      // Lignes 500, 1500, 2800, 3000, 3100 (courante).
-      final alice = [500, 1000, 1300, 200, 100].fold(Player(name: 'Alice'), (p, v) => p.applySuccessfulTurn(v));
-      await pumpSheet(tester, [me, alice], current: 0, potential: 2600);
+      final me = Player(name: 'Moi', totalScore: 2200, hasEntered: true);
+      // Grille de Bob : 2400, 2600, 2800, 3600 (courante).
+      final bob = [2400, 200, 200, 800].fold(Player(name: 'Bob'), (p, v) => p.applySuccessfulTurn(v));
+      await pumpSheet(tester, [me, bob], current: 0, potential: 2400);
 
-      expect(find.descendant(of: _rowOf('Alice'), matching: find.text('2800 · 3000')), findsOneWidget);
+      final radar = find.descendant(of: _rowOf('Bob'), matching: find.text('2400 · 2600 · 2800'));
+      expect(radar, findsOneWidget);
+      final first = (tester.widget<Text>(radar).textSpan! as TextSpan).children!.first as TextSpan;
+      expect((first.text, first.style?.color), ('2400', Colors.redAccent), reason: 'un arrêt maintenant le barrerait');
       // Le score précédent entre parenthèses ne vaut que pour le joueur courant.
-      expect(find.descendant(of: _rowOf('Alice'), matching: find.textContaining('(')), findsNothing);
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.textContaining('(')), findsNothing);
     });
 
-    testWidgets('rien d\'atteignable : jusqu\'à 3 écarts avec ses plus hautes lignes', (tester) async {
+    testWidgets('rien d\'atteignable : seul l\'écart entre son score et mon total potentiel', (tester) async {
       final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
-      final alice = [500, 1000, 1300, 200, 100].fold(Player(name: 'Alice'), (p, v) => p.applySuccessfulTurn(v));
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
-      await pumpSheet(tester, [me, alice, bob], current: 0, potential: 2900);
-      expect(find.descendant(of: _rowOf('Alice'), matching: find.text('+200 · +100 · \u2212100')), findsOneWidget);
-      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('\u22121100')), findsOneWidget);
+      await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('\u2212950')), findsOneWidget);
     });
 
     testWidgets('les indices d\'écart de 200 ne restent que sur la ligne du joueur courant', (tester) async {

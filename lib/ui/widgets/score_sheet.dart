@@ -30,6 +30,11 @@ class ScoreSheet extends StatelessWidget {
   /// le radar des autres joueurs (voir [collisionTargets]). Nul : son score seul.
   final int? potentialTotal;
 
+  /// D'où partent les lignes atteignables du radar (voir [radarReachFrom]).
+  /// Nul : le score du joueur courant plus 200 (ou son total potentiel, s'il
+  /// est au-dessus).
+  final int? reachFrom;
+
   /// Les joueurs (index) d'une partie en ligne partis en cours de partie, dont
   /// un bot du serveur a repris le siège : leur ligne porte une icône de robot.
   final Set<int> botIndices;
@@ -46,6 +51,7 @@ class ScoreSheet extends StatelessWidget {
     this.displayNames = const {},
     this.bubbles = const {},
     this.potentialTotal,
+    this.reachFrom,
     this.botIndices = const {},
     this.rowKeys = const {},
   });
@@ -55,6 +61,9 @@ class ScoreSheet extends StatelessWidget {
     final avatarColors = assignAvatarColors(players.map((p) => p.name));
     final ranks = podiumRanks(players);
     final potential = potentialTotal ?? players[currentPlayerIndex].totalScore;
+    final from =
+        reachFrom ??
+        radarReachFrom(currentTotal: players[currentPlayerIndex].totalScore, minimum: 200, potentialTotal: potential);
     // La liste tourne : le joueur dont c'est le tour en tête, les suivants dans
     // l'ordre de jeu. Chaque ligne est clée par son joueur, pour que son état
     // (la bulle d'émotion en cours) la suive d'une place à l'autre.
@@ -70,6 +79,7 @@ class ScoreSheet extends StatelessWidget {
               isCurrent: i == currentPlayerIndex,
               gaps: _scoreGaps(players, i),
               potentialTotal: potential,
+              reachFrom: from,
               onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
               avatarColor: avatarColors[players[i].name],
               podiumRank: ranks[i],
@@ -160,6 +170,9 @@ class _PlayerRow extends StatelessWidget {
   /// pas celle du joueur courant.
   final int potentialTotal;
 
+  /// Voir [ScoreSheet.reachFrom].
+  final int reachFrom;
+
   /// Voir [ScoreSheet.botIndices].
   final bool isBot;
 
@@ -168,6 +181,7 @@ class _PlayerRow extends StatelessWidget {
     super.key,
     required this.player,
     required this.potentialTotal,
+    required this.reachFrom,
     required this.displayName,
     this.bubble,
     required this.isCurrent,
@@ -330,11 +344,12 @@ class _PlayerRow extends StatelessWidget {
 
   /// Ce qu'une ligne d'adversaire montre à droite : son score, puis le radar —
   /// les lignes qu'il a encore et que le joueur courant pourrait barrer plus
-  /// tard, vues depuis son total potentiel (voir [collisionTargets]) — ou, s'il
-  /// n'y en a plus, les écarts avec ses plus hautes lignes (voir [radarGaps]).
+  /// ce tour-ci (voir [collisionTargets]), en rouge celle qu'il barrerait en
+  /// s'arrêtant sur son total potentiel — ou, s'il n'y en a plus, l'écart
+  /// entre son score et ce total (voir [radarGap]).
   Widget _radar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final targets = collisionTargets(player, potentialTotal);
+    final targets = collisionTargets(player, reachFrom);
     final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -352,9 +367,24 @@ class _PlayerRow extends StatelessWidget {
         Flexible(
           child: Tooltip(
             message: targets.isEmpty ? l10n.radarGapTooltip : l10n.radarTargetsTooltip,
-            child: Text(
-              targets.isEmpty ? radarGaps(player, potentialTotal).map(_signed).join(' · ') : targets.join(' · '),
-              style: muted,
+            child: Text.rich(
+              TextSpan(
+                style: muted,
+                children: targets.isEmpty
+                    ? [TextSpan(text: _signed(radarGap(player, potentialTotal)))]
+                    : [
+                        for (final (k, value) in targets.indexed) ...[
+                          if (k > 0) const TextSpan(text: ' · '),
+                          TextSpan(
+                            text: '$value',
+                            // La ligne qu'un arrêt maintenant barrerait.
+                            style: value == potentialTotal
+                                ? const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)
+                                : null,
+                          ),
+                        ],
+                      ],
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

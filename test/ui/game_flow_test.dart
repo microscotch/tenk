@@ -714,7 +714,7 @@ void main() {
     await pumpGame(tester, container);
 
     // La mention s'ajoute au libellé incrusté de la zone, à la suite du score
-    // et du minimum : « Main courante 500 (>200)  ·  ⚃ = 100 ».
+    // et du minimum : « Main courante 500 (<200)  ·  ⚃ = 100 ».
     expect(find.textContaining('= 100'), findsOneWidget);
     final glyph = tester.widget<DieGlyph>(find.byType(DieGlyph));
     expect(glyph.value, 4, reason: 'la valeur étendue est celle du brelan encaissé');
@@ -1339,9 +1339,7 @@ void main() {
     // hérite des 3 dés de B : sa popup de reprise de main est ouverte, on
     // repart d'une main neuve pour pouvoir dérouler l'historique (après le
     // bref verrou des commandes qui suit chaque transition).
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byTooltip('Nouvelle main'));
-    await tester.pumpAndSettle();
+    await dismissInheritedHand(tester);
     await openHistory(tester);
     expect(inHistory(find.textContaining('Score barré')), findsOneWidget,
         reason: 'la collision de score doit apparaître dans le journal de partie');
@@ -1447,9 +1445,7 @@ void main() {
 
     // B hérite du dé restant : sa fenêtre de reprise de main est ouverte
     // (touchée après le bref verrou des commandes qui suit chaque transition).
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byTooltip('Nouvelle main'));
-    await tester.pumpAndSettle();
+    await dismissInheritedHand(tester);
     await expectInHistory(tester, '500 pts sont pris => 500 pts', findsOneWidget);
   });
 
@@ -2073,7 +2069,7 @@ void main() {
     );
     await tester.pump();
     // Les dés roulent encore : la main en reste à 150, sous le minimum de 200.
-    expect(find.textContaining('(>200)', findRichText: true), findsOneWidget, reason: 'les dés roulent encore');
+    expect(find.textContaining('(<200)', findRichText: true), findsOneWidget, reason: 'les dés roulent encore');
     // L'immobilisation des dés est une minuterie : `pumpAndSettle` seul ne
     // l'attendrait pas.
     await tester.pump(DieWidget.maxRollDuration + const Duration(milliseconds: 100));
@@ -2735,13 +2731,13 @@ void main() {
 
     testWidgets('sous le minimum : le minimum seul, pas de total potentiel', (tester) async {
       await pumpHand(tester, total: 1000, banked: 150);
-      expect(find.textContaining('(>200)', findRichText: true), findsOneWidget);
+      expect(find.textContaining('(<200)', findRichText: true), findsOneWidget);
       expect(find.textContaining('→', findRichText: true), findsNothing);
     });
 
     testWidgets('au-delà : le total potentiel, blanc, rouge s\'il finit par 50, vert s\'il barre un joueur', (tester) async {
       await pumpHand(tester, total: 1000, banked: 300);
-      expect(find.textContaining('(>200)', findRichText: true), findsNothing);
+      expect(find.textContaining('(<200)', findRichText: true), findsNothing);
       expect(styleOf(tester, ' → 1300')?.color, Colors.white);
     });
 
@@ -2755,4 +2751,16 @@ void main() {
       expect(styleOf(tester, ' → 1400')?.color, Colors.lightGreenAccent);
     });
   });
+}
+
+/// Referme la fenêtre de reprise de main par « Nouvelle main ». Ses commandes
+/// sont brièvement inertes après chaque transition : on retouche tant que la
+/// fenêtre est là.
+Future<void> dismissInheritedHand(WidgetTester tester) async {
+  for (var i = 0; i < 5 && find.byTooltip('Nouvelle main').evaluate().isNotEmpty; i++) {
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byTooltip('Nouvelle main'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+  }
+  expect(find.byTooltip('Nouvelle main'), findsNothing, reason: 'la fenêtre de reprise de main est refermée');
 }

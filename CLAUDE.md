@@ -201,11 +201,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   action too: the play order imposed without dice (`DiceOffState.preset`); it only appears in games where every
   participant announced `rematchFeature`, since an older app couldn't parse it.
 - `game/score_radar.dart` — the game screen's player list: `rotatedOrder` (the active player on top, then play
-  order) and the "radar" shown on every *other* player's row: `collisionTargets(other, potentialTotal)` = that
-  player's first 3 *reachable* lines — non-barred, not their current score (already shown next to it), at least
-  `radarMinimumReach` (200, a turn's minimum) above the current player's potential total (their score + live hand) —
-  since a collision bars any non-barred line, not just the current one; when there are none, `radarGaps`: up to 3
-  differences between that player's highest non-barred lines and the potential. `barsAnotherPlayer` says whether
+  order) and the "radar" shown on every *other* player's row: `collisionTargets(other, reachFrom)` = that player's
+  first 3 lines the current player can still reach this turn — non-barred, not their current score (already shown
+  next to it), from `radarReachFrom` = the current player's score + the turn minimum (200, or 500 before entry),
+  never below their potential total (score + live hand: a line the hand has already passed is out of reach) — since
+  a collision bars any non-barred line, not just the current one. The line equal to the potential is red (stopping
+  now would strike it out). With none, `radarGap`: that player's score minus the potential. `barsAnotherPlayer` says whether
   stopping on the potential would strike someone out (the hand label's green). The current player's row keeps its
   previous-score parenthesis and 200-gap hints; other rows drop them for the radar.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
@@ -328,7 +329,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     dialog or the pass-device screen covers the game, so close those first (and wait out the 300 ms control lock).
     A bust entry starts with the points it cost (`bustedHandScore`, the same number as the bust dialog):
     "1250 : Craqué ! => 3000 petit trait".
-  - **The "Main courante" frame label**: the hand score, then — below the turn minimum — only "(>500)" in red;
+  - **The "Main courante" frame label**: the hand score, then — below the turn minimum — only "(<500)" in red (the hand is still below it);
     otherwise "→ {potential}", the player's total if that hand were kept (shown even on a full hand, where stopping
     isn't allowed): red when it ends in 50, green when it would strike another player out (`barsAnotherPlayer`)
     and the hand can be banked (`_handBankable`), white otherwise. The roll button itself just says "Main pleine !".

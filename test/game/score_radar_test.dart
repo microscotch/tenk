@@ -14,27 +14,34 @@ void main() {
     final alice = [500, 1000, 1300, 200, 100]
         .fold(Player(name: 'Alice'), (p, points) => p.applySuccessfulTurn(points));
 
-    test('les lignes atteignables : à 200 au moins au-dessus du potentiel, hors ligne courante, croissantes', () {
-      expect(alice.grid.map((e) => e.value), [0, 500, 1500, 2800, 3000, 3100]);
-      expect(collisionTargets(alice, 1000), [1500, 2800, 3000], reason: 'au plus 3, sans 3100 (son score)');
-      expect(collisionTargets(alice, 2600), [2800, 3000]);
-      expect(collisionTargets(alice, 2700), [3000], reason: '2800 n\'est qu\'à 100 : pas atteignable');
+    test('le point de départ : mon score + le minimum d\'un tour, jamais sous mon total potentiel', () {
+      expect(radarReachFrom(currentTotal: 2200, minimum: 200, potentialTotal: 2200), 2400);
+      expect(radarReachFrom(currentTotal: 2200, minimum: 200, potentialTotal: 2400), 2400);
+      expect(radarReachFrom(currentTotal: 2200, minimum: 200, potentialTotal: 2700), 2700);
+      expect(radarReachFrom(currentTotal: 0, minimum: 500, potentialTotal: 150), 500, reason: 'pas entré : 500');
     });
 
-    test('les lignes barrées, la ligne 0 et la ligne courante ne comptent pas', () {
-      // 3100 tirettée puis barrée : retour sur 3000.
-      final barred = alice.applyBust().applyBust();
-      expect(barred.totalScore, 3000);
+    test('le cas signalé : à 2200, les lignes 2400, 2600, 2800 restent visibles quand la main mène à 2400', () {
+      // Grille 2400, 2600, 2800, 3600 (courante).
+      final other = [2400, 200, 200, 800].fold(Player(name: 'Bob'), (p, points) => p.applySuccessfulTurn(points));
+      expect(other.totalScore, 3600);
+      expect(collisionTargets(other, radarReachFrom(currentTotal: 2200, minimum: 200, potentialTotal: 2200)), [2400, 2600, 2800]);
+      expect(collisionTargets(other, radarReachFrom(currentTotal: 2200, minimum: 200, potentialTotal: 2400)), [2400, 2600, 2800]);
+      expect(collisionTargets(other, radarReachFrom(currentTotal: 2200, minimum: 200, potentialTotal: 2500)), [2600, 2800],
+          reason: '2400 est dépassé : plus atteignable ce tour-ci');
+    });
+
+    test('les lignes barrées, la ligne 0 et la ligne courante ne comptent pas, au plus 3', () {
+      expect(collisionTargets(alice, 1000), [1500, 2800, 3000], reason: 'sans 3100, son score');
+      final barred = alice.applyBust().applyBust(); // 3100 barrée : retour sur 3000
       expect(collisionTargets(barred, 2000), [2800]);
-      expect(collisionTargets(Player(name: 'Bob'), 0), isEmpty);
+      expect(collisionTargets(Player(name: 'Carl'), 0), isEmpty);
     });
 
-    test('rien d\'atteignable : jusqu\'à 3 écarts avec ses plus hautes lignes', () {
-      expect(collisionTargets(alice, 2900), isEmpty);
-      expect(radarGaps(alice, 2900), [200, 100, -100]);
+    test('rien d\'atteignable : l\'écart entre son score et mon total potentiel', () {
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
-      expect(radarGaps(bob, 2750), [-950]);
-      expect(radarGaps(Player(name: 'Carl'), 600), [-600], reason: 'sans ligne marquée : l\'écart de son score');
+      expect(collisionTargets(bob, 2750), isEmpty);
+      expect(radarGap(bob, 2750), -950);
     });
 
     test('s\'arrêter sur une ligne non barrée d\'un autre joueur le barrerait', () {
