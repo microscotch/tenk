@@ -84,9 +84,10 @@ une partie rejouable à l'identique.
   l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
 - **Le radar** (`lib/game/score_radar.dart`) sert la liste des joueurs de l'écran de jeu, qui tourne autour du
   joueur dont c'est le tour (`rotatedOrder`). Pour chaque autre joueur, `collisionTargets` donne ses trois premières
-  lignes non barrées au moins égales au total potentiel du joueur courant (son score + sa main en cours) : les lignes
-  qu'un arrêt barrerait encore, puisqu'une collision barre toute ligne non barrée de même valeur. Sans ligne
-  éligible, `radarGap` donne l'écart. Fonctions pures, sans état : l'écran les recalcule à chaque changement de main.
+  lignes atteignables : non barrées, hors son score courant (déjà affiché), à 200 au moins au-dessus du total
+  potentiel du joueur courant (son score + sa main en cours) — puisqu'une collision barre toute ligne non barrée de
+  même valeur. Sans ligne atteignable, `radarGaps` donne jusqu'à trois écarts avec ses plus hautes lignes.
+  `barsAnotherPlayer` dit si s'arrêter sur le potentiel barrerait quelqu'un (le vert du liseré de la main). Fonctions pures, sans état : l'écran les recalcule à chaque changement de main.
 - **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une partie mais sept leçons (`tutorialLessons`), de la
   plus simple à la plus subtile : les bases, la main pleine (et les 5 facultatifs, jamais d'arrêt sur un total en
   50), le craque (trait puis barre), l'extension, la main héritée, la collision, le dernier tour. Chaque
@@ -98,8 +99,9 @@ une partie rejouable à l'identique.
   (sans seed, rien n'est sauvegardé), des bulles (`TutorialOverlay`) partent des vrais éléments — jusque dans les
   fenêtres de craque et de main héritée, qui reçoivent leur propre couche (`TutorialDialogLayer`) — et seule la
   commande de l'étape répond. Comme il écrase l'état du notifier singleton, la liste des leçons n'est offerte que
-  depuis l'accueil (`RulesScreen.canReplayTutorial`). Le parcours complet est proposé au premier lancement par
-  `launchScreenFor` (ni profil, ni ancien nom, `AppSettings.tutorialSeen` faux), sautable à tout moment.
+  depuis l'accueil (`RulesScreen.canReplayTutorial`). Le parcours complet, précédé d'une visite de l'écran d'accueil (le vrai
+  `SetupScreen`, inerte, une bulle par jeton), est proposé par `launchScreenFor` tant que le tutoriel n'a jamais été
+  affiché sur le téléphone (`AppSettings.tutorialSeen` faux), sautable à tout moment.
 - **`DiceOffState`** est le tirage au sort qui fixe l'ordre de jeu : tout le
   monde lance son dé en même temps (`rollAll`), le plus faible commence, les
   ex-aequo au plus bas relancent seuls. `playOrder` donne les sièges dans

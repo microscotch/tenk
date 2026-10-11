@@ -384,11 +384,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logHotDiceMessage => 'Main pleine !';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Main pleine ! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Score barré :';
 
   @override
@@ -656,6 +651,53 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialSkip => 'Passer';
 
   @override
+  String get tutorialLessonHome => 'L\'écran d\'accueil';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Voici l\'écran d\'accueil. Chaque jeton ouvre un écran ; un appui long sur un jeton affiche son nom. Faisons-en le tour.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Nouvelle partie : choisissez les joueurs, humains ou bots, et leur ordre autour de la table, pour jouer sur ce téléphone.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Jouer en ligne : créez un salon et partagez son code, ou rejoignez celui d\'un ami ; chacun joue sur son téléphone.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Reprendre : les parties en pause, reprises là où vous les avez laissées. Ce jeton reste inactif tant qu\'il n\'y en a pas.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Joueurs : les fiches des joueurs, avec leur surnom et leur main (droitier ou gaucher).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Parties terminées : revoyez-les coup par coup, avec leur grille, leur courbe et leurs statistiques.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Statistiques : les records et le bilan de chaque joueur.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Règles : la règle du jeu, et les leçons de ce tutoriel, à rejouer une à une.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Paramètres : langue, sons, couleurs des dés, délais et autres réglages.';
+
+  @override
+  String get tutorialHomeAbout =>
+      'À propos : la version de l\'application et ses informations.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Place au jeu : la leçon suivante vous fait jouer votre premier tour.';
+
+  @override
   String get tutorialFinalOutro =>
       'Le bot est barré et doit à son tour tenter les 10 000. Vous connaissez maintenant toutes les règles : bonne partie !';
 
@@ -748,7 +790,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le bouton montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s\'arrêter.';
+      'Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le liseré de la main montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s\'arrêter.';
 
   @override
   String get tutorialHotDiceKept =>

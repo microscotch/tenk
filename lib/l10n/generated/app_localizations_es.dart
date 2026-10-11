@@ -384,11 +384,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logHotDiceMessage => '¡Dados calientes!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return '¡Dados calientes! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Puntuación tachada:';
 
   @override
@@ -656,6 +651,53 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tutorialSkip => 'Saltar';
 
   @override
+  String get tutorialLessonHome => 'La pantalla de inicio';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Esta es la pantalla de inicio. Cada ficha abre una pantalla; una pulsación larga en una ficha muestra su nombre. Hagamos el recorrido.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Nueva partida: elige a los jugadores, humanos o bots, y su orden en la mesa, para jugar en este teléfono.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Jugar en línea: crea una sala y comparte su código, o únete a la de un amigo; cada uno juega en su teléfono.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Reanudar: las partidas en pausa, retomadas donde las dejaste. Esta ficha queda inactiva mientras no haya ninguna.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Jugadores: las fichas de los jugadores, con su apodo y su mano (diestro o zurdo).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Partidas terminadas: revívelas jugada a jugada, con su hoja, su gráfica y sus estadísticas.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Estadísticas: los récords y el balance de cada jugador.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Reglas: las reglas del juego y las lecciones de este tutorial, para repetirlas una a una.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Ajustes: idioma, sonidos, colores de los dados, tiempos y otras opciones.';
+
+  @override
+  String get tutorialHomeAbout =>
+      'Acerca de: la versión de la aplicación y su información.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'A jugar: la siguiente lección te hace jugar tu primer turno.';
+
+  @override
   String get tutorialFinalOutro =>
       'El bot queda tachado y ahora debe intentar los 10 000. Ya conoces todas las reglas: ¡buena partida!';
 
@@ -748,7 +790,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Tres 3: 300, la mano sube a 450. Todos los dados han puntuado: ¡dados calientes! El botón muestra el total que tendrías; se vuelven a tirar los 5 dados, sin poder plantarse.';
+      'Tres 3: 300, la mano sube a 450. Todos los dados han puntuado: ¡dados calientes! El marco de la mano muestra el total que tendrías; se vuelven a tirar los 5 dados, sin poder plantarse.';
 
   @override
   String get tutorialHotDiceKept =>

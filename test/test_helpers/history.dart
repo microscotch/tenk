@@ -17,3 +17,11 @@ Future<void> closeHistory(WidgetTester tester) async {
 /// [finder], limité au panneau d'historique déroulé : la barre du bas répète
 /// la dernière entrée, qu'il ne faut pas compter deux fois.
 Finder inHistory(Finder finder) => find.descendant(of: find.byType(BottomSheet), matching: finder);
+
+/// Déroule l'historique, y vérifie [matcher] pour les entrées contenant [text],
+/// puis le referme.
+Future<void> expectInHistory(WidgetTester tester, String text, Matcher matcher, {String? reason}) async {
+  await openHistory(tester);
+  expect(inHistory(find.textContaining(text)), matcher, reason: reason);
+  await closeHistory(tester);
+}

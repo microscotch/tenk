@@ -386,11 +386,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logHotDiceMessage => 'Heiße Würfel!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Heiße Würfel! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Punktzahl gestrichen:';
 
   @override
@@ -659,6 +654,53 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tutorialSkip => 'Überspringen';
 
   @override
+  String get tutorialLessonHome => 'Der Startbildschirm';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Das ist der Startbildschirm. Jeder Chip öffnet einen Bildschirm; langes Drücken auf einen Chip zeigt seinen Namen. Machen wir einen Rundgang.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Neues Spiel: Wähle die Spieler, Menschen oder Bots, und ihre Reihenfolge am Tisch, um auf diesem Telefon zu spielen.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Online spielen: Erstelle einen Raum und teile seinen Code, oder tritt dem eines Freundes bei; jeder spielt auf seinem Telefon.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Fortsetzen: pausierte Spiele, dort fortgesetzt, wo du sie verlassen hast. Dieser Chip bleibt inaktiv, solange es keine gibt.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Spieler: die Spielerprofile, mit Spitznamen und Händigkeit (Rechts- oder Linkshänder).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Beendete Spiele: Sieh sie dir Zug für Zug an, mit Punktetabelle, Verlauf und Statistiken.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Statistiken: die Rekorde und die Bilanz jedes Spielers.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Regeln: die Spielregeln und die Lektionen dieses Tutorials, einzeln wiederholbar.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Einstellungen: Sprache, Töne, Würfelfarben, Verzögerungen und weitere Optionen.';
+
+  @override
+  String get tutorialHomeAbout =>
+      'Über: die Version der App und ihre Informationen.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Jetzt wird gespielt: In der nächsten Lektion spielst du deinen ersten Zug.';
+
+  @override
   String get tutorialFinalOutro =>
       'Der Bot ist gestrichen und muss nun selbst die 10.000 versuchen. Jetzt kennst du alle Regeln: Viel Spaß!';
 
@@ -751,7 +793,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Drei 3en: 300, die Hand steigt auf 450. Alle Würfel haben gezählt: heiße Würfel! Der Knopf zeigt deine mögliche Summe; du wirfst alle 5 neu und darfst nicht aufhören.';
+      'Drei 3en: 300, die Hand steigt auf 450. Alle Würfel haben gezählt: heiße Würfel! Der Rahmen der Hand zeigt deine mögliche Summe; du wirfst alle 5 neu und darfst nicht aufhören.';
 
   @override
   String get tutorialHotDiceKept =>

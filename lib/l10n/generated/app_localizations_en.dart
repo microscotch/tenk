@@ -384,11 +384,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logHotDiceMessage => 'Hot dice!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Hot dice! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Score crossed out:';
 
   @override
@@ -653,6 +648,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialSkip => 'Skip';
 
   @override
+  String get tutorialLessonHome => 'The home screen';
+
+  @override
+  String get tutorialHomeIntro =>
+      'This is the home screen. Each chip opens a screen; a long press on a chip shows its name. Let\'s take the tour.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'New game: choose the players, humans or bots, and their order around the table, to play on this phone.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Play online: create a room and share its code, or join a friend\'s; everyone plays on their own phone.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Resume: paused games, picked up where you left them. This chip stays inactive while there are none.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Players: the player records, with their nickname and their hand (right- or left-handed).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Finished games: replay them move by move, with their score sheet, chart and statistics.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Statistics: the records and each player\'s results.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Rules: the game rules, and the lessons of this tutorial, to replay one by one.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Settings: language, sounds, dice colours, delays and other options.';
+
+  @override
+  String get tutorialHomeAbout => 'About: the app version and its information.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Time to play: the next lesson has you play your first turn.';
+
+  @override
   String get tutorialFinalOutro =>
       'The bot is struck out and must now try for 10,000 itself. You now know all the rules: have a good game!';
 
@@ -745,7 +786,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Three 3s: 300, the hand rises to 450. Every die scored: hot dice! The button shows the total you would have; you reroll all 5 dice and can\'t stop.';
+      'Three 3s: 300, the hand rises to 450. Every die scored: hot dice! The hand\'s frame shows the total you would have; you reroll all 5 dice and can\'t stop.';
 
   @override
   String get tutorialHotDiceKept =>

@@ -32,6 +32,7 @@ import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/replay_controls.dart';
 import '../widgets/tutorial_overlay.dart';
+import '../../game/score_radar.dart';
 import '../../game/tutorial.dart';
 import '../widgets/score_sheet.dart';
 import 'game_over_screen.dart';
@@ -1599,9 +1600,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final scoreColor = belowMinimum
         ? Colors.redAccent
         : (liveScore % 100 == 50 ? Colors.orange : Colors.lightGreenAccent);
-    final minimumColor = belowMinimum
-        ? Colors.redAccent
-        : Colors.lightGreenAccent;
+    // Au-delà du minimum, le libellé montre le total qu'aurait le joueur en
+    // gardant cette main (son score + la main), même quand s'arrêter n'est pas
+    // permis (main pleine) : rouge s'il finit par 50, vert s'il barre un
+    // autre joueur et que la main peut être encaissée, blanc sinon.
+    final potentialTotal = engine.currentPlayer.totalScore + liveScore;
+    final Color potentialColor;
+    if (potentialTotal % 100 == 50) {
+      potentialColor = Colors.redAccent;
+    } else if (barsAnotherPlayer(engine.players, engine.currentPlayerIndex, potentialTotal) &&
+        _handBankable(engine, turn, showRollPreview)) {
+      potentialColor = Colors.lightGreenAccent;
+    } else {
+      potentialColor = Colors.white;
+    }
     // Aperçu (ChoiceChip) seulement pertinent pour un lancer humain en
     // attente de décision ; sinon (IA, craque, idle) les dés du lancer, s'il
     // y en a un à afficher, sont montrés "tels quels" (rien n'est encore
@@ -1692,7 +1704,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       // seules répondent alors au doigt du spectateur.
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1761,7 +1773,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       liveScore: liveScore,
                       minimum: minimum,
                       scoreColor: scoreColor,
-                      minimumColor: minimumColor,
+                      potentialTotal: potentialTotal,
+                      potentialColor: potentialColor,
                       pendingAnalysis: pendingAnalysis,
                       previewIndices: previewIndices,
                       previewStates: previewStates,
@@ -1887,42 +1900,34 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ref.watch(gameProvider.notifier).isOnline &&
       ref.watch(onlineSessionProvider.select((s) => s.emotesEnabled));
 
-  /// La barre d'historique, en bas de l'écran : la dernière entrée du journal
-  /// sur une ligne (ou « Historique » tant qu'il est vide), et une flèche vers
-  /// le haut. Un tap, ou un glissement vers le haut, déroule tout le journal
-  /// (voir [_openHistory]).
+  /// L'historique replié, en bas de l'écran : rien qu'une petite encoche
+  /// centrée, qui dit qu'il y a là quelque chose à déployer. Un tap, ou un
+  /// glissement vers le haut, déroule tout le journal (voir [_openHistory]).
   Widget _historyBar(Map<String, Color> avatarColors) {
     final l10n = AppLocalizations.of(context);
-    return GestureDetector(
-      onVerticalDragEnd: (details) {
-        if ((details.primaryVelocity ?? 0) < 0) _openHistory(avatarColors);
-      },
-      child: OutlinedButton(
+    return Semantics(
+      button: true,
+      label: l10n.gameHistoryBar,
+      child: GestureDetector(
         key: const ValueKey('history-bar'),
-        onPressed: () => _openHistory(avatarColors),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(44),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-        ),
-        child: ValueListenableBuilder<int>(
-          valueListenable: _logRevision,
-          builder: (_, _, _) {
-            final latest = _log.isEmpty ? null : _log.last;
-            return Row(
-              children: [
-                if (latest == null) ...[
-                  const Icon(Icons.history, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(l10n.gameHistoryBar)),
-                ] else ...[
-                  PlayerAvatarWidget(name: latest.playerName, size: 18, color: avatarColors[latest.playerName]),
-                  const SizedBox(width: 6),
-                  Expanded(child: _buildLogWhatCell(latest, avatarColors, oneLine: true)),
-                ],
-                const Icon(Icons.keyboard_arrow_up, size: 22),
-              ],
-            );
-          },
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _openHistory(avatarColors),
+        onVerticalDragEnd: (details) {
+          if ((details.primaryVelocity ?? 0) < 0) _openHistory(avatarColors);
+        },
+        child: SizedBox(
+          height: 28,
+          width: double.infinity,
+          child: Center(
+            child: Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -2483,8 +2488,30 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Vrai si la main affichée pourrait être encaissée maintenant : la garde en
+  /// cours appliquée quand un lancer attend (et que ses dés sont immobilisés).
+  bool _handBankable(GameEngine engine, TurnState turn, bool withPendingRoll) {
+    if (engine.activeTurn == null || turn.busted) return false;
+    final pending = turn.pendingRoll;
+    TurnState effective = turn;
+    if (pending != null) {
+      if (!withPendingRoll) return false;
+      final minKeep = minKeepableFives(pending);
+      final maxKeep = maxKeepableFives(turn, pending, currentTotal: engine.currentPlayer.totalScore);
+      final keep = _selectedKeep.clamp(minKeep, maxKeep < minKeep ? minKeep : maxKeep);
+      effective = applyKeepDecision(turn, declineFivesCount: (pending.declinableFives?.diceCount ?? 0) - keep);
+    }
+    return tryBank(
+      effective,
+      minimumRequired: engine.minimumForCurrentPlayer,
+      currentTotal: engine.currentPlayer.totalScore,
+      isFinalRound: engine.isInFinalRound,
+    ).success;
+  }
+
   /// Zone bordurée "Main courante" : les dés gardés ce tour, avec le score du
-  /// tour (et le minimum requis) dans le libellé, coloré comme avant cette
+  /// tour (et, en dessous du minimum, le minimum requis ; au-delà, le total
+  /// potentiel du joueur) dans le libellé, coloré comme avant cette
   /// refonte (juste déplacé depuis sa propre ligne). Affiche en plus, en
   /// fondu, les dés du lancer en attente d'indice dans [previewIndices] une
   /// fois [previewRevealed] : une prévisualisation de ce que "garder par
@@ -2495,7 +2522,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     required int liveScore,
     required int minimum,
     required Color scoreColor,
-    required Color minimumColor,
+    required int potentialTotal,
+    required Color potentialColor,
     required RollAnalysis? pendingAnalysis,
     required Set<int> previewIndices,
     required List<DieVisualState>? previewStates,
@@ -2538,10 +2566,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
           text: '$liveScore',
           style: TextStyle(color: scoreColor),
         ),
-        TextSpan(
-          text: ' (>$minimum)',
-          style: TextStyle(color: minimumColor),
-        ),
+        // Sous le minimum, seul le minimum à atteindre compte ; au-delà, le
+        // total que donnerait cette main (voir `potentialColor` dans [build]).
+        if (liveScore < minimum)
+          TextSpan(text: ' (>$minimum)', style: const TextStyle(color: Colors.redAccent))
+        else
+          TextSpan(text: ' → $potentialTotal', style: TextStyle(color: potentialColor)),
         ..._extensionSpans(extendedValues, glyphSize: 13),
       ],
       child: _DiceZoneBody(
@@ -2973,17 +3003,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // choix réel, la décision de garde n'a pas encore été appliquée côté
     // moteur, donc `turn.mustContinue` est toujours celui d'AVANT ce lancer
     // (un tour de retard sur les dés chauds qui viennent d'être complétés).
-    //
-    // Sur une main pleine, le libellé montre le total qu'aurait le joueur si
-    // cette main était gardée — son score + la main — même quand s'arrêter
-    // n'est pas permis (relancer est obligatoire) : c'est ce qu'il met en jeu.
-    // Seulement une fois les dés immobilisés, comme les autres scores, pour ne
-    // pas trahir le lancer avant qu'on l'ait vu.
-    final rollLabel = !effective.mustContinue
-        ? _rollLabel(effective.diceToRoll, effective.extendedValues)
-        : _rollSettled
-            ? l10n.rollButtonHotDiceTotal(currentTotal + effective.bankedScore)
-            : l10n.logHotDiceMessage;
+    final rollLabel = effective.mustContinue
+        ? l10n.logHotDiceMessage
+        : _rollLabel(effective.diceToRoll, effective.extendedValues);
 
     void onRoll() => _rollForHumanTurn(engine, turn);
 

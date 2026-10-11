@@ -110,19 +110,14 @@ String tutorialBeatText(AppLocalizations l10n, TutorialLessonId lesson, String b
   };
 }
 
-/// Les bulles du tutoriel, posées PAR-DESSUS l'écran de jeu : une bulle de
-/// bande dessinée dont la queue part de l'élément montré, et qui ne laisse
-/// passer le doigt que sur la commande à toucher — tout le reste est inerte,
-/// pour qu'on ne puisse pas sortir du scénario.
+/// Les bulles du tutoriel, posées PAR-DESSUS l'écran de jeu (voir
+/// [TutorialBubbleLayer]), pour l'étape [beat] de la leçon du [guide].
 ///
 /// L'écran de jeu en pose une sur lui-même ([inDialog] faux) et une dans chaque
 /// fenêtre qu'il ouvre (craque, main héritée : [inDialog] vrai), car une
 /// fenêtre est une route au-dessus de l'écran. Chacune ne montre que les
 /// étapes qui la concernent.
-///
-/// Rien n'est affiché (et tout est inerte) tant que [visible] est faux — les
-/// dés roulent encore — ou que l'élément visé n'est pas encore mesurable.
-class TutorialOverlay extends StatefulWidget {
+class TutorialOverlay extends StatelessWidget {
   final TutorialGuide guide;
   final TutorialBeat? beat;
   final bool visible;
@@ -131,40 +126,94 @@ class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key, required this.guide, required this.beat, required this.visible, this.inDialog = false});
 
   @override
-  State<TutorialOverlay> createState() => _TutorialOverlayState();
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final beat = this.beat;
+    final target = beat?.target;
+    // Une étape de fenêtre ne se montre que dans la fenêtre, les autres que
+    // sur l'écran.
+    final mine = beat != null && (target?.inDialog ?? false) == inDialog;
+    final button = !mine || !beat.needsAck
+        ? null
+        : beat.isOutro
+        ? (guide.hasNext ? l10n.tutorialNextLesson : l10n.tutorialFinish)
+        : l10n.tutorialNext;
+    return TutorialBubbleLayer(
+      step: beat,
+      anchor: mine && target != null ? guide.keyFor(target) : null,
+      text: mine ? tutorialBeatText(l10n, guide.lesson.id, beat.id) : '',
+      letThrough: mine && target != null && !beat.needsAck,
+      visible: visible,
+      buttonLabel: button,
+      onButton: beat == null ? null : () => guide.press(beat),
+      onSkip: (beat?.isOutro ?? false) ? null : guide.onExit,
+    );
+  }
 }
 
-class _TutorialOverlayState extends State<TutorialOverlay> {
+/// Une étape du tutoriel à l'écran : une bulle de bande dessinée dont la queue
+/// part de l'élément [anchor] (ou centrée, sans [anchor]), qui dit [text] et
+/// porte au besoin son propre bouton ([buttonLabel], [onButton]). Tout le
+/// reste de l'écran est inerte, sauf l'élément lui-même quand [letThrough] :
+/// la commande à toucher. « Passer » ([onSkip]) reste en haut à droite.
+///
+/// L'élément est mesuré après chaque construction (l'écran défile, se
+/// redimensionne, intervertit ses commandes) et amené à l'écran une fois par
+/// étape ([step]). Rien n'est affiché, et tout est inerte, tant que [visible]
+/// est faux — les dés roulent encore — ou que l'élément n'est pas mesurable.
+class TutorialBubbleLayer extends StatefulWidget {
+  final Object? step;
+  final GlobalKey? anchor;
+  final String text;
+  final bool letThrough;
+  final bool visible;
+  final String? buttonLabel;
+  final VoidCallback? onButton;
+  final VoidCallback? onSkip;
+
+  const TutorialBubbleLayer({
+    super.key,
+    required this.step,
+    required this.anchor,
+    required this.text,
+    this.letThrough = false,
+    this.visible = true,
+    this.buttonLabel,
+    this.onButton,
+    this.onSkip,
+  });
+
+  @override
+  State<TutorialBubbleLayer> createState() => _TutorialBubbleLayerState();
+}
+
+class _TutorialBubbleLayerState extends State<TutorialBubbleLayer> {
   /// Où se trouve l'élément visé, dans le repère de cette superposition, et
-  /// lequel : une mesure faite pour l'étape précédente ne vaut rien pour
-  /// celle-ci.
+  /// lequel : une mesure faite pour une autre étape ne vaut rien pour celle-ci.
   Rect? _measured;
-  TutorialTarget? _measuredFor;
+  GlobalKey? _measuredFor;
 
-  Rect? get _target => _measuredFor == widget.beat?.target ? _measured : null;
+  Rect? get _target => identical(_measuredFor, widget.anchor) ? _measured : null;
 
-  /// L'étape dont l'élément a déjà été amené à l'écran (voir [_measureAfterLayout]).
-  TutorialBeat? _scrolledFor;
+  /// L'étape dont l'élément a déjà été amené à l'écran.
+  Object? _scrolledFor;
 
   static const _bubbleMaxWidth = 340.0;
   static const _tail = 10.0;
   static const _gap = 6.0;
 
-  /// Mesure l'élément visé après chaque construction : l'écran défile, se
-  /// redimensionne et intervertit ses commandes selon la latéralité, rien de
-  /// tout cela n'est connu d'avance.
   void _measureAfterLayout() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final beat = widget.beat;
-      final target = beat?.target;
+      final anchor = widget.anchor;
       Rect? measured;
-      if (target != null) {
-        final targetContext = widget.guide.keyFor(target).currentContext;
-        // L'écran défile : sur un petit téléphone, la commande visée peut être
-        // cachée sous la barre du bas. On l'amène à l'écran, une fois par étape.
-        if (targetContext != null && !identical(_scrolledFor, beat) && target.inDialog == widget.inDialog) {
-          _scrolledFor = beat;
+      if (anchor != null) {
+        final targetContext = anchor.currentContext;
+        // L'écran défile : sur un petit téléphone, l'élément visé peut être
+        // caché (sous la barre du bas, par exemple). On l'amène à l'écran, une
+        // fois par étape.
+        if (targetContext != null && !identical(_scrolledFor, widget.step)) {
+          _scrolledFor = widget.step;
           Scrollable.ensureVisible(targetContext, alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd);
           Scrollable.ensureVisible(targetContext, alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart);
         }
@@ -174,10 +223,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           measured = mine.globalToLocal(box.localToGlobal(Offset.zero)) & box.size;
         }
       }
-      if (measured != _measured || target != _measuredFor) {
+      if (measured != _measured || !identical(anchor, _measuredFor)) {
         setState(() {
           _measured = measured;
-          _measuredFor = target;
+          _measuredFor = anchor;
         });
       }
     });
@@ -186,16 +235,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   @override
   Widget build(BuildContext context) {
     _measureAfterLayout();
-    final l10n = AppLocalizations.of(context);
-    final beat = widget.beat;
-    final target = beat?.target;
-    // Une étape de fenêtre ne se montre que dans la fenêtre, les autres que
-    // sur l'écran.
-    final mine = beat != null && (target?.inDialog ?? false) == widget.inDialog;
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
-    final actionable = mine && target != null && !beat.needsAck && widget.visible;
-    final hole = actionable ? _target?.inflate(6) : null;
+    final hole = widget.letThrough && widget.visible ? _target?.inflate(6) : null;
 
     Widget absorber({required double left, required double top, required double right, required double bottom}) =>
         Positioned(
@@ -206,13 +248,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () {}, child: const SizedBox.expand()),
         );
 
-    final text = beat == null ? '' : tutorialBeatText(l10n, widget.guide.lesson.id, beat.id);
-    final showBubble = mine && widget.visible && text.isNotEmpty && (target == null || _target != null);
-    final button = beat == null || !beat.needsAck
-        ? null
-        : beat.isOutro
-        ? (widget.guide.hasNext ? l10n.tutorialNextLesson : l10n.tutorialFinish)
-        : l10n.tutorialNext;
+    final showBubble =
+        widget.visible && widget.text.isNotEmpty && (widget.anchor == null || _target != null);
 
     return Stack(
       fit: StackFit.expand,
@@ -226,20 +263,20 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           absorber(left: hole.right, top: hole.top, right: 0, bottom: size.height - hole.bottom),
         ],
         if (showBubble)
-          if (target == null)
+          if (widget.anchor == null)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: _bubble(context, text, beat, tailX: null, tailUp: false, button: button),
+                child: _bubble(context, tailX: null, tailUp: false),
               ),
             )
           else
-            _anchoredBubble(context, text, beat, _target!, size, button),
-        if (!(beat?.isOutro ?? false))
+            _anchoredBubble(context, _target!, size),
+        if (widget.onSkip != null)
           Positioned(
             top: padding.top + 4,
             right: 8,
-            child: TextButton(onPressed: widget.guide.onExit, child: Text(l10n.tutorialSkip)),
+            child: TextButton(onPressed: widget.onSkip, child: Text(AppLocalizations.of(context).tutorialSkip)),
           ),
       ],
     );
@@ -247,28 +284,18 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
   /// La bulle d'un élément : sous lui quand il y a la place, sinon au-dessus ;
   /// la queue part de son centre.
-  Widget _anchoredBubble(BuildContext context, String text, TutorialBeat beat, Rect target, Size screen, String? button) {
+  Widget _anchoredBubble(BuildContext context, Rect target, Size screen) {
     final width = (screen.width - 32).clamp(0.0, _bubbleMaxWidth);
     final left = (target.center.dx - width / 2).clamp(16.0, screen.width - 16 - width);
     final below = screen.height - target.bottom > 220;
     final tailX = (target.center.dx - left).clamp(24.0, width - 24);
-    final bubble = SizedBox(
-      width: width,
-      child: _bubble(context, text, beat, tailX: tailX, tailUp: below, button: button),
-    );
+    final bubble = SizedBox(width: width, child: _bubble(context, tailX: tailX, tailUp: below));
     return below
         ? Positioned(left: left, top: target.bottom + _gap, child: bubble)
         : Positioned(left: left, bottom: screen.height - target.top + _gap, child: bubble);
   }
 
-  Widget _bubble(
-    BuildContext context,
-    String text,
-    TutorialBeat beat, {
-    required double? tailX,
-    required bool tailUp,
-    required String? button,
-  }) {
+  Widget _bubble(BuildContext context, {required double? tailX, required bool tailUp}) {
     final scheme = Theme.of(context).colorScheme;
     final body = Material(
       color: scheme.primaryContainer,
@@ -281,16 +308,16 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              text,
+              widget.text,
               key: const ValueKey('tutorial-text'),
               style: TextStyle(fontSize: 15, height: 1.35, color: scheme.onPrimaryContainer),
             ),
-            if (button != null) ...[
+            if (widget.buttonLabel != null) ...[
               const SizedBox(height: 12),
               FilledButton(
                 key: const ValueKey('tutorial-action'),
-                onPressed: () => widget.guide.press(beat),
-                child: Text(button),
+                onPressed: widget.onButton,
+                child: Text(widget.buttonLabel!),
               ),
             ],
           ],

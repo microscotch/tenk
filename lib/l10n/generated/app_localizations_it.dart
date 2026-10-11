@@ -385,11 +385,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get logHotDiceMessage => 'Dadi bollenti!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Dadi bollenti! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Punteggio cancellato:';
 
   @override
@@ -658,6 +653,53 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tutorialSkip => 'Salta';
 
   @override
+  String get tutorialLessonHome => 'La schermata iniziale';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Questa è la schermata iniziale. Ogni gettone apre una schermata; una pressione lunga su un gettone ne mostra il nome. Facciamo il giro.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Nuova partita: scegli i giocatori, umani o bot, e il loro ordine al tavolo, per giocare su questo telefono.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Gioca online: crea una stanza e condividi il suo codice, oppure entra in quella di un amico; ognuno gioca sul proprio telefono.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Riprendi: le partite in pausa, riprese da dove le hai lasciate. Questo gettone resta inattivo finché non ce ne sono.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Giocatori: le schede dei giocatori, con soprannome e mano (destrimane o mancino).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Partite finite: rivedile mossa per mossa, con la loro tabella, il grafico e le statistiche.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Statistiche: i record e il bilancio di ogni giocatore.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Regole: le regole del gioco e le lezioni di questo tutorial, da rigiocare una per una.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Impostazioni: lingua, suoni, colori dei dadi, tempi e altre opzioni.';
+
+  @override
+  String get tutorialHomeAbout =>
+      'Informazioni: la versione dell\'app e le sue informazioni.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Si gioca: la prossima lezione ti fa giocare il tuo primo turno.';
+
+  @override
   String get tutorialFinalOutro =>
       'Il bot è cancellato e ora deve tentare i 10.000. Ora conosci tutte le regole: buon divertimento!';
 
@@ -750,7 +792,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Tre 3: 300, la mano sale a 450. Tutti i dadi hanno fatto punti: dadi bollenti! Il pulsante mostra il totale che avresti; si rilanciano tutti e 5 i dadi, senza potersi fermare.';
+      'Tre 3: 300, la mano sale a 450. Tutti i dadi hanno fatto punti: dadi bollenti! La cornice della mano mostra il totale che avresti; si rilanciano tutti e 5 i dadi, senza potersi fermare.';
 
   @override
   String get tutorialHotDiceKept =>

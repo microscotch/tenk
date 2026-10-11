@@ -734,12 +734,6 @@ abstract class AppLocalizations {
   /// **'Main pleine !'**
   String get logHotDiceMessage;
 
-  /// Libellé du bouton de lancer sur une main pleine, une fois les dés immobilisés : le total que le joueur aurait si cette main était gardée (son score + la main), même si s'arrêter là n'est pas permis.
-  ///
-  /// In fr, this message translates to:
-  /// **'Main pleine ! → {total}'**
-  String rollButtonHotDiceTotal(int total);
-
   /// Entrée du journal de partie quand le score d'un autre joueur est barré par collision (score identique nouvellement marqué) ; suivi du score barré et du blason du joueur concerné.
   ///
   /// In fr, this message translates to:
@@ -1166,6 +1160,78 @@ abstract class AppLocalizations {
   /// **'Passer'**
   String get tutorialSkip;
 
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'écran d\'accueil'**
+  String get tutorialLessonHome;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voici l\'écran d\'accueil. Chaque jeton ouvre un écran ; un appui long sur un jeton affiche son nom. Faisons-en le tour.'**
+  String get tutorialHomeIntro;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle partie : choisissez les joueurs, humains ou bots, et leur ordre autour de la table, pour jouer sur ce téléphone.'**
+  String get tutorialHomeNewGame;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Jouer en ligne : créez un salon et partagez son code, ou rejoignez celui d\'un ami ; chacun joue sur son téléphone.'**
+  String get tutorialHomeOnline;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre : les parties en pause, reprises là où vous les avez laissées. Ce jeton reste inactif tant qu\'il n\'y en a pas.'**
+  String get tutorialHomeResume;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Joueurs : les fiches des joueurs, avec leur surnom et leur main (droitier ou gaucher).'**
+  String get tutorialHomePlayers;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Parties terminées : revoyez-les coup par coup, avec leur grille, leur courbe et leurs statistiques.'**
+  String get tutorialHomeFinished;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques : les records et le bilan de chaque joueur.'**
+  String get tutorialHomeStatistics;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles : la règle du jeu, et les leçons de ce tutoriel, à rejouer une à une.'**
+  String get tutorialHomeRules;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres : langue, sons, couleurs des dés, délais et autres réglages.'**
+  String get tutorialHomeSettings;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'À propos : la version de l\'application et ses informations.'**
+  String get tutorialHomeAbout;
+
+  /// Visite de l'écran d'accueil, première étape du tutoriel au premier affichage (une bulle par jeton, sans ouvrir son écran).
+  ///
+  /// In fr, this message translates to:
+  /// **'Place au jeu : la leçon suivante vous fait jouer votre premier tour.'**
+  String get tutorialHomeOutro;
+
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
   ///
   /// In fr, this message translates to:
@@ -1307,7 +1373,7 @@ abstract class AppLocalizations {
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le bouton montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s\'arrêter.'**
+  /// **'Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le liseré de la main montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s\'arrêter.'**
   String get tutorialHotDiceFullHand;
 
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).

@@ -37,7 +37,15 @@ class SetupScreen extends ConsumerStatefulWidget {
   /// soit.
   static const routeName = '/home';
 
-  const SetupScreen({super.key});
+  /// Non nul pendant la visite de l'accueil du tutoriel : une clé par jeton,
+  /// dans l'ordre du rack, pour que ses bulles les montrent. L'écran n'y fait
+  /// alors rien de lui-même (ni reprise proposée, ni lien d'invitation ouvert).
+  final List<GlobalKey>? tourKeys;
+
+  /// Le nombre de jetons du rack (voir [tourKeys]).
+  static const chipCount = 9;
+
+  const SetupScreen({super.key, this.tourKeys});
 
   @override
   ConsumerState<SetupScreen> createState() => _SetupScreenState();
@@ -53,6 +61,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // déclenche qu'une fois par session — pas de popup répétée à chaque
     // retour au menu principal après une partie.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.tourKeys != null) return;
       // Un lien d'invitation qui a lancé l'application passe avant la reprise.
       if (_openPendingRoomCode()) return;
       _maybeOfferResume();
@@ -139,7 +148,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // Un lien qui arrive pendant que l'accueil est affiché (application déjà
     // ouverte). Ailleurs ou sous une fenêtre, il reste en attente.
     ref.listen(pendingRoomCodeProvider, (_, code) {
-      if (code != null) _openPendingRoomCode();
+      if (code != null && widget.tourKeys == null) _openPendingRoomCode();
     });
     // Pas de barre du haut : son titre a sa propre zone en haut de l'écran, et
     // tout ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu
@@ -161,6 +170,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: _ChipRack(
+                    keys: widget.tourKeys,
                     chips: [
                       _MenuChip(Icons.add, l10n.newGameSectionLabel, _chipGold, _openNewGame),
                       _MenuChip(Icons.public, l10n.onlinePlayButton, _chipBlue, () => _open(const OnlineEntryScreen())),
@@ -230,7 +240,10 @@ const _ChipColors _chipOrange = (color: Color(0xFFD9732B), edge: Color(0xFFFFF0E
 class _ChipRack extends StatelessWidget {
   final List<_MenuChip> chips;
 
-  const _ChipRack({required this.chips});
+  /// Une clé par jeton, dans l'ordre (voir [SetupScreen.tourKeys]).
+  final List<GlobalKey>? keys;
+
+  const _ChipRack({required this.chips, this.keys});
 
   static const _maxSize = 96.0;
   static const _gap = 26.0;
@@ -251,8 +264,9 @@ class _ChipRack extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 spacing: _gap,
                 children: [
-                  for (final chip in chips.skip(row).take(3))
+                  for (final (i, chip) in chips.indexed.skip(row).take(3))
                     CasinoChip(
+                      key: keys?[i],
                       icon: chip.icon,
                       label: chip.label,
                       color: chip.colors.color,

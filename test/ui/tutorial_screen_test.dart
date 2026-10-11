@@ -8,6 +8,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/rules_screen.dart';
+import 'package:le10000/ui/screens/setup_screen.dart';
 import 'package:le10000/ui/screens/tutorial_screen.dart';
 import 'package:le10000/ui/widgets/tutorial_overlay.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,7 +23,7 @@ void main() {
   late ProviderContainer container;
   late FakeGameSaveStore saved;
 
-  Future<void> open(WidgetTester tester, {Widget? next, TutorialLessonId? lesson}) async {
+  Future<void> open(WidgetTester tester, {Widget? next, TutorialLessonId? lesson, bool withHome = false}) async {
     saved = FakeGameSaveStore();
     container = ProviderContainer(
       overrides: [
@@ -43,7 +44,7 @@ void main() {
               body: TextButton(
                 onPressed: () => Navigator.of(
                   context,
-                ).push(MaterialPageRoute<void>(builder: (_) => TutorialScreen(next: next, lesson: lesson))),
+                ).push(MaterialPageRoute<void>(builder: (_) => TutorialScreen(next: next, lesson: lesson, withHome: withHome))),
                 child: const Text('ouvrir'),
               ),
             ),
@@ -207,5 +208,30 @@ void main() {
     for (final title in ['Les bases', 'La main pleine', 'Le craque', 'L\'extension', 'La main héritée', 'Barrer un joueur', 'Le dernier tour']) {
       expect(find.text(title), findsOneWidget, reason: title);
     }
+  });
+
+  testWidgets('au premier affichage, la visite de l\'accueil ouvre le parcours : une bulle par jeton, rien ne s\'ouvre', (tester) async {
+    await open(tester, withHome: true);
+    expect(find.byType(SetupScreen), findsOneWidget);
+    expect(find.textContaining('Voici l\'écran d\'accueil'), findsOneWidget);
+    final routesBefore = find.byType(Scaffold).evaluate().length;
+
+    for (final start in ['Nouvelle partie', 'Jouer en ligne', 'Reprendre', 'Joueurs', 'Parties terminées', 'Statistiques', 'Règles', 'Paramètres', 'À propos']) {
+      await tester.tap(find.byKey(const ValueKey('tutorial-action')));
+      await tester.pump();
+      await tester.pump();
+      final text = tester.widget<Text>(find.byKey(const ValueKey('tutorial-text'))).data!;
+      expect(text, startsWith(start));
+    }
+    expect(find.byType(Scaffold).evaluate().length, routesBefore, reason: 'aucun écran ouvert');
+
+    await tester.tap(find.byKey(const ValueKey('tutorial-action')));
+    await tester.pump();
+    expect(find.text('Leçon suivante'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('tutorial-action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(GameScreen), findsOneWidget);
+    expect(find.textContaining('Leçon 2/8'), findsOneWidget);
   });
 }

@@ -101,16 +101,11 @@ class MyProfileSetupScreen extends ConsumerWidget {
 /// si l'utilisateur n'a pas de profil. Rend la page à pousser à la place du
 /// splash.
 ///
-/// Au tout premier lancement — pas de profil, pas d'ancien nom de joueur (rien
-/// qui trahisse un utilisateur d'avant) et tutoriel jamais vu — c'est le
-/// tutoriel qui passe en premier, puis la création du profil.
+/// Tant que le tutoriel n'a jamais été affiché sur ce téléphone
+/// ([AppSettings.tutorialSeen]), c'est lui qui passe en premier — avec la visite
+/// de l'accueil en tête —, puis la page qui aurait été ouverte sans lui.
 Future<Widget> launchScreenFor(ProviderContainer container) async {
-  if (await isMyProfileMissing(container)) {
-    final settings = container.read(settingsProvider);
-    if (!settings.tutorialSeen && settings.playerName.isEmpty) {
-      return const TutorialScreen(next: MyProfileSetupScreen());
-    }
-    return const MyProfileSetupScreen();
-  }
-  return const SetupScreen();
+  final Widget next = await isMyProfileMissing(container) ? const MyProfileSetupScreen() : const SetupScreen();
+  if (!container.read(settingsProvider).tutorialSeen) return TutorialScreen(next: next, withHome: true);
+  return next;
 }

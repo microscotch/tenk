@@ -607,8 +607,10 @@ void main() {
           keep * (fives.points ~/ fives.diceCount);
     }
 
+    /// Le liseré de la main : « Main courante 350 (>500) » sous le minimum,
+    /// « Main courante 650 → 3150 » au-delà.
     Finder showsHandScore(int score) => find.byWidgetPredicate(
-          (w) => w is RichText && w.text.toPlainText().contains('$score (>'),
+          (w) => w is RichText && RegExp('Main courante $score( \\(>| →)').hasMatch(w.text.toPlainText()),
         );
 
     Future<void> joined(WidgetTester tester, int seat, List<GameAction> journal) async {
@@ -1009,7 +1011,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 20));
       await tester.pump();
       expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
-      expect(find.textContaining('un bot joue à sa place'), findsOneWidget, reason: 'dernière entrée, dans la barre');
+      await tester.tap(find.byKey(const ValueKey('history-bar')));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(inHistory(find.textContaining('un bot joue à sa place')), findsOneWidget);
     });
   });
 }

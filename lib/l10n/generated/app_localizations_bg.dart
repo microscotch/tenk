@@ -383,11 +383,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get logHotDiceMessage => 'Горещи зарове!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Горещи зарове! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Зачеркнат резултат:';
 
   @override
@@ -654,6 +649,53 @@ class AppLocalizationsBg extends AppLocalizations {
   String get tutorialSkip => 'Пропусни';
 
   @override
+  String get tutorialLessonHome => 'Началният екран';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Това е началният екран. Всеки жетон отваря екран; продължително натискане на жетон показва името му. Да ги обиколим.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Нова игра: изберете играчите, хора или ботове, и реда им около масата, за игра на този телефон.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Игра онлайн: създайте стая и споделете кода ѝ или се присъединете към стаята на приятел; всеки играе на своя телефон.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Продължи: игрите на пауза, продължени оттам, където сте ги оставили. Този жетон е неактивен, докато няма такива.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Играчи: профилите на играчите, с прякор и водеща ръка (десняк или левак).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Завършени игри: прегледайте ги ход по ход, с таблицата, графиката и статистиката им.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Статистика: рекордите и резултатите на всеки играч.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Правила: правилата на играта и уроците от това ръководство, за повторение един по един.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Настройки: език, звуци, цветове на заровете, забавяния и други опции.';
+
+  @override
+  String get tutorialHomeAbout =>
+      'Относно: версията на приложението и информация за него.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Да играем: следващият урок ви кара да изиграете първия си ход.';
+
+  @override
   String get tutorialFinalOutro =>
       'Ботът е зачеркнат и сега трябва сам да опита за 10 000. Вече знаете всички правила: приятна игра!';
 
@@ -746,7 +788,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Три тройки: 300, ръката става 450. Всички зарове донесоха точки: горещи зарове! Бутонът показва сбора, който бихте имали; хвърлят се отново и петте, без да можете да спрете.';
+      'Три тройки: 300, ръката става 450. Всички зарове донесоха точки: горещи зарове! Рамката на ръката показва сбора, който бихте имали; хвърлят се отново и петте, без да можете да спрете.';
 
   @override
   String get tutorialHotDiceKept =>

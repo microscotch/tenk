@@ -48,7 +48,8 @@ Generating it on the Pi takes ~8 minutes and ~30 MB, which is why it's built in 
 A third workflow, `.github/workflows/server-image.yaml`, builds the online-game server image
 (`server/Dockerfile`, amd64 **and** arm64, no emulation: the build stage cross-compiles) and, on `main`,
 publishes it to GitHub Container Registry as `ghcr.io/microscotch/tenk-server` (`:latest` and
-`:sha-<commit>`). It runs only when `server/**`, `lib/game/**` or the workflow itself change; on a pull
+`:sha-<commit>`, plus the app build version read from `pubspec.yaml`, `+` turned into `-` since a Docker tag
+refuses it, e.g. `:1.0.0-104`). It runs only when `server/**`, `lib/game/**` or the workflow itself change; on a pull
 request it builds and smoke-tests the image (`/healthz`) without publishing. Its Docker actions are pinned
 by commit SHA because the job holds a registry-write token. A package published from this public repo
 should be public (check its visibility once in the repo's Packages settings); otherwise the host must
@@ -152,7 +153,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   mid-final-round if someone else reaches 10000, via `triggeringWinnerIndex`/`remainingFinalTurns`).
   `startTurn(useFullHand:)` is where a player either continues an inherited hand (score + kept dice
   carried over as a bonus base) or starts fresh with 5 dice.
-- `game/tutorial.dart` — the tutorial: 7 lessons, simplest to subtlest (`tutorialLessons`: basics → hot dice and
+- `game/tutorial.dart` — the tutorial: a tour of the home screen (first display only, `TutorialScreen(withHome:)`:
+  the real `SetupScreen` with `tourKeys`, inert — no resume offer, no invitation link — one bubble per chip, nothing
+  opened), then 7 lessons, simplest to subtlest (`tutorialLessons`: basics → hot dice and
   optional 5s / never stop on 50 → bust, dash then barred → extension rule → inherited hand → striking a player out
   by collision → final round and the automatic exact-10000 take). A `TutorialLesson` has a prepared `setup`
   (scores, grids, final-round state), its `faces` in global roll order (the bot's included — the prudent bot is
@@ -170,8 +173,10 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   when the lesson says so (`TutorialGuide.botMayPlay`); the forced exact-10000 take and the inherited-hand dialog
   work as in a real game. Because it overwrites the singleton `GameNotifier`, the lesson list
   (`TutorialLessonsScreen`) is offered only by `RulesScreen(canReplayTutorial: true)`, i.e. from the home chip, never
-  from a game's ☰. `launchScreenFor` runs the whole path (then the profile creation) only with no profile, no
-  legacy `playerName` and `tutorialSeen` false. Texts: `tutorial<Lesson><Beat>`, `tutorialLesson<Id>` titles,
+  from a game's ☰. `launchScreenFor` runs the whole path (home tour + lessons) whenever the tutorial has never been
+  shown on this phone (`tutorialSeen` false), then the page it would have opened (profile creation, or home).
+  Bubbles are drawn by the generic `TutorialBubbleLayer` (anchor key, text, own button, let-through, skip), which
+  `TutorialOverlay` and the home tour both use. Texts: `tutorial<Lesson><Beat>`, `tutorialLesson<Id>` titles,
   `tutorialRollPrompt` / `tutorialBotTurn` shared, in all 11 ARBs.
 - `game/dice_off.dart` — separate mini state machine for the pre-game 1-die roll-off that decides
   turn order: everyone rolls at once (`rollAll`), lowest die starts, ties at the lowest re-roll among
@@ -196,11 +201,13 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   action too: the play order imposed without dice (`DiceOffState.preset`); it only appears in games where every
   participant announced `rematchFeature`, since an older app couldn't parse it.
 - `game/score_radar.dart` — the game screen's player list: `rotatedOrder` (the active player on top, then play
-  order) and the "radar" shown on every *other* player's row: `collisionTargets(other, potentialTotal)` = that player's
-  first 3 non-barred grid lines ≥ the current player's potential total (their score + live hand), i.e. the lines a
-  stop right now could still bar (a collision bars any non-barred line, not just the current one); when there are
-  none, `radarGap` (always negative then: no line is ever above its player's score). The current player's row keeps
-  its previous-score parenthesis and 200-gap hints; other rows drop them for the radar.
+  order) and the "radar" shown on every *other* player's row: `collisionTargets(other, potentialTotal)` = that
+  player's first 3 *reachable* lines — non-barred, not their current score (already shown next to it), at least
+  `radarMinimumReach` (200, a turn's minimum) above the current player's potential total (their score + live hand) —
+  since a collision bars any non-barred line, not just the current one; when there are none, `radarGaps`: up to 3
+  differences between that player's highest non-barred lines and the potential. `barsAnotherPlayer` says whether
+  stopping on the potential would strike someone out (the hand label's green). The current player's row keeps its
+  previous-score parenthesis and 200-gap hints; other rows drop them for the radar.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.
@@ -314,14 +321,17 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     the face: `dieFacePlacement` picks, per face, the rotation that puts the image's bottom toward the face's bottom,
     and `DiceFaceTextures` draws every texture mirrored horizontally to cancel the reflection — checked
     numerically in `test/ui/die_scene_placement_test.dart` (no GPU in tests, so never seen rendered there).
-  - **The game log is a bottom bar in every mode** (local, online, replay): `_historyBar`, in
-    `Scaffold.bottomNavigationBar` (above `ReplayControls` in a replay), shows the latest entry on one line and an
-    up arrow; a tap or an upward swipe unrolls the whole log in a bottom sheet (`_openHistory`). Tests that assert
-    on older log entries open it with `test/test_helpers/history.dart` (`openHistory`, `inHistory` — the bar repeats
-    the latest entry, so scope finders to the sheet). A bust entry starts with the points it cost
-    (`bustedHandScore`, the same number as the bust dialog): "1250 : Craqué ! => 3000 petit trait".
-  - On a full hand, once the dice have settled, the roll button reads "Main pleine ! → {total}": the player's total
-    if that hand were kept (`rollButtonHotDiceTotal`), shown even though stopping isn't allowed there.
+  - **The game log is folded away in every mode** (local, online, replay): `_historyBar`, in
+    `Scaffold.bottomNavigationBar` (above `ReplayControls` in a replay), is only a small centred notch; a tap or an
+    upward swipe unrolls the whole log in a bottom sheet (`_openHistory`). Tests that assert on log entries open it
+    with `test/test_helpers/history.dart` (`openHistory`, `inHistory`, `expectInHistory`) — not possible while a
+    dialog or the pass-device screen covers the game, so close those first (and wait out the 300 ms control lock).
+    A bust entry starts with the points it cost (`bustedHandScore`, the same number as the bust dialog):
+    "1250 : Craqué ! => 3000 petit trait".
+  - **The "Main courante" frame label**: the hand score, then — below the turn minimum — only "(>500)" in red;
+    otherwise "→ {potential}", the player's total if that hand were kept (shown even on a full hand, where stopping
+    isn't allowed): red when it ends in 50, green when it would strike another player out (`barsAnotherPlayer`)
+    and the hand can be banked (`_handBankable`), white otherwise. The roll button itself just says "Main pleine !".
   - Widget test states are built with `debugLoadState` snapshots; because of the auto-advance behavior,
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.

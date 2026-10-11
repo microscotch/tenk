@@ -384,11 +384,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get logHotDiceMessage => 'Varme terninger!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Varme terninger! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Poengsum strøket:';
 
   @override
@@ -654,6 +649,52 @@ class AppLocalizationsNb extends AppLocalizations {
   String get tutorialSkip => 'Hopp over';
 
   @override
+  String get tutorialLessonHome => 'Startskjermen';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Dette er startskjermen. Hver sjetong åpner en skjerm; trykk lenge på en sjetong for å se navnet. La oss ta en runde.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Nytt spill: velg spillerne, mennesker eller boter, og rekkefølgen rundt bordet, for å spille på denne telefonen.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Spill på nett: opprett et rom og del koden, eller bli med i en venns; alle spiller på sin egen telefon.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Fortsett: spill på pause, fortsatt der du slapp. Denne sjetongen er inaktiv så lenge det ikke finnes noen.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Spillere: spillerprofilene, med kallenavn og hånd (høyre- eller venstrehendt).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Ferdige spill: se dem trekk for trekk, med poengtabell, kurve og statistikk.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Statistikk: rekordene og hver spillers resultater.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Regler: spillereglene og leksjonene i denne veiledningen, som kan spilles om én etter én.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Innstillinger: språk, lyder, terningfarger, forsinkelser og andre valg.';
+
+  @override
+  String get tutorialHomeAbout => 'Om: appens versjon og informasjon.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Nå spiller vi: neste leksjon lar deg spille din første tur.';
+
+  @override
   String get tutorialFinalOutro =>
       'Boten er strøket og må nå selv prøve å nå 10 000. Nå kan du alle reglene: lykke til!';
 
@@ -746,7 +787,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Tre treere: 300, hånden stiger til 450. Alle terningene ga poeng: varme terninger! Knappen viser summen du ville hatt; du kaster alle 5 på nytt og kan ikke stoppe.';
+      'Tre treere: 300, hånden stiger til 450. Alle terningene ga poeng: varme terninger! Rammen rundt hånden viser summen du ville hatt; du kaster alle 5 på nytt og kan ikke stoppe.';
 
   @override
   String get tutorialHotDiceKept =>

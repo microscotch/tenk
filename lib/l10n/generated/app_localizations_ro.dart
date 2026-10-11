@@ -389,11 +389,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get logHotDiceMessage => 'Zaruri fierbinți!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Zaruri fierbinți! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Scor tăiat:';
 
   @override
@@ -662,6 +657,53 @@ class AppLocalizationsRo extends AppLocalizations {
   String get tutorialSkip => 'Sari peste';
 
   @override
+  String get tutorialLessonHome => 'Ecranul de start';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Acesta este ecranul de start. Fiecare jeton deschide un ecran; o apăsare lungă pe un jeton îi arată numele. Să facem turul.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Joc nou: alege jucătorii, oameni sau boți, și ordinea lor la masă, ca să jucați pe acest telefon.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Joacă online: creează o cameră și împarte-i codul, sau intră în cea a unui prieten; fiecare joacă pe telefonul lui.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Reia: jocurile puse pe pauză, reluate de unde le-ai lăsat. Acest jeton rămâne inactiv cât timp nu există niciunul.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Jucători: fișele jucătorilor, cu porecla și mâna lor (dreptaci sau stângaci).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Jocuri terminate: revezi-le mutare cu mutare, cu tabelul, graficul și statisticile lor.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Statistici: recordurile și bilanțul fiecărui jucător.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Reguli: regulile jocului și lecțiile acestui tutorial, de reluat una câte una.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Setări: limbă, sunete, culorile zarurilor, întârzieri și alte opțiuni.';
+
+  @override
+  String get tutorialHomeAbout =>
+      'Despre: versiunea aplicației și informațiile ei.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'La joc: lecția următoare te pune să joci prima ta tură.';
+
+  @override
   String get tutorialFinalOutro =>
       'Botul e tăiat și trebuie acum să încerce el 10.000. Acum cunoști toate regulile: joc plăcut!';
 
@@ -753,7 +795,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Trei de 3: 300, mâna urcă la 450. Toate zarurile au contat: zaruri fierbinți! Butonul arată totalul pe care l-ai avea; se aruncă din nou toate 5, fără să te poți opri.';
+      'Trei de 3: 300, mâna urcă la 450. Toate zarurile au contat: zaruri fierbinți! Chenarul mâinii arată totalul pe care l-ai avea; se aruncă din nou toate 5, fără să te poți opri.';
 
   @override
   String get tutorialHotDiceKept =>

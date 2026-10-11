@@ -68,10 +68,12 @@ void main() {
   }
 
   group('au lancement', () {
-    testWidgets('au tout premier lancement, le splash mène au tutoriel, puis à la création du profil', (tester) async {
+    testWidgets('au tout premier lancement, le splash mène au tutoriel (accueil d\'abord), puis à la création du profil',
+        (tester) async {
       await launch(tester);
       expect(find.byType(TutorialScreen), findsOneWidget);
       expect(find.byType(MyProfileSetupScreen), findsNothing);
+      expect(find.textContaining('Voici l\'écran d\'accueil'), findsOneWidget, reason: 'la visite de l\'accueil en tête');
 
       await tester.tap(find.text('Passer'));
       await tester.pumpAndSettle();
@@ -86,15 +88,19 @@ void main() {
       expect(find.byType(TutorialScreen), findsNothing);
     });
 
-    testWidgets('un utilisateur d\'avant les profils (ancien nom) n\'a pas le tutoriel', (tester) async {
-      SharedPreferences.setMockInitialValues({'settings.playerName': 'Laurent'});
+    testWidgets('un profil, mais le tutoriel jamais affiché sur ce téléphone : le tutoriel, puis l\'accueil', (tester) async {
+      await seedMyProfile(players, PlayerProfile.create(name: 'Anna'));
       await launch(tester);
-      expect(find.byType(MyProfileSetupScreen), findsOneWidget);
+      expect(find.byType(TutorialScreen), findsOneWidget);
+
+      await tester.tap(find.text('Passer'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SetupScreen), findsOneWidget);
       expect(find.byType(TutorialScreen), findsNothing);
     });
 
-    testWidgets('avec un profil, directement à l\'accueil', (tester) async {
-      await seedMyProfile(players, PlayerProfile.create(name: 'Anna'));
+    testWidgets('avec un profil et le tutoriel déjà vu, directement à l\'accueil', (tester) async {
+      await seedMyProfile(players, PlayerProfile.create(name: 'Anna'), tutorialSeen: true);
       await launch(tester);
       expect(find.byType(SetupScreen), findsOneWidget);
       expect(find.byType(MyProfileSetupScreen), findsNothing);

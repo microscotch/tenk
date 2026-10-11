@@ -8,16 +8,18 @@ import '../../state/settings_providers.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/tutorial_overlay.dart';
 import 'game_screen.dart';
+import 'setup_screen.dart';
 
 /// Le tutoriel : des leçons jouées sur le vrai écran de jeu ([GameScreen] en
 /// mode tutoriel), contre un bot, sur des dés scénarisés (voir
 /// [tutorialLessons]). Des bulles montrent la commande à toucher (voir
 /// [TutorialOverlay]) ; l'étape suivante vient de l'état de la partie.
 ///
-/// Sans [lesson], c'est le parcours complet, leçon après leçon : celui du
-/// premier lancement (voir `launchScreenFor`), avec la page [next] à ouvrir
-/// ensuite. Avec [lesson] (rejouée depuis la liste des leçons), cette leçon
-/// seule.
+/// Sans [lesson], c'est le parcours complet, leçon après leçon. Avec [withHome],
+/// il commence par la visite de l'écran d'accueil (voir [_HomeTour]) : c'est le
+/// parcours du premier affichage (voir `launchScreenFor`), avec la page [next]
+/// à ouvrir ensuite. Avec [lesson] (rejouée depuis la liste des leçons), cette
+/// leçon seule.
 ///
 /// Ce n'est pas une partie pour autant : ni seed, ni sauvegarde, ni
 /// statistiques (voir [GameNotifier.startTutorial]). Il remplace l'état du
@@ -28,8 +30,9 @@ import 'game_screen.dart';
 class TutorialScreen extends ConsumerStatefulWidget {
   final Widget? next;
   final TutorialLessonId? lesson;
+  final bool withHome;
 
-  const TutorialScreen({super.key, this.next, this.lesson});
+  const TutorialScreen({super.key, this.next, this.lesson, this.withHome = false});
 
   @override
   ConsumerState<TutorialScreen> createState() => _TutorialScreenState();
@@ -37,16 +40,29 @@ class TutorialScreen extends ConsumerStatefulWidget {
 
 class _TutorialScreenState extends ConsumerState<TutorialScreen> {
   late final List<TutorialLesson> _path = widget.lesson == null ? tutorialLessons : [tutorialLesson(widget.lesson!)];
+
+  /// La visite de l'accueil, en tête du parcours du premier affichage.
+  late final bool _withHome = widget.withHome && widget.lesson == null;
+  late bool _onHome = _withHome;
   var _index = 0;
   TutorialGuide? _guide;
   bool _left = false;
+
+  int get _total => _path.length + (_withHome ? 1 : 0);
 
   @override
   void initState() {
     super.initState();
     // Après la première construction : un provider ne se modifie pas pendant
     // celle-ci. Les noms viennent de la langue de l'écran, d'où `context`.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startLesson(0));
+    if (!_onHome) WidgetsBinding.instance.addPostFrameCallback((_) => _startLesson(0));
+  }
+
+  /// La visite de l'accueil finie : la première leçon de jeu.
+  void _homeDone() {
+    if (!mounted || _left) return;
+    _onHome = false;
+    _startLesson(0);
   }
 
   @override
@@ -65,8 +81,8 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
       _index = index;
       _guide = TutorialGuide(
         lesson: lesson,
-        number: widget.lesson == null ? index + 1 : tutorialLessons.indexOf(lesson) + 1,
-        total: tutorialLessons.length,
+        number: widget.lesson == null ? index + 1 + (_withHome ? 1 : 0) : tutorialLessons.indexOf(lesson) + 1,
+        total: widget.lesson == null ? _total : tutorialLessons.length,
         hasNext: index + 1 < _path.length,
         onLessonDone: _lessonDone,
         onExit: _leave,
@@ -92,12 +108,19 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
     if (next == null) {
       Navigator.of(context).pop();
     } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => next));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          // L'accueil garde son nom de route : c'est par lui qu'on y revient.
+          settings: next is SetupScreen ? const RouteSettings(name: SetupScreen.routeName) : null,
+          builder: (_) => next,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_onHome) return _HomeTour(onDone: _homeDone, onExit: _leave);
     final guide = _guide;
     if (guide == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     // Une clé par leçon : l'écran de jeu repart de zéro à chaque leçon.
@@ -137,3 +160,64 @@ class TutorialLessonsScreen extends StatelessWidget {
     );
   }
 }
+
+/// La visite de l'écran d'accueil, première étape du tutoriel au premier
+/// affichage : le vrai accueil ([SetupScreen] en mode visite, inerte), et une
+/// bulle par jeton qui dit ce qu'il ouvre — sans rien ouvrir.
+class _HomeTour extends StatefulWidget {
+  final VoidCallback onDone;
+  final VoidCallback onExit;
+
+  const _HomeTour({required this.onDone, required this.onExit});
+
+  @override
+  State<_HomeTour> createState() => _HomeTourState();
+}
+
+class _HomeTourState extends State<_HomeTour> {
+  final _keys = [for (var i = 0; i < SetupScreen.chipCount; i++) GlobalKey(debugLabel: 'home-chip-$i')];
+
+  /// L'étape : 0 l'introduction, puis un jeton chacune, puis la conclusion.
+  var _step = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final texts = [
+      l10n.tutorialHomeNewGame,
+      l10n.tutorialHomeOnline,
+      l10n.tutorialHomeResume,
+      l10n.tutorialHomePlayers,
+      l10n.tutorialHomeFinished,
+      l10n.tutorialHomeStatistics,
+      l10n.tutorialHomeRules,
+      l10n.tutorialHomeSettings,
+      l10n.tutorialHomeAbout,
+    ];
+    final last = texts.length + 1;
+    final chip = _step >= 1 && _step <= texts.length ? _step - 1 : null;
+    final text = _step == 0 ? l10n.tutorialHomeIntro : (chip != null ? texts[chip] : l10n.tutorialHomeOutro);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) widget.onExit();
+      },
+      child: Stack(
+        children: [
+          SetupScreen(tourKeys: _keys),
+          Positioned.fill(
+            child: TutorialBubbleLayer(
+              step: _step,
+              anchor: chip == null ? null : _keys[chip],
+              text: text,
+              buttonLabel: _step == last ? l10n.tutorialNextLesson : l10n.tutorialNext,
+              onButton: () => _step == last ? widget.onDone() : setState(() => _step++),
+              onSkip: _step == last ? null : widget.onExit,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

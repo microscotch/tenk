@@ -384,11 +384,6 @@ class AppLocalizationsFi extends AppLocalizations {
   String get logHotDiceMessage => 'Kuumat nopat!';
 
   @override
-  String rollButtonHotDiceTotal(int total) {
-    return 'Kuumat nopat! → $total';
-  }
-
-  @override
   String get logScoreCollisionMessage => 'Pisteet yliviivattu:';
 
   @override
@@ -655,6 +650,52 @@ class AppLocalizationsFi extends AppLocalizations {
   String get tutorialSkip => 'Ohita';
 
   @override
+  String get tutorialLessonHome => 'Aloitusnäyttö';
+
+  @override
+  String get tutorialHomeIntro =>
+      'Tämä on aloitusnäyttö. Jokainen pelimerkki avaa näytön; pitkä painallus pelimerkkiin näyttää sen nimen. Kierretään ne läpi.';
+
+  @override
+  String get tutorialHomeNewGame =>
+      'Uusi peli: valitse pelaajat, ihmiset tai botit, ja heidän järjestyksensä pöydän ympärillä, pelataksesi tällä puhelimella.';
+
+  @override
+  String get tutorialHomeOnline =>
+      'Pelaa verkossa: luo huone ja jaa sen koodi, tai liity ystävän huoneeseen; jokainen pelaa omalla puhelimellaan.';
+
+  @override
+  String get tutorialHomeResume =>
+      'Jatka: tauolla olevat pelit jatkuvat siitä, mihin jäit. Tämä pelimerkki on poissa käytöstä, kun niitä ei ole.';
+
+  @override
+  String get tutorialHomePlayers =>
+      'Pelaajat: pelaajien tiedot, lempinimi ja kätisyys (oikea- tai vasenkätinen).';
+
+  @override
+  String get tutorialHomeFinished =>
+      'Päättyneet pelit: katso ne siirto siirrolta, taulukon, käyrän ja tilastojen kera.';
+
+  @override
+  String get tutorialHomeStatistics =>
+      'Tilastot: ennätykset ja jokaisen pelaajan tulokset.';
+
+  @override
+  String get tutorialHomeRules =>
+      'Säännöt: pelin säännöt ja tämän opastuksen oppitunnit, uudelleen pelattavina yksi kerrallaan.';
+
+  @override
+  String get tutorialHomeSettings =>
+      'Asetukset: kieli, äänet, noppien värit, viiveet ja muut valinnat.';
+
+  @override
+  String get tutorialHomeAbout => 'Tietoja: sovelluksen versio ja tiedot.';
+
+  @override
+  String get tutorialHomeOutro =>
+      'Nyt pelataan: seuraavalla oppitunnilla pelaat ensimmäisen vuorosi.';
+
+  @override
   String get tutorialFinalOutro =>
       'Botti on yliviivattu ja sen on nyt yritettävä 10 000:ta. Nyt osaat kaikki säännöt: hauskaa peliä!';
 
@@ -748,7 +789,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFullHand =>
-      'Kolme kolmosta: 300, käsi nousee 450:een. Kaikki nopat toivat pisteitä: kuumat nopat! Painike näyttää summan, joka sinulla olisi; kaikki 5 heitetään uudelleen etkä voi lopettaa.';
+      'Kolme kolmosta: 300, käsi nousee 450:een. Kaikki nopat toivat pisteitä: kuumat nopat! Käden kehys näyttää summan, joka sinulla olisi; kaikki 5 heitetään uudelleen etkä voi lopettaa.';
 
   @override
   String get tutorialHotDiceKept =>

@@ -7,7 +7,13 @@ import 'fake_player_store.dart';
 /// [players], et désignée par les préférences, comme après sa création au
 /// premier lancement. À appeler AVANT que `settingsProvider` ne se construise
 /// (il relit les préférences à ce moment-là).
-Future<void> seedMyProfile(FakePlayerStore players, PlayerProfile profile) async {
+///
+/// [tutorialSeen] : le tutoriel a déjà été affiché sur ce téléphone (sinon le
+/// lancement le propose avant l'accueil).
+Future<void> seedMyProfile(FakePlayerStore players, PlayerProfile profile, {bool tutorialSeen = false}) async {
   await players.write(profile);
-  SharedPreferences.setMockInitialValues({'settings.myProfileId': profile.id});
+  SharedPreferences.setMockInitialValues({
+    'settings.myProfileId': profile.id,
+    if (tutorialSeen) 'settings.tutorialSeen': true,
+  });
 }

@@ -244,11 +244,15 @@ class _PlayerRow extends StatelessWidget {
                           ),
                         ),
                       if (!player.hasEntered)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text(
-                            l10n.notEnteredLabel,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              l10n.notEnteredLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                            ),
                           ),
                         ),
                     ],
@@ -312,7 +316,9 @@ class _PlayerRow extends StatelessWidget {
                       ),
                     ],
                   ),
-                if (!isCurrent) _radar(context),
+                // Le radar peut prendre jusqu'aux trois quarts de la ligne avant
+                // d'être abrégé ; le nom cède le reste.
+                if (!isCurrent) Flexible(flex: 3, child: _radar(context)),
               ],
             ),
           ),
@@ -323,14 +329,15 @@ class _PlayerRow extends StatelessWidget {
   }
 
   /// Ce qu'une ligne d'adversaire montre à droite : son score, puis le radar —
-  /// les lignes qu'il a encore et que le joueur courant pourrait barrer, vues
-  /// depuis son total potentiel (voir [collisionTargets]), celle qu'il barre
-  /// déjà mise en évidence — ou, s'il n'y en a plus, l'écart entre les deux.
+  /// les lignes qu'il a encore et que le joueur courant pourrait barrer plus
+  /// tard, vues depuis son total potentiel (voir [collisionTargets]) — ou, s'il
+  /// n'y en a plus, les écarts avec ses plus hautes lignes (voir [radarGaps]).
   Widget _radar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final targets = collisionTargets(player, potentialTotal);
     final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (player.hasTiret)
           Padding(
@@ -342,26 +349,16 @@ class _PlayerRow extends StatelessWidget {
           ),
         Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
         const SizedBox(width: 8),
-        Tooltip(
-          message: targets.isEmpty ? l10n.radarGapTooltip : l10n.radarTargetsTooltip,
-          child: targets.isEmpty
-              ? Text(_signed(radarGap(player, potentialTotal)), style: muted)
-              : Text.rich(
-                  TextSpan(
-                    style: muted,
-                    children: [
-                      for (var k = 0; k < targets.length; k++) ...[
-                        if (k > 0) const TextSpan(text: ' · '),
-                        TextSpan(
-                          text: '${targets[k]}',
-                          style: targets[k] == potentialTotal
-                              ? const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)
-                              : null,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+        Flexible(
+          child: Tooltip(
+            message: targets.isEmpty ? l10n.radarGapTooltip : l10n.radarTargetsTooltip,
+            child: Text(
+              targets.isEmpty ? radarGaps(player, potentialTotal).map(_signed).join(' · ') : targets.join(' · '),
+              style: muted,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
       ],
     );
@@ -369,7 +366,7 @@ class _PlayerRow extends StatelessWidget {
 }
 
 /// Un écart signé, le moins typographique (−950) plutôt que le trait d'union.
-String _signed(int value) => value < 0 ? '\u2212${-value}' : '+$value';
+String _signed(int value) => value < 0 ? '\u2212${-value}' : (value == 0 ? '0' : '+$value');
 
 /// Le blason d'un joueur, et la bulle de ce qu'il vient d'exprimer, quand il y
 /// en a une : pointe sur le bord droit du blason, centrée sur lui.
