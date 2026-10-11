@@ -4,6 +4,9 @@ name: Server image
 # sur main, la publie sur GitHub Container Registry :
 #
 #   ghcr.io/microscotch/tenk-server:latest        la dernière version de main
+#   ghcr.io/microscotch/tenk-server:<version>     la version du build de l'app, lue dans
+#                                                  pubspec.yaml (1.0.0+104 → 1.0.0-104 :
+#                                                  un tag Docker n'admet pas le « + »)
 #   ghcr.io/microscotch/tenk-server:sha-<commit>  une version précise (retour arrière)
 #
 # Image amd64 ET arm64, sans émulation (le Dockerfile cross-compile). Sur une pull
@@ -73,6 +76,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # La version du build (pubspec.yaml, déjà incrémentée par le hook pre-push du
+      # commit poussé), le « + » remplacé par « - » : un tag Docker n'admet que
+      # lettres, chiffres, « _ », « . » et « - ».
+      - name: Lit la version du build
+        id: version
+        run: |
+          version=$(sed -n 's/^version: *//p' pubspec.yaml | head -1)
+          [ -n "$version" ] || { echo "version introuvable dans pubspec.yaml"; exit 1; }
+          echo "tag=${version//+/-}" >> "$GITHUB_OUTPUT"
+
       # Le nom de l'image est mis en minuscules par l'action (exigé par le registre) ;
       # les étiquettes OCI qu'elle pose (dont `source`) rattachent le paquet au dépôt.
       - id: meta
@@ -81,6 +94,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/tenk-server
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.version.outputs.tag }},enable={{is_default_branch}}
             type=sha,prefix=sha-
 
       - name: Construit l'image multi-architecture (et la publie sur main)
