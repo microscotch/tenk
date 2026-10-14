@@ -1312,10 +1312,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Avant le banquage de B : A affiche 2000 avec son tiret, B affiche 1500.
+    // Avant le banquage de B : A affiche 2000 (en rouge : l'arrêt de B le barrerait)
+    // avec son tiret ; B affiche son total potentiel 2000, puis 1500 en petit.
     // La main de B le porterait à 2000, le score de A : son total potentiel
     // s'affiche en vert dans le liseré de la main.
-    expect(find.text('2000'), findsOneWidget);
+    expect(find.text('2000'), findsNWidgets(2));
     expect(find.textContaining('→ 2000', findRichText: true), findsOneWidget);
     expect(find.text('1500'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
@@ -2075,6 +2076,12 @@ void main() {
     await tester.pump(DieWidget.maxRollDuration + const Duration(milliseconds: 100));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(FilledButton, 'Main pleine !'), findsOneWidget, reason: 'le bouton reste simple');
+    // Les dés sont immobilisés mais pas encore posés dans la main : pas de spoil.
+    expect(find.textContaining('→ 2750', findRichText: true), findsNothing, reason: 'dés pas encore dans la main');
+    // Puis ils migrent dans la main (délai + fondu) : le total potentiel apparaît.
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
     expect(find.textContaining('→ 2750', findRichText: true), findsOneWidget);
   });
 

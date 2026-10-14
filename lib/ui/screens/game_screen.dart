@@ -1587,11 +1587,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final l10n = AppLocalizations.of(context);
 
     // Score "live" : score du tour déjà banqué + aperçu de la sélection de 5
-    // en cours si un choix humain est en attente ET que les dés du lancer se
-    // sont immobilisés (voir _rollSettled) — pas avant, sinon le score
-    // apparaît avant que le joueur ait vu le résultat du lancer.
+    // en cours si un choix humain est en attente ET que les dés du lancer sont
+    // immobilisés puis posés dans la main courante (voir _previewFrameShown,
+    // qui suit _rollSettled et _previewMoveRevealed) — pas avant, sinon le
+    // score apparaît avant que le joueur ait vu le résultat du lancer.
     final showRollPreview =
-        followsSelection && turn.pendingRoll != null && _rollSettled;
+        followsSelection && turn.pendingRoll != null && _previewFrameShown;
     final liveScore = showRollPreview
         ? turn.bankedScore + _previewPoints(turn.pendingRoll!, _selectedKeep)
         : turn.bankedScore;
@@ -1740,14 +1741,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       displayNames: ref.watch(displayNamesProvider),
                       bubbles: _bubbles,
                       botIndices: _onlineBotIndices(engine),
-                      // Le radar des autres joueurs suit la main en direct,
-                      // sélection de 5 comprise.
+                      // Les écarts des autres joueurs suivent la main en direct,
+                      // sélection de 5 comprise ; le rouge attend les dés posés.
                       potentialTotal: engine.currentPlayer.totalScore + liveScore,
-                      reachFrom: radarReachFrom(
-                        currentTotal: engine.currentPlayer.totalScore,
-                        minimum: engine.minimumForCurrentPlayer,
-                        potentialTotal: engine.currentPlayer.totalScore + liveScore,
-                      ),
+                      handRevealed: _previewFrameShown && liveScore > 0,
                       rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                     ),
                     const SizedBox(height: 12),
@@ -2705,7 +2702,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
         return Row(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: children,
         );
       },
@@ -3335,7 +3332,10 @@ class _DiceZoneBody extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) => SizedBox(
         height: _fittedDieSize(constraints.maxWidth) + _dieMargin,
-        child: Center(child: child),
+        // Toujours à gauche : les dés gardent la même place d'une zone à
+        // l'autre et d'un lancer à l'autre (pas de saut quand la rangée
+        // change de largeur).
+        child: Align(alignment: Alignment.centerLeft, child: child),
       ),
     );
   }
@@ -3501,7 +3501,7 @@ Widget _fittedDiceRow(
           : _fittedDieSize(constraints.maxWidth);
       return Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [for (var i = 0; i < count; i++) builder(i, size)],
       );
     },

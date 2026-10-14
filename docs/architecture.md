@@ -82,13 +82,13 @@ une partie rejouable à l'identique.
   (`playerIds`). C'est ce lien, jamais le nom, qui rattache une partie à un
   joueur : un renommage ne casse rien. `reordered(ordre)` la réordonne dans
   l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
-- **Le radar** (`lib/game/score_radar.dart`) sert la liste des joueurs de l'écran de jeu, qui tourne autour du
-  joueur dont c'est le tour (`rotatedOrder`). Pour chaque autre joueur, `collisionTargets` donne ses trois premières
-  lignes encore atteignables ce tour-ci : non barrées, hors son score courant (déjà affiché), à partir de
-  `radarReachFrom` — le score du joueur courant plus le minimum d'un tour, jamais sous son total potentiel (son
-  score + sa main en cours) —, puisqu'une collision barre toute ligne non barrée de même valeur. Celle qui égale le
-  potentiel est en rouge. Sans ligne atteignable, `radarGap` donne l'écart entre son score et ce potentiel.
-  `barsAnotherPlayer` dit si s'arrêter sur le potentiel barrerait quelqu'un (le vert du liseré de la main). Fonctions pures, sans état : l'écran les recalcule à chaque changement de main.
+- **Le radar** (`lib/game/score_radar.dart`) sert la liste des joueurs de l'écran de jeu, statique (ordre de la
+  partie). Sur la ligne du joueur courant, `firstEntryBelow` donne le premier score non barré de sa grille, en
+  remontant, strictement sous son total potentiel (son score + sa main en cours), affiché en petit après le total.
+  Sur celle d'un adversaire, `radarDifference` donne l'écart signé : son score moins le potentiel quand celui-ci le
+  dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`). `barsAnotherPlayer` dit
+  si s'arrêter sur le potentiel barrerait quelqu'un (le vert du liseré de la main). Fonctions pures, sans état :
+  l'écran les recalcule à chaque changement de main.
 - **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une partie mais sept leçons (`tutorialLessons`), de la
   plus simple à la plus subtile : les bases, la main pleine (et les 5 facultatifs, jamais d'arrêt sur un total en
   50), le craque (trait puis barre), l'extension, la main héritée, la collision, le dernier tour. Chaque

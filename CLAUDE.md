@@ -200,15 +200,13 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   a journal is what marks it as using the current order rule. `presetOrder` (an online rematch) is a roll-off
   action too: the play order imposed without dice (`DiceOffState.preset`); it only appears in games where every
   participant announced `rematchFeature`, since an older app couldn't parse it.
-- `game/score_radar.dart` — the game screen's player list: `rotatedOrder` (the active player on top, then play
-  order) and the "radar" shown on every *other* player's row: `collisionTargets(other, reachFrom)` = that player's
-  first 3 lines the current player can still reach this turn — non-barred, not their current score (already shown
-  next to it), from `radarReachFrom` = the current player's score + the turn minimum (200, or 500 before entry),
-  never below their potential total (score + live hand: a line the hand has already passed is out of reach) — since
-  a collision bars any non-barred line, not just the current one. The line equal to the potential is red (stopping
-  now would strike it out). With none, `radarGap`: that player's score minus the potential. `barsAnotherPlayer` says whether
-  stopping on the potential would strike someone out (the hand label's green). The current player's row keeps its
-  previous-score parenthesis and 200-gap hints; other rows drop them for the radar.
+- `game/score_radar.dart` — the game screen's player list, **static** (game order, never rotated): the current
+  player's row is bold and reads "potential total · <small: `firstEntryBelow`, the latest non-barred grid line below the
+  potential>"; another player's row shows their score (red and bold when stopping on the potential would equal it,
+  only once the hand's dice are shown — `ScoreSheet.handRevealed` — so the colour never spoils the roll), then
+  `radarDifference`: signed gap, their score minus the potential when the potential is above it, otherwise
+  `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
+  whether stopping on the potential would strike someone out (the hand label's green).
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.

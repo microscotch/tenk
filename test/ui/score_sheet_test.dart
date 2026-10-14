@@ -10,14 +10,21 @@ import 'package:le10000/ui/widgets/score_sheet.dart';
 Finder _rowOf(String playerName) => find.ancestor(of: find.text(playerName), matching: find.byType(Container)).first;
 
 void main() {
-  testWidgets('signale un écart de 200 : danger pour celui au-dessus, opportunité pour celui en dessous',
-      (tester) async {
+  testWidgets('signale un écart de 200 : danger pour celui au-dessus, opportunité pour celui en dessous', (
+    tester,
+  ) async {
     final players = [
       Player(name: 'A', totalScore: 800, hasEntered: true),
       Player(name: 'B', totalScore: 1000, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 0),
+      ),
+    );
 
     // A (joueur courant) est à 200 pts de barrer B. Les indices ne se lisent
     // que sur la ligne du joueur courant : celle de B montre le radar.
@@ -32,7 +39,13 @@ void main() {
       Player(name: 'B', totalScore: 1000, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 0)));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 0),
+      ),
+    );
 
     expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     expect(find.byIcon(Icons.gps_fixed), findsNothing);
@@ -45,7 +58,13 @@ void main() {
       Player(name: 'C', totalScore: 1200, hasEntered: true),
     ];
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: players, currentPlayerIndex: 1)));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 1),
+      ),
+    );
 
     // B (courant) est à 200 sous C, qu'il peut barrer, et à 200 au-dessus de
     // A, qui peut le barrer : les deux indices, sur sa ligne seulement.
@@ -62,18 +81,28 @@ void main() {
     a = a.applyBust(); // tiret sur 500
     a = a.applySuccessfulTurn(300); // nouvelle ligne : 800, sans tiret
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: [a], currentPlayerIndex: 0),
+      ),
+    );
 
     expect(find.text('800'), findsOneWidget);
-    expect(find.textContaining('(500'), findsOneWidget, reason: 'le score précédent apparaît entre parenthèses');
+    expect(
+      find.textContaining('500'),
+      findsOneWidget,
+      reason: 'le score précédent apparaît en petit après le séparateur',
+    );
 
     // Le tiret doit être DANS la parenthèse, donc porté par ce même widget de
     // texte, et non posé à côté : sinon il se lit comme qualifiant le score
     // courant affiché juste avant.
     expect(
-      find.descendant(of: find.textContaining('(500'), matching: find.byIcon(Icons.remove)),
+      find.descendant(of: find.textContaining('500'), matching: find.byIcon(Icons.remove)),
       findsOneWidget,
-      reason: 'la ligne précédente portait un tiret, marqué à l\'intérieur des parenthèses',
+      reason: 'la ligne précédente portait un tiret, marqué dans le même texte que ce score',
     );
   });
 
@@ -86,11 +115,17 @@ void main() {
     a = a.applyBust(); // 500 barré, retombe à 0
     a = a.applySuccessfulTurn(300); // nouvelle ligne 300, courante
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: ScoreSheet(players: [a], currentPlayerIndex: 0)));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: [a], currentPlayerIndex: 0),
+      ),
+    );
 
     expect(find.text('300'), findsOneWidget);
-    expect(find.text('(0)'), findsOneWidget, reason: 'la ligne 500 est barrée : on remonte jusqu\'à 0');
-    expect(find.text('(500)'), findsNothing);
+    expect(find.text('0'), findsOneWidget, reason: 'la ligne 500 est barrée : on remonte jusqu\'à 0');
+    expect(find.text('500'), findsNothing);
   });
 
   testWidgets('un joueur cliqué déclenche onTapPlayer avec ce joueur', (tester) async {
@@ -100,9 +135,13 @@ void main() {
     ];
     Player? tapped;
 
-    await tester.pumpWidget(MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
-      home: ScoreSheet(players: players, currentPlayerIndex: 0, onTapPlayer: (p) => tapped = p),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 0, onTapPlayer: (p) => tapped = p),
+      ),
+    );
 
     await tester.tap(find.text('B'));
     await tester.pump();
@@ -112,16 +151,15 @@ void main() {
 
   group('médailles du podium', () {
     Future<void> pumpSheet(WidgetTester tester, List<Player> players) => tester.pumpWidget(
-          MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: ScoreSheet(players: players, currentPlayerIndex: 0),
-          ),
-        );
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 0),
+      ),
+    );
 
-    Color medalColorIn(WidgetTester tester, String playerName) => tester
-        .widget<Icon>(find.descendant(of: _rowOf(playerName), matching: find.byIcon(Icons.military_tech)))
-        .color!;
+    Color medalColorIn(WidgetTester tester, String playerName) =>
+        tester.widget<Icon>(find.descendant(of: _rowOf(playerName), matching: find.byIcon(Icons.military_tech))).color!;
 
     testWidgets('or, argent et bronze vont aux trois meilleurs scores', (tester) async {
       await pumpSheet(tester, [
@@ -151,8 +189,11 @@ void main() {
     testWidgets('aucune médaille tant que personne n\'a marqué', (tester) async {
       await pumpSheet(tester, [Player(name: 'A'), Player(name: 'B'), Player(name: 'C')]);
 
-      expect(find.byIcon(Icons.military_tech), findsNothing,
-          reason: 'tout le monde à 0 en début de partie : personne n\'est en tête');
+      expect(
+        find.byIcon(Icons.military_tech),
+        findsNothing,
+        reason: 'tout le monde à 0 en début de partie : personne n\'est en tête',
+      );
     });
 
     testWidgets('deux joueurs à égalité partagent la même médaille', (tester) async {
@@ -168,45 +209,82 @@ void main() {
     });
   });
 
-  group('liste rotative et radar', () {
-    Future<void> pumpSheet(WidgetTester tester, List<Player> players, {required int current, int? potential}) =>
-        tester.pumpWidget(
-          MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: ScoreSheet(players: players, currentPlayerIndex: current, potentialTotal: potential)),
+  group('liste statique et écarts', () {
+    Future<void> pumpSheet(
+      WidgetTester tester,
+      List<Player> players, {
+      required int current,
+      int? potential,
+      bool handRevealed = true,
+    }) => tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ScoreSheet(
+            players: players,
+            currentPlayerIndex: current,
+            potentialTotal: potential,
+            handRevealed: handRevealed,
           ),
-        );
+        ),
+      ),
+    );
 
     double topOf(WidgetTester tester, String name) => tester.getTopLeft(find.text(name)).dy;
 
-    testWidgets('le joueur dont c\'est le tour est en tête, les suivants dans l\'ordre de jeu', (tester) async {
+    testWidgets('l\'ordre ne change pas quand le tour passe', (tester) async {
       final players = [Player(name: 'A'), Player(name: 'B'), Player(name: 'C')];
       await pumpSheet(tester, players, current: 1);
+      expect(topOf(tester, 'A'), lessThan(topOf(tester, 'B')));
       expect(topOf(tester, 'B'), lessThan(topOf(tester, 'C')));
-      expect(topOf(tester, 'C'), lessThan(topOf(tester, 'A')));
     });
 
-    testWidgets('un adversaire montre ses lignes atteignables, hors son score ; celle qu\'on barrerait en rouge',
-        (tester) async {
+    testWidgets('seul le nom du joueur courant est en gras', (tester) async {
+      await pumpSheet(tester, [Player(name: 'A'), Player(name: 'B')], current: 1);
+      expect(tester.widget<Text>(find.text('A')).style?.fontWeight, FontWeight.normal);
+      expect(tester.widget<Text>(find.text('B')).style?.fontWeight, FontWeight.bold);
+    });
+
+    testWidgets('le joueur courant montre son total potentiel puis son score précédent', (tester) async {
+      final me = Player(name: 'Moi').applySuccessfulTurn(1000);
+      await pumpSheet(tester, [me], current: 0, potential: 1400);
+      expect(find.text('1400'), findsOneWidget);
+      expect(find.text('1000'), findsOneWidget);
+    });
+
+    testWidgets('un adversaire en rouge et en gras si un arrêt le barrerait, puis l\'écart au premier barrable', (
+      tester,
+    ) async {
       final me = Player(name: 'Moi', totalScore: 2200, hasEntered: true);
-      // Grille de Bob : 2400, 2600, 2800, 3600 (courante).
-      final bob = [2400, 200, 200, 800].fold(Player(name: 'Bob'), (p, v) => p.applySuccessfulTurn(v));
+      final bob = [
+        2400,
+        200,
+        200,
+        800,
+      ].fold(Player(name: 'Bob'), (p, v) => p.applySuccessfulTurn(v)); // 2400 2600 2800 3600
       await pumpSheet(tester, [me, bob], current: 0, potential: 2400);
+      // 2400 : ligne barrable, mais pas son score (3600) : pas de rouge ; écart +0.
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.text(' · 0')), findsOneWidget);
+      expect(tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('3600'))).style?.color, isNull);
 
-      final radar = find.descendant(of: _rowOf('Bob'), matching: find.text('2400 · 2600 · 2800'));
-      expect(radar, findsOneWidget);
-      final first = (tester.widget<Text>(radar).textSpan! as TextSpan).children!.first as TextSpan;
-      expect((first.text, first.style?.color), ('2400', Colors.redAccent), reason: 'un arrêt maintenant le barrerait');
-      // Le score précédent entre parenthèses ne vaut que pour le joueur courant.
-      expect(find.descendant(of: _rowOf('Bob'), matching: find.textContaining('(')), findsNothing);
+      await pumpSheet(tester, [me, bob], current: 0, potential: 3600);
+      final score = tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('3600')));
+      expect((score.style?.color, score.style?.fontWeight), (Colors.redAccent, FontWeight.bold));
     });
 
-    testWidgets('rien d\'atteignable : seul l\'écart entre son score et mon total potentiel', (tester) async {
+    testWidgets('la couleur attend les dés de la main', (tester) async {
+      final me = Player(name: 'Moi', totalScore: 2200, hasEntered: true);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(2400);
+      await pumpSheet(tester, [me, bob], current: 0, potential: 2400, handRevealed: false);
+      expect(tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('2400'))).style?.color, isNull);
+    });
+
+    testWidgets('au-dessus du score de l\'adversaire : écart négatif signé', (tester) async {
       final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
       await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
-      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('\u2212950')), findsOneWidget);
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.text(' · \u2212950')), findsOneWidget);
     });
 
     testWidgets('les indices d\'écart de 200 ne restent que sur la ligne du joueur courant', (tester) async {
@@ -215,7 +293,6 @@ void main() {
         Player(name: 'B', totalScore: 1000, hasEntered: true),
       ];
       await pumpSheet(tester, players, current: 1);
-      // B (courant) est à 200 au-dessus de A : danger chez lui ; A n'a plus d'indice.
       expect(find.descendant(of: _rowOf('B'), matching: find.byIcon(Icons.warning_amber_rounded)), findsOneWidget);
       expect(find.byIcon(Icons.gps_fixed), findsNothing);
     });

@@ -1,41 +1,39 @@
 import 'player.dart';
 
-/// Les indices de [playerCount] joueurs à partir de [currentIndex] puis dans
-/// l'ordre de jeu : la liste des joueurs de l'écran de jeu « tourne » pour
-/// garder celui dont c'est le tour en tête.
-List<int> rotatedOrder(int playerCount, int currentIndex) => [
-  for (var k = 0; k < playerCount; k++) (currentIndex + k) % playerCount,
-];
-
-/// Le « radar » d'un adversaire : ses lignes de grille que le joueur courant
-/// peut encore barrer ce tour-ci. Une collision barre toute ligne non barrée de
-/// même valeur, pas seulement la ligne courante (voir
-/// [Player.applyScoreCollisionBarAt]) : ce sont donc ses lignes non barrées à
-/// partir de [reachFrom] — le score du joueur courant plus le minimum d'un
-/// tour, sans descendre sous son total potentiel (sa main ne fait que grossir :
-/// une ligne déjà dépassée n'est plus atteignable) —, hors ligne courante (son
-/// score est déjà affiché à côté), de la plus proche à la plus lointaine, sans
-/// doublon, au plus [limit]. Voir [radarReachFrom].
-List<int> collisionTargets(Player other, int reachFrom, {int limit = 3}) {
-  final values = {
-    for (final entry in other.grid)
-      if (!entry.isBarred && entry.value > 0 && entry.value != other.totalScore && entry.value >= reachFrom)
-        entry.value,
-  }.toList()..sort();
-  return values.take(limit).toList();
+/// Le premier score de la grille de [player], en remontant depuis sa ligne
+/// courante, qui soit non barré et strictement inférieur à [potentialTotal] :
+/// ce que la ligne du joueur courant affiche, en petit, à côté de son total
+/// potentiel. Nulle s'il n'y en a pas.
+ScoreEntry? firstEntryBelow(Player player, int potentialTotal) {
+  for (var i = player.grid.length - 1; i >= 0; i--) {
+    final entry = player.grid[i];
+    if (!entry.isBarred && entry.value < potentialTotal) return entry;
+  }
+  return null;
 }
 
-/// D'où partent les lignes atteignables du radar : le score du joueur courant
-/// ([currentTotal]) plus le minimum d'un tour ([minimum] : 200 une fois entré,
-/// 500 avant), sans descendre sous son total potentiel ([potentialTotal]).
-int radarReachFrom({required int currentTotal, required int minimum, required int potentialTotal}) {
-  final fromScore = currentTotal + minimum;
-  return potentialTotal > fromScore ? potentialTotal : fromScore;
+/// Le premier score barrable de [other] à partir de [potentialTotal] : sa plus
+/// petite ligne non barrée de valeur au moins égale (une collision barre toute
+/// ligne non barrée de même valeur, voir [Player.applyScoreCollisionBarAt]).
+/// Nul si [other] n'en a aucune.
+int? nextBarrableScore(Player other, int potentialTotal) {
+  int? best;
+  for (final entry in other.grid) {
+    if (entry.isBarred || entry.value <= 0 || entry.value < potentialTotal) continue;
+    if (best == null || entry.value < best) best = entry.value;
+  }
+  return best;
 }
 
-/// L'écart entre le score de [other] et [potentialTotal] : ce qu'affiche le
-/// radar quand il n'y a plus rien d'atteignable chez ce joueur.
-int radarGap(Player other, int potentialTotal) => other.totalScore - potentialTotal;
+/// L'écart signé que la ligne d'un adversaire affiche : son score moins
+/// [potentialTotal] quand le total potentiel du joueur courant le dépasse (donc
+/// négatif), sinon la distance de [potentialTotal] à son premier score barrable
+/// (voir [nextBarrableScore]). Nul quand il n'a plus rien à barrer.
+int? radarDifference(Player other, int potentialTotal) {
+  if (potentialTotal > other.totalScore) return other.totalScore - potentialTotal;
+  final next = nextBarrableScore(other, potentialTotal);
+  return next == null ? null : next - potentialTotal;
+}
 
 /// Vrai si s'arrêter sur [potentialTotal] barrerait un autre joueur que
 /// [currentIndex] : l'une de ses lignes non barrées a exactement cette valeur

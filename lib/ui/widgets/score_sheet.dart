@@ -27,13 +27,14 @@ class ScoreSheet extends StatelessWidget {
 
   /// Le total qu'aurait le joueur courant s'il s'arrêtait maintenant (son score
   /// + sa main courante, sélection de 5 comprise) : c'est depuis lui que se lit
-  /// le radar des autres joueurs (voir [collisionTargets]). Nul : son score seul.
+  /// l'écart affiché sur les lignes des autres joueurs (voir
+  /// [radarDifference]). Nul : son score seul.
   final int? potentialTotal;
 
-  /// D'où partent les lignes atteignables du radar (voir [radarReachFrom]).
-  /// Nul : le score du joueur courant plus 200 (ou son total potentiel, s'il
-  /// est au-dessus).
-  final int? reachFrom;
+  /// Vrai quand les dés de la main courante sont montrés : alors seulement le
+  /// score d'un adversaire que le joueur courant barrerait en s'arrêtant passe
+  /// en rouge (sinon la couleur trahirait le lancer avant qu'on l'ait vu).
+  final bool handRevealed;
 
   /// Les joueurs (index) d'une partie en ligne partis en cours de partie, dont
   /// un bot du serveur a repris le siège : leur ligne porte une icône de robot.
@@ -51,7 +52,7 @@ class ScoreSheet extends StatelessWidget {
     this.displayNames = const {},
     this.bubbles = const {},
     this.potentialTotal,
-    this.reachFrom,
+    this.handRevealed = true,
     this.botIndices = const {},
     this.rowKeys = const {},
   });
@@ -61,15 +62,12 @@ class ScoreSheet extends StatelessWidget {
     final avatarColors = assignAvatarColors(players.map((p) => p.name));
     final ranks = podiumRanks(players);
     final potential = potentialTotal ?? players[currentPlayerIndex].totalScore;
-    final from =
-        reachFrom ??
-        radarReachFrom(currentTotal: players[currentPlayerIndex].totalScore, minimum: 200, potentialTotal: potential);
-    // La liste tourne : le joueur dont c'est le tour en tête, les suivants dans
-    // l'ordre de jeu. Chaque ligne est clée par son joueur, pour que son état
-    // (la bulle d'émotion en cours) la suive d'une place à l'autre.
+    // La liste est statique : les joueurs restent à leur place, dans l'ordre de
+    // la partie. Chaque ligne est clée par son joueur, pour que son état (la
+    // bulle d'émotion en cours) lui reste attaché.
     return Column(
       children: [
-        for (final i in rotatedOrder(players.length, currentPlayerIndex))
+        for (var i = 0; i < players.length; i++)
           KeyedSubtree(
             key: rowKeys[i] ?? ValueKey('row-${players[i].name}'),
             child: _PlayerRow(
@@ -79,7 +77,7 @@ class ScoreSheet extends StatelessWidget {
               isCurrent: i == currentPlayerIndex,
               gaps: _scoreGaps(players, i),
               potentialTotal: potential,
-              reachFrom: from,
+              handRevealed: handRevealed,
               onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
               avatarColor: avatarColors[players[i].name],
               podiumRank: ranks[i],
@@ -170,8 +168,8 @@ class _PlayerRow extends StatelessWidget {
   /// pas celle du joueur courant.
   final int potentialTotal;
 
-  /// Voir [ScoreSheet.reachFrom].
-  final int reachFrom;
+  /// Voir [ScoreSheet.handRevealed].
+  final bool handRevealed;
 
   /// Voir [ScoreSheet.botIndices].
   final bool isBot;
@@ -181,7 +179,7 @@ class _PlayerRow extends StatelessWidget {
     super.key,
     required this.player,
     required this.potentialTotal,
-    required this.reachFrom,
+    required this.handRevealed,
     required this.displayName,
     this.bubble,
     required this.isCurrent,
@@ -199,7 +197,7 @@ class _PlayerRow extends StatelessWidget {
     // collision au prochain tour de l'adversaire concerné.
     final dangerBelow = gaps.below == 200;
     final opportunityAbove = gaps.above == 200;
-    final previousEntry = player.lastUnbarredEntry;
+    final previousEntry = firstEntryBelow(player, potentialTotal);
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -234,7 +232,7 @@ class _PlayerRow extends StatelessWidget {
                           displayName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
                         ),
                       ),
                       if (isBot)
@@ -302,17 +300,15 @@ class _PlayerRow extends StatelessWidget {
                             child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
                           ),
                         ),
-                      Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 4),
-                      // Le tiret est DANS la parenthèse : il qualifie ce score
-                      // précédent, pas le total courant qui le précède à
-                      // l'écran. D'où le WidgetSpan plutôt qu'une icône posée
-                      // après la parenthèse fermante.
+                      Text('$potentialTotal', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(' · ', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+                      // Le tiret est DANS le texte : il qualifie ce score
+                      // précédent, pas le total qui le précède à l'écran.
                       Text.rich(
                         TextSpan(
                           style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
                           children: [
-                            TextSpan(text: '(${previousEntry?.value ?? 0}'),
+                            TextSpan(text: '${previousEntry?.value ?? 0}'),
                             if (previousEntry?.hasTiret ?? false)
                               WidgetSpan(
                                 alignment: PlaceholderAlignment.middle,
@@ -324,7 +320,6 @@ class _PlayerRow extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            const TextSpan(text: ')'),
                           ],
                         ),
                       ),
@@ -342,14 +337,14 @@ class _PlayerRow extends StatelessWidget {
     return row;
   }
 
-  /// Ce qu'une ligne d'adversaire montre à droite : son score, puis le radar —
-  /// les lignes qu'il a encore et que le joueur courant pourrait barrer plus
-  /// ce tour-ci (voir [collisionTargets]), en rouge celle qu'il barrerait en
-  /// s'arrêtant sur son total potentiel — ou, s'il n'y en a plus, l'écart
-  /// entre son score et ce total (voir [radarGap]).
+  /// Ce qu'une ligne d'adversaire montre à droite : son score — en rouge et en
+  /// gras quand s'arrêter sur le total potentiel du joueur courant le barrerait,
+  /// une fois la main visible —, puis l'écart signé (voir [radarDifference]).
   Widget _radar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final targets = collisionTargets(player, reachFrom);
+    final difference = radarDifference(player, potentialTotal);
+    final barred =
+        handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
     final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -362,34 +357,21 @@ class _PlayerRow extends StatelessWidget {
               child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
             ),
           ),
-        Text('${player.totalScore}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Tooltip(
-            message: targets.isEmpty ? l10n.radarGapTooltip : l10n.radarTargetsTooltip,
-            child: Text.rich(
-              TextSpan(
-                style: muted,
-                children: targets.isEmpty
-                    ? [TextSpan(text: _signed(radarGap(player, potentialTotal)))]
-                    : [
-                        for (final (k, value) in targets.indexed) ...[
-                          if (k > 0) const TextSpan(text: ' · '),
-                          TextSpan(
-                            text: '$value',
-                            // La ligne qu'un arrêt maintenant barrerait.
-                            style: value == potentialTotal
-                                ? const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)
-                                : null,
-                          ),
-                        ],
-                      ],
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+        Text(
+          '${player.totalScore}',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: barred ? FontWeight.bold : FontWeight.w600,
+            color: barred ? Colors.redAccent : null,
           ),
         ),
+        if (difference != null)
+          Flexible(
+            child: Tooltip(
+              message: l10n.radarGapTooltip,
+              child: Text(' · ${_signed(difference)}', style: muted, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ),
       ],
     );
   }
