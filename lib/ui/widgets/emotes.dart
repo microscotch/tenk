@@ -355,3 +355,107 @@ class _DownBubblePainter extends CustomPainter {
   bool shouldRepaint(_DownBubblePainter old) =>
       old.fill != fill || old.outline != outline || old.tail != tail || old.tailX != tailX;
 }
+
+/// Une infobulle en bulle de bande dessinée, à la place de [Tooltip] : le même
+/// papier et le même trait que [SpeechBubble], posée au-dessus de [child], sa
+/// pointe vers lui. Elle s'ouvre à l'appui long (puis se referme seule) ou au
+/// survol de la souris, et se referme dès que le doigt ou le pointeur s'en va.
+class ComicTooltip extends StatefulWidget {
+  final String message;
+  final Widget child;
+
+  const ComicTooltip({super.key, required this.message, required this.child});
+
+  @override
+  State<ComicTooltip> createState() => _ComicTooltipState();
+}
+
+class _ComicTooltipState extends State<ComicTooltip> {
+  static const _margin = 8.0;
+  static const _maxWidth = 240.0;
+  static const _textStyle = TextStyle(color: SpeechBubble._ink, fontWeight: FontWeight.w700, fontSize: 14, height: 1.25);
+
+  OverlayEntry? _entry;
+  Timer? _hideTimer;
+
+  void _show() {
+    _hideTimer?.cancel();
+    if (_entry != null) return;
+    final box = context.findRenderObject();
+    final overlay = Overlay.maybeOf(context);
+    if (box is! RenderBox || !box.attached || overlay == null) return;
+    final anchor = box.localToGlobal(Offset.zero) & box.size;
+    final direction = Directionality.of(context);
+    final entry = OverlayEntry(builder: (context) => _bubble(context, anchor, direction));
+    _entry = entry;
+    overlay.insert(entry);
+  }
+
+  void _hide() {
+    _hideTimer?.cancel();
+    _entry?.remove();
+    _entry = null;
+  }
+
+  /// Après un appui long, la bulle reste un instant lisible une fois le doigt levé.
+  void _hideSoon() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(const Duration(milliseconds: 1500), _hide);
+  }
+
+  Widget _bubble(BuildContext context, Rect anchor, TextDirection direction) {
+    final screen = MediaQuery.sizeOf(context);
+    const padding = EdgeInsets.fromLTRB(12, 6, 12, SpeechBubble.tail + 6);
+    final painter = TextPainter(
+      text: TextSpan(text: widget.message, style: _textStyle),
+      textDirection: direction,
+    )..layout(maxWidth: _maxWidth - padding.horizontal);
+    final width = (painter.width + padding.horizontal).clamp(0.0, screen.width - 2 * _margin);
+    final left = (anchor.center.dx - width / 2).clamp(_margin, screen.width - _margin - width);
+    final tailX = (anchor.center.dx - left).clamp(24.0, width - 24.0);
+    return Positioned(
+      left: left,
+      bottom: screen.height - anchor.top + 2,
+      width: width,
+      child: IgnorePointer(
+        child: ExcludeSemantics(
+          child: CustomPaint(
+            painter: _DownBubblePainter(
+              fill: SpeechBubble._paper,
+              outline: SpeechBubble._outline,
+              tail: SpeechBubble.tail,
+              tailX: tailX,
+            ),
+            child: Padding(
+              padding: padding,
+              child: Material(
+                type: MaterialType.transparency,
+                child: Text(widget.message, softWrap: true, style: _textStyle),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hide();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => _show(),
+      onExit: (_) => _hide(),
+      child: GestureDetector(
+        onLongPress: _show,
+        onLongPressUp: _hideSoon,
+        onLongPressCancel: _hideSoon,
+        child: widget.child,
+      ),
+    );
+  }
+}

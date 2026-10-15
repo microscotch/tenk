@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/ui/widgets/emotes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
@@ -88,13 +89,26 @@ void main() {
     'À propos',
   ];
 
+  testWidgets('l\'appui long sur un jeton ouvre son nom dans une bulle de BD, qui se referme seule', (tester) async {
+    await pumpHome(tester);
+
+    await tester.longPress(chip('Règles du jeu'));
+    await tester.pump();
+    expect(find.text('Règles du jeu'), findsOneWidget, reason: 'la bulle montre le nom');
+    expect(find.byType(CustomPaint), findsWidgets);
+
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('Règles du jeu'), findsNothing, reason: 'elle se referme après l\'appui');
+  });
+
   testWidgets('l\'accueil est un rack de neuf jetons : une icône chacun, leur nom en infobulle', (tester) async {
     await pumpHome(tester);
 
     for (final label in allLabels) {
       expect(chip(label), findsOneWidget, reason: '$label doit être proposé');
       expect(find.text(label), findsNothing, reason: 'rien d\'écrit sur le jeton');
-      expect(find.byTooltip(label), findsOneWidget, reason: 'son nom, à l\'appui long');
+      expect(find.byWidgetPredicate((w) => w is ComicTooltip && w.message == label), findsOneWidget,
+          reason: 'son nom, dans une bulle de BD à l\'appui long');
       expect(find.bySemanticsLabel(label), findsOneWidget, reason: 'et pour un lecteur d\'écran');
     }
   });

@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'emotes.dart';
+
 /// Un jeton de casino qui sert de bouton : une couleur, un liseré, une icône,
-/// et rien d'écrit dessus. Son nom ([label]) s'affiche dans une infobulle à
+/// et rien d'écrit dessus. Son nom ([label]) s'affiche dans une bulle de BD à
 /// l'appui long (au survol sur ordinateur) et c'est lui que lit un lecteur
 /// d'écran.
 ///
@@ -61,9 +63,8 @@ class CasinoChip extends StatelessWidget {
     if (!enabled) {
       chip = Opacity(opacity: 0.38, child: ColorFiltered(colorFilter: _grayscale, child: chip));
     }
-    return Tooltip(
+    return ComicTooltip(
       message: label,
-      excludeFromSemantics: true,
       child: Semantics(
         button: true,
         enabled: enabled,
