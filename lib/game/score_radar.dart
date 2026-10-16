@@ -46,3 +46,6 @@ bool barsAnotherPlayer(List<Player> players, int currentIndex, int potentialTota
   }
   return false;
 }
+
+/// Un écart signé, le moins typographique (−950) plutôt que le trait d'union.
+String signedGap(int value) => value < 0 ? '\u2212${-value}' : (value == 0 ? '0' : '+$value');

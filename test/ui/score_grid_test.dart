@@ -216,8 +216,8 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(400, 800));
 
-    // Largeur utile ~368 (400 - marges) / largeur mini de colonne 108 -> 3
-    // colonnes par page, donc 2 pages pour 6 joueurs.
+    // Chaque grille occupe la moitié de la largeur : 2 par page, donc 3 pages
+    // pour 6 joueurs.
     final players = [for (var i = 0; i < 6; i++) Player(name: 'J$i')];
 
     await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
@@ -225,12 +225,13 @@ void main() {
 
     expect(find.byType(PageView), findsOneWidget);
     expect(_avatarFor('J0'), findsOneWidget);
-    expect(_avatarFor('J3'), findsNothing, reason: 'pas encore visible : sur la deuxième page');
+    expect(_avatarFor('J1'), findsOneWidget);
+    expect(_avatarFor('J2'), findsNothing, reason: 'pas encore visible : sur la deuxième page');
 
     await tester.drag(find.byType(PageView), const Offset(-400, 0));
     await tester.pumpAndSettle();
 
-    expect(_avatarFor('J3'), findsOneWidget);
+    expect(_avatarFor('J2'), findsOneWidget);
     expect(_avatarFor('J0'), findsNothing, reason: 'la première page a défilé hors champ');
   });
 
@@ -246,5 +247,51 @@ void main() {
     expect(find.byType(PageView), findsNothing);
     expect(_avatarFor('Alice'), findsOneWidget);
     expect(_avatarFor('Bob'), findsOneWidget);
+  });
+
+  group('largeur, centrage et écarts', () {
+    Future<void> pump(WidgetTester tester, Widget screen) => tester.pumpWidget(MaterialApp(
+          home: screen,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ));
+
+    testWidgets('une grille seule occupe la moitié de la largeur et se centre', (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice').applySuccessfulTurn(500)]));
+
+      final column = tester.getRect(find.byType(PlayerAvatarWidget).first);
+      expect(column.center.dx, closeTo(200, 1), reason: 'centrée horizontalement');
+      final row = tester.getRect(find.text('500').first);
+      expect(row.left, lessThan(200), reason: 'le score est aligné à gauche de sa colonne');
+    });
+
+    testWidgets('deux grilles se partagent chacune la moitié de la largeur', (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice'), Player(name: 'Bob')]));
+
+      expect(tester.getCenter(find.byType(PlayerAvatarWidget).first).dx, closeTo(108, 1));
+      expect(tester.getCenter(find.byType(PlayerAvatarWidget).last).dx, closeTo(292, 1));
+    });
+
+    testWidgets('les lignes des autres joueurs portent leur écart avec le total potentiel du joueur de référence',
+        (tester) async {
+      final alice = Player(name: 'Alice').applySuccessfulTurn(1000);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(500).applySuccessfulTurn(700); // 500, 1200
+      await pump(tester, ScoreGridScreen(players: [alice, bob], reference: alice, potentialTotal: 1300));
+
+      expect(find.text('\u2212100'), findsOneWidget, reason: '1200 - 1300');
+      expect(find.text('\u2212800'), findsOneWidget, reason: '500 - 1300');
+      expect(find.text('\u22121300'), findsOneWidget, reason: 'la ligne 0 de Bob');
+      // La grille de référence elle-même n'a pas d'écart : 1 ligne de 1000, pas de signe.
+      expect(find.text('\u2212300'), findsNothing);
+    });
+
+    testWidgets('sans joueur de référence, aucun écart', (tester) async {
+      await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice').applySuccessfulTurn(1000)]));
+      expect(find.textContaining('\u2212'), findsNothing);
+    });
   });
 }

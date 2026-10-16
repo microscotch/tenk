@@ -369,16 +369,13 @@ class _PlayerRow extends StatelessWidget {
           Flexible(
             child: Tooltip(
               message: l10n.radarGapTooltip,
-              child: Text(' · ${_signed(difference)}', style: muted, maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(' · ${signedGap(difference)}', style: muted, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ),
       ],
     );
   }
 }
-
-/// Un écart signé, le moins typographique (−950) plutôt que le trait d'union.
-String _signed(int value) => value < 0 ? '\u2212${-value}' : (value == 0 ? '0' : '+$value');
 
 /// Le blason d'un joueur, et la bulle de ce qu'il vient d'exprimer, quand il y
 /// en a une : pointe sur le bord droit du blason, centrée sur lui.

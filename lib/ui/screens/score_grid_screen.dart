@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
+import '../../game/score_radar.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 
-/// Largeur minimale d'une colonne pour que le score (jusqu'à 5 chiffres,
-/// icônes tiret/courant comprises) ne soit jamais contraint à passer à la
-/// ligne.
-const double _minColumnWidth = 108.0;
+/// Nombre de grilles par page : chacune occupe la moitié de la largeur.
+const int _columnsPerPage = 2;
 
 /// Grille de score complète : une colonne par joueur (son blason en entête,
 /// couleurs désambiguïsées entre joueurs de la même partie — voir
@@ -17,10 +16,14 @@ const double _minColumnWidth = 108.0;
 /// ligne), avec tous ses tours validés dans l'ordre, le tiret ou le barré
 /// propre à chaque ligne, et la ligne courante mise en évidence.
 ///
-/// Les colonnes s'étalent pour remplir toute la largeur disponible, sans
-/// jamais descendre sous [_minColumnWidth] ; si tous les joueurs ne tiennent
-/// pas sur une page à cette largeur minimale, elles sont réparties sur
-/// plusieurs pages navigables façon carrousel (glissement + points de page).
+/// Chaque colonne occupe la moitié de la largeur : deux grilles au plus par
+/// page, une colonne seule étant centrée. Au-delà de deux joueurs, les
+/// colonnes sont réparties sur plusieurs pages navigables façon carrousel
+/// (glissement + points de page).
+///
+/// Les grilles se lisent depuis [reference] — le joueur dont c'est le tour, ou
+/// le gagnant d'une partie finie : sur chaque ligne d'un autre joueur, l'écart
+/// signé entre ce score et le total potentiel de [reference] ([potentialTotal]).
 class ScoreGridScreen extends StatefulWidget {
   /// Les joueurs dont la grille est affichée — tous, ou un seul quand on
   /// ouvre la grille depuis la ligne d'un joueur.
@@ -38,7 +41,13 @@ class ScoreGridScreen extends StatefulWidget {
   /// Par défaut [players], ce qui convient dès que la grille les montre tous.
   final List<Player>? roster;
 
-  const ScoreGridScreen({super.key, required this.players, this.roster});
+  /// Le joueur depuis qui se lisent les grilles. Nul : aucun écart affiché.
+  final Player? reference;
+
+  /// Son total potentiel (score + main en cours). Nul : son score seul.
+  final int? potentialTotal;
+
+  const ScoreGridScreen({super.key, required this.players, this.roster, this.reference, this.potentialTotal});
 
   @override
   State<ScoreGridScreen> createState() => _ScoreGridScreenState();
@@ -62,59 +71,64 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: LayoutBuilder(builder: (context, constraints) {
-            final columnsPerPage =
-                (constraints.maxWidth / _minColumnWidth).floor().clamp(1, widget.players.length);
-            final pageCount = (widget.players.length / columnsPerPage).ceil();
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const columnsPerPage = _columnsPerPage;
+              final pageCount = (widget.players.length / columnsPerPage).ceil();
 
-            if (pageCount <= 1) {
-              return _GridPage(
-                players: widget.players,
-                avatarColors: avatarColors,
-                start: 0,
-                end: widget.players.length,
-              );
-            }
+              if (pageCount <= 1) {
+                return _GridPage(
+                  players: widget.players,
+                  avatarColors: avatarColors,
+                  start: 0,
+                  end: widget.players.length,
+                  reference: widget.reference,
+                  potentialTotal: widget.potentialTotal,
+                );
+              }
 
-            return Column(
-              children: [
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: pageCount,
-                    onPageChanged: (p) => setState(() => _page = p),
-                    itemBuilder: (context, pageIndex) {
-                      final start = pageIndex * columnsPerPage;
-                      final end = (start + columnsPerPage).clamp(0, widget.players.length);
-                      return _GridPage(
-                        players: widget.players,
-                        avatarColors: avatarColors,
-                        start: start,
-                        end: end,
-                      );
-                    },
+              return Column(
+                children: [
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: pageCount,
+                      onPageChanged: (p) => setState(() => _page = p),
+                      itemBuilder: (context, pageIndex) {
+                        final start = pageIndex * columnsPerPage;
+                        final end = (start + columnsPerPage).clamp(0, widget.players.length);
+                        return _GridPage(
+                          players: widget.players,
+                          avatarColors: avatarColors,
+                          start: start,
+                          end: end,
+                          reference: widget.reference,
+                          potentialTotal: widget.potentialTotal,
+                        );
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < pageCount; i++)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        child: Icon(
-                          Icons.circle,
-                          size: 8,
-                          color: i == _page
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outlineVariant,
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < pageCount; i++)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: i == _page
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outlineVariant,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
-              ],
-            );
-          }),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -122,29 +136,51 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
 }
 
 /// Une page du carrousel : les colonnes des joueurs [start] (inclus) à [end]
-/// (exclus), étalées pour remplir toute la largeur disponible.
+/// (exclus), chacune sur la moitié de la largeur, centrées ensemble (une
+/// colonne seule se retrouve donc au milieu).
 class _GridPage extends StatelessWidget {
   final List<Player> players;
   final Map<String, Color> avatarColors;
   final int start;
   final int end;
+  final Player? reference;
+  final int? potentialTotal;
 
-  const _GridPage({required this.players, required this.avatarColors, required this.start, required this.end});
+  const _GridPage({
+    required this.players,
+    required this.avatarColors,
+    required this.start,
+    required this.end,
+    required this.reference,
+    required this.potentialTotal,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = start; i < end; i++)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _PlayerColumn(player: players[i], avatarColors: avatarColors),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = start; i < end; i++)
+              SizedBox(
+                width: constraints.maxWidth / _columnsPerPage,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _PlayerColumn(
+                    player: players[i],
+                    avatarColors: avatarColors,
+                    // L'écart se lit depuis le joueur de référence : sa propre
+                    // grille n'en porte pas.
+                    gapFrom: reference != null && reference!.name != players[i].name
+                        ? (potentialTotal ?? reference!.totalScore)
+                        : null,
+                  ),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -154,7 +190,11 @@ class _PlayerColumn extends StatelessWidget {
   final Player player;
   final Map<String, Color> avatarColors;
 
-  const _PlayerColumn({required this.player, required this.avatarColors});
+  /// Le total potentiel du joueur de référence, quand cette colonne n'est pas
+  /// la sienne : chaque ligne affiche alors son écart avec lui.
+  final int? gapFrom;
+
+  const _PlayerColumn({required this.player, required this.avatarColors, required this.gapFrom});
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +212,7 @@ class _PlayerColumn extends StatelessWidget {
               entry: player.grid[i],
               isCurrent: i == player.currentIndex,
               avatarColors: avatarColors,
+              gapFrom: gapFrom,
             ),
           ),
       ],
@@ -183,12 +224,9 @@ class _ScoreRow extends StatelessWidget {
   final ScoreEntry entry;
   final bool isCurrent;
   final Map<String, Color> avatarColors;
+  final int? gapFrom;
 
-  const _ScoreRow({
-    required this.entry,
-    required this.isCurrent,
-    required this.avatarColors,
-  });
+  const _ScoreRow({required this.entry, required this.isCurrent, required this.avatarColors, required this.gapFrom});
 
   @override
   Widget build(BuildContext context) {
@@ -196,18 +234,18 @@ class _ScoreRow extends StatelessWidget {
     final backgroundColor = entry.isBarred
         ? colorScheme.errorContainer
         : isCurrent
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest;
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerHighest;
     final borderColor = entry.isBarred
         ? colorScheme.error
         : isCurrent
-            ? colorScheme.primary
-            : colorScheme.outlineVariant;
+        ? colorScheme.primary
+        : colorScheme.outlineVariant;
     final textColor = entry.isBarred ? colorScheme.onErrorContainer : colorScheme.onSurface;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: backgroundColor,
         border: Border.all(color: borderColor, width: isCurrent ? 2 : 1),
@@ -240,6 +278,14 @@ class _ScoreRow extends StatelessWidget {
           if (entry.hasTiret && !entry.isBarred) ...[
             const SizedBox(width: 6),
             const Icon(Icons.remove, size: 14, color: Colors.orange),
+          ],
+          // L'écart avec le total potentiel du joueur de référence, à droite.
+          if (gapFrom != null) ...[
+            const Spacer(),
+            Text(
+              signedGap(entry.value - gapFrom!),
+              style: TextStyle(fontSize: 12, color: textColor.withValues(alpha: 0.7)),
+            ),
           ],
         ],
       ),

@@ -518,6 +518,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
   Timer? _pendingTimer;
   VoidCallback? _pendingAction;
 
+  /// Le total potentiel du joueur courant au dernier affichage (voir `build`) :
+  /// les grilles de score s'ouvrent depuis lui (voir [_gridScreen]).
+  int? _gridPotential;
+
   /// Les scores affichés dans les libellés (zone "Piste" et zone "Main
   /// courante") ne doivent se rafraîchir qu'une fois les dés du lancer en
   /// attente immobilisés (fin de l'animation de lancer, voir
@@ -1606,6 +1610,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // permis (main pleine) : rouge s'il finit par 50, vert s'il barre un
     // autre joueur et que la main peut être encaissée, blanc sinon.
     final potentialTotal = engine.currentPlayer.totalScore + liveScore;
+    _gridPotential = potentialTotal;
     final Color potentialColor;
     if (potentialTotal % 100 == 50) {
       potentialColor = Colors.redAccent;
@@ -1985,7 +1990,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         onSelected: (open) => open(),
         itemBuilder: (_) => [
           item(Icons.grid_on, l10n.scoreGridLabel, () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => ScoreGridScreen(players: players)));
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => _gridScreen(players)));
           }),
           item(Icons.show_chart, l10n.scoreChartTitle, () {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScoreChartScreen()));
@@ -2035,13 +2040,21 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void _openPlayerGrid(Player player) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ScoreGridScreen(
-          players: [player],
-          // La grille ne montre que ce joueur, mais sa couleur de blason se
-          // décide sur la table entière (voir [ScoreGridScreen.roster]).
-          roster: ref.read(gameProvider)?.players,
-        ),
+        builder: (_) => _gridScreen([player]),
       ),
+    );
+  }
+
+  /// La grille de score de [players], lue depuis le joueur dont c'est le tour
+  /// et son total potentiel. Même seul à l'écran, un joueur garde sa couleur
+  /// de blason de la table entière (voir [ScoreGridScreen.roster]).
+  ScoreGridScreen _gridScreen(List<Player> players) {
+    final engine = ref.read(gameProvider);
+    return ScoreGridScreen(
+      players: players,
+      roster: engine?.players,
+      reference: engine?.currentPlayer,
+      potentialTotal: _gridPotential,
     );
   }
 
@@ -2198,7 +2211,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       icon: const Icon(Icons.grid_on),
       tooltip: l10n.scoreGridLabel,
       onPressed: () => Navigator.of(dialogContext).push(
-        MaterialPageRoute(builder: (_) => ScoreGridScreen(players: engine.players)),
+        MaterialPageRoute(builder: (_) => _gridScreen(engine.players)),
       ),
     );
     final chart = IconButton(

@@ -207,6 +207,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `radarDifference`: signed gap, their score minus the potential when the potential is above it, otherwise
   `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
   whether stopping on the potential would strike someone out (the hand label's green).
+  `signedGap` writes the sign. The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
+  player with `potentialTotal` (`GameScreen._gridScreen`, fed by `_gridPotential`, set at each build), the winner on
+  the game-over screen: each grid takes **half the width** (two per page, a lone column centred, carousel beyond), a
+  row is score + state (tiret, or struck with the striker's crest) left-aligned, and on every grid but the
+  reference's, `signedGap(line − potential)` at the right.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.
