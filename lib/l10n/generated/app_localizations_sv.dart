@@ -628,6 +628,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get radarGapTooltip => 'Avstånd till summan av den pågående handen';
 
   @override
+  String gridGapAhead(int points) {
+    return '$points före';
+  }
+
+  @override
+  String gridGapBehind(int points) {
+    return '$points efter';
+  }
+
+  @override
   String get previousScoreHadTiretTooltip => 'Föregående poäng hade ett streck';
 
   @override

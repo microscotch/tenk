@@ -208,10 +208,14 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
   whether stopping on the potential would strike someone out (the hand label's green).
   `signedGap` writes the sign. The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
-  player with `potentialTotal` (`GameScreen._gridScreen`, fed by `_gridPotential`, set at each build), the winner on
-  the game-over screen: each grid takes **half the width** (two per page, a lone column centred, carousel beyond), a
-  row is score + state (tiret, or struck with the striker's crest) left-aligned, and on every grid but the
-  reference's, `signedGap(line − potential)` at the right.
+  player with `potentialTotal` and `handBankable` (`GameScreen._gridScreen`, fed by `_gridPotential` / `_gridBankable`,
+  set at each build), the winner on the game-over screen: each grid takes **half the width** (two per page, a lone
+  column centred, carousel beyond). Its header is the crest + `displayNames` name (ellipsised in the full grid; whole
+  and centred over the full width above a lone grid), a row is score + state (tiret, or struck with the striker's
+  crest) left-aligned, and on every non-barred line of the other players the gap to the potential at the right:
+  absolute value + "devant" / "derrière" (`gridGapAhead` / `gridGapBehind`; a plain "0" when nil), the score in red
+  when the gap is nil and the hand can be banked. In the player list, the right-hand score/gap keeps its own width
+  (never a `Flexible`): the crest, name and medal on the left take the rest.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.

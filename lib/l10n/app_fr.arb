@@ -601,6 +601,10 @@
   "@radarTargetsTooltip": {"description": "Infobulle du radar d'un adversaire dans la liste des joueurs : ses lignes de score que le joueur courant barrerait en s'arrêtant sur elles."},
   "radarGapTooltip": "Écart avec le total de la main en cours",
   "@radarGapTooltip": {"description": "Infobulle de l'écart affiché pour un adversaire quand le joueur courant ne peut plus barrer aucune de ses lignes (son score − total potentiel)."},
+  "gridGapAhead": "{points} devant",
+  "@gridGapAhead": {"description": "Grille de scores, ligne d'un adversaire : de combien son score devance le total potentiel du joueur courant.", "placeholders": {"points": {"type": "int"}}},
+  "gridGapBehind": "{points} derrière",
+  "@gridGapBehind": {"description": "Grille de scores, ligne d'un adversaire : de combien son score est derrière le total potentiel du joueur courant.", "placeholders": {"points": {"type": "int"}}},
 
   "previousScoreHadTiretTooltip": "Le score précédent portait un tiret",
   "@previousScoreHadTiretTooltip": {"description": "Infobulle indiquant que la ligne de score précédente portait un tiret."},

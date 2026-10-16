@@ -88,8 +88,9 @@ une partie rejouable à l'identique.
   Sur celle d'un adversaire, `radarDifference` donne l'écart signé : son score moins le potentiel quand celui-ci le
   dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; `signedGap` en écrit le signe.
   La grille de scores complète (`ScoreGridScreen`) reprend le même écart sur chaque ligne des autres joueurs, lu depuis
-  `reference` (le joueur courant avec son total potentiel, le gagnant d'une partie finie) ; chaque grille y prend la
-  moitié de la largeur, deux par page. `barsAnotherPlayer` dit
+  `reference` (le joueur courant avec son total potentiel, le gagnant d'une partie finie), en valeur absolue suivie de
+  « devant » / « derrière » (sauf sur une ligne barrée) ; chaque grille y prend la moitié de la largeur, deux par
+  page, sous un en-tête blason + nom. `barsAnotherPlayer` dit
   si s'arrêter sur le potentiel barrerait quelqu'un (le vert du liseré de la main). Fonctions pures, sans état :
   l'écran les recalcule à chaque changement de main.
 - **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une partie mais sept leçons (`tutorialLessons`), de la

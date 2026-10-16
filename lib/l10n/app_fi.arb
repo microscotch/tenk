@@ -69,6 +69,8 @@
   "tiretTooltip": "Viiva: toinen epäonnistuminen viivaa pisteet yli",
   "radarTargetsTooltip": "Pisteet, jotka käynnissä oleva käsi voisi yliviivata",
   "radarGapTooltip": "Ero käynnissä olevan käden summaan",
+  "gridGapAhead": "{points} edellä",
+  "gridGapBehind": "{points} jäljessä",
   "previousScoreHadTiretTooltip": "Edellisissä pisteissä oli viiva",
   "helpTooltip": "Pelisäännöt",
   "aboutTooltip": "Tietoja",

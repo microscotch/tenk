@@ -69,6 +69,8 @@
   "tiretTooltip": "Strek: en ny bom vil stryke poengsummen",
   "radarTargetsTooltip": "Poengsummer den pågående hånden kan stryke",
   "radarGapTooltip": "Avstand til summen av den pågående hånden",
+  "gridGapAhead": "{points} foran",
+  "gridGapBehind": "{points} bak",
   "previousScoreHadTiretTooltip": "Forrige poengsum hadde en strek",
   "helpTooltip": "Spilleregler",
   "aboutTooltip": "Om",

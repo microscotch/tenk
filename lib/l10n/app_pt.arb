@@ -69,6 +69,8 @@
   "tiretTooltip": "Traço: um segundo rebentamento risca a pontuação",
   "radarTargetsTooltip": "Pontuações que a mão em curso poderia riscar",
   "radarGapTooltip": "Diferença para o total da mão em curso",
+  "gridGapAhead": "{points} à frente",
+  "gridGapBehind": "{points} atrás",
   "previousScoreHadTiretTooltip": "A pontuação anterior tinha um traço",
   "helpTooltip": "Regras do jogo",
   "aboutTooltip": "Sobre",

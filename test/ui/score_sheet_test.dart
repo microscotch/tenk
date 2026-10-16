@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/game/player.dart';
@@ -285,6 +286,18 @@ void main() {
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
       await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
       expect(find.descendant(of: _rowOf('Bob'), matching: find.text(' · \u2212950')), findsOneWidget);
+    });
+
+    testWidgets('le nom d\'un adversaire n\'est pas rogné tant qu\'il y a la place : le score ne prend que sa largeur',
+        (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      // La police des tests est large : ce nom court tient largement, avec la
+      // médaille, le score et l'écart, dans cette largeur.
+      await tester.binding.setSurfaceSize(const Size(360, 800));
+      final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
+      final other = Player(name: 'Alex').applySuccessfulTurn(7800);
+      await pumpSheet(tester, [me, other], current: 0, potential: 2750);
+      expect(tester.renderObject<RenderParagraph>(find.text('Alex')).didExceedMaxLines, isFalse);
     });
 
     testWidgets('les indices d\'écart de 200 ne restent que sur la ligne du joueur courant', (tester) async {

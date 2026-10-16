@@ -69,6 +69,8 @@
   "tiretTooltip": "Черта: втори провал ще зачеркне резултата",
   "radarTargetsTooltip": "Резултати, които текущата ръка може да зачеркне",
   "radarGapTooltip": "Разлика до сбора на текущата ръка",
+  "gridGapAhead": "{points} напред",
+  "gridGapBehind": "{points} назад",
   "previousScoreHadTiretTooltip": "Предишният резултат имаше черта",
   "helpTooltip": "Правила на играта",
   "aboutTooltip": "Относно",

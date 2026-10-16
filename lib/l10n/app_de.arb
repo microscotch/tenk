@@ -69,6 +69,8 @@
   "tiretTooltip": "Strich: Ein zweiter Fehlwurf streicht die Punktzahl",
   "radarTargetsTooltip": "Punktestände, die die laufende Hand streichen könnte",
   "radarGapTooltip": "Abstand zur Summe der laufenden Hand",
+  "gridGapAhead": "{points} vorn",
+  "gridGapBehind": "{points} hinten",
   "previousScoreHadTiretTooltip": "Die vorige Punktzahl trug einen Strich",
   "helpTooltip": "Spielregeln",
   "aboutTooltip": "Über",

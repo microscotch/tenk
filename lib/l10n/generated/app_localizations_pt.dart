@@ -629,6 +629,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get radarGapTooltip => 'Diferença para o total da mão em curso';
 
   @override
+  String gridGapAhead(int points) {
+    return '$points à frente';
+  }
+
+  @override
+  String gridGapBehind(int points) {
+    return '$points atrás';
+  }
+
+  @override
   String get previousScoreHadTiretTooltip =>
       'A pontuação anterior tinha um traço';
 

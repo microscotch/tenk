@@ -69,6 +69,8 @@
   "tiretTooltip": "Guion: un segundo pase tachará la puntuación",
   "radarTargetsTooltip": "Puntuaciones que la mano en curso podría tachar",
   "radarGapTooltip": "Diferencia con el total de la mano en curso",
+  "gridGapAhead": "{points} por delante",
+  "gridGapBehind": "{points} por detrás",
   "previousScoreHadTiretTooltip": "La puntuación anterior tenía un guion",
   "helpTooltip": "Reglas del juego",
   "aboutTooltip": "Acerca de",

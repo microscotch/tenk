@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../game/player.dart';
-import '../../game/score_radar.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/player_providers.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 
@@ -23,7 +23,13 @@ const int _columnsPerPage = 2;
 ///
 /// Les grilles se lisent depuis [reference] — le joueur dont c'est le tour, ou
 /// le gagnant d'une partie finie : sur chaque ligne d'un autre joueur, l'écart
-/// signé entre ce score et le total potentiel de [reference] ([potentialTotal]).
+/// entre ce score et le total potentiel de [reference] ([potentialTotal]), en
+/// valeur absolue suivie de « devant » ou « derrière » (jamais sur une ligne
+/// barrée).
+///
+/// En tête de chaque colonne : le blason et le nom (le surnom d'abord),
+/// tronqué à la largeur de la colonne ; une grille seule le montre en entier,
+/// centré sur toute la largeur de l'écran, au-dessus d'elle.
 class ScoreGridScreen extends StatefulWidget {
   /// Les joueurs dont la grille est affichée — tous, ou un seul quand on
   /// ouvre la grille depuis la ligne d'un joueur.
@@ -47,7 +53,24 @@ class ScoreGridScreen extends StatefulWidget {
   /// Son total potentiel (score + main en cours). Nul : son score seul.
   final int? potentialTotal;
 
-  const ScoreGridScreen({super.key, required this.players, this.roster, this.reference, this.potentialTotal});
+  /// Noms à afficher, par nom en jeu (voir `displayNamesProvider`) : le surnom
+  /// s'il y en a un. Un joueur absent de la table garde son nom.
+  final Map<String, String> displayNames;
+
+  /// Vrai quand la main du joueur de référence peut être encaissée : une ligne
+  /// d'un autre joueur égale à son total potentiel passe alors en rouge — s'il
+  /// s'arrête, elle est barrée.
+  final bool handBankable;
+
+  const ScoreGridScreen({
+    super.key,
+    required this.players,
+    this.roster,
+    this.reference,
+    this.potentialTotal,
+    this.displayNames = const {},
+    this.handBankable = false,
+  });
 
   @override
   State<ScoreGridScreen> createState() => _ScoreGridScreenState();
@@ -84,6 +107,8 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
                   end: widget.players.length,
                   reference: widget.reference,
                   potentialTotal: widget.potentialTotal,
+                  displayNames: widget.displayNames,
+                  handBankable: widget.handBankable,
                 );
               }
 
@@ -104,6 +129,8 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
                           end: end,
                           reference: widget.reference,
                           potentialTotal: widget.potentialTotal,
+                          displayNames: widget.displayNames,
+                          handBankable: widget.handBankable,
                         );
                       },
                     ),
@@ -145,6 +172,8 @@ class _GridPage extends StatelessWidget {
   final int end;
   final Player? reference;
   final int? potentialTotal;
+  final Map<String, String> displayNames;
+  final bool handBankable;
 
   const _GridPage({
     required this.players,
@@ -153,32 +182,56 @@ class _GridPage extends StatelessWidget {
     required this.end,
     required this.reference,
     required this.potentialTotal,
+    required this.displayNames,
+    required this.handBankable,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Une grille seule (ouverte depuis la ligne d'un joueur) : son nom en
+    // entier, centré sur toute la largeur, au-dessus de la grille.
+    final solo = players.length == 1;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (var i = start; i < end; i++)
-              SizedBox(
-                width: constraints.maxWidth / _columnsPerPage,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: _PlayerColumn(
-                    player: players[i],
-                    avatarColors: avatarColors,
-                    // L'écart se lit depuis le joueur de référence : sa propre
-                    // grille n'en porte pas.
-                    gapFrom: reference != null && reference!.name != players[i].name
-                        ? (potentialTotal ?? reference!.totalScore)
-                        : null,
-                  ),
+            if (solo)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _PlayerHeader(
+                  name: players.first.name,
+                  displayName: displayNameOf(displayNames, players.first.name),
+                  color: avatarColors[players.first.name],
+                  size: 36,
+                  truncate: false,
                 ),
               ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = start; i < end; i++)
+                  SizedBox(
+                    width: constraints.maxWidth / _columnsPerPage,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: _PlayerColumn(
+                        player: players[i],
+                        displayName: displayNameOf(displayNames, players[i].name),
+                        avatarColors: avatarColors,
+                        showHeader: !solo,
+                        handBankable: handBankable,
+                        // L'écart se lit depuis le joueur de référence : sa
+                        // propre grille n'en porte pas.
+                        gapFrom: reference != null && reference!.name != players[i].name
+                            ? (potentialTotal ?? reference!.totalScore)
+                            : null,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -186,25 +239,78 @@ class _GridPage extends StatelessWidget {
   }
 }
 
+/// Le blason d'un joueur suivi de son nom, centrés : tronqué (points de
+/// suspension) à la largeur disponible si [truncate], entier sinon.
+class _PlayerHeader extends StatelessWidget {
+  final String name;
+  final String displayName;
+  final Color? color;
+  final double size;
+  final bool truncate;
+
+  const _PlayerHeader({
+    required this.name,
+    required this.displayName,
+    required this.color,
+    required this.size,
+    required this.truncate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = Text(
+      displayName,
+      textAlign: TextAlign.center,
+      maxLines: truncate ? 1 : null,
+      overflow: truncate ? TextOverflow.ellipsis : TextOverflow.visible,
+      style: const TextStyle(fontWeight: FontWeight.bold),
+    );
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        PlayerAvatarWidget(name: name, size: size, color: color),
+        const SizedBox(width: 8),
+        Flexible(child: label),
+      ],
+    );
+  }
+}
+
 class _PlayerColumn extends StatelessWidget {
   final Player player;
+  final String displayName;
   final Map<String, Color> avatarColors;
+  final bool showHeader;
+  final bool handBankable;
 
   /// Le total potentiel du joueur de référence, quand cette colonne n'est pas
   /// la sienne : chaque ligne affiche alors son écart avec lui.
   final int? gapFrom;
 
-  const _PlayerColumn({required this.player, required this.avatarColors, required this.gapFrom});
+  const _PlayerColumn({
+    required this.player,
+    required this.displayName,
+    required this.avatarColors,
+    required this.showHeader,
+    required this.handBankable,
+    required this.gapFrom,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: PlayerAvatarWidget(name: player.name, size: 36, color: avatarColors[player.name]),
-        ),
-        const SizedBox(height: 8),
+        if (showHeader) ...[
+          _PlayerHeader(
+            name: player.name,
+            displayName: displayName,
+            color: avatarColors[player.name],
+            size: 28,
+            truncate: true,
+          ),
+          const SizedBox(height: 8),
+        ],
         for (var i = player.grid.length - 1; i >= 0; i--)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
@@ -213,6 +319,7 @@ class _PlayerColumn extends StatelessWidget {
               isCurrent: i == player.currentIndex,
               avatarColors: avatarColors,
               gapFrom: gapFrom,
+              handBankable: handBankable,
             ),
           ),
       ],
@@ -225,8 +332,15 @@ class _ScoreRow extends StatelessWidget {
   final bool isCurrent;
   final Map<String, Color> avatarColors;
   final int? gapFrom;
+  final bool handBankable;
 
-  const _ScoreRow({required this.entry, required this.isCurrent, required this.avatarColors, required this.gapFrom});
+  const _ScoreRow({
+    required this.entry,
+    required this.isCurrent,
+    required this.avatarColors,
+    required this.gapFrom,
+    required this.handBankable,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -242,6 +356,10 @@ class _ScoreRow extends StatelessWidget {
         ? colorScheme.primary
         : colorScheme.outlineVariant;
     final textColor = entry.isBarred ? colorScheme.onErrorContainer : colorScheme.onSurface;
+    // L'écart avec le total potentiel du joueur de référence (jamais sur une
+    // ligne barrée). Nul et main prenable : s'arrêter barrerait cette ligne.
+    final gap = (gapFrom == null || entry.isBarred) ? null : entry.value - gapFrom!;
+    final strikable = gap == 0 && handBankable;
 
     return Container(
       width: double.infinity,
@@ -259,7 +377,7 @@ class _ScoreRow extends StatelessWidget {
               decoration: entry.isBarred ? TextDecoration.lineThrough : null,
               decorationThickness: 2,
               fontWeight: FontWeight.w600,
-              color: textColor,
+              color: strikable ? Colors.redAccent : textColor,
             ),
           ),
           // Le blason de l'AUTEUR du barrage (pas forcément le propriétaire
@@ -279,11 +397,14 @@ class _ScoreRow extends StatelessWidget {
             const SizedBox(width: 6),
             const Icon(Icons.remove, size: 14, color: Colors.orange),
           ],
-          // L'écart avec le total potentiel du joueur de référence, à droite.
-          if (gapFrom != null) ...[
+          if (gap != null) ...[
             const Spacer(),
             Text(
-              signedGap(entry.value - gapFrom!),
+              gap == 0
+                  ? '0'
+                  : gap > 0
+                  ? AppLocalizations.of(context).gridGapAhead(gap)
+                  : AppLocalizations.of(context).gridGapBehind(-gap),
               style: TextStyle(fontSize: 12, color: textColor.withValues(alpha: 0.7)),
             ),
           ],

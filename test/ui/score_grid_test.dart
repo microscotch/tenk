@@ -256,42 +256,95 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
         ));
 
+    Finder rowOf(String score) => find.ancestor(of: find.text(score), matching: find.byType(Container)).first;
+
     testWidgets('une grille seule occupe la moitié de la largeur et se centre', (tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.binding.setSurfaceSize(const Size(400, 800));
       await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice').applySuccessfulTurn(500)]));
 
-      final column = tester.getRect(find.byType(PlayerAvatarWidget).first);
-      expect(column.center.dx, closeTo(200, 1), reason: 'centrée horizontalement');
-      final row = tester.getRect(find.text('500').first);
-      expect(row.left, lessThan(200), reason: 'le score est aligné à gauche de sa colonne');
+      final row = tester.getRect(rowOf('500'));
+      expect(row.center.dx, closeTo(200, 1), reason: 'centrée horizontalement');
+      expect(row.width, closeTo(184 - 8, 1), reason: 'la moitié de la largeur utile');
+      expect(tester.getTopLeft(find.text('500')).dx - row.left, lessThan(20), reason: 'score aligné à gauche');
     });
 
     testWidgets('deux grilles se partagent chacune la moitié de la largeur', (tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.binding.setSurfaceSize(const Size(400, 800));
-      await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice'), Player(name: 'Bob')]));
+      await pump(
+        tester,
+        ScoreGridScreen(players: [Player(name: 'Alice').applySuccessfulTurn(500), Player(name: 'Bob').applySuccessfulTurn(700)]),
+      );
 
-      expect(tester.getCenter(find.byType(PlayerAvatarWidget).first).dx, closeTo(108, 1));
-      expect(tester.getCenter(find.byType(PlayerAvatarWidget).last).dx, closeTo(292, 1));
+      expect(tester.getRect(rowOf('500')).center.dx, closeTo(108, 1));
+      expect(tester.getRect(rowOf('700')).center.dx, closeTo(292, 1));
     });
 
-    testWidgets('les lignes des autres joueurs portent leur écart avec le total potentiel du joueur de référence',
-        (tester) async {
-      final alice = Player(name: 'Alice').applySuccessfulTurn(1000);
-      final bob = Player(name: 'Bob').applySuccessfulTurn(500).applySuccessfulTurn(700); // 500, 1200
-      await pump(tester, ScoreGridScreen(players: [alice, bob], reference: alice, potentialTotal: 1300));
+    testWidgets('chaque colonne porte le blason et le surnom, le nom à défaut', (tester) async {
+      await pump(
+        tester,
+        ScoreGridScreen(players: [Player(name: 'Alice'), Player(name: 'Bob')], displayNames: const {'Alice': 'Lili'}),
+      );
+      expect(find.text('Lili'), findsOneWidget);
+      expect(find.text('Alice'), findsNothing);
+      expect(find.text('Bob'), findsOneWidget);
+    });
 
-      expect(find.text('\u2212100'), findsOneWidget, reason: '1200 - 1300');
-      expect(find.text('\u2212800'), findsOneWidget, reason: '500 - 1300');
-      expect(find.text('\u22121300'), findsOneWidget, reason: 'la ligne 0 de Bob');
-      // La grille de référence elle-même n'a pas d'écart : 1 ligne de 1000, pas de signe.
-      expect(find.text('\u2212300'), findsNothing);
+    testWidgets('un nom trop long est tronqué dans la grille complète, entier et centré dans une grille seule',
+        (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      const long = 'Un pseudo vraiment très très long';
+      await pump(
+        tester,
+        ScoreGridScreen(players: [Player(name: 'Alice'), Player(name: 'Bob')], displayNames: const {'Alice': long}),
+      );
+      expect(tester.widget<Text>(find.text(long)).overflow, TextOverflow.ellipsis);
+
+      await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice')], displayNames: const {'Alice': long}));
+      expect(tester.widget<Text>(find.text(long)).overflow, TextOverflow.visible);
+      final header = tester.getRect(find.text(long));
+      final avatar = tester.getRect(find.byType(PlayerAvatarWidget));
+      expect((avatar.left + header.right) / 2, closeTo(200, 2), reason: 'blason + nom centrés sur tout l\'écran');
+    });
+
+    testWidgets('l\'écart avec le total potentiel : valeur absolue, devant ou derrière', (tester) async {
+      final alice = Player(name: 'Alice').applySuccessfulTurn(1000);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(500).applySuccessfulTurn(700); // 0, 500, 1200
+      await pump(tester, ScoreGridScreen(players: [alice, bob], reference: alice, potentialTotal: 1000));
+
+      expect(find.text('200 devant'), findsOneWidget, reason: '1200 - 1000');
+      expect(find.text('500 derrière'), findsOneWidget, reason: '500 - 1000');
+      expect(find.text('1000 derrière'), findsOneWidget, reason: 'la ligne 0 de Bob');
+    });
+
+    testWidgets('pas d\'écart sur une ligne barrée', (tester) async {
+      final alice = Player(name: 'Alice').applySuccessfulTurn(1000);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(500).applyBust().applyBust(); // 500 barrée
+      await pump(tester, ScoreGridScreen(players: [alice, bob], reference: alice, potentialTotal: 1000));
+
+      expect(find.text('500 derrière'), findsNothing);
+      expect(find.text('1000 derrière'), findsOneWidget, reason: 'seule la ligne 0, non barrée, garde son écart');
+    });
+
+    testWidgets('écart nul : le score passe en rouge seulement si la main est prenable', (tester) async {
+      final alice = Player(name: 'Alice').applySuccessfulTurn(1000);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(1200);
+      Color? colorOf() => tester.widget<Text>(find.text('1200')).style?.color;
+
+      await pump(tester, ScoreGridScreen(players: [alice, bob], reference: alice, potentialTotal: 1200));
+      expect(find.text('0'), findsWidgets);
+      expect(colorOf(), isNot(Colors.redAccent), reason: 'main non prenable : pas d\'alerte');
+
+      await pump(tester, ScoreGridScreen(players: [alice, bob], reference: alice, potentialTotal: 1200, handBankable: true));
+      expect(colorOf(), Colors.redAccent);
     });
 
     testWidgets('sans joueur de référence, aucun écart', (tester) async {
       await pump(tester, ScoreGridScreen(players: [Player(name: 'Alice').applySuccessfulTurn(1000)]));
-      expect(find.textContaining('\u2212'), findsNothing);
+      expect(find.textContaining('devant'), findsNothing);
+      expect(find.textContaining('derrière'), findsNothing);
     });
   });
 }

@@ -69,6 +69,8 @@
   "tiretTooltip": "Streck: ett andra bom kommer att stryka poängen",
   "radarTargetsTooltip": "Poäng som den pågående handen kan stryka",
   "radarGapTooltip": "Avstånd till summan av den pågående handen",
+  "gridGapAhead": "{points} före",
+  "gridGapBehind": "{points} efter",
   "previousScoreHadTiretTooltip": "Föregående poäng hade ett streck",
   "helpTooltip": "Spelregler",
   "aboutTooltip": "Om",

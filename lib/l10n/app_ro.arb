@@ -69,6 +69,8 @@
   "tiretTooltip": "Liniuță: un al doilea eșec va anula scorul",
   "radarTargetsTooltip": "Scoruri pe care mâna curentă le-ar putea tăia",
   "radarGapTooltip": "Diferența față de totalul mâinii curente",
+  "gridGapAhead": "{points} înainte",
+  "gridGapBehind": "{points} în urmă",
   "previousScoreHadTiretTooltip": "Scorul anterior avea o liniuță",
   "helpTooltip": "Regulile jocului",
   "aboutTooltip": "Despre",

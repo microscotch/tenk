@@ -325,9 +325,9 @@ class _PlayerRow extends StatelessWidget {
                       ),
                     ],
                   ),
-                // Le radar peut prendre jusqu'aux trois quarts de la ligne avant
-                // d'être abrégé ; le nom cède le reste.
-                if (!isCurrent) Flexible(flex: 3, child: _radar(context)),
+                // Le score et l'écart gardent leur largeur : le nom, le blason et
+                // la médaille, à gauche, prennent tout le reste.
+                if (!isCurrent) _radar(context),
               ],
             ),
           ),
@@ -366,12 +366,7 @@ class _PlayerRow extends StatelessWidget {
           ),
         ),
         if (difference != null)
-          Flexible(
-            child: Tooltip(
-              message: l10n.radarGapTooltip,
-              child: Text(' · ${signedGap(difference)}', style: muted, maxLines: 1, overflow: TextOverflow.ellipsis),
-            ),
-          ),
+          Tooltip(message: l10n.radarGapTooltip, child: Text(' · ${signedGap(difference)}', style: muted)),
       ],
     );
   }

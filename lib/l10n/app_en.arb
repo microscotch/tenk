@@ -69,6 +69,8 @@
   "tiretTooltip": "Strike: a second bust will cross out the score",
   "radarTargetsTooltip": "Scores the current hand could strike out",
   "radarGapTooltip": "Gap to the current hand's total",
+  "gridGapAhead": "{points} ahead",
+  "gridGapBehind": "{points} behind",
   "previousScoreHadTiretTooltip": "The previous score had a strike",
   "helpTooltip": "Game rules",
   "aboutTooltip": "About",

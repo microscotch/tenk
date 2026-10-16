@@ -1118,6 +1118,18 @@ abstract class AppLocalizations {
   /// **'Écart avec le total de la main en cours'**
   String get radarGapTooltip;
 
+  /// Grille de scores, ligne d'un adversaire : de combien son score devance le total potentiel du joueur courant.
+  ///
+  /// In fr, this message translates to:
+  /// **'{points} devant'**
+  String gridGapAhead(int points);
+
+  /// Grille de scores, ligne d'un adversaire : de combien son score est derrière le total potentiel du joueur courant.
+  ///
+  /// In fr, this message translates to:
+  /// **'{points} derrière'**
+  String gridGapBehind(int points);
+
   /// Infobulle indiquant que la ligne de score précédente portait un tiret.
   ///
   /// In fr, this message translates to:

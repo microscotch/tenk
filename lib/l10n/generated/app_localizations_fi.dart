@@ -629,6 +629,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get radarGapTooltip => 'Ero käynnissä olevan käden summaan';
 
   @override
+  String gridGapAhead(int points) {
+    return '$points edellä';
+  }
+
+  @override
+  String gridGapBehind(int points) {
+    return '$points jäljessä';
+  }
+
+  @override
   String get previousScoreHadTiretTooltip => 'Edellisissä pisteissä oli viiva';
 
   @override

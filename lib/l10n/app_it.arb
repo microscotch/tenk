@@ -69,6 +69,8 @@
   "tiretTooltip": "Trattino: un secondo sballo cancellerà il punteggio",
   "radarTargetsTooltip": "Punteggi che la mano in corso potrebbe cancellare",
   "radarGapTooltip": "Differenza con il totale della mano in corso",
+  "gridGapAhead": "{points} avanti",
+  "gridGapBehind": "{points} indietro",
   "previousScoreHadTiretTooltip": "Il punteggio precedente aveva un trattino",
   "helpTooltip": "Regole del gioco",
   "aboutTooltip": "Informazioni",

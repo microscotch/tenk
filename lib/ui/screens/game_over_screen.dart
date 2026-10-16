@@ -204,7 +204,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => ScoreGridScreen(players: players, reference: players[winnerIndex]),
+                        builder: (_) => ScoreGridScreen(players: players, reference: players[winnerIndex], displayNames: displayNames),
                       ),
                     ),
                     icon: const Icon(Icons.grid_on),

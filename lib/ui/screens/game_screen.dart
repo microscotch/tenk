@@ -522,6 +522,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// les grilles de score s'ouvrent depuis lui (voir [_gridScreen]).
   int? _gridPotential;
 
+  /// Si cette main pouvait être encaissée à ce même affichage (voir `build`).
+  bool _gridBankable = false;
+
   /// Les scores affichés dans les libellés (zone "Piste" et zone "Main
   /// courante") ne doivent se rafraîchir qu'une fois les dés du lancer en
   /// attente immobilisés (fin de l'animation de lancer, voir
@@ -1611,6 +1614,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // autre joueur et que la main peut être encaissée, blanc sinon.
     final potentialTotal = engine.currentPlayer.totalScore + liveScore;
     _gridPotential = potentialTotal;
+    _gridBankable = _handBankable(engine, turn, showRollPreview);
     final Color potentialColor;
     if (potentialTotal % 100 == 50) {
       potentialColor = Colors.redAccent;
@@ -2055,6 +2059,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
       roster: engine?.players,
       reference: engine?.currentPlayer,
       potentialTotal: _gridPotential,
+      displayNames: ref.read(displayNamesProvider),
+      handBankable: _gridBankable,
     );
   }
 
