@@ -1124,9 +1124,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Syntetisk';
 
   @override
-  String get homeChipsHint => 'Trykk lenge på en sjetong for å se navnet.';
-
-  @override
   String get emoteThoughtful => 'Ettertenksom';
 
   @override

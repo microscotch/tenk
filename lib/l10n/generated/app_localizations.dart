@@ -1952,12 +1952,6 @@ abstract class AppLocalizations {
   /// **'Synthétique'**
   String get settingsDiceSoundSynthetic;
 
-  /// Ligne sous le menu en jetons de l'accueil : comment lire le nom d'un jeton.
-  ///
-  /// In fr, this message translates to:
-  /// **'Appui long sur un jeton : son nom s\'affiche.'**
-  String get homeChipsHint;
-
   /// Nom de l'émotion « songeur » (bouton d'émotion en ligne, lu par les lecteurs d'écran).
   ///
   /// In fr, this message translates to:

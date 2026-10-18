@@ -1120,9 +1120,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Synthetic';
 
   @override
-  String get homeChipsHint => 'Long-press a chip to see its name.';
-
-  @override
   String get emoteThoughtful => 'Thoughtful';
 
   @override

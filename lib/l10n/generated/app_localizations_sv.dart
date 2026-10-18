@@ -1122,9 +1122,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Syntetiskt';
 
   @override
-  String get homeChipsHint => 'Tryck länge på en mark för att se namnet.';
-
-  @override
   String get emoteThoughtful => 'Fundersam';
 
   @override

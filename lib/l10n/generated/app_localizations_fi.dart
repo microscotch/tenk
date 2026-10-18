@@ -1125,9 +1125,6 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Synteettinen';
 
   @override
-  String get homeChipsHint => 'Paina pelimerkkiä pitkään nähdäksesi sen nimen.';
-
-  @override
   String get emoteThoughtful => 'Mietteliäs';
 
   @override

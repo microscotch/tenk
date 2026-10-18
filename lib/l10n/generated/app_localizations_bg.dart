@@ -1121,9 +1121,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Синтетичен';
 
   @override
-  String get homeChipsHint => 'Задръжте чип, за да видите името му.';
-
-  @override
   String get emoteThoughtful => 'Замислен';
 
   @override

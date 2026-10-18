@@ -10,7 +10,7 @@ import '../navigation.dart';
 import '../route_observer.dart';
 import '../widgets/about_dialog.dart';
 import '../widgets/app_title.dart';
-import '../widgets/casino_chip.dart';
+import '../widgets/menu_die.dart';
 import '../widgets/update_banner.dart';
 import 'finished_games_screen.dart';
 import 'new_game_screen.dart';
@@ -154,10 +154,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
     // tout ce qu'elle portait d'autre (règles, paramètres, à propos) est devenu
     // un bouton, sous les autres.
     return Scaffold(
-      // Des jetons, et rien d'autre : un « rack » de 3×3 jetons de casino, une
-      // icône chacun, leur nom à l'appui long (voir [CasinoChip]). Le titre en
+      // Des dés, et rien d'autre : un rack de 3×3 dés vus de trois quarts, une
+      // icône sur chaque face et leur nom dessous (voir [MenuDie]). Le titre en
       // haut, le rack centré dans le reste de la hauteur (défilant si l'écran
-      // est trop bas), et une ligne qui dit comment lire les jetons.
+      // est trop bas).
       body: SafeArea(
         child: Column(
           children: [
@@ -195,14 +195,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
             ),
             // Une mise à jour arrivée sur le store, s'il y en a une.
             const UpdateBanner(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(
-                l10n.homeChipsHint,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white60),
-              ),
-            ),
           ],
         ),
       ),
@@ -221,18 +213,18 @@ class _MenuChip {
   const _MenuChip(this.icon, this.label, this.colors, this.onPressed);
 }
 
-typedef _ChipColors = ({Color color, Color edge, Color ink});
+typedef _ChipColors = ({Color color, Color ink});
 
 // Une couleur de jeton de casino par entrée du menu.
-const _ChipColors _chipGold = (color: Color(0xFFC9A227), edge: Color(0xFFFFF3C4), ink: Color(0xFF3A2A08));
-const _ChipColors _chipBlue = (color: Color(0xFF1F5FA8), edge: Color(0xFFEAF2FF), ink: Colors.white);
-const _ChipColors _chipGreen = (color: Color(0xFF2E7D4F), edge: Color(0xFFE9F7EE), ink: Colors.white);
-const _ChipColors _chipRed = (color: Color(0xFFB3261E), edge: Color(0xFFFFE9E6), ink: Colors.white);
-const _ChipColors _chipPurple = (color: Color(0xFF5E35B1), edge: Color(0xFFF1EAFF), ink: Colors.white);
-const _ChipColors _chipBlack = (color: Color(0xFF1B1B1B), edge: Color(0xFFE8D9B0), ink: Color(0xFFE8D9B0));
-const _ChipColors _chipWhite = (color: Color(0xFFEDE6D6), edge: Color(0xFFB3261E), ink: Color(0xFF3A2A08));
-const _ChipColors _chipGrey = (color: Color(0xFF6B6F73), edge: Color(0xFFF2F2F2), ink: Colors.white);
-const _ChipColors _chipOrange = (color: Color(0xFFD9732B), edge: Color(0xFFFFF0E2), ink: Colors.white);
+const _ChipColors _chipGold = (color: Color(0xFFC9A227), ink: Color(0xFF3A2A08));
+const _ChipColors _chipBlue = (color: Color(0xFF1F5FA8), ink: Colors.white);
+const _ChipColors _chipGreen = (color: Color(0xFF2E7D4F), ink: Colors.white);
+const _ChipColors _chipRed = (color: Color(0xFFB3261E), ink: Colors.white);
+const _ChipColors _chipPurple = (color: Color(0xFF5E35B1), ink: Colors.white);
+const _ChipColors _chipBlack = (color: Color(0xFF1B1B1B), ink: Color(0xFFE8D9B0));
+const _ChipColors _chipWhite = (color: Color(0xFFEDE6D6), ink: Color(0xFF3A2A08));
+const _ChipColors _chipGrey = (color: Color(0xFF6B6F73), ink: Colors.white);
+const _ChipColors _chipOrange = (color: Color(0xFFD9732B), ink: Colors.white);
 
 /// Le rack : les jetons du menu en grille de trois colonnes, quelle que soit la
 /// largeur de l'écran. Ils mesurent 96
@@ -246,13 +238,13 @@ class _ChipRack extends StatelessWidget {
   const _ChipRack({required this.chips, this.keys});
 
   static const _maxSize = 96.0;
-  static const _gap = 26.0;
+  static const _gap = 12.0;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = math.min(_maxSize, (constraints.maxWidth - 2 * _gap) / 3);
+        final size = math.min(_maxSize, (constraints.maxWidth - 2 * _gap) / 3 - MenuDie.captionMargin);
         // Toujours trois colonnes, même sur un écran large : c'est un rack, pas
         // une rangée qui s'étire.
         return Column(
@@ -265,12 +257,11 @@ class _ChipRack extends StatelessWidget {
                 spacing: _gap,
                 children: [
                   for (final (i, chip) in chips.indexed.skip(row).take(3))
-                    CasinoChip(
+                    MenuDie(
                       key: keys?[i],
                       icon: chip.icon,
                       label: chip.label,
                       color: chip.colors.color,
-                      edge: chip.colors.edge,
                       ink: chip.colors.ink,
                       size: size,
                       onPressed: chip.onPressed,

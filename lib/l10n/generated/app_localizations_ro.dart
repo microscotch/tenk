@@ -1132,9 +1132,6 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Sintetic';
 
   @override
-  String get homeChipsHint => 'Ține apăsat pe o fisă ca să-i vezi numele.';
-
-  @override
   String get emoteThoughtful => 'Gânditor';
 
   @override

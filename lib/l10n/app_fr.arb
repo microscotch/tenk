@@ -920,8 +920,6 @@
   "settingsDiceSoundSynthetic": "Synthétique",
   "@settingsDiceSoundSynthetic": {"description": "Bruit des dés : le son synthétique d'origine, le même pour tous les lancers."},
 
-  "homeChipsHint": "Appui long sur un jeton : son nom s'affiche.",
-  "@homeChipsHint": {"description": "Ligne sous le menu en jetons de l'accueil : comment lire le nom d'un jeton."},
 
   "emoteThoughtful": "Songeur",
   "@emoteThoughtful": {"description": "Nom de l'émotion « songeur » (bouton d'émotion en ligne, lu par les lecteurs d'écran)."},

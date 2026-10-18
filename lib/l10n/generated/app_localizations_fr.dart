@@ -1126,9 +1126,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Synthétique';
 
   @override
-  String get homeChipsHint => 'Appui long sur un jeton : son nom s\'affiche.';
-
-  @override
   String get emoteThoughtful => 'Songeur';
 
   @override

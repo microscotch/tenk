@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le10000/ui/widgets/emotes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
@@ -13,10 +12,9 @@ import 'package:le10000/ui/screens/paused_games_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
 import 'package:le10000/ui/screens/rules_screen.dart';
 import 'package:le10000/ui/screens/settings_screen.dart';
-import 'package:le10000/ui/screens/statistics_screen.dart';
 import 'package:le10000/ui/screens/setup_screen.dart';
 import 'package:le10000/ui/widgets/app_title.dart';
-import 'package:le10000/ui/widgets/casino_chip.dart';
+import 'package:le10000/ui/widgets/menu_die.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
@@ -72,10 +70,10 @@ void main() {
   /// Le bouton se cherche par prédicat et non par `find.byType` : celui-ci
   /// exige le type exact, alors que `FilledButton.icon`/`OutlinedButton.icon`
   /// construisent des sous-classes privées.
-  /// Le jeton du menu nommé [label] (son nom est son infobulle).
-  Finder chip(String label) => find.byWidgetPredicate((w) => w is CasinoChip && w.label == label);
+  /// Le dé du menu nommé [label].
+  Finder chip(String label) => find.byWidgetPredicate((w) => w is MenuDie && w.label == label);
 
-  bool isEnabled(WidgetTester tester, String label) => tester.widget<CasinoChip>(chip(label)).onPressed != null;
+  bool isEnabled(WidgetTester tester, String label) => tester.widget<MenuDie>(chip(label)).onPressed != null;
 
   const allLabels = [
     'Nouvelle partie',
@@ -89,38 +87,14 @@ void main() {
     'À propos',
   ];
 
-  testWidgets('l\'appui long sur un jeton ouvre son nom dans une bulle de BD, qui se referme seule', (tester) async {
-    await pumpHome(tester);
-
-    await tester.longPress(chip('Règles du jeu'));
-    await tester.pump();
-    expect(find.text('Règles du jeu'), findsOneWidget, reason: 'la bulle montre le nom');
-    expect(find.byType(CustomPaint), findsWidgets);
-
-    await tester.pump(const Duration(seconds: 2));
-    expect(find.text('Règles du jeu'), findsNothing, reason: 'elle se referme après l\'appui');
-  });
-
-  testWidgets('l\'accueil est un rack de neuf jetons : une icône chacun, leur nom en infobulle', (tester) async {
+  testWidgets('l\'accueil est un rack de neuf dés : une icône par face, leur nom écrit dessous', (tester) async {
     await pumpHome(tester);
 
     for (final label in allLabels) {
       expect(chip(label), findsOneWidget, reason: '$label doit être proposé');
-      expect(find.text(label), findsNothing, reason: 'rien d\'écrit sur le jeton');
-      expect(find.byWidgetPredicate((w) => w is ComicTooltip && w.message == label), findsOneWidget,
-          reason: 'son nom, dans une bulle de BD à l\'appui long');
-      expect(find.bySemanticsLabel(label), findsOneWidget, reason: 'et pour un lecteur d\'écran');
+      expect(find.text(label), findsOneWidget, reason: 'le nom est écrit sous le dé');
+      expect(find.bySemanticsLabel(label), findsOneWidget, reason: 'et lu par un lecteur d\'écran');
     }
-  });
-
-  testWidgets('un appui long sur un jeton affiche son nom', (tester) async {
-    await pumpHome(tester);
-
-    await tester.longPress(chip('Statistiques'));
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('Statistiques'), findsOneWidget);
-    expect(find.byType(StatisticsScreen), findsNothing, reason: 'l\'appui long n\'ouvre rien');
   });
 
   testWidgets('le bouton de reprise est inerte tant qu\'aucune partie n\'est en pause', (tester) async {
@@ -244,7 +218,7 @@ void main() {
       ('À propos', Icons.info_outline),
     ]) {
       expect(tester.getCenter(chip(label)).dy, lastRow, reason: label);
-      expect(find.descendant(of: chip(label), matching: find.byIcon(icon)), findsOneWidget, reason: label);
+      expect(tester.widget<MenuDie>(chip(label)).icon, icon, reason: label);
     }
 
     await tester.ensureVisible(chip('Règles du jeu'));
@@ -281,15 +255,13 @@ void main() {
 
     final first = tester.getRect(chip('Nouvelle partie'));
     final last = tester.getRect(chip('À propos'));
-    final hint = tester.getRect(find.text('Appui long sur un jeton : son nom s\'affiche.'));
-    // Le rack est centré entre le titre et la ligne d'aide : autant de place
+    // Le rack est centré entre le titre et le bas de l'écran : autant de place
     // au-dessus qu'en dessous.
-    expect(first.top - title.bottom, closeTo(hint.top - last.bottom, 2));
-    expect(first.top - title.bottom, greaterThan(60), reason: 'l\'écran est assez haut pour l\'aérer');
-    expect(hint.bottom, lessThanOrEqualTo(915));
+    expect(first.top - title.bottom, closeTo(915 - last.bottom, 40));
+    expect(first.top - title.bottom, greaterThan(20), reason: 'l\'écran est assez haut pour l\'aérer');
   });
 
-  testWidgets('sur un téléphone étroit, les jetons rapetissent mais gardent trois colonnes', (tester) async {
+  testWidgets('sur un téléphone étroit, les dés rapetissent mais gardent trois colonnes', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -300,7 +272,7 @@ void main() {
     expect(row('Jouer en ligne'), row('Nouvelle partie'));
     expect(row('Reprise de parties'), row('Nouvelle partie'), reason: 'trois par rangée');
     expect(row('Gestion des joueurs'), greaterThan(row('Nouvelle partie')));
-    expect(tester.getSize(chip('Nouvelle partie')).width, lessThan(96));
+    expect(tester.getSize(chip('Nouvelle partie')).width, lessThan(112));
     expect(tester.takeException(), isNull, reason: 'aucun débordement');
   });
 }

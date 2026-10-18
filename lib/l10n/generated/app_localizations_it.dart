@@ -1131,9 +1131,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsDiceSoundSynthetic => 'Sintetico';
 
   @override
-  String get homeChipsHint => 'Tieni premuta una fiche per vederne il nome.';
-
-  @override
   String get emoteThoughtful => 'Pensieroso';
 
   @override
