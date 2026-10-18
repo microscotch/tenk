@@ -215,14 +215,6 @@ class _MenuDiePainter extends CustomPainter {
             ).createShader(faceRect),
         );
       }
-      // Le chanfrein : un cadre en retrait, que la lumière accroche.
-      canvas.drawRect(
-        faceRect.deflate(unit * 0.07),
-        Paint()
-          ..color = Colors.white.withValues(alpha: facing ? 0.3 : 0.14)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 0.02,
-      );
       final at = Offset((unit - frontIcon.width) / 2, (unit - frontIcon.height) / 2);
       if (facing) {
         cutLight.paint(canvas, at + const Offset(depth, depth));
@@ -259,33 +251,42 @@ class _MenuDiePainter extends CustomPainter {
         (normals.any(facingNormal) ? shown : hidden).add((onScreen(i), onScreen(j)));
       }
     }
-    Paint edge(double alpha, double factor) => Paint()
-      ..color = Color.lerp(color, Colors.white, 0.6)!.withValues(alpha: alpha)
+    // Pas de jointure visible : une arête arrondie n'a pas de trait, seulement un
+    // reflet doux là où la lumière glisse d'une face à l'autre.
+    Paint soft(double alpha, double factor) => Paint()
+      ..color = Colors.white.withValues(alpha: alpha)
       ..style = PaintingStyle.stroke
       ..strokeWidth = width * factor
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 0.9);
     for (final (a, b) in hidden) {
-      canvas.drawLine(a, b, edge(0.4, 0.6));
-    }
-    // Pour chaque arête de devant : un filet sombre qui la cerne, puis l'arête
-    // claire, arrondie, comme un chanfrein qui accroche la lumière.
-    final dark = Paint()
-      ..color = Color.lerp(color, Colors.black, 0.6)!.withValues(alpha: 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = width * 1.9
-      ..strokeCap = StrokeCap.round;
-    for (final (a, b) in shown) {
-      canvas.drawLine(a, b, dark);
+      canvas.drawLine(a, b, soft(0.14, 1.6));
     }
     for (final (a, b) in shown) {
-      canvas.drawLine(a, b, edge(0.95, 1.1));
+      canvas.drawLine(a, b, soft(0.3, 2.4));
     }
+    // Les arêtes du contour sont traitées comme les autres : pas de trait, le même
+    // reflet doux, rogné au dé (donc rentrant), avec un léger assombrissement
+    // dessous pour que le bord se détache du feutre.
+    canvas.drawPath(
+      silhouette,
+      Paint()
+        ..color = Color.lerp(color, Colors.black, 0.6)!.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width * 3
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 0.9),
+    );
+    canvas.drawPath(
+      silhouette,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.3)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width * 2.4
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 0.9),
+    );
     canvas.restore();
-
-    // Le contour arrondi : le même filet sombre et la même arête claire, qui
-    // suivent les coins.
-    canvas.drawPath(silhouette, dark..strokeJoin = StrokeJoin.round);
-    canvas.drawPath(silhouette, edge(0.95, 1.1)..strokeJoin = StrokeJoin.round);
   }
 
   /// L'enveloppe convexe de [points], dans l'ordre du contour.
