@@ -346,6 +346,30 @@ class _PlayerRow extends StatelessWidget {
     final barred =
         handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
     final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
+    // Largeur fixe : le score, puis l'écart au plus large (signe et 10000),
+    // alignés à droite, pour que les lignes ne bougent pas d'un tour à l'autre.
+    final scoreWidth = _textWidth(context, '10000', const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+    final gapWidth = _textWidth(context, ' · \u221210000', muted);
+    return SizedBox(
+      width: scoreWidth + gapWidth + 24,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
+        child: _radarContent(context, l10n, difference, barred, muted),
+      ),
+    );
+  }
+
+  static double _textWidth(BuildContext context, String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    return painter.width;
+  }
+
+  Widget _radarContent(BuildContext context, AppLocalizations l10n, int? difference, bool barred, TextStyle muted) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -366,7 +390,16 @@ class _PlayerRow extends StatelessWidget {
           ),
         ),
         if (difference != null)
-          Tooltip(message: l10n.radarGapTooltip, child: Text(' · ${signedGap(difference)}', style: muted)),
+          Tooltip(
+            message: l10n.radarGapTooltip,
+            child: difference == 0
+                // Écart nul : à la place, le score barrable lui-même, en rouge.
+                ? Text(
+                    ' · ${nextBarrableScore(player, potentialTotal)}',
+                    style: const TextStyle(fontSize: 13, color: Colors.redAccent),
+                  )
+                : Text(' · ${signedGap(difference)}', style: muted),
+          ),
       ],
     );
   }

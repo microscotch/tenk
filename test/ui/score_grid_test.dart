@@ -183,7 +183,7 @@ void main() {
     expect(_avatarFor('Bob'), findsOneWidget);
   });
 
-  testWidgets('un clic sur la ligne d\'un joueur ouvre sa grille seule, avec son blason en entête',
+  testWidgets('un clic sur la ligne d\'un adversaire ouvre sa grille à droite de celle du joueur courant',
       (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -208,7 +208,8 @@ void main() {
 
     expect(find.byType(ScoreGridScreen), findsOneWidget);
     expect(_avatarFor('Bob'), findsOneWidget);
-    expect(_avatarFor('Alice'), findsNothing, reason: 'la grille est filtrée sur ce seul joueur');
+    expect(_avatarFor('Alice'), findsOneWidget, reason: 'le joueur courant est à gauche');
+    expect(tester.getCenter(_avatarFor('Alice')).dx, lessThan(tester.getCenter(_avatarFor('Bob')).dx));
   });
 
   testWidgets('bascule en carrousel paginé quand toutes les colonnes ne tiennent pas sur une page',
@@ -233,6 +234,27 @@ void main() {
 
     expect(_avatarFor('J2'), findsOneWidget);
     expect(_avatarFor('J0'), findsNothing, reason: 'la première page a défilé hors champ');
+  });
+
+  testWidgets('la grille complète : une page par adversaire, le joueur de référence à gauche', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    final players = [Player(name: 'Alice'), Player(name: 'Bob'), Player(name: 'Carl')];
+
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players, reference: players[1]), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PageView), findsOneWidget);
+    expect(_avatarFor('Bob'), findsOneWidget);
+    expect(_avatarFor('Alice'), findsOneWidget);
+    expect(_avatarFor('Carl'), findsNothing);
+    expect(tester.getCenter(_avatarFor('Bob')).dx, lessThan(tester.getCenter(_avatarFor('Alice')).dx));
+
+    await tester.drag(find.byType(PageView), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(_avatarFor('Carl'), findsOneWidget);
+    expect(_avatarFor('Bob'), findsOneWidget);
+    expect(_avatarFor('Alice'), findsNothing);
   });
 
   testWidgets('pas de carrousel quand toutes les colonnes tiennent sur une seule page', (tester) async {

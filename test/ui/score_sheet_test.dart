@@ -265,8 +265,10 @@ void main() {
         800,
       ].fold(Player(name: 'Bob'), (p, v) => p.applySuccessfulTurn(v)); // 2400 2600 2800 3600
       await pumpSheet(tester, [me, bob], current: 0, potential: 2400);
-      // 2400 : ligne barrable, mais pas son score (3600) : pas de rouge ; écart +0.
-      expect(find.descendant(of: _rowOf('Bob'), matching: find.text(' · 0')), findsOneWidget);
+      // 2400 : ligne barrable, mais pas son score (3600) : pas de rouge ; l'écart
+      // nul laisse la place au score barrable, en rouge.
+      final barrable = tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text(' · 2400')));
+      expect(barrable.style?.color, Colors.redAccent);
       expect(tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('3600'))).style?.color, isNull);
 
       await pumpSheet(tester, [me, bob], current: 0, potential: 3600);
@@ -293,7 +295,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       // La police des tests est large : ce nom court tient largement, avec la
       // médaille, le score et l'écart, dans cette largeur.
-      await tester.binding.setSurfaceSize(const Size(360, 800));
+      await tester.binding.setSurfaceSize(const Size(480, 800));
       final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
       final other = Player(name: 'Alex').applySuccessfulTurn(7800);
       await pumpSheet(tester, [me, other], current: 0, potential: 2750);

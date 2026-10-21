@@ -17,8 +17,11 @@ const int _columnsPerPage = 2;
 /// propre à chaque ligne, et la ligne courante mise en évidence.
 ///
 /// Chaque colonne occupe la moitié de la largeur : deux grilles au plus par
-/// page, une colonne seule étant centrée. Au-delà de deux joueurs, les
-/// colonnes sont réparties sur plusieurs pages navigables façon carrousel
+/// page, une colonne seule étant centrée. Avec un [reference] et des
+/// adversaires à montrer, il y a une page par adversaire : la grille de
+/// [reference] à gauche, celle de l'adversaire à droite (une seule page pour
+/// la grille individuelle d'un adversaire). Sans [reference], les colonnes
+/// sont réparties par deux sur des pages navigables façon carrousel
 /// (glissement + points de page).
 ///
 /// Les grilles se lisent depuis [reference] — le joueur dont c'est le tour, ou
@@ -86,6 +89,26 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
     super.dispose();
   }
 
+  /// Le contenu de chaque page. Avec un joueur de référence et au moins un
+  /// adversaire à montrer : une page par adversaire, la grille du joueur de
+  /// référence à gauche et celle de l'adversaire à droite. Sinon, les joueurs
+  /// par paquets de [_columnsPerPage].
+  List<List<Player>> _pages() {
+    final reference = widget.reference;
+    if (reference != null) {
+      final opponents = widget.players.where((p) => p.name != reference.name).toList();
+      if (opponents.isNotEmpty) {
+        return [
+          for (final opponent in opponents) [reference, opponent],
+        ];
+      }
+    }
+    return [
+      for (var i = 0; i < widget.players.length; i += _columnsPerPage)
+        widget.players.sublist(i, (i + _columnsPerPage).clamp(0, widget.players.length)),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final avatarColors = assignAvatarColors((widget.roster ?? widget.players).map((p) => p.name));
@@ -96,15 +119,13 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
           padding: const EdgeInsets.all(16),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              const columnsPerPage = _columnsPerPage;
-              final pageCount = (widget.players.length / columnsPerPage).ceil();
+              final pages = _pages();
+              final pageCount = pages.length;
 
               if (pageCount <= 1) {
                 return _GridPage(
-                  players: widget.players,
+                  players: pages.isEmpty ? const [] : pages.first,
                   avatarColors: avatarColors,
-                  start: 0,
-                  end: widget.players.length,
                   reference: widget.reference,
                   potentialTotal: widget.potentialTotal,
                   displayNames: widget.displayNames,
@@ -120,13 +141,9 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
                       itemCount: pageCount,
                       onPageChanged: (p) => setState(() => _page = p),
                       itemBuilder: (context, pageIndex) {
-                        final start = pageIndex * columnsPerPage;
-                        final end = (start + columnsPerPage).clamp(0, widget.players.length);
                         return _GridPage(
-                          players: widget.players,
+                          players: pages[pageIndex],
                           avatarColors: avatarColors,
-                          start: start,
-                          end: end,
                           reference: widget.reference,
                           potentialTotal: widget.potentialTotal,
                           displayNames: widget.displayNames,
@@ -162,14 +179,12 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
   }
 }
 
-/// Une page du carrousel : les colonnes des joueurs [start] (inclus) à [end]
-/// (exclus), chacune sur la moitié de la largeur, centrées ensemble (une
-/// colonne seule se retrouve donc au milieu).
+/// Une page du carrousel : les colonnes de [players], chacune sur la moitié de
+/// la largeur, centrées ensemble (une colonne seule se retrouve donc au
+/// milieu).
 class _GridPage extends StatelessWidget {
   final List<Player> players;
   final Map<String, Color> avatarColors;
-  final int start;
-  final int end;
   final Player? reference;
   final int? potentialTotal;
   final Map<String, String> displayNames;
@@ -178,8 +193,6 @@ class _GridPage extends StatelessWidget {
   const _GridPage({
     required this.players,
     required this.avatarColors,
-    required this.start,
-    required this.end,
     required this.reference,
     required this.potentialTotal,
     required this.displayNames,
@@ -211,7 +224,7 @@ class _GridPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = start; i < end; i++)
+                for (var i = 0; i < players.length; i++)
                   SizedBox(
                     width: constraints.maxWidth / _columnsPerPage,
                     child: Padding(
