@@ -274,7 +274,10 @@ class _PlayerRow extends StatelessWidget {
                 // La ligne du joueur courant garde son affichage : score, puis
                 // le précédent entre parenthèses, et les indices d'écart de 200.
                 if (isCurrent)
-                  Row(
+                  _radarZone(
+                    context,
+                    Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       if (opportunityAbove)
                         Padding(
@@ -325,6 +328,7 @@ class _PlayerRow extends StatelessWidget {
                       ),
                     ],
                   ),
+                  ),
                 // Le score et l'écart gardent leur largeur : le nom, le blason et
                 // la médaille, à gauche, prennent tout le reste.
                 if (!isCurrent) _radar(context),
@@ -346,17 +350,20 @@ class _PlayerRow extends StatelessWidget {
     final barred =
         handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
     final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
-    // Largeur fixe : le score, puis l'écart au plus large (signe et 10000),
-    // alignés à droite, pour que les lignes ne bougent pas d'un tour à l'autre.
+    return _radarZone(context, _radarContent(context, l10n, difference, barred, muted));
+  }
+
+  /// La zone de droite, de largeur fixe pour le joueur courant comme pour les
+  /// autres : le score, puis l'écart au plus large (signe et 10000), le texte
+  /// aligné à droite — les lignes ne bougent pas d'un tour à l'autre. Un contenu
+  /// plus large (icônes d'alerte) est réduit plutôt que de grignoter le nom.
+  Widget _radarZone(BuildContext context, Widget content) {
+    final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
     final scoreWidth = _textWidth(context, '10000', const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
     final gapWidth = _textWidth(context, ' · \u221210000', muted);
     return SizedBox(
       width: scoreWidth + gapWidth + 24,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerRight,
-        child: _radarContent(context, l10n, difference, barred, muted),
-      ),
+      child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: content),
     );
   }
 

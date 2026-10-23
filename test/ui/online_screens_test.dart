@@ -389,7 +389,7 @@ void main() {
       await tester.tap(find.text('Partager le code'));
       await tester.pumpAndSettle();
 
-      expect(shared, ['Rejoins ma partie de Le 10000 en ligne ! Code du salon : ABCDE\nhttps://tenk.microscotch.net/j/ABCDE']);
+      expect(shared, ['Petite partie de 10 000 rapide ?\n\n* Code du salon pour rejoindre ma partie: ABCDE\n\nhttps://tenk.microscotch.net/j/ABCDE']);
     });
 
     testWidgets('sans feuille de partage, le message est copié dans le presse-papiers', (tester) async {
@@ -406,7 +406,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(shared, isEmpty);
-      expect(copied, 'Rejoins ma partie de Le 10000 en ligne ! Code du salon : ABCDE\nhttps://tenk.microscotch.net/j/ABCDE');
+      expect(copied, 'Petite partie de 10 000 rapide ?\n\n* Code du salon pour rejoindre ma partie: ABCDE\n\nhttps://tenk.microscotch.net/j/ABCDE');
     });
 
     testWidgets('un joueur déconnecté empêche le lancement et se signale', (tester) async {

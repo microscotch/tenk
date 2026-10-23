@@ -1679,7 +1679,7 @@ abstract class AppLocalizations {
   /// Texte envoyé par la feuille de partage (WhatsApp, SMS...) ; code = code du salon, link = lien d'invitation qui ouvre l'application.
   ///
   /// In fr, this message translates to:
-  /// **'Rejoins ma partie de Le 10000 en ligne ! Code du salon : {code}\n{link}'**
+  /// **'Petite partie de 10 000 rapide ?\n\n* Code du salon pour rejoindre ma partie: {code}\n\n{link}'**
   String onlineShareMessage(String code, String link);
 
   /// Titre de la liste des joueurs d'un salon ; count = présents, max = places.
