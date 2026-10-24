@@ -1316,7 +1316,8 @@ void main() {
     // avec son tiret ; B affiche son total potentiel 2000, puis 1500 en petit.
     // La main de B le porterait à 2000, le score de A : son total potentiel
     // s'affiche en vert dans le liseré de la main.
-    expect(find.text('2000'), findsNWidgets(2));
+    // (3 : le score de A, son score barrable dans l'écart nul, le total de B.)
+    expect(find.text('2000'), findsNWidgets(3));
     expect(find.textContaining('→ 2000', findRichText: true), findsOneWidget);
     expect(find.text('1500'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);

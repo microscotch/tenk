@@ -97,13 +97,12 @@ void main() {
       reason: 'le score précédent apparaît en petit après le séparateur',
     );
 
-    // Le tiret doit être DANS la parenthèse, donc porté par ce même widget de
-    // texte, et non posé à côté : sinon il se lit comme qualifiant le score
-    // courant affiché juste avant.
+    // Le tiret est dans la case du score précédent, à sa droite : il ne se lit
+    // pas comme qualifiant le score courant affiché avant.
     expect(
-      find.descendant(of: find.textContaining('500'), matching: find.byIcon(Icons.remove)),
+      find.descendant(of: _rowOf('A'), matching: find.byIcon(Icons.remove)),
       findsOneWidget,
-      reason: 'la ligne précédente portait un tiret, marqué dans le même texte que ce score',
+      reason: 'la ligne précédente portait un tiret, à droite de ce score',
     );
   });
 
@@ -267,12 +266,13 @@ void main() {
       await pumpSheet(tester, [me, bob], current: 0, potential: 2400);
       // 2400 : ligne barrable, mais pas son score (3600) : pas de rouge ; l'écart
       // nul laisse la place au score barrable, en rouge.
-      final barrable = tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text(' · 2400')));
+      // Deux « 2400 » : le score de Bob (gris) puis, dans l'écart, le score barrable.
+      final barrable = tester.widgetList<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('2400'))).last;
       expect(barrable.style?.color, Colors.redAccent);
       expect(tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('3600'))).style?.color, isNull);
 
       await pumpSheet(tester, [me, bob], current: 0, potential: 3600);
-      final score = tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('3600')));
+      final score = tester.widgetList<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('3600'))).first;
       expect((score.style?.color, score.style?.fontWeight), (Colors.redAccent, FontWeight.bold));
     });
 
@@ -280,14 +280,14 @@ void main() {
       final me = Player(name: 'Moi', totalScore: 2200, hasEntered: true);
       final bob = Player(name: 'Bob').applySuccessfulTurn(2400);
       await pumpSheet(tester, [me, bob], current: 0, potential: 2400, handRevealed: false);
-      expect(tester.widget<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('2400'))).style?.color, isNull);
+      expect(tester.widgetList<Text>(find.descendant(of: _rowOf('Bob'), matching: find.text('2400'))).first.style?.color, isNull);
     });
 
     testWidgets('au-dessus du score de l\'adversaire : écart négatif signé', (tester) async {
       final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
       await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
-      expect(find.descendant(of: _rowOf('Bob'), matching: find.text(' · \u2212950')), findsOneWidget);
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('\u2212950')), findsOneWidget);
     });
 
     testWidgets('le nom d\'un adversaire n\'est pas rogné tant qu\'il y a la place : le score ne prend que sa largeur',
@@ -310,6 +310,32 @@ void main() {
       await pumpSheet(tester, players, current: 1);
       expect(find.descendant(of: _rowOf('B'), matching: find.byIcon(Icons.warning_amber_rounded)), findsOneWidget);
       expect(find.byIcon(Icons.gps_fixed), findsNothing);
+    });
+
+    testWidgets('la zone chiffrée ne bouge pas, quelles que soient les valeurs affichées', (tester) async {
+      Future<(double, double, double)> edges(int bobScore, int potential) async {
+        final me = Player(name: 'Moi', totalScore: 2200, hasEntered: true);
+        final bob = Player(name: 'Bob', totalScore: bobScore, hasEntered: true);
+        await pumpSheet(tester, [me, bob], current: 0, potential: potential);
+        final row = _rowOf('Bob');
+        final bobRight = tester.getTopRight(find.descendant(of: row, matching: find.text('$bobScore'))).dx;
+        // Dans l'ordre : le nom, le score, le point, l'écart.
+        final gapText = find.descendant(of: row, matching: find.byType(Text));
+        final meRow = _rowOf('Moi');
+        final potentialRight = tester.getTopRight(find.descendant(of: meRow, matching: find.text('$potential'))).dx;
+        return (bobRight, tester.getTopRight(gapText.last).dx, potentialRight);
+      }
+
+      final a = await edges(500, 2300);
+      final b = await edges(9950, 2750);
+      final c = await edges(1000, 3000);
+      // Le bord droit du score (adversaire comme joueur courant) est le même.
+      expect(b.$1, a.$1);
+      expect(c.$1, a.$1);
+      expect(b.$3, a.$3);
+      expect(c.$3, a.$3);
+      // Celui de l'écart aussi, quand il y en a un.
+      expect(b.$2, a.$2);
     });
   });
 }

@@ -271,67 +271,38 @@ class _PlayerRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // La ligne du joueur courant garde son affichage : score, puis
-                // le précédent entre parenthèses, et les indices d'écart de 200.
-                if (isCurrent)
-                  _radarZone(
-                    context,
-                    Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (opportunityAbove)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Tooltip(
-                            message: l10n.opportunityTooltip,
-                            child: const Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
-                          ),
-                        ),
-                      if (dangerBelow)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Tooltip(
-                            message: l10n.dangerTooltip,
-                            child: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
-                          ),
-                        ),
-                      if (player.hasTiret)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Tooltip(
-                            message: l10n.tiretTooltip,
-                            child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
-                          ),
-                        ),
-                      Text('$potentialTotal', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(' · ', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
-                      // Le tiret est DANS le texte : il qualifie ce score
-                      // précédent, pas le total qui le précède à l'écran.
-                      Text.rich(
-                        TextSpan(
-                          style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-                          children: [
-                            TextSpan(text: '${previousEntry?.value ?? 0}'),
-                            if (previousEntry?.hasTiret ?? false)
-                              WidgetSpan(
-                                alignment: PlaceholderAlignment.middle,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                                  child: Tooltip(
-                                    message: l10n.previousScoreHadTiretTooltip,
-                                    child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
+                // Les icônes d'alerte (écart de 200, tiret) viennent à gauche des
+                // chiffres : leur nombre change d'un tour à l'autre, mais elles ne
+                // décalent que le nom, jamais la zone chiffrée.
+                if (isCurrent) ...[
+                  if (opportunityAbove)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Tooltip(
+                        message: l10n.opportunityTooltip,
+                        child: const Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
                       ),
-                    ],
-                  ),
+                    ),
+                  if (dangerBelow)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Tooltip(
+                        message: l10n.dangerTooltip,
+                        child: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
+                      ),
+                    ),
+                ],
+                if (player.hasTiret)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Tooltip(
+                      message: l10n.tiretTooltip,
+                      child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                    ),
                   ),
                 // Le score et l'écart gardent leur largeur : le nom, le blason et
                 // la médaille, à gauche, prennent tout le reste.
-                if (!isCurrent) _radar(context),
+                isCurrent ? _currentZone(context, l10n, previousEntry) : _radar(context),
               ],
             ),
           ),
@@ -341,32 +312,88 @@ class _PlayerRow extends StatelessWidget {
     return row;
   }
 
+  static const _digits = [FontFeature.tabularFigures()];
+  static const _scoreStyle = TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFeatures: _digits);
+
   /// Ce qu'une ligne d'adversaire montre à droite : son score — en rouge et en
   /// gras quand s'arrêter sur le total potentiel du joueur courant le barrerait,
   /// une fois la main visible —, puis l'écart signé (voir [radarDifference]).
   Widget _radar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final difference = radarDifference(player, potentialTotal);
-    final barred =
-        handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
-    final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
-    return _radarZone(context, _radarContent(context, l10n, difference, barred, muted));
-  }
-
-  /// La zone de droite, de largeur fixe pour le joueur courant comme pour les
-  /// autres : le score, puis l'écart au plus large (signe et 10000), le texte
-  /// aligné à droite — les lignes ne bougent pas d'un tour à l'autre. Un contenu
-  /// plus large (icônes d'alerte) est réduit plutôt que de grignoter le nom.
-  Widget _radarZone(BuildContext context, Widget content) {
-    final muted = TextStyle(fontSize: 13, color: Colors.grey.shade400);
-    final scoreWidth = _textWidth(context, '10000', const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
-    final gapWidth = _textWidth(context, ' · \u221210000', muted);
-    return SizedBox(
-      width: scoreWidth + gapWidth + 24,
-      child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: content),
+    final barred = handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
+    final muted = _mutedStyle;
+    return _radarZone(
+      context,
+      score: Text(
+        '${player.totalScore}',
+        style: _scoreStyle.copyWith(
+          fontWeight: barred ? FontWeight.bold : FontWeight.w600,
+          color: barred ? Colors.redAccent : null,
+        ),
+      ),
+      second: difference == null
+          ? null
+          : Tooltip(
+              message: l10n.radarGapTooltip,
+              child: difference == 0
+                  // Écart nul : à la place, le score barrable lui-même, en rouge.
+                  ? Text(
+                      '${nextBarrableScore(player, potentialTotal)}',
+                      style: muted.copyWith(color: Colors.redAccent),
+                    )
+                  : Text(signedGap(difference), style: muted),
+            ),
     );
   }
 
+  /// La zone du joueur courant : le total potentiel, puis le dernier score non
+  /// barré en dessous ([firstEntryBelow]).
+  Widget _currentZone(BuildContext context, AppLocalizations l10n, ScoreEntry? previousEntry) {
+    return _radarZone(
+      context,
+      score: Text('$potentialTotal', style: _scoreStyle),
+      second: Text('${previousEntry?.value ?? 0}', style: _mutedStyle),
+      // Le tiret est à droite de ce score précédent : il le qualifie lui, pas le
+      // total potentiel qui le précède.
+      tiret: (previousEntry?.hasTiret ?? false)
+          ? Tooltip(
+              message: l10n.previousScoreHadTiretTooltip,
+              child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
+            )
+          : null,
+    );
+  }
+
+  TextStyle get _mutedStyle => TextStyle(fontSize: 13, color: Colors.grey.shade400, fontFeatures: _digits);
+
+  /// La zone de droite : trois cases de largeur fixe — le score, un point, puis
+  /// l'écart (au plus large : signe et 10000) —, le texte de chaque case aligné à
+  /// droite et en chiffres de même chasse. Quelle que soit la valeur, rien ne
+  /// bouge d'un tour à l'autre ; une case vide garde sa place. Un contenu trop
+  /// large (grande police système) est réduit dans sa case.
+  Widget _radarZone(BuildContext context, {required Widget score, Widget? second, Widget? tiret}) {
+    final scoreWidth = _textWidth(context, '10000', _scoreStyle);
+    final secondWidth = _textWidth(context, '\u221210000', _mutedStyle);
+    final dotWidth = _textWidth(context, '\u00b7', _mutedStyle) + 10;
+    Widget slot(double width, Widget? child, [Alignment alignment = Alignment.centerRight]) => SizedBox(
+      width: width,
+      child: child == null ? null : FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: child),
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        slot(scoreWidth, score),
+        slot(dotWidth, second == null ? null : Text('\u00b7', style: _mutedStyle), Alignment.center),
+        slot(secondWidth, second),
+        // Le tiret du score précédent du joueur courant y tient ; vide chez les
+        // adversaires, pour que toutes les lignes alignent leurs colonnes.
+        SizedBox(width: _tiretSlot, child: tiret),
+      ],
+    );
+  }
+
+  static const _tiretSlot = 16.0;
   static double _textWidth(BuildContext context, String text, TextStyle style) {
     final painter = TextPainter(
       text: TextSpan(text: text, style: style),
@@ -374,41 +401,6 @@ class _PlayerRow extends StatelessWidget {
       textScaler: MediaQuery.textScalerOf(context),
     )..layout();
     return painter.width;
-  }
-
-  Widget _radarContent(BuildContext context, AppLocalizations l10n, int? difference, bool barred, TextStyle muted) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (player.hasTiret)
-          Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: Tooltip(
-              message: l10n.tiretTooltip,
-              child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
-            ),
-          ),
-        Text(
-          '${player.totalScore}',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: barred ? FontWeight.bold : FontWeight.w600,
-            color: barred ? Colors.redAccent : null,
-          ),
-        ),
-        if (difference != null)
-          Tooltip(
-            message: l10n.radarGapTooltip,
-            child: difference == 0
-                // Écart nul : à la place, le score barrable lui-même, en rouge.
-                ? Text(
-                    ' · ${nextBarrableScore(player, potentialTotal)}',
-                    style: const TextStyle(fontSize: 13, color: Colors.redAccent),
-                  )
-                : Text(' · ${signedGap(difference)}', style: muted),
-          ),
-      ],
-    );
   }
 }
 
