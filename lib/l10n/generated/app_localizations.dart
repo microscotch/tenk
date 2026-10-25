@@ -698,6 +698,12 @@ abstract class AppLocalizations {
   /// **'Revoir la partie'**
   String get gameOverReplayButton;
 
+  /// Bouton de l'écran de fin d'une partie locale qui en relance une avec les mêmes joueurs, départage compris.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relancer une partie'**
+  String get gameOverRestartButton;
+
   /// Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs.
   ///
   /// In fr, this message translates to:
@@ -2096,6 +2102,18 @@ abstract class AppLocalizations {
   /// **'Avec panache !'**
   String get emotePhraseWithPanache;
 
+  /// Phrase de l'émotion mort de rire : on se moque d'un adversaire timide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Petit joueur !'**
+  String get emotePhraseSmallPlayer;
+
+  /// Phrase de l'émotion mort de rire : un simple éclat de rire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Haha !'**
+  String get emotePhraseHaha;
+
   /// Phrase de l'émotion dévasté : c'est vraiment trop injuste.
   ///
   /// In fr, this message translates to:
@@ -2119,6 +2137,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'C\'était chaud !'**
   String get emotePhraseCloseCall;
+
+  /// Phrase de l'émotion soulagé : une offre qu'on ne refuse pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça ne se refuse pas'**
+  String get emotePhraseNoRefuse;
+
+  /// Phrase de l'émotion soulagé : ça vaut le coup d'essayer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça se tente'**
+  String get emotePhraseWorthTrying;
 
   /// Phrase de l'émotion câlin : bien joué.
   ///

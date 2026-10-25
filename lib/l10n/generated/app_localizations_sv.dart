@@ -364,6 +364,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gameOverReplayButton => 'Se spelet igen';
 
   @override
+  String get gameOverRestartButton => 'Spela igen';
+
+  @override
   String get scoreGridLabel => 'Poängtabell';
 
   @override
@@ -1194,6 +1197,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emotePhraseWithPanache => 'Med bravur!';
 
   @override
+  String get emotePhraseSmallPlayer => 'Amatör!';
+
+  @override
+  String get emotePhraseHaha => 'Haha!';
+
+  @override
   String get emotePhraseUnfair => 'Det är verkligen för orättvist';
 
   @override
@@ -1204,6 +1213,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get emotePhraseCloseCall => 'Det var nära ögat!';
+
+  @override
+  String get emotePhraseNoRefuse => 'Det tackar man inte nej till';
+
+  @override
+  String get emotePhraseWorthTrying => 'Värt ett försök';
 
   @override
   String get emotePhraseWellPlayed => 'Bra spelat';

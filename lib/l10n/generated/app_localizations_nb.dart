@@ -364,6 +364,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gameOverReplayButton => 'Se spillet igjen';
 
   @override
+  String get gameOverRestartButton => 'Spill igjen';
+
+  @override
   String get scoreGridLabel => 'Poengtabell';
 
   @override
@@ -1196,6 +1199,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emotePhraseWithPanache => 'Med stil!';
 
   @override
+  String get emotePhraseSmallPlayer => 'Amatør!';
+
+  @override
+  String get emotePhraseHaha => 'Haha!';
+
+  @override
   String get emotePhraseUnfair => 'Det er altfor urettferdig';
 
   @override
@@ -1206,6 +1215,12 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get emotePhraseCloseCall => 'Det var nære på!';
+
+  @override
+  String get emotePhraseNoRefuse => 'Det sier man ikke nei til';
+
+  @override
+  String get emotePhraseWorthTrying => 'Verdt et forsøk';
 
   @override
   String get emotePhraseWellPlayed => 'Godt spilt';

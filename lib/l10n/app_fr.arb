@@ -338,6 +338,9 @@
   "gameOverReplayButton": "Revoir la partie",
   "@gameOverReplayButton": {"description": "Bouton de l'écran de fin de partie qui relance le rejeu spectateur de la partie, départage compris."},
 
+  "gameOverRestartButton": "Relancer une partie",
+  "@gameOverRestartButton": {"description": "Bouton de l'écran de fin d'une partie locale qui en relance une avec les mêmes joueurs, départage compris."},
+
   "scoreGridLabel": "Grille des scores",
   "@scoreGridLabel": {"description": "Titre/infobulle de l'écran affichant la grille complète des scores de tous les joueurs."},
 
@@ -993,6 +996,12 @@
   "emotePhraseWithPanache": "Avec panache !",
   "@emotePhraseWithPanache": {"description": "Phrase de l'émotion mort de rire : un coup joué avec panache (souvent ironique)."},
 
+  "emotePhraseSmallPlayer": "Petit joueur !",
+  "@emotePhraseSmallPlayer": {"description": "Phrase de l'émotion mort de rire : on se moque d'un adversaire timide."},
+
+  "emotePhraseHaha": "Haha !",
+  "@emotePhraseHaha": {"description": "Phrase de l'émotion mort de rire : un simple éclat de rire."},
+
   "emotePhraseUnfair": "C'est vraiment trop injuste",
   "@emotePhraseUnfair": {"description": "Phrase de l'émotion dévasté : c'est vraiment trop injuste."},
 
@@ -1004,6 +1013,12 @@
 
   "emotePhraseCloseCall": "C'était chaud !",
   "@emotePhraseCloseCall": {"description": "Phrase de l'émotion soulagé : on l'a échappé belle."},
+
+  "emotePhraseNoRefuse": "Ça ne se refuse pas",
+  "@emotePhraseNoRefuse": {"description": "Phrase de l'émotion soulagé : une offre qu'on ne refuse pas."},
+
+  "emotePhraseWorthTrying": "Ça se tente",
+  "@emotePhraseWorthTrying": {"description": "Phrase de l'émotion soulagé : ça vaut le coup d'essayer."},
 
   "emotePhraseWellPlayed": "Bien joué",
   "@emotePhraseWellPlayed": {"description": "Phrase de l'émotion câlin : bien joué."},

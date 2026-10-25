@@ -53,7 +53,7 @@
         <mxCell id="scorechart" value="ScoreChart&#10;(évolution des scores)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="40" y="580" width="200" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="gameover" value="GameOver&#10;(fin de partie ; en ligne :&#10;revanche, émotions)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="gameover" value="GameOver&#10;(fin de partie ; locale : relance ;&#10;en ligne : revanche, émotions)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="680" width="220" height="60" as="geometry" />
         </mxCell>
         <mxCell id="gamestats" value="GameStatistics&#10;(bilan de la partie)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
@@ -146,6 +146,7 @@
         <mxCell id="e23" value="statistiques" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="gameover" target="gamestats">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="e64" value="Relancer&#10;(locale)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=0.25;exitY=0;entryX=0.25;entryY=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="gameover" target="diceoff"><mxGeometry x="-0.75" relative="1" as="geometry" /></mxCell>
         <mxCell id="e24" value="Revoir la partie (rejeu)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;dashed=1;exitX=1;exitY=0.25;entryX=1;entryY=0.75;" edge="1" parent="1" source="gameover" target="game">
           <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="700" /><mxPoint x="650" y="545" /></Array></mxGeometry>
         </mxCell>

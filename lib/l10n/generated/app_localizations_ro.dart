@@ -369,6 +369,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get gameOverReplayButton => 'Revezi jocul';
 
   @override
+  String get gameOverRestartButton => 'Joacă din nou';
+
+  @override
   String get scoreGridLabel => 'Grilă de scoruri';
 
   @override
@@ -1205,6 +1208,12 @@ class AppLocalizationsRo extends AppLocalizations {
   String get emotePhraseWithPanache => 'Cu panaș!';
 
   @override
+  String get emotePhraseSmallPlayer => 'Amatorule!';
+
+  @override
+  String get emotePhraseHaha => 'Haha!';
+
+  @override
   String get emotePhraseUnfair => 'E chiar prea nedrept';
 
   @override
@@ -1215,6 +1224,12 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get emotePhraseCloseCall => 'A fost cât pe ce!';
+
+  @override
+  String get emotePhraseNoRefuse => 'Nu se refuză';
+
+  @override
+  String get emotePhraseWorthTrying => 'Merită încercat';
 
   @override
   String get emotePhraseWellPlayed => 'Bine jucat';

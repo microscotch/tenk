@@ -363,6 +363,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get gameOverReplayButton => 'Преглед на играта';
 
   @override
+  String get gameOverRestartButton => 'Играй отново';
+
+  @override
   String get scoreGridLabel => 'Таблица с резултати';
 
   @override
@@ -1193,6 +1196,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get emotePhraseWithPanache => 'С финес!';
 
   @override
+  String get emotePhraseSmallPlayer => 'Аматьор!';
+
+  @override
+  String get emotePhraseHaha => 'Хаха!';
+
+  @override
   String get emotePhraseUnfair => 'Това е наистина много несправедливо';
 
   @override
@@ -1203,6 +1212,12 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get emotePhraseCloseCall => 'На косъм беше!';
+
+  @override
+  String get emotePhraseNoRefuse => 'От това не се отказва';
+
+  @override
+  String get emotePhraseWorthTrying => 'Струва си да опиташ';
 
   @override
   String get emotePhraseWellPlayed => 'Добре изиграно';

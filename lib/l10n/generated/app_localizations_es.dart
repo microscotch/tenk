@@ -363,6 +363,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gameOverReplayButton => 'Volver a ver la partida';
 
   @override
+  String get gameOverRestartButton => 'Jugar otra vez';
+
+  @override
   String get scoreGridLabel => 'Tabla de puntuaciones';
 
   @override
@@ -1199,6 +1202,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emotePhraseWithPanache => '¡Con estilo!';
 
   @override
+  String get emotePhraseSmallPlayer => '¡Aficionado!';
+
+  @override
+  String get emotePhraseHaha => '¡Jaja!';
+
+  @override
   String get emotePhraseUnfair => 'Es realmente muy injusto';
 
   @override
@@ -1209,6 +1218,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get emotePhraseCloseCall => '¡Ha estado cerca!';
+
+  @override
+  String get emotePhraseNoRefuse => 'No se le dice que no';
+
+  @override
+  String get emotePhraseWorthTrying => 'Vale la pena intentarlo';
 
   @override
   String get emotePhraseWellPlayed => 'Bien jugado';

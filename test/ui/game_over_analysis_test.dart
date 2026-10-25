@@ -7,6 +7,7 @@ import 'package:le10000/game/game_statistics.dart';
 import 'package:le10000/game/player_stats.dart';
 import 'package:le10000/game/score_series.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
+import 'package:le10000/state/dice_off_providers.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/replay_pause_provider.dart';
@@ -77,6 +78,7 @@ void main() {
   final chartButton = find.widgetWithText(OutlinedButton, 'Évolution des scores');
   final statsButton = find.widgetWithText(OutlinedButton, 'Statistiques de la partie');
   final replayButton = find.widgetWithText(OutlinedButton, 'Revoir la partie');
+  final restartButton = find.widgetWithText(FilledButton, 'Relancer une partie');
 
   testWidgets('sans journal de partie, ni courbe, ni statistiques, ni rejeu ne sont proposés',
       (tester) async {
@@ -90,6 +92,21 @@ void main() {
     expect(chartButton, findsNothing);
     expect(statsButton, findsNothing);
     expect(replayButton, findsNothing);
+    expect(restartButton, findsNothing);
+  });
+
+  testWidgets('le bouton de relance lance un nouveau départage avec les mêmes joueurs', (tester) async {
+    container.read(gameProvider.notifier).resumeFromSave(finishedGame(51));
+    await pumpGameOver(tester);
+    expect(restartButton, findsOneWidget);
+
+    await tester.tap(restartButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DiceOffScreen), findsOneWidget);
+    expect(find.byType(GameOverScreen), findsNothing, reason: 'l\'écran de fin cède la place au départage');
+    expect(container.read(diceOffProvider), isNotNull);
+    expect(container.read(diceOffProvider.notifier).nameOf(1), 'B');
   });
 
   testWidgets('le bouton de rejeu relance le rejeu de CETTE partie', (tester) async {

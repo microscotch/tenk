@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
+import '../../state/dice_off_providers.dart';
 import '../../state/game_save_store.dart';
 import '../../state/online_providers.dart';
 import '../../state/player_providers.dart';
@@ -14,11 +15,13 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/emotes.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/score_sheet.dart' show AvatarWithBubble;
+import 'dice_off_screen.dart';
 import 'game_screen.dart';
 import 'game_statistics_screen.dart';
 import 'online_game_over_panel.dart';
 import 'score_chart_screen.dart';
 import 'score_grid_screen.dart';
+import 'setup_screen.dart';
 
 class GameOverScreen extends ConsumerStatefulWidget {
   final List<Player> players;
@@ -93,6 +96,17 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
   void _leave() {
     popToHome(context);
     if (_online) unawaited(ref.read(onlineSessionProvider.notifier).leaveFinishedGame());
+  }
+
+  /// Relance une partie locale avec les mêmes joueurs (et les mêmes bots) : un
+  /// nouveau départage décide de l'ordre, comme depuis l'écran de nouvelle partie.
+  /// L'accueil reste sous le départage ; cet écran de fin, lui, disparaît.
+  void _restart(SavedGame finished) {
+    ref.read(diceOffProvider.notifier).start(finished.setup);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const DiceOffScreen()),
+      (route) => route.isFirst || route.settings.name == SetupScreen.routeName,
+    );
   }
 
   @override
@@ -201,6 +215,14 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
                     const OnlineGameOverPanel(),
                   ],
                   const SizedBox(height: 32),
+                  if (!_online && !archived && journal != null) ...[
+                    FilledButton.icon(
+                      onPressed: () => _restart(journal),
+                      icon: const Icon(Icons.casino),
+                      label: Text(l10n.gameOverRestartButton),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(

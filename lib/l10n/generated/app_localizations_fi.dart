@@ -363,6 +363,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gameOverReplayButton => 'Katso peli uudelleen';
 
   @override
+  String get gameOverRestartButton => 'Pelaa uudelleen';
+
+  @override
   String get scoreGridLabel => 'Pistetaulukko';
 
   @override
@@ -1197,6 +1200,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get emotePhraseWithPanache => 'Tyylillä!';
 
   @override
+  String get emotePhraseSmallPlayer => 'Pikkupelaaja!';
+
+  @override
+  String get emotePhraseHaha => 'Haha!';
+
+  @override
   String get emotePhraseUnfair => 'Tämä on todella epäreilua';
 
   @override
@@ -1207,6 +1216,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get emotePhraseCloseCall => 'Olipa täpärällä!';
+
+  @override
+  String get emotePhraseNoRefuse => 'Siitä ei kieltäydytä';
+
+  @override
+  String get emotePhraseWorthTrying => 'Kannattaa yrittää';
 
   @override
   String get emotePhraseWellPlayed => 'Hyvin pelattu';

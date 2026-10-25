@@ -174,11 +174,11 @@ void main() {
     test('le catalogue : six émotions, chacune avec ses phrases, sous des noms stables', () {
       expect(Emote.values.map((e) => e.name), ['thoughtful', 'mocking', 'devastated', 'angry', 'relieved', 'joyful']);
       expect(Emote.mocking.phrases,
-          ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy', 'allByFives', 'withPanache']);
+          ['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy', 'allByFives', 'withPanache', 'smallPlayer', 'haha']);
       expect(Emote.thoughtful.phrases, ['tooLucky', 'dryTenThousand', 'strangeChoice']);
       expect(Emote.devastated.phrases, ['noWay', 'unfair', 'argh']);
       expect(Emote.angry.phrases, ['coincidence', 'lucky']);
-      expect(Emote.relieved.phrases, ['phew', 'atLast', 'closeCall']);
+      expect(Emote.relieved.phrases, ['phew', 'atLast', 'closeCall', 'noRefuse', 'worthTrying']);
       expect(Emote.joyful.phrases, ['hello', 'goodLuck', 'thanks', 'sorryMustGo', 'wellPlayed', 'sorry']);
       expect(clientFeatures, contains(emotesFeature));
       expect(serverFeatures, containsAll([emotesFeature, emotes2Feature]));

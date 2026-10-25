@@ -34,14 +34,14 @@ enum Emote {
   thoughtful(['tooLucky', 'dryTenThousand', 'strangeChoice'], retired: ['coincidence']),
   /// « Mort de rire » à l'écran : le nom `mocking` (ex-« moqueur ») reste,
   /// c'est l'identifiant qui voyage.
-  mocking(['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy', 'allByFives', 'withPanache']),
+  mocking(['stickyFive', 'fullHandEmptyHand', 'neverTakeA1000', 'tooGreedy', 'allByFives', 'withPanache', 'smallPlayer', 'haha']),
   /// « Comme de par hasard... » et « Veinard va ! » sont passées chez [angry] :
   /// toujours acceptées ici, une app d'avant les envoie encore sous cette émotion.
   devastated(['noWay', 'unfair', 'argh'], retired: ['coincidence', 'lucky']),
   /// Fâché — seconde série (voir [emotes2Feature]).
   angry(['coincidence', 'lucky'], v2Only: true),
   /// Soulagé — seconde série (voir [emotes2Feature]).
-  relieved(['phew', 'atLast', 'closeCall'], v2Only: true),
+  relieved(['phew', 'atLast', 'closeCall', 'noRefuse', 'worthTrying'], v2Only: true),
   /// « Câlin » à l'écran : le nom `joyful` (ex-« joyeux ») reste,
   /// c'est l'identifiant qui voyage.
   joyful(['hello', 'goodLuck', 'thanks', 'sorryMustGo', 'wellPlayed', 'sorry'], retired: ['yes']);
