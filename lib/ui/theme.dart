@@ -84,3 +84,23 @@ ThemeData buildAppTheme() {
     ),
   );
 }
+
+/// Le facteur appliqué aux polices de l'application selon la plateforme : à
+/// facteur de forme égal, les mêmes tailles logiques paraissent nettement plus
+/// grandes sur iOS (police SF, taille de texte du système) que sur Android. Il
+/// s'ajoute au réglage de taille de texte de l'appareil, qu'il ne remplace pas.
+double textScaleFactorFor(TargetPlatform platform) => platform == TargetPlatform.iOS ? iosTextScaleFactor : 1.0;
+
+/// Voir [textScaleFactorFor].
+const double iosTextScaleFactor = 0.88;
+
+/// Réduit les polices de [child] de [textScaleFactorFor] : rien à faire hors iOS.
+Widget withPlatformTextScale(BuildContext context, Widget child) {
+  final factor = textScaleFactorFor(Theme.of(context).platform);
+  if (factor == 1.0) return child;
+  final media = MediaQuery.of(context);
+  return MediaQuery(
+    data: media.copyWith(textScaler: TextScaler.linear(media.textScaler.scale(1.0) * factor)),
+    child: child,
+  );
+}

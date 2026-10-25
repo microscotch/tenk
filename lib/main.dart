@@ -67,8 +67,10 @@ class Le10000App extends ConsumerWidget {
         }
         return const Locale('fr');
       },
-      builder: (context, child) =>
-          Stack(children: [const CasinoFeltBackground(), ?child]),
+      builder: (context, child) => withPlatformTextScale(
+        context,
+        Stack(children: [const CasinoFeltBackground(), ?child]),
+      ),
       navigatorObservers: [routeObserver],
       home: const SplashScreen(),
     );
