@@ -1435,7 +1435,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       if (keep != null && keep != _selectedKeep) setState(() => _selectedKeep = keep);
     });
     // Un joueur en ligne est parti, un bot du serveur le remplace : l'historique
-    // le dit (son icône apparaît sur sa ligne, voir [_onlineBotIndices]).
+    // le dit (son icône apparaît sur sa ligne, voir [_botIndices]).
     ref.listen<List<SeatInfo>>(onlineSessionProvider.select((s) => s.seats), (previous, next) {
       if (!ref.read(gameProvider.notifier).isOnline || widget.replayMode) return;
       for (var i = 0; i < next.length; i++) {
@@ -1749,7 +1749,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       onTapPlayer: _openPlayerGrid,
                       displayNames: ref.watch(displayNamesProvider),
                       bubbles: _bubbles,
-                      botIndices: _onlineBotIndices(engine),
+                      botIndices: _botIndices(engine),
                       // Les écarts des autres joueurs suivent la main en direct,
                       // sélection de 5 comprise ; le rouge attend les dés posés.
                       potentialTotal: engine.currentPlayer.totalScore + liveScore,
@@ -1863,13 +1863,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Les joueurs d'une partie en ligne repris par un bot du serveur. Suit les
-  /// sièges du salon : la ligne d'un joueur parti prend son icône dès que le
-  /// serveur l'annonce.
-  Set<int> _onlineBotIndices(GameEngine engine) {
-    if (!ref.watch(gameProvider.notifier).isOnline) return const {};
+  /// Les joueurs menés par un bot : ceux choisis au départ d'une partie locale,
+  /// ou, en ligne, les joueurs repris par un bot du serveur — dont la ligne prend
+  /// son icône dès que le serveur annonce les sièges du salon.
+  Set<int> _botIndices(GameEngine engine) {
+    final notifier = ref.watch(gameProvider.notifier);
+    if (!notifier.isOnline) {
+      return {for (var i = 0; i < engine.players.length; i++) if (notifier.isAiPlayer(i)) i};
+    }
     ref.watch(onlineSessionProvider.select((s) => s.seats));
-    final notifier = ref.read(gameProvider.notifier);
     return {for (var i = 0; i < engine.players.length; i++) if (notifier.isOnlineBot(i)) i};
   }
 

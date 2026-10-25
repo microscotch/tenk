@@ -2229,6 +2229,9 @@ void main() {
     expect(button.onPressed, isNull);
     expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas de bouton Stop pendant le tour d\'un bot');
     expect(find.byIcon(Icons.swap_vert), findsNothing);
+    // Le bot porte la même icône que le joueur remplacé par un bot en ligne,
+    // lui seul : B est humain.
+    expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
 
     // L'IA enchaîne toute seule : on démonte avant que ses temporisations
     // ne fassent diverger l'état mesuré.
