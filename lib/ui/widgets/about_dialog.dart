@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import 'die_widget.dart';
 
 /// Mention d'auteur affichée à l'identique sur l'écran d'introduction
 /// ([SplashScreen]) et dans le dialogue "À propos" ([showAppAboutDialog]) :
@@ -61,6 +62,8 @@ Future<void> showAppAboutDialog(BuildContext context) async {
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          const _AceCross(),
           const SizedBox(height: 12),
           Text(
             kAppTagline,
@@ -85,4 +88,31 @@ Future<void> showAppAboutDialog(BuildContext context) async {
       ],
     ),
   );
+}
+
+/// Le clin d'œil sous « 10K » : cinq as posés en croix — un, trois, un —, chaque
+/// ligne centrée.
+class _AceCross extends StatelessWidget {
+  const _AceCross();
+
+  static const _rows = [1, 3, 1];
+  static const _dieSize = 52.0;
+
+  @override
+  Widget build(BuildContext context) {
+    var seed = 0;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final count in _rows)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < count; i++)
+                DieWidget(value: 1, state: DieVisualState.kept, size: _dieSize, restSeed: seed++),
+            ],
+          ),
+      ],
+    );
+  }
 }
