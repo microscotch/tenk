@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
+import 'package:le10000/game/dice_roll.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
@@ -1428,6 +1429,9 @@ void main() {
     container.read(gameProvider.notifier).debugLoadState(
           engine,
           const GameSetup(playerNames: ['A', 'B']),
+          // Le lancer de B, une fois la main refusée, ne craque pas : sans cela,
+          // 5 dés au hasard craquent une fois sur treize et la popup couvre l'historique.
+          random: ScriptedRandom([1, 2, 3, 4, 6]),
         );
 
     await tester.pumpWidget(

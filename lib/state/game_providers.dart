@@ -514,10 +514,13 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// Charge un état de partie déjà construit, sans passer par [startGame].
   /// Réservé aux tests, pour vérifier des scénarios (craque, victoire...)
   /// sans dépendre de vrais lancers de dés aléatoires. N'active aucune
-  /// persistance (pas de seed).
+  /// persistance (pas de seed). [random] fixe les faces des lancers suivants
+  /// (par exemple un `ScriptedRandom`) : sans lui, un lancer automatique après
+  /// le chargement peut craquer au hasard et faire dévier le scénario.
   @visibleForTesting
-  void debugLoadState(GameEngine engine, GameSetup setup) {
+  void debugLoadState(GameEngine engine, GameSetup setup, {Random? random}) {
     _setup = setup;
+    _random = random;
     state = engine;
   }
 
