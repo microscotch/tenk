@@ -1303,6 +1303,10 @@ void main() {
     container.read(gameProvider.notifier).debugLoadState(
           engine,
           const GameSetup(playerNames: ['A', 'B']),
+          // La main neuve de A se lance seule (il ne peut pas encore s'arrêter) :
+          // avec de vrais dés elle craquait une fois sur douze, et la popup de
+          // craque cachait alors la barre de l'historique.
+          random: ScriptedRandom([1, 2, 3, 4, 6]),
         );
 
     await tester.pumpWidget(
