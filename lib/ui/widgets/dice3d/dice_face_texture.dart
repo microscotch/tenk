@@ -74,6 +74,13 @@ class DiceFaceTextures {
 
   static final Map<String, Texture2D> _ready = {};
 
+  /// Texture unie du chanfrein et du noyau du dé : sa couleur de corps, un peu
+  /// assombrie, pour que l'arête se détache des faces qu'elle relie.
+  static Future<Texture2D> getEdge(DieVisualState state, [Color? baseColor]) =>
+      get(-1, state, baseColor);
+
+  static Texture2D? peekEdge(DieVisualState state, [Color? baseColor]) => peek(-1, state, baseColor);
+
   static String _key(int value, DieVisualState state, Color? baseColor) =>
       '$value|$state|${(baseColor ?? kDefaultDieBodyColor).toARGB32()}';
 
@@ -95,6 +102,18 @@ class DiceFaceTextures {
   static Future<Texture2D> _render(int value, DieVisualState state, Color? baseColor) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, _size, _size));
+    if (value < 0) {
+      canvas.drawRect(
+        const Rect.fromLTWH(0, 0, _size, _size),
+        Paint()..color = Color.lerp(bodyColorFor(state, baseColor), Colors.black, 0.12)!,
+      );
+      final image = await recorder.endRecording().toImage(_size.toInt(), _size.toInt());
+      try {
+        return await Texture2D.fromImage(image);
+      } finally {
+        image.dispose();
+      }
+    }
     // En miroir horizontal : la géométrie du plan de flutter_scene retourne
     // l'image à l'affichage (voir `dieFacePlacement`), cette inversion la
     // remet à l'endroit sur chaque face.
@@ -104,14 +123,14 @@ class DiceFaceTextures {
     final accent = accentColorFor(state);
     final pipColor = pipColorFor(state);
 
-    final rrect = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(3, 3, _size - 6, _size - 6),
-      const Radius.circular(_size * 0.2),
-    );
+    // La face remplit tout son carré : ses arêtes sont modelées par la
+    // géométrie (voir `_applyFaces`), non par des coins arrondis découpés dans
+    // la texture, qui laissaient des encoches entre deux faces.
+    const rect = Rect.fromLTWH(0, 0, _size, _size);
 
     // Corps du dé : léger dégradé façon plastique moulé plutôt qu'un aplat.
-    canvas.drawRRect(
-      rrect,
+    canvas.drawRect(
+      rect,
       Paint()
         ..shader = ui.Gradient.linear(
           const Offset(0, 0),
@@ -122,7 +141,7 @@ class DiceFaceTextures {
 
     // Liseré fin de couleur d'état, en retrait du bord pour rester discret.
     canvas.drawRRect(
-      rrect.deflate(_size * 0.02),
+      RRect.fromRectAndRadius(rect.deflate(_size * 0.07), const Radius.circular(_size * 0.1)),
       Paint()
         ..color = accent
         ..style = PaintingStyle.stroke

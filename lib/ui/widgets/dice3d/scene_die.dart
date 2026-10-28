@@ -154,13 +154,15 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   bool _buildFacesNow() {
     final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
     final textures = <MapEntry<String, Texture2D>>[];
+    final edge = DiceFaceTextures.peekEdge(widget.state, widget.bodyColor);
+    if (edge == null) return false;
     for (final e in values.entries) {
       final texture = DiceFaceTextures.peek(e.value, widget.state, widget.bodyColor);
       if (texture == null) return false;
       textures.add(MapEntry(e.key, texture));
     }
     _loadGeneration++;
-    _applyFaces(textures);
+    _applyFaces(textures, edge);
     _facesReady = true;
     return true;
   }
@@ -168,31 +170,93 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   Future<void> _buildFaces() async {
     final generation = ++_loadGeneration;
     final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
+    final edge = await DiceFaceTextures.getEdge(widget.state, widget.bodyColor);
     final textures = await Future.wait(
       values.entries
           .map((e) async => MapEntry(e.key, await DiceFaceTextures.get(e.value, widget.state, widget.bodyColor))),
     );
     if (!mounted || generation != _loadGeneration) return;
-    _applyFaces(textures);
+    _applyFaces(textures, edge);
     setState(() => _facesReady = true);
   }
 
-  void _applyFaces(List<MapEntry<String, Texture2D>> textures) {
+  /// Largeur du chanfrein de chaque arête, en fraction du côté du dé.
+  static const _bevel = 0.07;
+
+  static const _faceNormals = {
+    'top': (0.0, 1.0, 0.0),
+    'bottom': (0.0, -1.0, 0.0),
+    'front': (0.0, 0.0, -1.0),
+    'back': (0.0, 0.0, 1.0),
+    'right': (1.0, 0.0, 0.0),
+    'left': (-1.0, 0.0, 0.0),
+  };
+
+  /// Pose un plan unité de [material] : [across] sur son X, [normal] sur son Y,
+  /// [down] sur son Z, mis à l'échelle ([length] sur X, [depth] sur Z) puis
+  /// reculé de [offset] le long de la normale.
+  Node _plane(Vector3 across, Vector3 normal, Vector3 down, double length, double depth, double offset, Material material) {
+    final basis = Matrix4.columns(
+      Vector4(across.x, across.y, across.z, 0),
+      Vector4(normal.x, normal.y, normal.z, 0),
+      Vector4(down.x, down.y, down.z, 0),
+      Vector4(0, 0, 0, 1),
+    );
+    return Node(
+      localTransform: basis
+        ..translateByDouble(0.0, offset, 0.0, 1.0)
+        ..scaleByDouble(length, 1.0, depth, 1.0),
+      mesh: Mesh(PlaneGeometry(), material),
+    );
+  }
+
+  void _applyFaces(List<MapEntry<String, Texture2D>> textures, Texture2D edge) {
     _dieNode.removeAll();
     // Orientation déjà posée avant le premier tick de la scène : sans elle, le
     // dé apparaîtrait un instant droit, avant de prendre son orientation.
     _onTick(Duration.zero, 0);
+    // Fini plastique mat (dé physique) plutôt que le défaut métallique
+    // brillant de PhysicallyBasedMaterial, qui donnait un aspect artificiel.
+    PhysicallyBasedMaterial plastic(Texture2D texture, double roughness) =>
+        PhysicallyBasedMaterial(baseColorTexture: texture)
+          ..metallicFactor = 0.0
+          ..roughnessFactor = roughness;
+    // Faces : un carré rétréci de deux chanfreins, posé à plat.
+    const flat = 1 - 2 * _bevel;
     for (final entry in textures) {
       final placement = dieFacePlacement(entry.key, topQuarterTurns: _motion.topQuarterTurns);
-      // Fini plastique mat (dé physique) plutôt que le défaut métallique
-      // brillant de PhysicallyBasedMaterial, qui donnait un aspect artificiel.
-      final material = PhysicallyBasedMaterial(baseColorTexture: entry.value)
-        ..metallicFactor = 0.0
-        ..roughnessFactor = 0.45;
       _dieNode.add(Node(
-        localTransform: Matrix4.copy(placement)..translateByDouble(0.0, _half, 0.0, 1.0),
-        mesh: Mesh(PlaneGeometry(), material),
+        localTransform: Matrix4.copy(placement)
+          ..translateByDouble(0.0, _half, 0.0, 1.0)
+          ..scaleByDouble(flat, 1.0, flat, 1.0),
+        mesh: Mesh(PlaneGeometry(), plastic(entry.value, 0.45)),
       ));
+    }
+    // Arêtes : un chanfrein à 45° entre chaque paire de faces voisines, plus
+    // lisse que le plat des faces, donc plus brillant, comme un vrai dé moulé.
+    final bevel = plastic(edge, 0.3);
+    final names = _faceNormals.keys.toList();
+    for (var i = 0; i < names.length; i++) {
+      for (var j = i + 1; j < names.length; j++) {
+        final (ax, ay, az) = _faceNormals[names[i]]!;
+        final (bx, by, bz) = _faceNormals[names[j]]!;
+        final n1 = Vector3(ax, ay, az);
+        final n2 = Vector3(bx, by, bz);
+        if (n1.dot(n2) != 0) continue; // faces opposées
+        final normal = (n1 + n2)..normalize();
+        final along = n1.cross(n2)..normalize();
+        final down = along.cross(normal);
+        _dieNode.add(_plane(along, normal, down, flat, _bevel * math.sqrt2, (0.5 - _bevel / 2) * math.sqrt2, bevel));
+      }
+    }
+    // Noyau : un cube un peu plus petit, qui bouche les huit coins où trois
+    // chanfreins se rejoignent sans se toucher.
+    for (final entry in _faceNormals.values) {
+      final (x, y, z) = entry;
+      final normal = Vector3(x, y, z);
+      final across = normal.cross(y.abs() == 1 ? Vector3(1, 0, 0) : Vector3(0, 1, 0));
+      final down = across.cross(normal);
+      _dieNode.add(_plane(across, normal, down, flat, flat, 0.5 - _bevel, bevel));
     }
   }
 
