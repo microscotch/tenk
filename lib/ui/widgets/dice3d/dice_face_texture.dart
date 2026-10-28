@@ -74,13 +74,6 @@ class DiceFaceTextures {
 
   static final Map<String, Texture2D> _ready = {};
 
-  /// Texture unie du chanfrein et du noyau du dé : sa couleur de corps, un peu
-  /// assombrie, pour que l'arête se détache des faces qu'elle relie.
-  static Future<Texture2D> getEdge(DieVisualState state, [Color? baseColor]) =>
-      get(-1, state, baseColor);
-
-  static Texture2D? peekEdge(DieVisualState state, [Color? baseColor]) => peek(-1, state, baseColor);
-
   static String _key(int value, DieVisualState state, Color? baseColor) =>
       '$value|$state|${(baseColor ?? kDefaultDieBodyColor).toARGB32()}';
 
@@ -102,30 +95,18 @@ class DiceFaceTextures {
   static Future<Texture2D> _render(int value, DieVisualState state, Color? baseColor) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, _size, _size));
-    if (value < 0) {
-      canvas.drawRect(
-        const Rect.fromLTWH(0, 0, _size, _size),
-        Paint()..color = Color.lerp(bodyColorFor(state, baseColor), Colors.black, 0.12)!,
-      );
-      final image = await recorder.endRecording().toImage(_size.toInt(), _size.toInt());
-      try {
-        return await Texture2D.fromImage(image);
-      } finally {
-        image.dispose();
-      }
-    }
     // En miroir horizontal : la géométrie du plan de flutter_scene retourne
     // l'image à l'affichage (voir `dieFacePlacement`), cette inversion la
     // remet à l'endroit sur chaque face.
     canvas.translate(_size, 0);
     canvas.scale(-1, 1);
     final body = bodyColorFor(state, baseColor);
-    final accent = accentColorFor(state);
     final pipColor = pipColorFor(state);
 
-    // La face remplit tout son carré : ses arêtes sont modelées par la
-    // géométrie (voir `_applyFaces`), non par des coins arrondis découpés dans
-    // la texture, qui laissaient des encoches entre deux faces.
+    // Face pleine, carrée : ni coins découpés ni jointure dessinée. Les arêtes
+    // sont adoucies comme sur les dés du menu (voir `_MenuDiePainter`) : pas de
+    // trait, un reflet flou là où la lumière glisse d'une face à l'autre, sur
+    // un léger assombrissement du bord qui détache le dé du feutre.
     const rect = Rect.fromLTWH(0, 0, _size, _size);
 
     // Corps du dé : léger dégradé façon plastique moulé plutôt qu'un aplat.
@@ -139,14 +120,28 @@ class DiceFaceTextures {
         ),
     );
 
-    // Liseré fin de couleur d'état, en retrait du bord pour rester discret.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect.deflate(_size * 0.07), const Radius.circular(_size * 0.1)),
+    // Les quatre arêtes de la face : assombrissement au bord, puis reflet doux.
+    // Rognés à la face (le trait est centré sur son bord), ils s'ajoutent à ceux
+    // de la face voisine pour former, de part et d'autre, une arête arrondie.
+    canvas.save();
+    canvas.clipRect(rect);
+    canvas.drawRect(
+      rect,
       Paint()
-        ..color = accent
+        ..color = Color.lerp(body, Colors.black, 0.6)!.withValues(alpha: 0.35)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = _size * 0.035,
+        ..strokeWidth = _size * 0.07
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, _size * 0.025),
     );
+    canvas.drawRect(
+      rect.deflate(_size * 0.01),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _size * 0.06
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, _size * 0.025),
+    );
+    canvas.restore();
 
     // Pips légèrement "gravés" : une ombre portée, le disque, un reflet.
     for (final p in pipPositions[value] ?? const []) {

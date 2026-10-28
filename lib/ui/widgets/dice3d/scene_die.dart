@@ -94,6 +94,7 @@ class Scene3DDie extends StatefulWidget {
 class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateMixin {
   double get _size => widget.size;
   static const _half = 0.5;
+  static const _cameraDistance = 3.2;
 
   final _random = math.Random();
   final Scene _scene = Scene();
@@ -154,15 +155,13 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   bool _buildFacesNow() {
     final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
     final textures = <MapEntry<String, Texture2D>>[];
-    final edge = DiceFaceTextures.peekEdge(widget.state, widget.bodyColor);
-    if (edge == null) return false;
     for (final e in values.entries) {
       final texture = DiceFaceTextures.peek(e.value, widget.state, widget.bodyColor);
       if (texture == null) return false;
       textures.add(MapEntry(e.key, texture));
     }
     _loadGeneration++;
-    _applyFaces(textures, edge);
+    _applyFaces(textures);
     _facesReady = true;
     return true;
   }
@@ -170,93 +169,31 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   Future<void> _buildFaces() async {
     final generation = ++_loadGeneration;
     final values = dieFaceValues(widget.value, quarterTurns: _motion.quarterTurns);
-    final edge = await DiceFaceTextures.getEdge(widget.state, widget.bodyColor);
     final textures = await Future.wait(
       values.entries
           .map((e) async => MapEntry(e.key, await DiceFaceTextures.get(e.value, widget.state, widget.bodyColor))),
     );
     if (!mounted || generation != _loadGeneration) return;
-    _applyFaces(textures, edge);
+    _applyFaces(textures);
     setState(() => _facesReady = true);
   }
 
-  /// Largeur du chanfrein de chaque arête, en fraction du côté du dé.
-  static const _bevel = 0.07;
-
-  static const _faceNormals = {
-    'top': (0.0, 1.0, 0.0),
-    'bottom': (0.0, -1.0, 0.0),
-    'front': (0.0, 0.0, -1.0),
-    'back': (0.0, 0.0, 1.0),
-    'right': (1.0, 0.0, 0.0),
-    'left': (-1.0, 0.0, 0.0),
-  };
-
-  /// Pose un plan unité de [material] : [across] sur son X, [normal] sur son Y,
-  /// [down] sur son Z, mis à l'échelle ([length] sur X, [depth] sur Z) puis
-  /// reculé de [offset] le long de la normale.
-  Node _plane(Vector3 across, Vector3 normal, Vector3 down, double length, double depth, double offset, Material material) {
-    final basis = Matrix4.columns(
-      Vector4(across.x, across.y, across.z, 0),
-      Vector4(normal.x, normal.y, normal.z, 0),
-      Vector4(down.x, down.y, down.z, 0),
-      Vector4(0, 0, 0, 1),
-    );
-    return Node(
-      localTransform: basis
-        ..translateByDouble(0.0, offset, 0.0, 1.0)
-        ..scaleByDouble(length, 1.0, depth, 1.0),
-      mesh: Mesh(PlaneGeometry(), material),
-    );
-  }
-
-  void _applyFaces(List<MapEntry<String, Texture2D>> textures, Texture2D edge) {
+  void _applyFaces(List<MapEntry<String, Texture2D>> textures) {
     _dieNode.removeAll();
     // Orientation déjà posée avant le premier tick de la scène : sans elle, le
     // dé apparaîtrait un instant droit, avant de prendre son orientation.
     _onTick(Duration.zero, 0);
-    // Fini plastique mat (dé physique) plutôt que le défaut métallique
-    // brillant de PhysicallyBasedMaterial, qui donnait un aspect artificiel.
-    PhysicallyBasedMaterial plastic(Texture2D texture, double roughness) =>
-        PhysicallyBasedMaterial(baseColorTexture: texture)
-          ..metallicFactor = 0.0
-          ..roughnessFactor = roughness;
-    // Faces : un carré rétréci de deux chanfreins, posé à plat.
-    const flat = 1 - 2 * _bevel;
     for (final entry in textures) {
       final placement = dieFacePlacement(entry.key, topQuarterTurns: _motion.topQuarterTurns);
+      // Fini plastique mat (dé physique) plutôt que le défaut métallique
+      // brillant de PhysicallyBasedMaterial, qui donnait un aspect artificiel.
+      final material = PhysicallyBasedMaterial(baseColorTexture: entry.value)
+        ..metallicFactor = 0.0
+        ..roughnessFactor = 0.45;
       _dieNode.add(Node(
-        localTransform: Matrix4.copy(placement)
-          ..translateByDouble(0.0, _half, 0.0, 1.0)
-          ..scaleByDouble(flat, 1.0, flat, 1.0),
-        mesh: Mesh(PlaneGeometry(), plastic(entry.value, 0.45)),
+        localTransform: Matrix4.copy(placement)..translateByDouble(0.0, _half, 0.0, 1.0),
+        mesh: Mesh(PlaneGeometry(), material),
       ));
-    }
-    // Arêtes : un chanfrein à 45° entre chaque paire de faces voisines, plus
-    // lisse que le plat des faces, donc plus brillant, comme un vrai dé moulé.
-    final bevel = plastic(edge, 0.3);
-    final names = _faceNormals.keys.toList();
-    for (var i = 0; i < names.length; i++) {
-      for (var j = i + 1; j < names.length; j++) {
-        final (ax, ay, az) = _faceNormals[names[i]]!;
-        final (bx, by, bz) = _faceNormals[names[j]]!;
-        final n1 = Vector3(ax, ay, az);
-        final n2 = Vector3(bx, by, bz);
-        if (n1.dot(n2) != 0) continue; // faces opposées
-        final normal = (n1 + n2)..normalize();
-        final along = n1.cross(n2)..normalize();
-        final down = along.cross(normal);
-        _dieNode.add(_plane(along, normal, down, flat, _bevel * math.sqrt2, (0.5 - _bevel / 2) * math.sqrt2, bevel));
-      }
-    }
-    // Noyau : un cube un peu plus petit, qui bouche les huit coins où trois
-    // chanfreins se rejoignent sans se toucher.
-    for (final entry in _faceNormals.values) {
-      final (x, y, z) = entry;
-      final normal = Vector3(x, y, z);
-      final across = normal.cross(y.abs() == 1 ? Vector3(1, 0, 0) : Vector3(0, 1, 0));
-      final down = across.cross(normal);
-      _dieNode.add(_plane(across, normal, down, flat, flat, 0.5 - _bevel, bevel));
     }
   }
 
@@ -283,14 +220,98 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
             ? AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) => DieBounce(hop: _motion.hopAt(_controller.value), size: _size, child: child!),
-                child: SceneView(
-                  _scene,
-                  camera: PerspectiveCamera(position: Vector3(0, 0, -3.2)),
-                  onTick: _onTick,
+                // Silhouette arrondie comme celle des dés du menu : le contour du
+                // cube tel que la caméra le voit, dont chaque coin est adouci.
+                child: ClipPath(
+                  clipper: _DieSilhouetteClipper(_motion, _controller, _size),
+                  child: SceneView(
+                    _scene,
+                    camera: PerspectiveCamera(position: Vector3(0, 0, -_cameraDistance)),
+                    onTick: _onTick,
+                  ),
                 ),
               )
             : const SizedBox.shrink(),
       ),
     );
+  }
+}
+
+/// Le contour du dé à l'écran : l'enveloppe convexe de ses huit sommets, vus
+/// par la caméra de [Scene3DDie] (perspective de 45° à 3,2 de l'origine), dont
+/// chaque coin est arrondi. Se recalcule à chaque pas de [motion], donc de la
+/// rotation du dé. [side] : le côté de la vue, en pixels.
+class _DieSilhouetteClipper extends CustomClipper<Path> {
+  final DieRollMotion motion;
+  final AnimationController progress;
+  final double side;
+
+  _DieSilhouetteClipper(this.motion, this.progress, this.side) : super(reclip: progress);
+
+  @override
+  Path getClip(Size size) {
+    final angles = motion.anglesAt(progress.value);
+    final spin = Matrix4.identity()
+      ..rotateX(angles.x)
+      ..rotateY(angles.y)
+      ..rotateZ(angles.z);
+    final focal = 1 / math.tan(45 * math.pi / 180 / 2);
+    final points = <Offset>[];
+    for (final x in const [-0.5, 0.5]) {
+      for (final y in const [-0.5, 0.5]) {
+        for (final z in const [-0.5, 0.5]) {
+          final v = spin.transformed3(Vector3(x, y, z));
+          final depth = _Scene3DDieState._cameraDistance + v.z;
+          points.add(Offset(
+            size.width / 2 + v.x * focal / depth * size.width / 2,
+            size.height / 2 - v.y * focal / depth * size.height / 2,
+          ));
+        }
+      }
+    }
+    return _roundedPolygon(_convexHull(points), side * 0.07);
+  }
+
+  @override
+  bool shouldReclip(_DieSilhouetteClipper old) => old.motion != motion || old.side != side;
+
+  static List<Offset> _convexHull(List<Offset> points) {
+    final sorted = [...points]..sort((a, b) => a.dx != b.dx ? a.dx.compareTo(b.dx) : a.dy.compareTo(b.dy));
+    double cross(Offset o, Offset a, Offset b) => (a.dx - o.dx) * (b.dy - o.dy) - (a.dy - o.dy) * (b.dx - o.dx);
+    final lower = <Offset>[];
+    for (final p in sorted) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower.last, p) <= 1e-6) {
+        lower.removeLast();
+      }
+      lower.add(p);
+    }
+    final upper = <Offset>[];
+    for (final p in sorted.reversed) {
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper.last, p) <= 1e-6) {
+        upper.removeLast();
+      }
+      upper.add(p);
+    }
+    return [...lower..removeLast(), ...upper..removeLast()];
+  }
+
+  /// Le polygone [points] dont chaque coin est arrondi sur [radius] de chaque côté.
+  static Path _roundedPolygon(List<Offset> points, double radius) {
+    final path = Path();
+    final n = points.length;
+    for (var i = 0; i < n; i++) {
+      final prev = points[(i + n - 1) % n];
+      final p = points[i];
+      final next = points[(i + 1) % n];
+      final enter = p + (prev - p) / (prev - p).distance * radius;
+      final leave = p + (next - p) / (next - p).distance * radius;
+      if (i == 0) {
+        path.moveTo(enter.dx, enter.dy);
+      } else {
+        path.lineTo(enter.dx, enter.dy);
+      }
+      path.quadraticBezierTo(p.dx, p.dy, leave.dx, leave.dy);
+    }
+    return path..close();
   }
 }
