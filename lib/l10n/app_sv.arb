@@ -221,7 +221,7 @@
   "tutorialBustIntro": "Ett kast utan poäng är en bom: den pågående handen är förlorad. Du har 1500 poäng.",
   "tutorialHotDiceOutro": "Kom ihåg: stanna aldrig på en summa som slutar på 50, och heta tärningar kastas alltid om.",
   "tutorialHotDiceStop": "500: nog för att komma in, och ingen 50 på slutet. Stanna.",
-  "tutorialHotDiceFives": "Två femmor, men valfria: den här väljaren bestämmer hur många du behåller. Med båda skulle 550 sluta på 50: du kunde inte stanna. Välj 1.",
+  "tutorialHotDiceFives": "Två femmor, men valfria: den här knappen föreslår att behålla 0, 1 eller 2, med den summa du skulle få. Med båda skulle 550 sluta på 50: du kunde inte stanna. Behåll bara en.",
   "tutorialHotDiceFullHand": "Tre treor: 300, handen stiger till 450. Alla tärningar gav poäng: heta tärningar! Handens ram visar summan du skulle ha; du kastar om alla 5 och kan inte stanna.",
   "tutorialHotDiceKept": "Ettan och femman behålls: handen är värd 150. Kasta om de 3 andra tärningarna.",
   "tutorialHotDiceIntro": "När alla tärningar ger poäng är det heta tärningar: man kastar om alla 5. Och en ensam femma är ibland valfri.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "Du kan ändra det senare i inställningarna.",
 
-  "themeChoiceContinue": "Fortsätt"
+  "themeChoiceContinue": "Fortsätt",
+
+  "exchangeFivesTooltip": "Välj hur många femmor du behåller",
+
+  "exchangeIgnoreOne": "Ignorera femman",
+
+  "exchangeIgnoreAll": "Ignorera alla femmor",
+
+  "exchangeKeepOne": "Behåll femman",
+
+  "exchangeKeepSingle": "Behåll bara en femma",
+
+  "exchangeKeepAll": "Behåll alla femmor",
+
+  "exchangeKeepCount": "Behåll {count} femmor"
 }

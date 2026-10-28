@@ -1385,7 +1385,7 @@ abstract class AppLocalizations {
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Deux 5, mais facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Choisissez 1.'**
+  /// **'Deux 5, mais facultatifs : ce bouton propose d\'en garder 0, 1 ou 2, avec le total que vous auriez. Avec les deux, 550 finirait en 50 : impossible de s\'arrêter. Gardez-en un seul.'**
   String get tutorialHotDiceFives;
 
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
@@ -2221,6 +2221,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer'**
   String get themeChoiceContinue;
+
+  /// Infobulle du bouton de recyclage : chaque tap rend un 5 de plus au lieu de le garder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir combien de 5 garder'**
+  String get exchangeFivesTooltip;
+
+  /// Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ignorer le cinq'**
+  String get exchangeIgnoreOne;
+
+  /// Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ignorer tous les cinq'**
+  String get exchangeIgnoreAll;
+
+  /// Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder le cinq'**
+  String get exchangeKeepOne;
+
+  /// Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder un seul cinq'**
+  String get exchangeKeepSingle;
+
+  /// Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder tous les cinq'**
+  String get exchangeKeepAll;
+
+  /// Entrée de la bulle du bouton de recyclage : garder {count} des 5 (plus de deux 5 déclinables, rare).
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder {count} cinq'**
+  String exchangeKeepCount(int count);
 }
 
 class _AppLocalizationsDelegate

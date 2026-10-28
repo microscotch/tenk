@@ -796,7 +796,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'Två femmor, men valfria: den här väljaren bestämmer hur många du behåller. Med båda skulle 550 sluta på 50: du kunde inte stanna. Välj 1.';
+      'Två femmor, men valfria: den här knappen föreslår att behålla 0, 1 eller 2, med den summa du skulle få. Med båda skulle 550 sluta på 50: du kunde inte stanna. Behåll bara en.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1257,4 +1257,27 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Fortsätt';
+
+  @override
+  String get exchangeFivesTooltip => 'Välj hur många femmor du behåller';
+
+  @override
+  String get exchangeIgnoreOne => 'Ignorera femman';
+
+  @override
+  String get exchangeIgnoreAll => 'Ignorera alla femmor';
+
+  @override
+  String get exchangeKeepOne => 'Behåll femman';
+
+  @override
+  String get exchangeKeepSingle => 'Behåll bara en femma';
+
+  @override
+  String get exchangeKeepAll => 'Behåll alla femmor';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return 'Behåll $count femmor';
+  }
 }

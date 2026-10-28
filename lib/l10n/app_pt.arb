@@ -221,7 +221,7 @@
   "tutorialBustIntro": "Um lançamento que não pontua é um rebentamento: a mão em curso perde-se. Tens 1500 pontos.",
   "tutorialHotDiceOutro": "Lembra-te: nunca parar num total que termine em 50, e os dados quentes relançam-se sempre.",
   "tutorialHotDiceStop": "500: chega para entrar, e sem 50 no fim. Para.",
-  "tutorialHotDiceFives": "Dois 5, mas opcionais: este seletor escolhe quantos manter. Com os dois, 550 terminaria em 50: não poderias parar. Escolhe 1.",
+  "tutorialHotDiceFives": "Dois 5, mas opcionais: este botão propõe manter 0, 1 ou 2, com o total que terias. Com os dois, 550 terminaria em 50: não poderias parar. Mantém só um.",
   "tutorialHotDiceFullHand": "Três 3: 300, a mão sobe para 450. Todos os dados pontuaram: dados quentes! A moldura da mão mostra o total que terias; relançam-se os 5 dados, sem poder parar.",
   "tutorialHotDiceKept": "O 1 e o 5 ficam guardados: a mão vale 150. Relança os outros 3 dados.",
   "tutorialHotDiceIntro": "Quando todos os dados pontuam são dados quentes: relançam-se os 5. E um 5 sozinho às vezes é opcional.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "Pode alterá-lo mais tarde nas definições.",
 
-  "themeChoiceContinue": "Continuar"
+  "themeChoiceContinue": "Continuar",
+
+  "exchangeFivesTooltip": "Escolher quantos 5 manter",
+
+  "exchangeIgnoreOne": "Ignorar o cinco",
+
+  "exchangeIgnoreAll": "Ignorar todos os cincos",
+
+  "exchangeKeepOne": "Manter o cinco",
+
+  "exchangeKeepSingle": "Manter um só cinco",
+
+  "exchangeKeepAll": "Manter todos os cincos",
+
+  "exchangeKeepCount": "Manter {count} cincos"
 }

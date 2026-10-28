@@ -221,7 +221,7 @@
   "tutorialBustIntro": "Et kast uten poeng er en bom: den pågående hånden er tapt. Du har 1500 poeng.",
   "tutorialHotDiceOutro": "Husk: aldri stopp på en sum som ender på 50, og varme terninger kastes alltid på nytt.",
   "tutorialHotDiceStop": "500: nok til å komme inn, og ingen 50 til slutt. Stopp.",
-  "tutorialHotDiceFives": "To femmere, men valgfrie: denne velgeren bestemmer hvor mange du beholder. Med begge ville 550 ende på 50: du kunne ikke stoppe. Velg 1.",
+  "tutorialHotDiceFives": "To femmere, men valgfrie: denne knappen foreslår å beholde 0, 1 eller 2, med totalen du ville fått. Med begge ville 550 ende på 50: du kunne ikke stoppe. Behold bare én.",
   "tutorialHotDiceFullHand": "Tre treere: 300, hånden stiger til 450. Alle terningene ga poeng: varme terninger! Rammen rundt hånden viser summen du ville hatt; du kaster alle 5 på nytt og kan ikke stoppe.",
   "tutorialHotDiceKept": "Eneren og femmeren beholdes: hånden er verdt 150. Kast de 3 andre terningene på nytt.",
   "tutorialHotDiceIntro": "Når alle terningene gir poeng, er det varme terninger: man kaster alle 5 på nytt. Og en enslig femmer er noen ganger valgfri.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "Du kan endre det senere i innstillingene.",
 
-  "themeChoiceContinue": "Fortsett"
+  "themeChoiceContinue": "Fortsett",
+
+  "exchangeFivesTooltip": "Velg hvor mange 5-ere du beholder",
+
+  "exchangeIgnoreOne": "Ignorer femmeren",
+
+  "exchangeIgnoreAll": "Ignorer alle femmerne",
+
+  "exchangeKeepOne": "Behold femmeren",
+
+  "exchangeKeepSingle": "Behold bare én femmer",
+
+  "exchangeKeepAll": "Behold alle femmerne",
+
+  "exchangeKeepCount": "Behold {count} femmere"
 }

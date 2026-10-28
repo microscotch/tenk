@@ -221,7 +221,7 @@
   "tutorialBustIntro": "Una tirada que no puntúa es un pase: la mano en curso se pierde. Tienes 1500 puntos.",
   "tutorialHotDiceOutro": "Recuerda: nunca te plantes en un total que acabe en 50, y los dados calientes siempre se vuelven a tirar.",
   "tutorialHotDiceStop": "500: suficiente para entrar, y sin 50 al final. Plántate.",
-  "tutorialHotDiceFives": "Dos 5, pero opcionales: este selector elige cuántos guardar. Con los dos, 550 acabaría en 50: no podrías plantarte. Elige 1.",
+  "tutorialHotDiceFives": "Dos 5, pero opcionales: este botón propone guardar 0, 1 o 2, con el total que tendrías. Con los dos, 550 acabaría en 50: no podrías plantarte. Guarda solo uno.",
   "tutorialHotDiceFullHand": "Tres 3: 300, la mano sube a 450. Todos los dados han puntuado: ¡dados calientes! El marco de la mano muestra el total que tendrías; se vuelven a tirar los 5 dados, sin poder plantarse.",
   "tutorialHotDiceKept": "El 1 y el 5 se guardan: la mano vale 150. Vuelve a tirar los otros 3 dados.",
   "tutorialHotDiceIntro": "Cuando todos los dados puntúan, son dados calientes: se vuelven a tirar los 5. Y un 5 solo a veces es opcional.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "Podrás cambiarlo más tarde en los ajustes.",
 
-  "themeChoiceContinue": "Continuar"
+  "themeChoiceContinue": "Continuar",
+
+  "exchangeFivesTooltip": "Elegir cuántos 5 guardar",
+
+  "exchangeIgnoreOne": "Ignorar el cinco",
+
+  "exchangeIgnoreAll": "Ignorar todos los cincos",
+
+  "exchangeKeepOne": "Guardar el cinco",
+
+  "exchangeKeepSingle": "Guardar un solo cinco",
+
+  "exchangeKeepAll": "Guardar todos los cincos",
+
+  "exchangeKeepCount": "Guardar {count} cincos"
 }

@@ -804,7 +804,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'Doi de 5, dar opționali: acest selector alege câți păstrezi. Cu amândoi, 550 s-ar termina în 50: nu te-ai putea opri. Alege 1.';
+      'Doi de 5, dar opționali: acest buton propune să păstrezi 0, 1 sau 2, cu totalul pe care l-ai avea. Cu amândoi, 550 s-ar termina în 50: nu te-ai putea opri. Păstrează doar unul.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1268,4 +1268,27 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Continuă';
+
+  @override
+  String get exchangeFivesTooltip => 'Alege câți de 5 păstrezi';
+
+  @override
+  String get exchangeIgnoreOne => 'Ignoră cincele';
+
+  @override
+  String get exchangeIgnoreAll => 'Ignoră toți cincii';
+
+  @override
+  String get exchangeKeepOne => 'Păstrează cincele';
+
+  @override
+  String get exchangeKeepSingle => 'Păstrează un singur cinci';
+
+  @override
+  String get exchangeKeepAll => 'Păstrează toți cincii';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return 'Păstrează $count de cinci';
+  }
 }

@@ -221,7 +221,7 @@
   "tutorialBustIntro": "Heitto ilman pisteitä on epäonnistuminen: käynnissä oleva käsi menetetään. Sinulla on 1500 pistettä.",
   "tutorialHotDiceOutro": "Muista: älä koskaan lopeta summaan, joka päättyy lukuun 50, ja kuumat nopat heitetään aina uudelleen.",
   "tutorialHotDiceStop": "500: riittää sisään, eikä lopussa ole 50. Lopeta.",
-  "tutorialHotDiceFives": "Kaksi viitosta, mutta vapaaehtoisia: tämä valitsin määrää, montako pidät. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Valitse 1.",
+  "tutorialHotDiceFives": "Kaksi viitosta, mutta vapaaehtoisia: tämä painike ehdottaa 0, 1 tai 2 pitämistä sekä kokonaispisteet, jotka saisit. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Pidä vain yksi.",
   "tutorialHotDiceFullHand": "Kolme kolmosta: 300, käsi nousee 450:een. Kaikki nopat toivat pisteitä: kuumat nopat! Käden kehys näyttää summan, joka sinulla olisi; kaikki 5 heitetään uudelleen etkä voi lopettaa.",
   "tutorialHotDiceKept": "Ykkönen ja viitonen pidetään: käsi on 150 pisteen arvoinen. Heitä muut 3 noppaa uudelleen.",
   "tutorialHotDiceIntro": "Kun kaikki nopat tuovat pisteitä, ne ovat kuumat nopat: kaikki 5 heitetään uudelleen. Ja yksittäinen viitonen on joskus vapaaehtoinen.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "Voit muuttaa sitä myöhemmin asetuksissa.",
 
-  "themeChoiceContinue": "Jatka"
+  "themeChoiceContinue": "Jatka",
+
+  "exchangeFivesTooltip": "Valitse montako viitosta pidät",
+
+  "exchangeIgnoreOne": "Ohita viitonen",
+
+  "exchangeIgnoreAll": "Ohita kaikki viitoset",
+
+  "exchangeKeepOne": "Pidä viitonen",
+
+  "exchangeKeepSingle": "Pidä vain yksi viitonen",
+
+  "exchangeKeepAll": "Pidä kaikki viitoset",
+
+  "exchangeKeepCount": "Pidä {count} viitosta"
 }

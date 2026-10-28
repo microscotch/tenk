@@ -221,7 +221,7 @@
   "tutorialBustIntro": "A roll that scores nothing is a bust: the current hand is lost. You have 1,500 points.",
   "tutorialHotDiceOutro": "Remember: never stop on a total ending in 50, and hot dice are always rerolled.",
   "tutorialHotDiceStop": "500: enough to enter, and no 50 at the end. Stop.",
-  "tutorialHotDiceFives": "Two 5s, but they're optional: this selector chooses how many to keep. With both, 550 would end in 50: you couldn't stop. Choose 1.",
+  "tutorialHotDiceFives": "Two 5s, but they're optional: this button offers to keep 0, 1 or 2, with the total you'd have. With both, 550 would end in 50: you couldn't stop. Keep just one.",
   "tutorialHotDiceFullHand": "Three 3s: 300, the hand rises to 450. Every die scored: hot dice! The hand's frame shows the total you would have; you reroll all 5 dice and can't stop.",
   "tutorialHotDiceKept": "The ace and the 5 are kept: the hand is worth 150. Reroll the other 3 dice.",
   "tutorialHotDiceIntro": "When every die scores, that's hot dice: you reroll all 5. And a lone 5 is sometimes optional.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "You can change it later in the settings.",
 
-  "themeChoiceContinue": "Continue"
+  "themeChoiceContinue": "Continue",
+
+  "exchangeFivesTooltip": "Choose how many 5s to keep",
+
+  "exchangeIgnoreOne": "Ignore the five",
+
+  "exchangeIgnoreAll": "Ignore all fives",
+
+  "exchangeKeepOne": "Keep the five",
+
+  "exchangeKeepSingle": "Keep just one five",
+
+  "exchangeKeepAll": "Keep all fives",
+
+  "exchangeKeepCount": "Keep {count} fives"
 }

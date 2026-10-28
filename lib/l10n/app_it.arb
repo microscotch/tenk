@@ -221,7 +221,7 @@
   "tutorialBustIntro": "Un lancio che non fa punti è uno sballo: la mano in corso è persa. Hai 1.500 punti.",
   "tutorialHotDiceOutro": "Ricorda: mai fermarsi su un totale che finisce in 50, e i dadi bollenti si rilanciano sempre.",
   "tutorialHotDiceStop": "500: abbastanza per entrare, e niente 50 alla fine. Fermati.",
-  "tutorialHotDiceFives": "Due 5, ma facoltativi: questo selettore sceglie quanti tenerne. Con entrambi, 550 finirebbe in 50: non potresti fermarti. Scegli 1.",
+  "tutorialHotDiceFives": "Due 5, ma facoltativi: questo pulsante propone di tenerne 0, 1 o 2, con il totale che avresti. Con entrambi, 550 finirebbe in 50: non potresti fermarti. Tienine uno solo.",
   "tutorialHotDiceFullHand": "Tre 3: 300, la mano sale a 450. Tutti i dadi hanno fatto punti: dadi bollenti! La cornice della mano mostra il totale che avresti; si rilanciano tutti e 5 i dadi, senza potersi fermare.",
   "tutorialHotDiceKept": "L'1 e il 5 si tengono: la mano vale 150. Rilancia gli altri 3 dadi.",
   "tutorialHotDiceIntro": "Quando tutti i dadi fanno punti sono dadi bollenti: si rilanciano tutti e 5. E un 5 da solo a volte è facoltativo.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "Potrai cambiarlo più tardi nelle impostazioni.",
 
-  "themeChoiceContinue": "Continua"
+  "themeChoiceContinue": "Continua",
+
+  "exchangeFivesTooltip": "Scegli quanti 5 tenere",
+
+  "exchangeIgnoreOne": "Ignora il cinque",
+
+  "exchangeIgnoreAll": "Ignora tutti i cinque",
+
+  "exchangeKeepOne": "Tieni il cinque",
+
+  "exchangeKeepSingle": "Tieni un solo cinque",
+
+  "exchangeKeepAll": "Tieni tutti i cinque",
+
+  "exchangeKeepCount": "Tieni {count} cinque"
 }

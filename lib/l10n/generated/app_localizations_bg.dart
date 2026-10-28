@@ -797,7 +797,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'Две петици, но по избор: този избирател определя колко да запазите. С двете 550 би завършило на 50: не бихте могли да спрете. Изберете 1.';
+      'Две петици, но по избор: този бутон предлага да запазите 0, 1 или 2, с общия резултат, който бихте имали. С двете 550 би завършило на 50: не бихте могли да спрете. Запазете само една.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1257,4 +1257,27 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Продължи';
+
+  @override
+  String get exchangeFivesTooltip => 'Изберете колко петици да запазите';
+
+  @override
+  String get exchangeIgnoreOne => 'Игнорирай петицата';
+
+  @override
+  String get exchangeIgnoreAll => 'Игнорирай всички петици';
+
+  @override
+  String get exchangeKeepOne => 'Запази петицата';
+
+  @override
+  String get exchangeKeepSingle => 'Запази само една петица';
+
+  @override
+  String get exchangeKeepAll => 'Запази всички петици';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return 'Запази $count петици';
+  }
 }

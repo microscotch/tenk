@@ -221,7 +221,7 @@
   "tutorialBustIntro": "O aruncare fără puncte e un eșec: mâna curentă se pierde. Ai 1.500 de puncte.",
   "tutorialHotDiceOutro": "Reține: niciodată nu te oprești pe un total care se termină în 50, iar zarurile fierbinți se aruncă mereu din nou.",
   "tutorialHotDiceStop": "500: destul ca să intri, și fără 50 la final. Oprește-te.",
-  "tutorialHotDiceFives": "Doi de 5, dar opționali: acest selector alege câți păstrezi. Cu amândoi, 550 s-ar termina în 50: nu te-ai putea opri. Alege 1.",
+  "tutorialHotDiceFives": "Doi de 5, dar opționali: acest buton propune să păstrezi 0, 1 sau 2, cu totalul pe care l-ai avea. Cu amândoi, 550 s-ar termina în 50: nu te-ai putea opri. Păstrează doar unul.",
   "tutorialHotDiceFullHand": "Trei de 3: 300, mâna urcă la 450. Toate zarurile au contat: zaruri fierbinți! Chenarul mâinii arată totalul pe care l-ai avea; se aruncă din nou toate 5, fără să te poți opri.",
   "tutorialHotDiceKept": "Zarurile 1 și 5 se păstrează: mâna valorează 150. Aruncă din nou celelalte 3 zaruri.",
   "tutorialHotDiceIntro": "Când toate zarurile aduc puncte, sunt zaruri fierbinți: se aruncă din nou toate 5. Iar un 5 singur e uneori opțional.",
@@ -366,5 +366,19 @@
 
   "themeChoiceMessage": "O poți schimba mai târziu în setări.",
 
-  "themeChoiceContinue": "Continuă"
+  "themeChoiceContinue": "Continuă",
+
+  "exchangeFivesTooltip": "Alege câți de 5 păstrezi",
+
+  "exchangeIgnoreOne": "Ignoră cincele",
+
+  "exchangeIgnoreAll": "Ignoră toți cincii",
+
+  "exchangeKeepOne": "Păstrează cincele",
+
+  "exchangeKeepSingle": "Păstrează un singur cinci",
+
+  "exchangeKeepAll": "Păstrează toți cincii",
+
+  "exchangeKeepCount": "Păstrează {count} de cinci"
 }

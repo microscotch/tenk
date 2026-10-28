@@ -796,7 +796,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'To femmere, men valgfrie: denne velgeren bestemmer hvor mange du beholder. Med begge ville 550 ende på 50: du kunne ikke stoppe. Velg 1.';
+      'To femmere, men valgfrie: denne knappen foreslår å beholde 0, 1 eller 2, med totalen du ville fått. Med begge ville 550 ende på 50: du kunne ikke stoppe. Behold bare én.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1259,4 +1259,27 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Fortsett';
+
+  @override
+  String get exchangeFivesTooltip => 'Velg hvor mange 5-ere du beholder';
+
+  @override
+  String get exchangeIgnoreOne => 'Ignorer femmeren';
+
+  @override
+  String get exchangeIgnoreAll => 'Ignorer alle femmerne';
+
+  @override
+  String get exchangeKeepOne => 'Behold femmeren';
+
+  @override
+  String get exchangeKeepSingle => 'Behold bare én femmer';
+
+  @override
+  String get exchangeKeepAll => 'Behold alle femmerne';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return 'Behold $count femmere';
+  }
 }

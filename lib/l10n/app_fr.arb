@@ -695,7 +695,7 @@
   "@tutorialHotDiceOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
   "tutorialHotDiceStop": "500 : assez pour entrer, et pas de 50 à la fin. Arrêtez-vous.",
   "@tutorialHotDiceStop": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
-  "tutorialHotDiceFives": "Deux 5, mais facultatifs : ce sélecteur choisit combien en garder. Avec les deux, 550 finirait en 50 : impossible de s'arrêter. Choisissez 1.",
+  "tutorialHotDiceFives": "Deux 5, mais facultatifs : ce bouton propose d'en garder 0, 1 ou 2, avec le total que vous auriez. Avec les deux, 550 finirait en 50 : impossible de s'arrêter. Gardez-en un seul.",
   "@tutorialHotDiceFives": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
   "tutorialHotDiceFullHand": "Un brelan de 3 : 300, la main monte à 450. Tous les dés ont servi : main pleine ! Le liseré de la main montre le total que vous auriez ; on relance les 5 dés, sans pouvoir s'arrêter.",
   "@tutorialHotDiceFullHand": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
@@ -1057,5 +1057,26 @@
   "@themeChoiceMessage": {"description": "Sous-titre de cet écran : le choix reste modifiable dans les réglages."},
 
   "themeChoiceContinue": "Continuer",
-  "@themeChoiceContinue": {"description": "Bouton qui valide le thème choisi et poursuit le lancement."}
+  "@themeChoiceContinue": {"description": "Bouton qui valide le thème choisi et poursuit le lancement."},
+
+  "exchangeFivesTooltip": "Choisir combien de 5 garder",
+  "@exchangeFivesTooltip": {"description": "Infobulle du bouton de recyclage : chaque tap rend un 5 de plus au lieu de le garder."},
+
+  "exchangeIgnoreOne": "Ignorer le cinq",
+  "@exchangeIgnoreOne": {"description": "Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel)."},
+
+  "exchangeIgnoreAll": "Ignorer tous les cinq",
+  "@exchangeIgnoreAll": {"description": "Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel)."},
+
+  "exchangeKeepOne": "Garder le cinq",
+  "@exchangeKeepOne": {"description": "Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel)."},
+
+  "exchangeKeepSingle": "Garder un seul cinq",
+  "@exchangeKeepSingle": {"description": "Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel)."},
+
+  "exchangeKeepAll": "Garder tous les cinq",
+  "@exchangeKeepAll": {"description": "Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel)."},
+
+  "exchangeKeepCount": "Garder {count} cinq",
+  "@exchangeKeepCount": {"description": "Entrée de la bulle du bouton de recyclage : garder {count} des 5 (plus de deux 5 déclinables, rare).", "placeholders": {"count": {"type": "int"}}}
 }

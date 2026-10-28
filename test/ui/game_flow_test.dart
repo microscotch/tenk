@@ -2232,7 +2232,7 @@ void main() {
     final button = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'A joue…'));
     expect(button.onPressed, isNull);
     expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas de bouton Stop pendant le tour d\'un bot');
-    expect(find.byIcon(Icons.swap_vert), findsNothing);
+    expect(find.byIcon(Icons.recycling), findsNothing);
     // Le bot porte la même icône que le joueur remplacé par un bot en ligne,
     // lui seul : B est humain.
     expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
@@ -2476,12 +2476,49 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // On lit les valeurs proposées dans la combobox plutôt que du texte
-    // brut : des chiffres isolés apparaissent ailleurs sur l'écran.
-    final dropdown = tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>));
-    final offered = dropdown.items!.map((item) => item.value).toList();
-    expect(offered, [0, 1],
+    // Le bouton de recyclage boucle entre les gardes légales : ses bornes sont
+    // celles du moteur, et la bulle n'apparaît que sur un vrai choix (ici, 10000
+    // pile est automatique : plus aucun choix une fois les dés posés).
+    final turn = container.read(gameProvider)!.activeTurn!;
+    expect(minKeepableFives(turn.pendingRoll!), 0);
+    expect(maxKeepableFives(turn, turn.pendingRoll!, currentTotal: 9850), 1,
         reason: 'garder 0 ou 1 cinq reste légal, en garder 2 dépasserait 10000');
+  });
+
+  testWidgets('le bouton de recyclage ouvre une bulle avec tous les choix de garde, chacun suivi du total potentiel',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', totalScore: 1000, hasEntered: true), Player(name: 'B')],
+      activeTurn: TurnState(
+        diceToRoll: 5,
+        pendingRoll: analyzeRoll([1, 5, 5, 2, 3]),
+        hasRolledThisTurn: true,
+      ),
+    );
+    container.read(gameProvider.notifier).debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('exchange-bubble')), findsNothing, reason: 'la bulle ne s\'ouvre qu\'au tap');
+    await tester.tap(find.byIcon(Icons.recycling));
+    await tester.pumpAndSettle();
+    // Tous les choix, du moins au plus de 5 gardés, chacun suivi de son total potentiel.
+    expect(find.text('Ignorer tous les cinq · 1100'), findsOneWidget);
+    expect(find.text('Garder un seul cinq · 1150'), findsOneWidget);
+    expect(find.text('Garder tous les cinq · 1200'), findsOneWidget);
+
+    await tester.tap(find.text('Ignorer tous les cinq · 1100'));
+    await tester.pumpAndSettle();
+    expect(find.text('Garder un seul cinq · 1150'), findsNothing, reason: 'la bulle se referme sur le choix');
+    expect(find.textContaining('(<200)', findRichText: true), findsWidgets, reason: 'sans aucun 5, la main (100) reste sous le minimum');
   });
 
   testWidgets('les dés d\'un tour d\'IA restent à leur taille d\'avant l\'élargissement', (tester) async {
@@ -2605,7 +2642,7 @@ void main() {
 
     final stop = tester.getRect(find.byIcon(Icons.front_hand));
     final roll = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
-    final exchange = tester.getRect(find.byIcon(Icons.swap_vert));
+    final exchange = tester.getRect(find.byIcon(Icons.recycling));
 
     // Réglage par défaut, droitier : l'échange tombe sous le pouce droit...
     expect(exchange.center.dx, lessThan(roll.left), reason: 'droitier : l\'échange est à gauche');
@@ -2615,7 +2652,7 @@ void main() {
     container.read(settingsProvider.notifier).setRightHanded(false);
     await tester.pumpAndSettle();
     final stopG = tester.getRect(find.byIcon(Icons.front_hand));
-    final exchangeG = tester.getRect(find.byIcon(Icons.swap_vert));
+    final exchangeG = tester.getRect(find.byIcon(Icons.recycling));
     final rollG = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
     expect(stopG.center.dx, lessThan(rollG.left), reason: 'gaucher : Stop passe à gauche');
     expect(exchangeG.center.dx, greaterThan(rollG.right), reason: 'gaucher : l\'échange passe à droite');
@@ -2630,7 +2667,7 @@ void main() {
 
     expect(_stopEnabled(tester), isTrue, reason: '300 banqués suffisent pour s\'arrêter');
     expect(
-      tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged,
+      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.recycling)).onPressed,
       isNotNull,
       reason: 'deux 5 déclinables : l\'échange est possible',
     );
@@ -2661,13 +2698,14 @@ void main() {
     await tester.pump();
 
     expect(find.byIcon(Icons.front_hand), findsOneWidget, reason: 'Stop reste visible');
-    expect(find.byIcon(Icons.swap_vert), findsOneWidget, reason: 'l\'échange reste visible');
+    expect(find.byIcon(Icons.recycling), findsOneWidget, reason: 'l\'échange reste visible');
     expect(_stopEnabled(tester), isFalse, reason: 'rien n\'a encore été lancé');
     expect(
-      tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged,
+      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.recycling)).onPressed,
       isNull,
       reason: 'aucun 5 à échanger',
     );
+    expect(find.byKey(const ValueKey('exchange-bubble')), findsNothing, reason: 'sans choix, pas de bulle');
   });
 
   testWidgets('le pourcentage de chance de marquer n\'est affiché que si l\'option est activée',

@@ -23,7 +23,7 @@ enum TutorialTarget {
   /// Le bouton de lancer.
   roll,
 
-  /// Le sélecteur du nombre de 5 à garder.
+  /// Le bouton de recyclage, qui fait défiler le nombre de 5 à garder.
   exchange,
 
   /// Le bouton « S'arrêter ».

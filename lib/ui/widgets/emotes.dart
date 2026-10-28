@@ -247,10 +247,13 @@ class _PhraseBubbleRoute extends PopupRoute<String> {
   final Rect anchor;
   final List<({String id, String text})> phrases;
 
+  /// L'entrée déjà choisie, mise en valeur ; nulle pour des phrases.
+  final String? selectedId;
+
   @override
   final String barrierLabel;
 
-  _PhraseBubbleRoute({required this.anchor, required this.phrases, required this.barrierLabel});
+  _PhraseBubbleRoute({required this.anchor, required this.phrases, required this.barrierLabel, this.selectedId});
 
   static const _margin = 8.0;
   static const _maxWidth = 280.0;
@@ -280,7 +283,7 @@ class _PhraseBubbleRoute extends PopupRoute<String> {
             scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
             alignment: Alignment(((tailX / width) * 2) - 1, 1),
             child: CustomPaint(
-              painter: _DownBubblePainter(
+              painter: DownBubblePainter(
                 fill: SpeechBubble._paper,
                 outline: SpeechBubble._outline,
                 tail: SpeechBubble.tail,
@@ -295,14 +298,25 @@ class _PhraseBubbleRoute extends PopupRoute<String> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       for (final phrase in phrases)
-                        InkWell(
-                          borderRadius: BorderRadius.circular(10),
-                          onTap: () => Navigator.of(context).pop(phrase.id),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                            child: Text(
-                              phrase.text,
-                              style: const TextStyle(color: SpeechBubble._ink, fontWeight: FontWeight.w700, fontSize: 15),
+                        Ink(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: phrase.id == selectedId ? SpeechBubble._outline.withValues(alpha: 0.18) : null,
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () => Navigator.of(context).pop(phrase.id),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                              child: Text(
+                                phrase.text,
+                                style: const TextStyle(
+                                  color: SpeechBubble._ink,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -320,13 +334,13 @@ class _PhraseBubbleRoute extends PopupRoute<String> {
 
 /// La bulle des phrases : le même papier et le même trait que [SpeechBubble],
 /// mais la pointe en bas, à [tailX] du bord gauche, vers le bouton.
-class _DownBubblePainter extends CustomPainter {
+class DownBubblePainter extends CustomPainter {
   final Color fill;
   final Color outline;
   final double tail;
   final double tailX;
 
-  const _DownBubblePainter({required this.fill, required this.outline, required this.tail, required this.tailX});
+  const DownBubblePainter({required this.fill, required this.outline, required this.tail, required this.tailX});
 
   Path _shape(Size size) {
     const radius = 14.0;
@@ -356,7 +370,7 @@ class _DownBubblePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DownBubblePainter old) =>
+  bool shouldRepaint(DownBubblePainter old) =>
       old.fill != fill || old.outline != outline || old.tail != tail || old.tailX != tailX;
 }
 
@@ -424,7 +438,7 @@ class _ComicTooltipState extends State<ComicTooltip> {
       child: IgnorePointer(
         child: ExcludeSemantics(
           child: CustomPaint(
-            painter: _DownBubblePainter(
+            painter: DownBubblePainter(
               fill: SpeechBubble._paper,
               outline: SpeechBubble._outline,
               tail: SpeechBubble.tail,
@@ -462,4 +476,26 @@ class _ComicTooltipState extends State<ComicTooltip> {
       ),
     );
   }
+}
+
+/// Ouvre [choices] dans une bulle de bande dessinée posée au-dessus de
+/// [anchorContext] (le bouton qui l'ouvre), sa pointe vers lui, et rend l'id de
+/// l'entrée touchée — nul si on referme la bulle. [selectedId] est mise en
+/// valeur.
+Future<String?> showChoiceBubble(
+  BuildContext context,
+  BuildContext anchorContext, {
+  required List<({String id, String text})> choices,
+  String? selectedId,
+}) {
+  final box = anchorContext.findRenderObject()! as RenderBox;
+  final navigator = Navigator.of(context);
+  final overlay = navigator.overlay!.context.findRenderObject()! as RenderBox;
+  final anchor = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+  return navigator.push<String>(_PhraseBubbleRoute(
+    anchor: anchor,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    phrases: choices,
+    selectedId: selectedId,
+  ));
 }

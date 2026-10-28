@@ -795,7 +795,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'Two 5s, but they\'re optional: this selector chooses how many to keep. With both, 550 would end in 50: you couldn\'t stop. Choose 1.';
+      'Two 5s, but they\'re optional: this button offers to keep 0, 1 or 2, with the total you\'d have. With both, 550 would end in 50: you couldn\'t stop. Keep just one.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1255,4 +1255,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Continue';
+
+  @override
+  String get exchangeFivesTooltip => 'Choose how many 5s to keep';
+
+  @override
+  String get exchangeIgnoreOne => 'Ignore the five';
+
+  @override
+  String get exchangeIgnoreAll => 'Ignore all fives';
+
+  @override
+  String get exchangeKeepOne => 'Keep the five';
+
+  @override
+  String get exchangeKeepSingle => 'Keep just one five';
+
+  @override
+  String get exchangeKeepAll => 'Keep all fives';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return 'Keep $count fives';
+  }
 }

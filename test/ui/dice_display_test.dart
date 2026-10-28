@@ -93,8 +93,9 @@ void main() {
     // Interagit directement avec le callback de la combobox (plutôt que
     // d'ouvrir puis de taper l'entrée du menu) : plus robuste, et teste la
     // même mise à jour d'état que la vraie sélection à l'écran.
-    final dropdown = tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>));
-    dropdown.onChanged!(1);
+    await tester.tap(find.byIcon(Icons.recycling));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Garder un seul cinq'));
     await tester.pump();
 
     // Un seul 5 gardé : 200 + 50 = 250, l'aperçu doit se mettre à jour.
@@ -315,8 +316,9 @@ void main() {
     final widthForFour = tester.getSize(frame).width;
     expect(widthForFour, greaterThan(0));
 
-    final dropdown = tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>));
-    dropdown.onChanged!(1);
+    await tester.tap(find.byIcon(Icons.recycling));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Garder un seul cinq'));
     await tester.pumpAndSettle();
 
     // Un 5 rendu : le liseré ne couvre plus que trois dés, soit exactement

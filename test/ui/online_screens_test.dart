@@ -672,9 +672,20 @@ void main() {
       final choice = atFivesChoice();
       await joined(tester, choice.current, choice.journal);
       await openGame(tester);
-      final keep = choice.turn.pendingRoll!.declinableFives!.diceCount - choice.alternative;
 
-      tester.widget<DropdownButton<int>>(find.byType(DropdownButton<int>)).onChanged!(keep);
+      // La bulle propose tous les choix, chacun suivi du total potentiel : on prend celui de la sélection voulue.
+      await tester.tap(find.byIcon(Icons.recycling));
+      await tester.pumpAndSettle();
+      final fives = choice.turn.pendingRoll!.declinableFives!.diceCount;
+      final keepWanted = fives - choice.alternative;
+      final label = keepWanted == 0
+          ? (fives == 1 ? 'Ignorer le cinq' : 'Ignorer tous les cinq')
+          : keepWanted == fives
+              ? (fives == 1 ? 'Garder le cinq' : 'Garder tous les cinq')
+              : keepWanted == 1
+                  ? 'Garder un seul cinq'
+                  : 'Garder $keepWanted cinq';
+      await tester.tap(find.textContaining(label));
       await tester.pump(const Duration(milliseconds: 50));
 
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.select).toList();

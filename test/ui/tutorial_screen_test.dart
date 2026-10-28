@@ -96,9 +96,9 @@ void main() {
           case TutorialTarget.stop:
             await tester.tap(find.byIcon(Icons.front_hand));
           case TutorialTarget.exchange:
-            await tester.tap(find.byType(DropdownButton<int>));
+            await tester.tap(find.byIcon(Icons.recycling));
             await tester.pumpAndSettle();
-            await tester.tap(find.text('1').last);
+            await tester.tap(find.textContaining('Garder un seul cinq'));
           case TutorialTarget.bustOk:
             await tester.tap(find.byTooltip('Continuer'));
           case TutorialTarget.inheritTake:

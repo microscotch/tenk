@@ -798,7 +798,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'Kaksi viitosta, mutta vapaaehtoisia: tämä valitsin määrää, montako pidät. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Valitse 1.';
+      'Kaksi viitosta, mutta vapaaehtoisia: tämä painike ehdottaa 0, 1 tai 2 pitämistä sekä kokonaispisteet, jotka saisit. Molemmilla 550 päättyisi lukuun 50: et voisi lopettaa. Pidä vain yksi.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1260,4 +1260,27 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Jatka';
+
+  @override
+  String get exchangeFivesTooltip => 'Valitse montako viitosta pidät';
+
+  @override
+  String get exchangeIgnoreOne => 'Ohita viitonen';
+
+  @override
+  String get exchangeIgnoreAll => 'Ohita kaikki viitoset';
+
+  @override
+  String get exchangeKeepOne => 'Pidä viitonen';
+
+  @override
+  String get exchangeKeepSingle => 'Pidä vain yksi viitonen';
+
+  @override
+  String get exchangeKeepAll => 'Pidä kaikki viitoset';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return 'Pidä $count viitosta';
+  }
 }

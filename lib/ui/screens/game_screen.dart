@@ -3087,6 +3087,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
               value: selectedKeep,
               minKeep: minKeep,
               maxKeep: maxKeep,
+              fivesCount: fives?.diceCount ?? 0,
+              potentialFor: (keep) => currentTotal + turn.bankedScore + (pending == null ? 0 : _previewPoints(pending, keep)),
             ),
           ),
         ),
@@ -3166,65 +3168,70 @@ class _GameScreenState extends ConsumerState<GameScreen>
     ref.read(gameProvider.notifier).shareKeepSelection((roll.declinableFives?.diceCount ?? 0) - keep);
   }
 
-  /// Sélecteur du nombre de 5 conservés — l'échange de dés — à droite de la
-  /// ligne de contrôle. Toujours présent, pour que la ligne ne change pas de
-  /// forme, mais inerte tant qu'aucun choix réel ne se pose.
+  /// Le bouton de recyclage — l'échange de dés — à côté de la ligne de contrôle.
+  /// Un tap ouvre, dans une bulle de bande dessinée au-dessus de lui, tous les
+  /// choix de garde possibles — « Ignorer le cinq », « Garder un seul cinq »,
+  /// « Garder tous les cinq »… —, chacun suivi du total potentiel qu'il donnerait
+  /// (voir [_keepChoiceLabel]) ; toucher l'un le choisit. Toujours présent, pour
+  /// que la ligne ne change pas de forme, mais inerte tant qu'aucun choix réel
+  /// ne se pose.
   ///
-  /// Les bornes sont assainies ici : [maxKeep] peut tomber sous [minKeep]
-  /// quand garder le minimum dépasserait déjà 10000, et un `DropdownButton`
-  /// dont la valeur ne figure pas dans ses entrées lève une assertion.
+  /// Les bornes sont assainies ici : [maxKeep] peut tomber sous [minKeep] quand
+  /// garder le minimum dépasserait déjà 10000. [fivesCount] est le nombre de 5
+  /// déclinables du lancer, [potentialFor] le total potentiel pour un nombre de
+  /// 5 gardés.
   Widget _exchangeControl({
     required bool enabled,
     required int value,
     required int minKeep,
     required int maxKeep,
+    required int fivesCount,
+    required int Function(int keep) potentialFor,
   }) {
     final highest = maxKeep < minKeep ? minKeep : maxKeep;
-    final theme = Theme.of(context);
-    final accent = theme.colorScheme.primary;
-    // Actif, la commande entière passe à l'ambre — contour, pictogramme et
-    // nombre — pour se distinguer nettement de son état inerte, qui ne se
-    // lisait qu'à une nuance de gris près.
-    final foreground = enabled ? accent : theme.disabledColor;
+    final current = value.clamp(minKeep, highest);
+    final accent = Theme.of(context).colorScheme.primary;
+    final l10n = AppLocalizations.of(context);
 
-    return Container(
-      // Hauteur alignée sur le cercle de [_stopButton] : les deux commandes
-      // latérales doivent peser pareil de part et d'autre de "Lancer".
-      height: _sideControlSize,
-      padding: const EdgeInsets.only(left: 8, right: 2),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: enabled ? accent : theme.colorScheme.outlineVariant,
-          width: enabled ? 1.6 : 1,
-        ),
-        borderRadius: BorderRadius.circular(_sideControlSize / 2),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.swap_vert, size: 18, color: foreground),
-          const SizedBox(width: 2),
-          DropdownButton<int>(
-            value: value.clamp(minKeep, highest),
-            underline: const SizedBox.shrink(),
-            isDense: true,
-            style: theme.textTheme.bodyLarge?.copyWith(color: foreground),
-            iconEnabledColor: foreground,
-            iconDisabledColor: foreground,
-            items: [
-              for (var i = minKeep; i <= highest; i++) DropdownMenuItem(value: i, child: Text('$i')),
-            ],
-            onChanged: enabled && !_controlsLocked ? (v) => _changeSelectedKeep(v!) : null,
-          ),
-        ],
+    // Hauteur alignée sur [_stopButton] : les deux commandes latérales doivent
+    // peser pareil de part et d'autre de "Lancer". Actif, le bouton passe à
+    // l'ambre — contour et pictogramme —, pour se distinguer de son état inerte.
+    return Builder(
+      builder: (buttonContext) => IconButton.outlined(
+        onPressed: enabled && !_controlsLocked
+            ? () async {
+                final picked = await showChoiceBubble(
+                  context,
+                  buttonContext,
+                  selectedId: '$current',
+                  choices: [
+                    for (var keep = minKeep; keep <= highest; keep++)
+                      (id: '$keep', text: '${_keepChoiceLabel(l10n, keep, fivesCount)} · ${potentialFor(keep)}'),
+                  ],
+                );
+                if (picked != null && mounted) _changeSelectedKeep(int.parse(picked));
+              }
+            : null,
+        icon: const Icon(Icons.recycling),
+        tooltip: l10n.exchangeFivesTooltip,
+        style: enabled
+            ? IconButton.styleFrom(foregroundColor: accent, side: BorderSide(color: accent, width: 1.6))
+            : null,
       ),
     );
   }
 
-  /// Côté du bouton Stop, et donc hauteur de la pastille d'échange en face :
-  /// c'est la taille par défaut d'un [IconButton], fixée ici pour que les
-  /// deux commandes latérales s'alignent exactement.
-  static const double _sideControlSize = 40.0;
+  /// Le libellé de garder [keep] des [fivesCount] 5 déclinables : « Ignorer le
+  /// cinq » / « Ignorer tous les cinq » pour aucun ; « Garder le cinq » (un seul
+  /// 5 en jeu) ou « Garder un seul cinq » pour un ; « Garder tous les cinq » pour
+  /// tous ; « Garder N cinq » entre les deux (plus de deux 5, rare).
+  static String _keepChoiceLabel(AppLocalizations l10n, int keep, int fivesCount) {
+    if (keep == 0) return fivesCount == 1 ? l10n.exchangeIgnoreOne : l10n.exchangeIgnoreAll;
+    if (fivesCount == 1) return l10n.exchangeKeepOne;
+    if (keep == fivesCount) return l10n.exchangeKeepAll;
+    if (keep == 1) return l10n.exchangeKeepSingle;
+    return l10n.exchangeKeepCount(keep);
+  }
 
   /// Bouton Stop, réduit au minimum (icône seule, pas de largeur imposée) :
   /// contrairement à Lancer, son libellé ne varie jamais, pas besoin d'une

@@ -802,7 +802,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialHotDiceFives =>
-      'Zwei 5en, aber freiwillig: Dieser Wähler bestimmt, wie viele du behältst. Mit beiden würden 550 auf 50 enden: Aufhören wäre unmöglich. Wähle 1.';
+      'Zwei 5en, aber freiwillig: Dieser Knopf bietet an, 0, 1 oder 2 zu behalten, mit der Gesamtpunktzahl, die du hättest. Mit beiden würden 550 auf 50 enden: Aufhören wäre unmöglich. Behalte nur eine.';
 
   @override
   String get tutorialHotDiceFullHand =>
@@ -1267,4 +1267,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themeChoiceContinue => 'Weiter';
+
+  @override
+  String get exchangeFivesTooltip => 'Anzahl behaltener 5er wählen';
+
+  @override
+  String get exchangeIgnoreOne => 'Die 5 ignorieren';
+
+  @override
+  String get exchangeIgnoreAll => 'Alle 5en ignorieren';
+
+  @override
+  String get exchangeKeepOne => 'Die 5 behalten';
+
+  @override
+  String get exchangeKeepSingle => 'Nur eine 5 behalten';
+
+  @override
+  String get exchangeKeepAll => 'Alle 5en behalten';
+
+  @override
+  String exchangeKeepCount(int count) {
+    return '$count 5en behalten';
+  }
 }
