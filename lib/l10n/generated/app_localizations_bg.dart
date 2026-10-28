@@ -1238,4 +1238,23 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get updateLaterButton => 'По-късно';
+
+  @override
+  String get settingsThemeTitle => 'Външен вид';
+
+  @override
+  String get themeDark => 'Тъмна';
+
+  @override
+  String get themeLight => 'Светла';
+
+  @override
+  String get themeChoiceTitle => 'Изберете тема';
+
+  @override
+  String get themeChoiceMessage =>
+      'Можете да я промените по-късно в настройките.';
+
+  @override
+  String get themeChoiceContinue => 'Продължи';
 }

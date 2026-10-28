@@ -354,5 +354,17 @@
   "gameHistoryBar": "Historia",
   "updateAvailableMessage": "Uusi versio on saatavilla ({version}, koontiversio {build}).",
   "updateNowButton": "Päivitä",
-  "updateLaterButton": "Myöhemmin"
+  "updateLaterButton": "Myöhemmin",
+
+  "settingsThemeTitle": "Ulkoasu",
+
+  "themeDark": "Tumma",
+
+  "themeLight": "Vaalea",
+
+  "themeChoiceTitle": "Valitse teema",
+
+  "themeChoiceMessage": "Voit muuttaa sitä myöhemmin asetuksissa.",
+
+  "themeChoiceContinue": "Jatka"
 }

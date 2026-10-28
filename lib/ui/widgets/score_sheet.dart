@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
 import '../../game/player.dart';
 import '../../game/score_radar.dart';
@@ -240,7 +241,7 @@ class _PlayerRow extends StatelessWidget {
                           padding: const EdgeInsets.only(left: 6),
                           child: Tooltip(
                             message: l10n.botSeatTooltip,
-                            child: Icon(Icons.smart_toy_outlined, size: 18, color: Colors.grey.shade400),
+                            child: Icon(Icons.smart_toy_outlined, size: 18, color: TableColors.of(context).muted),
                           ),
                         ),
                       if (podiumRank != null)
@@ -263,7 +264,7 @@ class _PlayerRow extends StatelessWidget {
                               l10n.notEnteredLabel,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                              style: TextStyle(fontSize: 11, color: TableColors.of(context).muted),
                             ),
                           ),
                         ),
@@ -280,7 +281,7 @@ class _PlayerRow extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 6),
                       child: Tooltip(
                         message: l10n.opportunityTooltip,
-                        child: const Icon(Icons.gps_fixed, size: 18, color: Colors.lightGreenAccent),
+                        child: Icon(Icons.gps_fixed, size: 18, color: TableColors.of(context).positive),
                       ),
                     ),
                   if (dangerBelow)
@@ -288,7 +289,7 @@ class _PlayerRow extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 6),
                       child: Tooltip(
                         message: l10n.dangerTooltip,
-                        child: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.redAccent),
+                        child: Icon(Icons.warning_amber_rounded, size: 18, color: TableColors.of(context).negative),
                       ),
                     ),
                 ],
@@ -297,7 +298,7 @@ class _PlayerRow extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 6),
                     child: Tooltip(
                       message: l10n.tiretTooltip,
-                      child: const Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                      child: Icon(Icons.priority_high, size: 18, color: TableColors.of(context).warning),
                     ),
                   ),
                 // Le score et l'écart gardent leur largeur : le nom, le blason et
@@ -322,14 +323,14 @@ class _PlayerRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final difference = radarDifference(player, potentialTotal);
     final barred = handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
-    final muted = _mutedStyle;
+    final muted = _mutedStyle(context);
     return _radarZone(
       context,
       score: Text(
         '${player.totalScore}',
         style: _scoreStyle.copyWith(
           fontWeight: barred ? FontWeight.bold : FontWeight.w600,
-          color: barred ? Colors.redAccent : null,
+          color: barred ? TableColors.of(context).negative : null,
         ),
       ),
       second: difference == null
@@ -340,7 +341,7 @@ class _PlayerRow extends StatelessWidget {
                   // Écart nul : à la place, le score barrable lui-même, en rouge.
                   ? Text(
                       '${nextBarrableScore(player, potentialTotal)}',
-                      style: muted.copyWith(color: Colors.redAccent),
+                      style: muted.copyWith(color: TableColors.of(context).negative),
                     )
                   : Text(signedGap(difference), style: muted),
             ),
@@ -353,19 +354,20 @@ class _PlayerRow extends StatelessWidget {
     return _radarZone(
       context,
       score: Text('$potentialTotal', style: _scoreStyle),
-      second: Text('${previousEntry?.value ?? 0}', style: _mutedStyle),
+      second: Text('${previousEntry?.value ?? 0}', style: _mutedStyle(context)),
       // Le tiret est à droite de ce score précédent : il le qualifie lui, pas le
       // total potentiel qui le précède.
       tiret: (previousEntry?.hasTiret ?? false)
           ? Tooltip(
               message: l10n.previousScoreHadTiretTooltip,
-              child: Icon(Icons.remove, size: 12, color: Colors.orange.shade300),
+              child: Icon(Icons.remove, size: 12, color: TableColors.of(context).warning),
             )
           : null,
     );
   }
 
-  TextStyle get _mutedStyle => TextStyle(fontSize: 13, color: Colors.grey.shade400, fontFeatures: _digits);
+  TextStyle _mutedStyle(BuildContext context) =>
+      TextStyle(fontSize: 13, color: TableColors.of(context).muted, fontFeatures: _digits);
 
   /// La zone de droite : trois cases de largeur fixe — le score, un point, puis
   /// l'écart (au plus large : signe et 10000) —, le texte de chaque case aligné à
@@ -374,8 +376,8 @@ class _PlayerRow extends StatelessWidget {
   /// large (grande police système) est réduit dans sa case.
   Widget _radarZone(BuildContext context, {required Widget score, Widget? second, Widget? tiret}) {
     final scoreWidth = _textWidth(context, '10000', _scoreStyle);
-    final secondWidth = _textWidth(context, '\u221210000', _mutedStyle);
-    final dotWidth = _textWidth(context, '\u00b7', _mutedStyle) + 10;
+    final secondWidth = _textWidth(context, '\u221210000', _mutedStyle(context));
+    final dotWidth = _textWidth(context, '\u00b7', _mutedStyle(context)) + 10;
     Widget slot(double width, Widget? child, [Alignment alignment = Alignment.centerRight]) => SizedBox(
       width: width,
       child: child == null ? null : FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: child),
@@ -384,7 +386,7 @@ class _PlayerRow extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         slot(scoreWidth, score),
-        slot(dotWidth, second == null ? null : Text('\u00b7', style: _mutedStyle), Alignment.center),
+        slot(dotWidth, second == null ? null : Text('\u00b7', style: _mutedStyle(context)), Alignment.center),
         slot(secondWidth, second),
         // Le tiret du score précédent du joueur courant y tient ; vide chez les
         // adversaires, pour que toutes les lignes alignent leurs colonnes.

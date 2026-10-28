@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 
 /// Une entrée du menu d'accueil, en dé vu de trois quarts : chacune de ses
@@ -58,7 +59,7 @@ class MenuDie extends StatelessWidget {
       textAlign: TextAlign.center,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white, height: 1.15),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: TableColors.of(context).plain, height: 1.15),
     );
     Widget content = SizedBox(
       width: size + captionMargin,

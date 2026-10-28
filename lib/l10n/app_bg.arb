@@ -354,5 +354,17 @@
   "gameHistoryBar": "История",
   "updateAvailableMessage": "Налична е нова версия ({version}, компилация {build}).",
   "updateNowButton": "Обнови",
-  "updateLaterButton": "По-късно"
+  "updateLaterButton": "По-късно",
+
+  "settingsThemeTitle": "Външен вид",
+
+  "themeDark": "Тъмна",
+
+  "themeLight": "Светла",
+
+  "themeChoiceTitle": "Изберете тема",
+
+  "themeChoiceMessage": "Можете да я промените по-късно в настройките.",
+
+  "themeChoiceContinue": "Продължи"
 }

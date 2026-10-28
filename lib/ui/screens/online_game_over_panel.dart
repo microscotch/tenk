@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../theme.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -113,7 +114,7 @@ class _OnlineGameOverPanelState extends ConsumerState<OnlineGameOverPanel> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
-                Text(l10n.rematchSecondsLeft(seconds), style: TextStyle(color: Colors.grey.shade400)),
+                Text(l10n.rematchSecondsLeft(seconds), style: TextStyle(color: TableColors.of(context).muted)),
                 if (!answered) ...[
                   const SizedBox(height: 12),
                   Row(

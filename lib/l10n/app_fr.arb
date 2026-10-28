@@ -1039,5 +1039,23 @@
   "@updateNowButton": {"description": "Bouton du bandeau de mise à jour : ouvre Google Play ou TestFlight."},
 
   "updateLaterButton": "Plus tard",
-  "@updateLaterButton": {"description": "Bouton du bandeau de mise à jour : n'en reparle plus pour ce build."}
+  "@updateLaterButton": {"description": "Bouton du bandeau de mise à jour : n'en reparle plus pour ce build."},
+
+  "settingsThemeTitle": "Apparence",
+  "@settingsThemeTitle": {"description": "Titre de la section des réglages qui choisit l'apparence (thème sombre ou clair)."},
+
+  "themeDark": "Sombre",
+  "@themeDark": {"description": "Le thème sombre (feutre vert profond)."},
+
+  "themeLight": "Clair",
+  "@themeLight": {"description": "Le thème clair (feutre sauge pâle)."},
+
+  "themeChoiceTitle": "Choisissez votre thème",
+  "@themeChoiceTitle": {"description": "Titre de l'écran proposé au premier lancement pour choisir le thème."},
+
+  "themeChoiceMessage": "Vous pourrez le modifier plus tard dans les réglages.",
+  "@themeChoiceMessage": {"description": "Sous-titre de cet écran : le choix reste modifiable dans les réglages."},
+
+  "themeChoiceContinue": "Continuer",
+  "@themeChoiceContinue": {"description": "Bouton qui valide le thème choisi et poursuit le lancement."}
 }

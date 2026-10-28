@@ -354,5 +354,17 @@
   "gameHistoryBar": "Historikk",
   "updateAvailableMessage": "En ny versjon er tilgjengelig ({version}, bygg {build}).",
   "updateNowButton": "Oppdater",
-  "updateLaterButton": "Senere"
+  "updateLaterButton": "Senere",
+
+  "settingsThemeTitle": "Utseende",
+
+  "themeDark": "Mørkt",
+
+  "themeLight": "Lyst",
+
+  "themeChoiceTitle": "Velg tema",
+
+  "themeChoiceMessage": "Du kan endre det senere i innstillingene.",
+
+  "themeChoiceContinue": "Fortsett"
 }

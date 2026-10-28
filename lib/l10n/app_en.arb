@@ -354,5 +354,17 @@
   "gameHistoryBar": "History",
   "updateAvailableMessage": "A new version is available ({version}, build {build}).",
   "updateNowButton": "Update",
-  "updateLaterButton": "Later"
+  "updateLaterButton": "Later",
+
+  "settingsThemeTitle": "Appearance",
+
+  "themeDark": "Dark",
+
+  "themeLight": "Light",
+
+  "themeChoiceTitle": "Choose your theme",
+
+  "themeChoiceMessage": "You can change it later in the settings.",
+
+  "themeChoiceContinue": "Continue"
 }

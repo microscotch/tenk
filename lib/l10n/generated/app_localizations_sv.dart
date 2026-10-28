@@ -1239,4 +1239,22 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get updateLaterButton => 'Senare';
+
+  @override
+  String get settingsThemeTitle => 'Utseende';
+
+  @override
+  String get themeDark => 'Mörkt';
+
+  @override
+  String get themeLight => 'Ljust';
+
+  @override
+  String get themeChoiceTitle => 'Välj ditt tema';
+
+  @override
+  String get themeChoiceMessage => 'Du kan ändra det senare i inställningarna.';
+
+  @override
+  String get themeChoiceContinue => 'Fortsätt';
 }

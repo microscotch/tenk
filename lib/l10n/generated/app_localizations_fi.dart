@@ -1242,4 +1242,22 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get updateLaterButton => 'Myöhemmin';
+
+  @override
+  String get settingsThemeTitle => 'Ulkoasu';
+
+  @override
+  String get themeDark => 'Tumma';
+
+  @override
+  String get themeLight => 'Vaalea';
+
+  @override
+  String get themeChoiceTitle => 'Valitse teema';
+
+  @override
+  String get themeChoiceMessage => 'Voit muuttaa sitä myöhemmin asetuksissa.';
+
+  @override
+  String get themeChoiceContinue => 'Jatka';
 }

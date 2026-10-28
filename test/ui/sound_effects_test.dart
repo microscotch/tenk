@@ -9,10 +9,10 @@ void main() {
     final sounds = SoundEffects.instance;
 
     // Au tout premier build, le fournisseur n'expose que les valeurs par
-    // défaut — musique activée — en attendant la lecture du disque. Les
+    // défaut — musique activée chez qui l'a demandée — en attendant la lecture du disque. Les
     // appliquer démarrait la musique chez quelqu'un qui l'avait coupée.
     final before = sounds.musicStartCount;
-    sounds.applySettings(const AppSettings());
+    sounds.applySettings(const AppSettings(musicEnabled: true));
     expect(sounds.musicStartCount, before,
         reason: 'valeurs par défaut non confirmées : rien ne doit démarrer');
 
@@ -21,6 +21,10 @@ void main() {
     expect(sounds.musicStartCount, before, reason: 'la musique est désactivée');
 
     // Préférences relues, musique voulue : cette fois elle démarre.
+    sounds.applySettings(const AppSettings(musicEnabled: true, loaded: true));
+    expect(sounds.musicStartCount, before + 1);
+
+    // Par défaut, la musique est coupée : rien ne démarre sans l'avoir demandé.
     sounds.applySettings(const AppSettings(loaded: true));
     expect(sounds.musicStartCount, before + 1);
   });

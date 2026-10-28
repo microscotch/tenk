@@ -14,6 +14,7 @@ Future<void> seedMyProfile(FakePlayerStore players, PlayerProfile profile, {bool
   await players.write(profile);
   SharedPreferences.setMockInitialValues({
     'settings.myProfileId': profile.id,
+    'settings.themeChoice': 'dark',
     if (tutorialSeen) 'settings.tutorialSeen': true,
   });
 }

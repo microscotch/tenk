@@ -354,5 +354,17 @@
   "gameHistoryBar": "Cronologia",
   "updateAvailableMessage": "È disponibile una nuova versione ({version}, build {build}).",
   "updateNowButton": "Aggiorna",
-  "updateLaterButton": "Più tardi"
+  "updateLaterButton": "Più tardi",
+
+  "settingsThemeTitle": "Aspetto",
+
+  "themeDark": "Scuro",
+
+  "themeLight": "Chiaro",
+
+  "themeChoiceTitle": "Scegli il tuo tema",
+
+  "themeChoiceMessage": "Potrai cambiarlo più tardi nelle impostazioni.",
+
+  "themeChoiceContinue": "Continua"
 }

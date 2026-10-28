@@ -10,6 +10,7 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/player_avatar.dart';
 import 'player_edit_screen.dart';
 import 'setup_screen.dart';
+import 'theme_choice_screen.dart';
 import 'tutorial_screen.dart';
 
 /// Demande son profil à l'utilisateur, au lancement, quand il n'en a pas (voir
@@ -103,9 +104,15 @@ class MyProfileSetupScreen extends ConsumerWidget {
 ///
 /// Tant que le tutoriel n'a jamais été affiché sur ce téléphone
 /// ([AppSettings.tutorialSeen]), c'est lui qui passe en premier — avec la visite
-/// de l'accueil en tête —, puis la page qui aurait été ouverte sans lui.
+/// de l'accueil en tête —, puis la page qui aurait été ouverte sans lui. Tant
+/// que le thème n'a jamais été choisi ([AppSettings.themeChoice]), c'est
+/// [ThemeChoiceScreen] qui passe avant tout.
 Future<Widget> launchScreenFor(ProviderContainer container) async {
   final Widget next = await isMyProfileMissing(container) ? const MyProfileSetupScreen() : const SetupScreen();
-  if (!container.read(settingsProvider).tutorialSeen) return TutorialScreen(next: next, withHome: true);
-  return next;
+  final settings = container.read(settingsProvider);
+  final Widget afterTheme = settings.tutorialSeen ? next : TutorialScreen(next: next, withHome: true);
+  // Le thème d'abord, pour que tout le reste (tutoriel compris) s'affiche dans
+  // celui qui a été choisi.
+  if (settings.themeChoice == null) return ThemeChoiceScreen(next: afterTheme);
+  return afterTheme;
 }

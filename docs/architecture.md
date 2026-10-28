@@ -110,6 +110,13 @@ une partie rejouable à l'identique.
   depuis l'accueil (`RulesScreen.canReplayTutorial`). Le parcours complet, précédé d'une visite de l'écran d'accueil (le vrai
   `SetupScreen`, inerte, une bulle par jeton), est proposé par `launchScreenFor` tant que le tutoriel n'a jamais été
   affiché sur le téléphone (`AppSettings.tutorialSeen` faux), sautable à tout moment.
+- **Le thème** (`AppSettings.themeChoice`, `ThemeChoice.dark` / `light`) est nul tant que
+  l'utilisateur n'a rien choisi : l'app reste alors sombre, et `launchScreenFor` fait passer
+  `ThemeChoiceScreen` avant le tutoriel et le profil (toucher une vignette applique le thème
+  en direct). `themeFor` construit le `ThemeData` ; les couleurs hors `ColorScheme` — le
+  feutre du fond et les teintes de sens (gain, perte, alerte, texte discret) — sont dans
+  l'extension `TableColors` (`TableColors.of(context)`), jamais en dur dans les écrans. La
+  musique de fond est coupée par défaut (`musicEnabled` faux).
 - **`DiceOffState`** est le tirage au sort qui fixe l'ordre de jeu : tout le
   monde lance son dé en même temps (`rollAll`), le plus faible commence, les
   ex-aequo au plus bas relancent seuls. `playOrder` donne les sièges dans

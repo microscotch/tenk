@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../theme.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -1239,7 +1240,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               alignment: PlaceholderAlignment.middle,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: Icon(Icons.remove, size: 14, color: Colors.orange.shade300),
+                child: Icon(Icons.remove, size: 14, color: TableColors.of(context).warning),
               ),
             ),
           if (barred) TextSpan(text: ', -${before - after} => $after'),
@@ -1606,8 +1607,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final minimum = engine.minimumForCurrentPlayer;
     final belowMinimum = liveScore < minimum;
     final scoreColor = belowMinimum
-        ? Colors.redAccent
-        : (liveScore % 100 == 50 ? Colors.orange : Colors.lightGreenAccent);
+        ? TableColors.of(context).negative
+        : (liveScore % 100 == 50 ? TableColors.of(context).warning : TableColors.of(context).positive);
     // Au-delà du minimum, le libellé montre le total qu'aurait le joueur en
     // gardant cette main (son score + la main), même quand s'arrêter n'est pas
     // permis (main pleine) : rouge s'il finit par 50, vert s'il barre un
@@ -1617,12 +1618,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _gridBankable = _handBankable(engine, turn, showRollPreview);
     final Color potentialColor;
     if (potentialTotal % 100 == 50) {
-      potentialColor = Colors.redAccent;
+      potentialColor = TableColors.of(context).negative;
     } else if (barsAnotherPlayer(engine.players, engine.currentPlayerIndex, potentialTotal) &&
         _handBankable(engine, turn, showRollPreview)) {
-      potentialColor = Colors.lightGreenAccent;
+      potentialColor = TableColors.of(context).positive;
     } else {
-      potentialColor = Colors.white;
+      potentialColor = TableColors.of(context).plain;
     }
     // Aperçu (ChoiceChip) seulement pertinent pour un lancer humain en
     // attente de décision ; sinon (IA, craque, idle) les dés du lancer, s'il
@@ -1764,9 +1765,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         child: Text(
                           l10n.finalRoundBanner,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.deepOrange,
+                            color: TableColors.of(context).warning,
                           ),
                         ),
                       ),
@@ -2344,7 +2345,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           pipColor: pipColorFor(DieVisualState.kept),
         ),
       ),
-      const TextSpan(text: ' = 100', style: TextStyle(color: kExtensionLabelColor)),
+      TextSpan(text: ' = 100', style: TextStyle(color: TableColors.of(context).extensionLabel)),
     ];
   }
 
@@ -2592,7 +2593,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // Sous le minimum, seul le minimum à atteindre compte ; au-delà, le
         // total que donnerait cette main (voir `potentialColor` dans [build]).
         if (liveScore < minimum)
-          TextSpan(text: ' (<$minimum)', style: const TextStyle(color: Colors.redAccent))
+          TextSpan(text: ' (<$minimum)', style: TextStyle(color: TableColors.of(context).negative))
         else
           TextSpan(text: ' → $potentialTotal', style: TextStyle(color: potentialColor)),
         ..._extensionSpans(extendedValues, glyphSize: 13),
@@ -2755,7 +2756,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       maxLines: maxLines,
       overflow: overflow,
       TextSpan(
-        style: const TextStyle(fontSize: 13, color: Colors.white),
+        style: TextStyle(fontSize: 13, color: TableColors.of(context).plain),
         children: [
           TextSpan(text: ': ${entry.text} '),
           TextSpan(
@@ -2790,7 +2791,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ),
       child: _log.isEmpty
           ? Center(
-              child: Text('—', style: TextStyle(color: Colors.grey.shade400)),
+              child: Text('—', style: TextStyle(color: TableColors.of(context).muted)),
             )
           : Scrollbar(
               controller: _logScrollController,
@@ -2825,7 +2826,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             child: Text(
                               _formatLogTime(_log[i].timestamp),
                               style: TextStyle(
-                                color: Colors.grey.shade500,
+                                color: TableColors.of(context).muted,
                                 fontSize: 11,
                               ),
                             ),
@@ -3053,7 +3054,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               _failureMessage(l10n, bankAttempt),
-              style: TextStyle(color: Colors.grey.shade400),
+              style: TextStyle(color: TableColors.of(context).muted),
             ),
           ),
         _controlRow(

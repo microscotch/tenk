@@ -2185,6 +2185,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Plus tard'**
   String get updateLaterButton;
+
+  /// Titre de la section des réglages qui choisit l'apparence (thème sombre ou clair).
+  ///
+  /// In fr, this message translates to:
+  /// **'Apparence'**
+  String get settingsThemeTitle;
+
+  /// Le thème sombre (feutre vert profond).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get themeDark;
+
+  /// Le thème clair (feutre sauge pâle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get themeLight;
+
+  /// Titre de l'écran proposé au premier lancement pour choisir le thème.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre thème'**
+  String get themeChoiceTitle;
+
+  /// Sous-titre de cet écran : le choix reste modifiable dans les réglages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez le modifier plus tard dans les réglages.'**
+  String get themeChoiceMessage;
+
+  /// Bouton qui valide le thème choisi et poursuit le lancement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get themeChoiceContinue;
 }
 
 class _AppLocalizationsDelegate

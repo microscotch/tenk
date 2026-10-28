@@ -354,5 +354,17 @@
   "gameHistoryBar": "Verlauf",
   "updateAvailableMessage": "Eine neue Version ist verfügbar ({version}, Build {build}).",
   "updateNowButton": "Aktualisieren",
-  "updateLaterButton": "Später"
+  "updateLaterButton": "Später",
+
+  "settingsThemeTitle": "Darstellung",
+
+  "themeDark": "Dunkel",
+
+  "themeLight": "Hell",
+
+  "themeChoiceTitle": "Wähle dein Design",
+
+  "themeChoiceMessage": "Du kannst es später in den Einstellungen ändern.",
+
+  "themeChoiceContinue": "Weiter"
 }

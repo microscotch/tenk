@@ -44,10 +44,11 @@ class Le10000App extends ConsumerWidget {
     ref.watch(onlineLifecycleProvider);
 
     final languageOverride = ref.watch(settingsProvider).languageOverride;
+    final themeChoice = ref.watch(settingsProvider.select((s) => s.themeChoice));
 
     return MaterialApp(
       title: 'TenK',
-      theme: buildAppTheme(),
+      theme: themeFor(themeChoice),
       locale: languageOverride == null ? null : Locale(languageOverride),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

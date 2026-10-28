@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -144,7 +145,7 @@ class OnlineRoomScreen extends ConsumerWidget {
       final seat = online.seats[index];
       return ListTile(
         key: ValueKey('seat-$index-${seat.name}'),
-        leading: Icon(index == online.hostSeat ? Icons.star : Icons.person, color: seat.connected ? null : Colors.grey),
+        leading: Icon(index == online.hostSeat ? Icons.star : Icons.person, color: seat.connected ? null : TableColors.of(context).muted),
         title: Text(seat.name + (index == online.mySeat ? '  •' : '')),
         subtitle: index == online.hostSeat
             ? Text(l10n.onlineHostBadge)

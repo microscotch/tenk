@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/game_engine.dart';
@@ -40,7 +41,7 @@ class _EmptyMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(text, style: TextStyle(color: Colors.grey.shade400)));
+    return Center(child: Text(text, style: TextStyle(color: TableColors.of(context).muted)));
   }
 }
 

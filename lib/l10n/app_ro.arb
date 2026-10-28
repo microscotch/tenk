@@ -354,5 +354,17 @@
   "gameHistoryBar": "Istoric",
   "updateAvailableMessage": "Este disponibilă o versiune nouă ({version}, build {build}).",
   "updateNowButton": "Actualizează",
-  "updateLaterButton": "Mai târziu"
+  "updateLaterButton": "Mai târziu",
+
+  "settingsThemeTitle": "Aspect",
+
+  "themeDark": "Întunecată",
+
+  "themeLight": "Luminoasă",
+
+  "themeChoiceTitle": "Alege-ți tema",
+
+  "themeChoiceMessage": "O poți schimba mai târziu în setări.",
+
+  "themeChoiceContinue": "Continuă"
 }

@@ -10,6 +10,7 @@ import 'package:le10000/state/room_link_providers.dart';
 import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/route_observer.dart';
 import 'package:le10000/ui/screens/my_profile_setup_screen.dart';
+import 'package:le10000/ui/screens/theme_choice_screen.dart';
 import 'package:le10000/ui/screens/tutorial_screen.dart';
 import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/player_edit_screen.dart';
@@ -71,6 +72,10 @@ void main() {
     testWidgets('au tout premier lancement, le splash mène au tutoriel (accueil d\'abord), puis à la création du profil',
         (tester) async {
       await launch(tester);
+      expect(find.byType(ThemeChoiceScreen), findsOneWidget, reason: 'le thème se choisit avant tout le reste');
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+      expect(container.read(settingsProvider).themeChoice, ThemeChoice.dark);
       expect(find.byType(TutorialScreen), findsOneWidget);
       expect(find.byType(MyProfileSetupScreen), findsNothing);
       expect(find.textContaining('Voici l\'écran d\'accueil'), findsOneWidget, reason: 'la visite de l\'accueil en tête');
@@ -82,7 +87,7 @@ void main() {
     });
 
     testWidgets('tutoriel déjà vu, sans profil : directement à la création', (tester) async {
-      SharedPreferences.setMockInitialValues({'settings.tutorialSeen': true});
+      SharedPreferences.setMockInitialValues({'settings.tutorialSeen': true, 'settings.themeChoice': 'dark'});
       await launch(tester);
       expect(find.byType(MyProfileSetupScreen), findsOneWidget);
       expect(find.byType(TutorialScreen), findsNothing);
@@ -109,7 +114,7 @@ void main() {
 
   group('écran du profil', () {
     testWidgets('créer son profil, prérempli avec l\'ancien nom des réglages, mène à l\'accueil', (tester) async {
-      SharedPreferences.setMockInitialValues({'settings.playerName': 'Laurent', 'settings.rightHanded': false});
+      SharedPreferences.setMockInitialValues({'settings.playerName': 'Laurent', 'settings.rightHanded': false, 'settings.themeChoice': 'dark'});
       await pump(tester, const MyProfileSetupScreen());
 
       await tester.tap(find.text('Créer mon profil'));
@@ -132,7 +137,7 @@ void main() {
       final laurent = PlayerProfile.create(name: 'Laurent');
       await players.write(anna);
       await players.write(laurent);
-      SharedPreferences.setMockInitialValues({'settings.playerName': 'laurent'});
+      SharedPreferences.setMockInitialValues({'settings.playerName': 'laurent', 'settings.themeChoice': 'dark'});
       await pump(tester, const MyProfileSetupScreen());
 
       final tiles = find.byType(ListTile);
@@ -148,7 +153,7 @@ void main() {
 
     testWidgets('l\'ancien nom déjà porté par une fiche ne préremplit pas la création', (tester) async {
       await players.write(PlayerProfile.create(name: 'Laurent'));
-      SharedPreferences.setMockInitialValues({'settings.playerName': 'Laurent'});
+      SharedPreferences.setMockInitialValues({'settings.playerName': 'Laurent', 'settings.themeChoice': 'dark'});
       await pump(tester, const MyProfileSetupScreen());
 
       await tester.tap(find.text('Créer mon profil'));

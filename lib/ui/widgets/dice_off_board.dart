@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/dice_off.dart';
@@ -33,19 +34,19 @@ class DiceOffBoard extends ConsumerWidget {
       children: [
         Text(l10n.diceOffInstructions, textAlign: TextAlign.center),
         const SizedBox(height: 24),
-        _diceRow(ref),
+        _diceRow(context, ref),
         const SizedBox(height: 24),
-        if (state.isResolved) _result(context, l10n) else _status(l10n),
+        if (state.isResolved) _result(context, l10n) else _status(context, l10n),
       ],
     );
   }
 
-  Widget _status(AppLocalizations l10n) {
+  Widget _status(BuildContext context, AppLocalizations l10n) {
     // Avant le premier round, rien à dire : les dés partent d'eux-mêmes.
     if (state.roundHistory.isEmpty) return const SizedBox.shrink();
     return Text(
       l10n.diceOffTieBreak(state.activeIndices.map(shownName).join(', ')),
-      style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
+      style: TextStyle(color: TableColors.of(context).warning, fontWeight: FontWeight.bold),
       textAlign: TextAlign.center,
     );
   }
@@ -71,7 +72,7 @@ class DiceOffBoard extends ConsumerWidget {
   /// Un dé par joueur, dans l'ordre de la liste, montrant son dernier lancer.
   /// Seuls les dés du round qui vient d'être joué s'animent ; ceux des joueurs
   /// déjà départagés restent posés, estompés.
-  Widget _diceRow(WidgetRef ref) {
+  Widget _diceRow(BuildContext context, WidgetRef ref) {
     final colorMode = ref.watch(settingsProvider).diceColorMode;
     final lastRoll = <int, ({int value, int round})>{};
     for (var r = 0; r < state.roundHistory.length; r++) {
@@ -84,12 +85,12 @@ class DiceOffBoard extends ConsumerWidget {
       runSpacing: 12,
       children: [
         for (var seat = 0; seat < state.playerCount; seat++)
-          _seatDie(seat, lastRoll[seat], diceBodyColorFor(colorMode, seat)),
+          _seatDie(context, seat, lastRoll[seat], diceBodyColorFor(colorMode, seat)),
       ],
     );
   }
 
-  Widget _seatDie(int seat, ({int value, int round})? roll, Color? bodyColor) {
+  Widget _seatDie(BuildContext context, int seat, ({int value, int round})? roll, Color? bodyColor) {
     final stillIn = state.isResolved ? seat == state.winnerIndex : state.activeIndices.contains(seat);
     final visualState = !stillIn
         ? DieVisualState.junk
@@ -102,12 +103,12 @@ class DiceOffBoard extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(shownName(seat), style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+          Text(shownName(seat), style: TextStyle(fontSize: 12, color: TableColors.of(context).muted)),
           const SizedBox(height: 4),
           if (roll == null)
-            const SizedBox.square(
+            SizedBox.square(
               dimension: DieWidget.defaultSize,
-              child: Center(child: Icon(Icons.casino_outlined, color: Colors.grey)),
+              child: Center(child: Icon(Icons.casino_outlined, color: TableColors.of(context).muted)),
             )
           else
             DieWidget(

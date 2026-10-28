@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -105,11 +106,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onChanged: notifier.setLanguageOverride,
               ),
               const SizedBox(height: 28),
+              Text(l10n.settingsThemeTitle, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              SegmentedButton<ThemeChoice>(
+                segments: [
+                  ButtonSegment(value: ThemeChoice.dark, icon: const Icon(Icons.dark_mode), label: Text(l10n.themeDark)),
+                  ButtonSegment(value: ThemeChoice.light, icon: const Icon(Icons.light_mode), label: Text(l10n.themeLight)),
+                ],
+                selected: {settings.themeChoice ?? ThemeChoice.dark},
+                onSelectionChanged: (s) => notifier.setThemeChoice(s.first),
+              ),
+              const SizedBox(height: 28),
               Text(l10n.settingsDelaysTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
                 l10n.settingsDelaysDescription,
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                style: TextStyle(color: TableColors.of(context).muted, fontSize: 12),
               ),
               const SizedBox(height: 12),
               _DelayField(

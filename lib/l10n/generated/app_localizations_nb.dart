@@ -1241,4 +1241,22 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get updateLaterButton => 'Senere';
+
+  @override
+  String get settingsThemeTitle => 'Utseende';
+
+  @override
+  String get themeDark => 'Mørkt';
+
+  @override
+  String get themeLight => 'Lyst';
+
+  @override
+  String get themeChoiceTitle => 'Velg tema';
+
+  @override
+  String get themeChoiceMessage => 'Du kan endre det senere i innstillingene.';
+
+  @override
+  String get themeChoiceContinue => 'Fortsett';
 }

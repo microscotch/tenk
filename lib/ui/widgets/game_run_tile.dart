@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -32,7 +33,7 @@ class GameRunTile extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     final date = DateFormat.yMMMd(locale).format(game.createdAt);
     final time = DateFormat.Hm(locale).format(game.createdAt);
-    const muted = Colors.grey;
+    final muted = TableColors.of(context).muted;
 
     Widget row(Widget left, String right, TextStyle? rightStyle) {
       return Row(
@@ -63,18 +64,18 @@ class GameRunTile extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
             ),
             date,
-            theme.textTheme.bodySmall?.copyWith(color: muted.shade400),
+            theme.textTheme.bodySmall?.copyWith(color: muted),
           ),
           const SizedBox(height: 2),
           row(
             Text(
               participants.join(l10n.gameRunParticipantsSeparator),
-              style: theme.textTheme.labelSmall?.copyWith(color: muted.shade400),
+              style: theme.textTheme.labelSmall?.copyWith(color: muted),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             time,
-            theme.textTheme.labelSmall?.copyWith(color: muted.shade400),
+            theme.textTheme.labelSmall?.copyWith(color: muted),
           ),
         ],
       ),

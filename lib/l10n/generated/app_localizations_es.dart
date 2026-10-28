@@ -1244,4 +1244,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get updateLaterButton => 'Más tarde';
+
+  @override
+  String get settingsThemeTitle => 'Apariencia';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeChoiceTitle => 'Elige tu tema';
+
+  @override
+  String get themeChoiceMessage => 'Podrás cambiarlo más tarde en los ajustes.';
+
+  @override
+  String get themeChoiceContinue => 'Continuar';
 }

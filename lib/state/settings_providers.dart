@@ -11,6 +11,10 @@ enum DiceColorMode { uniform, varied }
 /// le même pour tous les lancers.
 enum DiceSoundMode { realistic, synthetic }
 
+/// L'apparence de l'application : la table sombre d'origine, ou sa variante
+/// claire.
+enum ThemeChoice { dark, light }
+
 /// Préférences utilisateur persistées localement (indépendantes de toute
 /// partie en cours). Chargées de façon best-effort au démarrage : en cas
 /// d'échec (plateforme sans backend, tests) on reste sur les valeurs par
@@ -31,8 +35,15 @@ class AppSettings {
   final int autoActionDelayMs;
   final DiceColorMode diceColorMode;
   final DiceSoundMode diceSoundMode;
+
+  /// Désactivée par défaut : la musique n'est lancée que si l'utilisateur la
+  /// demande.
   final bool musicEnabled;
   final bool soundEffectsEnabled;
+
+  /// Le thème choisi ; nul tant qu'il n'a jamais été choisi — l'app le propose
+  /// alors au lancement (voir `launchScreenFor`) et reste sombre en attendant.
+  final ThemeChoice? themeChoice;
 
   /// Demande confirmation avant de purger une partie en pause (swipe sur
   /// l'écran d'accueil). Désactivable pour une suppression immédiate.
@@ -79,8 +90,9 @@ class AppSettings {
     this.autoActionDelayMs = 2000,
     this.diceColorMode = DiceColorMode.uniform,
     this.diceSoundMode = DiceSoundMode.realistic,
-    this.musicEnabled = true,
+    this.musicEnabled = false,
     this.soundEffectsEnabled = true,
+    this.themeChoice,
     this.confirmBeforeDeleteGame = true,
     this.shakeToRollEnabled = false,
     this.showProbabilities = false,
@@ -102,6 +114,7 @@ class AppSettings {
     DiceSoundMode? diceSoundMode,
     bool? musicEnabled,
     bool? soundEffectsEnabled,
+    ThemeChoice? themeChoice,
     bool? confirmBeforeDeleteGame,
     bool? shakeToRollEnabled,
     bool? showProbabilities,
@@ -119,6 +132,7 @@ class AppSettings {
       diceSoundMode: diceSoundMode ?? this.diceSoundMode,
       musicEnabled: musicEnabled ?? this.musicEnabled,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
+      themeChoice: themeChoice ?? this.themeChoice,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
       showProbabilities: showProbabilities ?? this.showProbabilities,
@@ -143,6 +157,7 @@ const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyDiceSoundMode = 'settings.diceSoundMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
+const _keyThemeChoice = 'settings.themeChoice';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 // `settings.aiDifficulty` n'est plus lue : tous les bots jouent au niveau
 // prudent. La clé peut rester sur les appareils déjà installés, elle est
@@ -177,8 +192,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
         autoActionDelayMs: prefs.getInt(_keyAutoActionDelayMs) ?? 2000,
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
         diceSoundMode: prefs.getString(_keyDiceSoundMode) == 'synthetic' ? DiceSoundMode.synthetic : DiceSoundMode.realistic,
-        musicEnabled: prefs.getBool(_keyMusicEnabled) ?? true,
+        musicEnabled: prefs.getBool(_keyMusicEnabled) ?? false,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
+        themeChoice: ThemeChoice.values.where((t) => t.name == prefs.getString(_keyThemeChoice)).firstOrNull,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
         showProbabilities: prefs.getBool(_keyShowProbabilities) ?? false,
@@ -247,6 +263,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setMusicEnabled(bool enabled) {
     state = state.copyWith(musicEnabled: enabled);
     _save(_keyMusicEnabled, enabled);
+  }
+
+  void setThemeChoice(ThemeChoice choice) {
+    state = state.copyWith(themeChoice: choice);
+    _save(_keyThemeChoice, choice.name);
   }
 
   void setSoundEffectsEnabled(bool enabled) {

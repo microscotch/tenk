@@ -1250,4 +1250,22 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get updateLaterButton => 'Mai târziu';
+
+  @override
+  String get settingsThemeTitle => 'Aspect';
+
+  @override
+  String get themeDark => 'Întunecată';
+
+  @override
+  String get themeLight => 'Luminoasă';
+
+  @override
+  String get themeChoiceTitle => 'Alege-ți tema';
+
+  @override
+  String get themeChoiceMessage => 'O poți schimba mai târziu în setări.';
+
+  @override
+  String get themeChoiceContinue => 'Continuă';
 }

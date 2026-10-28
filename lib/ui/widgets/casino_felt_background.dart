@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../theme.dart';
+
 /// Fond "table de jeu" façon feutre de casino : dégradé vert profond,
 /// vignette et un motif discret de losanges qui évoque le tapis d'une
 /// piste de dés, entièrement dessiné (pas d'image embarquée).
@@ -11,7 +13,7 @@ class CasinoFeltBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: RepaintBoundary(
-        child: CustomPaint(painter: _CasinoFeltPainter()),
+        child: CustomPaint(painter: _CasinoFeltPainter(TableColors.of(context))),
       ),
     );
   }
@@ -36,30 +38,41 @@ class ScreenFixedFeltBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: RepaintBoundary(child: _ScreenFixedFelt(screen: MediaQuery.sizeOf(context), motion: motion)),
+      child: RepaintBoundary(
+        child: _ScreenFixedFelt(screen: MediaQuery.sizeOf(context), colors: TableColors.of(context), motion: motion),
+      ),
     );
   }
 }
 
 class _ScreenFixedFelt extends LeafRenderObjectWidget {
   final Size screen;
+  final TableColors colors;
   final Listenable motion;
 
-  const _ScreenFixedFelt({required this.screen, required this.motion});
+  const _ScreenFixedFelt({required this.screen, required this.colors, required this.motion});
 
   @override
-  RenderObject createRenderObject(BuildContext context) => _RenderScreenFixedFelt(screen, motion);
+  RenderObject createRenderObject(BuildContext context) => _RenderScreenFixedFelt(screen, colors, motion);
 
   @override
   void updateRenderObject(BuildContext context, _RenderScreenFixedFelt renderObject) {
     renderObject
       ..screen = screen
+      ..colors = colors
       ..motion = motion;
   }
 }
 
 class _RenderScreenFixedFelt extends RenderBox {
-  _RenderScreenFixedFelt(this._screen, this._motion);
+  _RenderScreenFixedFelt(this._screen, this._colors, this._motion);
+
+  TableColors _colors;
+  set colors(TableColors value) {
+    if (value == _colors) return;
+    _colors = value;
+    markNeedsPaint();
+  }
 
   Size _screen;
   set screen(Size value) {
@@ -102,40 +115,40 @@ class _RenderScreenFixedFelt extends RenderBox {
     canvas.save();
     canvas.clipRect(offset & size);
     canvas.translate(offset.dx - origin.dx, offset.dy - origin.dy);
-    _paintFelt(canvas, _screen);
+    _paintFelt(canvas, _screen, _colors);
     canvas.restore();
   }
 }
 
 class _CasinoFeltPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) => _paintFelt(canvas, size);
+  final TableColors colors;
+
+  _CasinoFeltPainter(this.colors);
 
   @override
-  bool shouldRepaint(covariant _CasinoFeltPainter oldDelegate) => false;
+  void paint(Canvas canvas, Size size) => _paintFelt(canvas, size, colors);
+
+  @override
+  bool shouldRepaint(covariant _CasinoFeltPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
-const _felt = Color(0xFF0E3B2C);
-const _feltDark = Color(0xFF071F17);
-const _line = Color(0x14D9A441); // liseré or, très discret
-
-/// Le feutre sur [size] : dégradé, losanges, vignette.
-void _paintFelt(Canvas canvas, Size size) {
+/// Le feutre sur [size] : dégradé, losanges, vignette, aux couleurs de [colors].
+void _paintFelt(Canvas canvas, Size size, TableColors colors) {
   final rect = Offset.zero & size;
 
   canvas.drawRect(
     rect,
     Paint()
-      ..shader = const RadialGradient(
+      ..shader = RadialGradient(
         center: Alignment(0, -0.3),
         radius: 1.3,
-        colors: [_felt, _feltDark],
+        colors: [colors.feltCenter, colors.feltEdge],
       ).createShader(rect),
   );
 
   // Motif de losanges (façon piste de dés) : deux familles de diagonales.
   final linePaint = Paint()
-    ..color = _line
+    ..color = colors.feltLine
     ..strokeWidth = 1;
   const spacing = 46.0;
   final diagonal = size.width + size.height;
@@ -151,7 +164,7 @@ void _paintFelt(Canvas canvas, Size size) {
       ..shader = RadialGradient(
         center: Alignment.center,
         radius: 1.0,
-        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.45)],
+        colors: [Colors.transparent, Colors.black.withValues(alpha: colors.vignette)],
         stops: const [0.6, 1.0],
       ).createShader(rect),
   );

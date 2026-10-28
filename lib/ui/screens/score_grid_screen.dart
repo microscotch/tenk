@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -390,7 +391,7 @@ class _ScoreRow extends StatelessWidget {
               decoration: entry.isBarred ? TextDecoration.lineThrough : null,
               decorationThickness: 2,
               fontWeight: FontWeight.w600,
-              color: strikable ? Colors.redAccent : textColor,
+              color: strikable ? TableColors.of(context).negative : textColor,
             ),
           ),
           // Le blason de l'AUTEUR du barrage (pas forcément le propriétaire
@@ -408,7 +409,7 @@ class _ScoreRow extends StatelessWidget {
           // n'annonce plus rien — le barré dit tout.
           if (entry.hasTiret && !entry.isBarred) ...[
             const SizedBox(width: 6),
-            const Icon(Icons.remove, size: 14, color: Colors.orange),
+            Icon(Icons.remove, size: 14, color: TableColors.of(context).warning),
           ],
           if (gap != null) ...[
             const Spacer(),
