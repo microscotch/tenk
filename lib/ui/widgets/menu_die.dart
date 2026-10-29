@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
@@ -52,7 +53,7 @@ class MenuDie extends StatelessWidget {
     Widget die = SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _MenuDiePainter(icon: icon, color: color, ink: ink)),
+      child: _MenuDiePicture(icon: icon, color: color, ink: ink, size: size),
     );
     Widget caption = Text(
       label,
@@ -79,6 +80,105 @@ class MenuDie extends StatelessWidget {
         containedInkWell: false,
         child: content,
       ),
+    );
+  }
+}
+
+/// Le dé du menu, dessiné une seule fois : [_MenuDiePainter] (une dizaine de
+/// flous par dé, neuf dés à l'écran) est rendu dans une image, gardée en mémoire
+/// pour toute la session, et l'écran ne fait plus que la poser. Redessiner les
+/// dés à chaque repeinture de l'accueil (transitions de page, retour d'un écran)
+/// faisait ramer le menu.
+///
+/// L'image est calculée à la densité de l'écran, avec une marge tout autour pour
+/// que l'ombre portée floue ne soit pas rognée. Tant qu'elle n'est pas prête
+/// (le premier affichage seulement), la place du dé reste vide.
+class _MenuDiePicture extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final Color ink;
+  final double size;
+
+  const _MenuDiePicture({required this.icon, required this.color, required this.ink, required this.size});
+
+  /// Marge de l'image autour du dé, en part de son côté.
+  static const _margin = 0.15;
+
+  static final Map<String, ui.Image> _ready = {};
+  static final Map<String, Future<ui.Image>> _pending = {};
+
+  static String keyFor(IconData icon, Color color, Color ink, double size, double ratio) =>
+      '${icon.codePoint}|${icon.fontFamily}|${icon.fontPackage}|${color.toARGB32()}|${ink.toARGB32()}|$size|$ratio';
+
+  static Future<ui.Image> _render(IconData icon, Color color, Color ink, double size, double ratio) async {
+    final pad = size * _margin;
+    final side = size + 2 * pad;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder)
+      ..scale(ratio)
+      ..translate(pad, pad);
+    _MenuDiePainter(icon: icon, color: color, ink: ink).paint(canvas, Size(size, size));
+    final picture = recorder.endRecording();
+    try {
+      return await picture.toImage((side * ratio).ceil(), (side * ratio).ceil());
+    } finally {
+      picture.dispose();
+    }
+  }
+
+  @override
+  State<_MenuDiePicture> createState() => _MenuDiePictureState();
+}
+
+class _MenuDiePictureState extends State<_MenuDiePicture> {
+  ui.Image? _image;
+  String? _key;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MenuDiePicture old) {
+    super.didUpdateWidget(old);
+    _load();
+  }
+
+  void _load() {
+    final w = widget;
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    final key = _MenuDiePicture.keyFor(w.icon, w.color, w.ink, w.size, ratio);
+    if (key == _key) return;
+    _key = key;
+    final ready = _MenuDiePicture._ready[key];
+    if (ready != null) {
+      _image = ready;
+      return;
+    }
+    // Entre-temps : la couleur ou la taille a changé, l'ancienne image ne va plus.
+    _image = null;
+    _MenuDiePicture._pending.putIfAbsent(key, () async {
+      final image = await _MenuDiePicture._render(w.icon, w.color, w.ink, w.size, ratio);
+      _MenuDiePicture._ready[key] = image;
+      return image;
+    }).then((image) {
+      if (mounted && _key == key) setState(() => _image = image);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final image = _image;
+    if (image == null) return const SizedBox.expand();
+    final side = widget.size * (1 + 2 * _MenuDiePicture._margin);
+    return OverflowBox(
+      minWidth: side,
+      maxWidth: side,
+      minHeight: side,
+      maxHeight: side,
+      child: RawImage(image: image, width: side, height: side, filterQuality: FilterQuality.medium),
     );
   }
 }
