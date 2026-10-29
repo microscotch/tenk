@@ -2644,12 +2644,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
           var slot = 0;
           for (final d in batch) {
             dice.add(
-              DieWidget(
-                value: d.value,
-                state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
-                bodyColor: _diceColor(position),
-                size: size,
-                restSeed: _restSeed(d.rollIndex, slot),
+              _tightDie(
+                DieWidget(
+                  value: d.value,
+                  state: d.isExtended ? DieVisualState.extended : DieVisualState.kept,
+                  bodyColor: _diceColor(position),
+                  size: size,
+                  restSeed: _restSeed(d.rollIndex, slot),
+                ),
               ),
             );
             position++;
@@ -2670,15 +2672,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
             final faceIndex = pendingOrder[slot];
             final visible = previewRevealed && previewIndices.contains(faceIndex);
             slots.add(
-              AnimatedOpacity(
-                opacity: visible ? 1 : 0,
-                duration: _previewFadeDuration,
-                child: DieWidget(
-                  value: pendingAnalysis!.faces[faceIndex],
-                  state: previewStates![faceIndex],
-                  bodyColor: _diceColor(position),
-                  size: size,
-                  restSeed: _restSeed(pendingRollIndex, slot),
+              _tightDie(
+                AnimatedOpacity(
+                  opacity: visible ? 1 : 0,
+                  duration: _previewFadeDuration,
+                  child: DieWidget(
+                    value: pendingAnalysis!.faces[faceIndex],
+                    state: previewStates![faceIndex],
+                    bodyColor: _diceColor(position),
+                    size: size,
+                    restSeed: _restSeed(pendingRollIndex, slot),
+                  ),
                 ),
               ),
             );
@@ -2712,7 +2716,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    width: previewIndices.length * (size + _dieMargin),
+                    width: previewIndices.length * (size + _dieMargin) * _sameRollSpacing,
                     child: const _RollFrameBorder(
                       key: ValueKey('kept-roll-frame-pending'),
                     ),
@@ -3309,6 +3313,17 @@ const int _diceRowReferenceCount = 5;
 /// propre, de chaque côté (voir [DieWidget.margin]).
 const double _dieMargin = DieWidget.margin * 2;
 
+/// Part de sa place qu'un dé garde dans une rangée de dés d'un même lancer
+/// (main courante, popups) : le cube 3D n'occupe qu'un peu plus de la moitié de
+/// la case du dé, si bien qu'à pleine largeur deux voisins paraissaient très
+/// éloignés. Les cases se chevauchent donc d'autant (le dessin déborde, sans
+/// rien rogner), et le cadre du lancer se resserre avec elles.
+const double _sameRollSpacing = 0.7;
+
+/// [die] dans une rangée de dés d'un même lancer : sa place est réduite à
+/// [_sameRollSpacing], le dé restant centré dessus.
+Widget _tightDie(Widget die) => Align(widthFactor: _sameRollSpacing, heightFactor: 1, child: die);
+
 const double _minDieSize = 40.0;
 
 /// Côté d'un dé pour une largeur disponible donnée, de sorte que
@@ -3481,7 +3496,7 @@ class _PopupDiceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = groups.fold<int>(0, (n, g) => n + g.values.length);
-    final size = ((_maxRowWidth / total) - DieWidget.margin * 2).clamp(14.0, _maxSize);
+    final size = ((_maxRowWidth / (total * _sameRollSpacing)) - DieWidget.margin * 2).clamp(14.0, _maxSize);
 
     var position = 0;
     var framedCount = 0;
@@ -3490,11 +3505,13 @@ class _PopupDiceRow extends StatelessWidget {
       final dice = <Widget>[];
       for (var i = 0; i < group.values.length; i++) {
         dice.add(
-          DieWidget(
-            value: group.values[i],
-            state: group.states[i],
-            bodyColor: diceBodyColorFor(colorMode, position),
-            size: size,
+          _tightDie(
+            DieWidget(
+              value: group.values[i],
+              state: group.states[i],
+              bodyColor: diceBodyColorFor(colorMode, position),
+              size: size,
+            ),
           ),
         );
         position++;
