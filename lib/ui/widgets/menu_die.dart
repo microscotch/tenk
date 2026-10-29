@@ -40,6 +40,18 @@ class MenuDie extends StatelessWidget {
   /// deux lignes plutôt que d'être coupé.
   static const captionMargin = 16.0;
 
+  /// Calcule d'avance l'image d'un dé (voir [_MenuDiePicture]), pour que l'accueil
+  /// la trouve prête. Les paramètres doivent être exactement ceux de l'accueil
+  /// (icône, couleurs, taille, densité de l'écran), faute de quoi l'image n'est
+  /// pas retrouvée et l'accueil la recalcule.
+  static Future<void> precache({
+    required IconData icon,
+    required Color color,
+    required Color ink,
+    required double size,
+    required double pixelRatio,
+  }) => _MenuDiePicture.obtain(icon, color, ink, size, pixelRatio);
+
   static const _grayscale = ColorFilter.matrix(<double>[
     0.2126, 0.7152, 0.0722, 0, 0, //
     0.2126, 0.7152, 0.0722, 0, 0, //
@@ -110,6 +122,17 @@ class _MenuDiePicture extends StatefulWidget {
   static String keyFor(IconData icon, Color color, Color ink, double size, double ratio) =>
       '${icon.codePoint}|${icon.fontFamily}|${icon.fontPackage}|${color.toARGB32()}|${ink.toARGB32()}|$size|$ratio';
 
+  /// L'image de ce dé : celle déjà en mémoire, ou celle que l'on calcule (un seul
+  /// calcul, même demandé deux fois à la fois).
+  static Future<ui.Image> obtain(IconData icon, Color color, Color ink, double size, double ratio) {
+    final key = keyFor(icon, color, ink, size, ratio);
+    return _pending.putIfAbsent(key, () async {
+      final image = await _render(icon, color, ink, size, ratio);
+      _ready[key] = image;
+      return image;
+    });
+  }
+
   static Future<ui.Image> _render(IconData icon, Color color, Color ink, double size, double ratio) async {
     final pad = size * _margin;
     final side = size + 2 * pad;
@@ -159,11 +182,7 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
     }
     // Entre-temps : la couleur ou la taille a changé, l'ancienne image ne va plus.
     _image = null;
-    _MenuDiePicture._pending.putIfAbsent(key, () async {
-      final image = await _MenuDiePicture._render(w.icon, w.color, w.ink, w.size, ratio);
-      _MenuDiePicture._ready[key] = image;
-      return image;
-    }).then((image) {
+    _MenuDiePicture.obtain(w.icon, w.color, w.ink, w.size, ratio).then((image) {
       if (mounted && _key == key) setState(() => _image = image);
     });
   }

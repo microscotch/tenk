@@ -168,26 +168,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(_rackPadding),
                   child: _ChipRack(
                     keys: widget.tourKeys,
                     chips: [
-                      _MenuChip(Icons.add, l10n.newGameSectionLabel, _chipGold, _openNewGame),
-                      _MenuChip(Icons.public, l10n.onlinePlayButton, _chipBlue, () => _open(const OnlineEntryScreen())),
+                      _MenuChip(_newGameLook, l10n.newGameSectionLabel, _openNewGame),
+                      _MenuChip(_onlineLook, l10n.onlinePlayButton, () => _open(const OnlineEntryScreen())),
                       // Inerte tant qu'il n'y a rien à reprendre : ouvrir un écran
                       // sur une liste vide n'apprendrait rien au joueur.
                       _MenuChip(
-                        Icons.play_arrow,
+                        _resumeLook,
                         l10n.resumeGamesButton,
-                        _chipGreen,
                         pausedCount == 0 ? null : () => _open(const PausedGamesScreen()),
                       ),
-                      _MenuChip(Icons.group, l10n.managePlayersButton, _chipRed, () => _open(const PlayersScreen())),
-                      _MenuChip(Icons.history, l10n.finishedGamesButton, _chipPurple, () => _open(const FinishedGamesScreen())),
-                      _MenuChip(Icons.bar_chart, l10n.statisticsButton, _chipBlack, () => _open(const StatisticsScreen())),
-                      _MenuChip(Icons.help_outline, l10n.helpTooltip, _chipWhite, () => _open(const RulesScreen(canReplayTutorial: true))),
-                      _MenuChip(Icons.settings, l10n.settingsTooltip, _chipGrey, () => _open(const SettingsScreen())),
-                      _MenuChip(Icons.info_outline, l10n.aboutTooltip, _chipOrange, () => showAppAboutDialog(context)),
+                      _MenuChip(_playersLook, l10n.managePlayersButton, () => _open(const PlayersScreen())),
+                      _MenuChip(_finishedLook, l10n.finishedGamesButton, () => _open(const FinishedGamesScreen())),
+                      _MenuChip(_statisticsLook, l10n.statisticsButton, () => _open(const StatisticsScreen())),
+                      _MenuChip(_helpLook, l10n.helpTooltip, () => _open(const RulesScreen(canReplayTutorial: true))),
+                      _MenuChip(_settingsLook, l10n.settingsTooltip, () => _open(const SettingsScreen())),
+                      _MenuChip(_aboutLook, l10n.aboutTooltip, () => showAppAboutDialog(context)),
                     ],
                   ),
                 ),
@@ -202,18 +201,71 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
   }
 }
 
+/// La marge autour du rack, de chaque côté.
+const double _rackPadding = 16;
+
 /// Un jeton du menu : son icône, son nom, ses couleurs, son action (nulle :
 /// inerte).
 class _MenuChip {
-  final IconData icon;
+  final _ChipLook look;
   final String label;
-  final _ChipColors colors;
   final VoidCallback? onPressed;
 
-  const _MenuChip(this.icon, this.label, this.colors, this.onPressed);
+  const _MenuChip(this.look, this.label, this.onPressed);
+
+  IconData get icon => look.icon;
+  _ChipColors get colors => look.colors;
 }
 
 typedef _ChipColors = ({Color color, Color ink});
+
+/// Ce qui se peint sur un dé du menu (son icône et ses couleurs), par opposition
+/// à son nom et à son action : c'est tout ce dont [precacheMenuDice] a besoin.
+typedef _ChipLook = ({IconData icon, _ChipColors colors});
+
+const _ChipLook _newGameLook = (icon: Icons.add, colors: _chipGold);
+const _ChipLook _onlineLook = (icon: Icons.public, colors: _chipBlue);
+const _ChipLook _resumeLook = (icon: Icons.play_arrow, colors: _chipGreen);
+const _ChipLook _playersLook = (icon: Icons.group, colors: _chipRed);
+const _ChipLook _finishedLook = (icon: Icons.history, colors: _chipPurple);
+const _ChipLook _statisticsLook = (icon: Icons.bar_chart, colors: _chipBlack);
+const _ChipLook _helpLook = (icon: Icons.help_outline, colors: _chipWhite);
+const _ChipLook _settingsLook = (icon: Icons.settings, colors: _chipGrey);
+const _ChipLook _aboutLook = (icon: Icons.info_outline, colors: _chipOrange);
+
+/// Les neuf dés du menu, dans l'ordre du rack.
+const List<_ChipLook> _menuLooks = [
+  _newGameLook,
+  _onlineLook,
+  _resumeLook,
+  _playersLook,
+  _finishedLook,
+  _statisticsLook,
+  _helpLook,
+  _settingsLook,
+  _aboutLook,
+];
+
+/// Calcule d'avance l'image des neuf dés du menu (voir [MenuDie.precache]), l'un
+/// après l'autre pour ne pas bloquer l'écran en cours : le splash l'appelle pour
+/// que l'accueil les trouve prêts. La taille est celle que le rack leur donnera
+/// (voir [_ChipRack.dieSizeFor]) ; une erreur de rendu est sans conséquence,
+/// l'accueil recalcule alors ce qui manque.
+Future<void> precacheMenuDice(BuildContext context) async {
+  final media = MediaQuery.of(context);
+  final size = _ChipRack.dieSizeFor(media.size.width - media.padding.horizontal - 2 * _rackPadding);
+  for (final look in _menuLooks) {
+    try {
+      await MenuDie.precache(
+        icon: look.icon,
+        color: look.colors.color,
+        ink: look.colors.ink,
+        size: size,
+        pixelRatio: media.devicePixelRatio,
+      );
+    } catch (_) {}
+  }
+}
 
 // Une couleur de jeton de casino par entrée du menu.
 const _ChipColors _chipGold = (color: Color(0xFFC9A227), ink: Color(0xFF3A2A08));
@@ -240,11 +292,15 @@ class _ChipRack extends StatelessWidget {
   static const _maxSize = 96.0;
   static const _gap = 12.0;
 
+  /// Le côté d'un dé dans un rack de [rackWidth] de large.
+  static double dieSizeFor(double rackWidth) =>
+      math.min(_maxSize, (rackWidth - 2 * _gap) / 3 - MenuDie.captionMargin);
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = math.min(_maxSize, (constraints.maxWidth - 2 * _gap) / 3 - MenuDie.captionMargin);
+        final size = dieSizeFor(constraints.maxWidth);
         // Toujours trois colonnes, même sur un écran large : c'est un rack, pas
         // une rangée qui s'étire.
         return Column(

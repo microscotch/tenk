@@ -57,7 +57,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   static final _footerStart = _resultStart + _resultFadeIn + _gapBeforeFooter;
   static final _choreographyDuration = _footerStart + _footerFadeIn;
 
+  /// Plafond de l'attente du calcul des dés du menu avant de quitter le splash :
+  /// au-delà, l'accueil s'affiche quand même, ses dés se complétant au fil du
+  /// calcul.
+  static const _dicePrecacheMaxWait = Duration(milliseconds: 300);
+
   final List<Timer> _timers = [];
+  Future<void>? _menuDicePrecache;
   Object? _diceRollToken;
 
   /// Faces des dés avant le lancer : tirées au hasard, jamais l'as, pour que
@@ -80,6 +86,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _avatarVisible = true);
+      // Les dés du menu se calculent pendant que le splash se joue, pour que
+      // l'accueil les trouve prêts (voir `precacheMenuDice`).
+      _menuDicePrecache = precacheMenuDice(context);
     });
     _schedule(_avatarFadeIn + _gapBeforePresente, () => setState(() => _presenteVisible = true));
     _schedule(_diceStart, () => setState(() => _diceVisible = true));
@@ -95,7 +104,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     );
     _schedule(_resultStart, () => setState(() => _resultVisible = true));
     _schedule(_footerStart, () => setState(() => _footerVisible = true));
-    _schedule(_choreographyDuration + widget.displayDuration, _goToSetup);
+    _schedule(_choreographyDuration + widget.displayDuration, () => _goToSetup(waitForDice: true));
   }
 
   void _schedule(Duration delay, VoidCallback action) {
@@ -118,14 +127,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   /// Quitte le splash pour l'accueil — ou, sans profil utilisateur, pour sa
   /// création d'abord (voir `launchScreenFor`), qui attend que réglages et
   /// fiches soient relus : un toucher qui écourte le splash ne décide donc
-  /// jamais sur des valeurs par défaut.
-  Future<void> _goToSetup() async {
+  /// jamais sur des valeurs par défaut. À la fin du splash ([waitForDice]), on
+  /// attend aussi le calcul des dés du menu, au plus [_dicePrecacheMaxWait] ; un
+  /// toucher ne l'attend pas.
+  Future<void> _goToSetup({bool waitForDice = false}) async {
     if (_navigated || !mounted) return;
     _navigated = true;
     for (final timer in _timers) {
       timer.cancel();
     }
     final next = await launchScreenFor(ProviderScope.containerOf(context, listen: false));
+    if (waitForDice) await _menuDicePrecache?.timeout(_dicePrecacheMaxWait, onTimeout: () {});
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
