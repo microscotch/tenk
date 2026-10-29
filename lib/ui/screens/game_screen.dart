@@ -3320,9 +3320,14 @@ const double _dieMargin = DieWidget.margin * 2;
 /// rien rogner), et le cadre du lancer se resserre avec elles.
 const double _sameRollSpacing = 0.7;
 
+/// Idem en hauteur : le cadre du lancer épouse le cube au lieu de la case
+/// entière, dont il dépassait nettement en haut et en bas.
+const double _sameRollHeight = 0.78;
+
 /// [die] dans une rangée de dés d'un même lancer : sa place est réduite à
-/// [_sameRollSpacing], le dé restant centré dessus.
-Widget _tightDie(Widget die) => Align(widthFactor: _sameRollSpacing, heightFactor: 1, child: die);
+/// [_sameRollSpacing] en largeur et [_sameRollHeight] en hauteur, le dé restant
+/// centré dessus.
+Widget _tightDie(Widget die) => Align(widthFactor: _sameRollSpacing, heightFactor: _sameRollHeight, child: die);
 
 const double _minDieSize = 40.0;
 
