@@ -340,25 +340,22 @@ class _MenuDiePainter extends CustomPainter {
     }
 
     const unit = 100.0;
-    TextPainter glyph(Color tint) => TextPainter(
+    TextPainter glyphStyled({Color? color, Paint? foreground}) => TextPainter(
           text: TextSpan(
             text: String.fromCharCode(icon.codePoint),
             style: TextStyle(
               fontSize: unit * 0.62,
               fontFamily: icon.fontFamily,
               package: icon.fontPackage,
-              color: tint,
+              color: color,
+              foreground: foreground,
             ),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
+    TextPainter glyph(Color tint) => glyphStyled(color: tint);
     final frontIcon = glyph(ink);
     final backIcon = glyph(ink.withValues(alpha: 0.4));
-    // L'incrustation de l'icône de devant : un bord d'ombre en haut à gauche et
-    // un reflet en bas à droite.
-    final cutShadow = glyph(Colors.black.withValues(alpha: 0.55));
-    final cutLight = glyph(Colors.white.withValues(alpha: 0.4));
-    const depth = unit * 0.022;
 
     final fitted = Matrix4(
       scale, 0, 0, 0, //
@@ -402,9 +399,8 @@ class _MenuDiePainter extends CustomPainter {
       if (art != null) {
         art!(canvas, unit, identical(placement, top) ? _FaceRole.top : (identical(placement, left) ? _FaceRole.left : _FaceRole.right));
       } else if (facing) {
-        cutLight.paint(canvas, at + const Offset(depth, depth));
-        cutShadow.paint(canvas, at - const Offset(depth, depth));
-        frontIcon.paint(canvas, at);
+        // L'icône de devant est gravée en creux, de sa couleur.
+        _engrave(canvas, unit, ink, (paint) => glyphStyled(foreground: paint).paint(canvas, at));
       } else {
         backIcon.paint(canvas, at);
       }
@@ -571,6 +567,31 @@ enum _FaceRole { top, left, right }
 /// en haut à gauche).
 typedef _FaceArt = void Function(Canvas canvas, double unit, _FaceRole role);
 
+/// Une gravure en creux sur une face de [unit] de côté : le fond de la cavité
+/// ([cavity]), une ombre intérieure floue le long des bords du haut et de la
+/// gauche (là où la paroi cache la lumière), et un mince liseré clair de l'autre
+/// côté, là où la lumière touche le rebord. Pas de copie sombre décalée dehors, qui
+/// ferait un halo. [draw] trace la forme gravée avec la peinture qu'on lui donne.
+void _engrave(Canvas canvas, double unit, Color cavity, void Function(Paint paint) draw) {
+  final bounds = Rect.fromLTWH(-unit * 0.1, -unit * 0.1, unit * 1.2, unit * 1.2);
+  Paint blur(double sigma) => Paint()..imageFilter = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
+  canvas
+    ..saveLayer(bounds, blur(unit * 0.004))
+    ..translate(unit * 0.012, unit * 0.012);
+  draw(Paint()..color = Colors.white.withValues(alpha: 0.45));
+  canvas.restore();
+  draw(Paint()..color = cavity);
+  canvas.saveLayer(bounds, blur(unit * 0.011));
+  draw(Paint()..color = Colors.black.withValues(alpha: 0.95));
+  canvas
+    ..save()
+    ..translate(unit * 0.03, unit * 0.034);
+  draw(Paint()..blendMode = BlendMode.dstOut);
+  canvas
+    ..restore()
+    ..restore();
+}
+
 /// Peint dans [size] le dé de l'icône de l'app : le dé du menu, mais opaque, en
 /// perspective, remplissant [size],
 /// laiton d'un seul tenant, un as sur le dessus, « 10 » sur la face de gauche et
@@ -578,30 +599,6 @@ typedef _FaceArt = void Function(Canvas canvas, double unit, _FaceRole role);
 /// police des chiffres. L'outil `tool/render_app_icon_test.dart` s'en sert pour
 /// produire les PNG de l'icône.
 void paintAppIconDie(Canvas canvas, Size size, {required Color color, required Color ink, required TextStyle numerals}) {
-  // Une gravure en creux : le fond de la cavité, une ombre intérieure floue le long
-  // des bords du haut et de la gauche (là où la paroi cache la lumière), et un mince
-  // liseré clair de l'autre côté, là où la lumière touche le rebord. Pas de copie
-  // sombre décalée dehors, qui ferait un halo.
-  void engrave(Canvas canvas, double unit, void Function(Paint paint) draw) {
-    final bounds = Rect.fromLTWH(-unit * 0.1, -unit * 0.1, unit * 1.2, unit * 1.2);
-    Paint blur(double sigma) => Paint()..imageFilter = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
-    canvas
-      ..saveLayer(bounds, blur(unit * 0.004))
-      ..translate(unit * 0.012, unit * 0.012);
-    draw(Paint()..color = Colors.white.withValues(alpha: 0.45));
-    canvas.restore();
-    draw(Paint()..color = Color.lerp(color, Colors.black, 0.72)!);
-    canvas.saveLayer(bounds, blur(unit * 0.011));
-    draw(Paint()..color = Colors.black.withValues(alpha: 0.95));
-    canvas
-      ..save()
-      ..translate(unit * 0.03, unit * 0.034);
-    draw(Paint()..blendMode = BlendMode.dstOut);
-    canvas
-      ..restore()
-      ..restore();
-  }
-
   void text(Canvas canvas, double unit, String text, Paint paint) {
     final painter = TextPainter(
       text: TextSpan(text: text, style: numerals.copyWith(fontSize: unit * 0.56, foreground: paint)),
@@ -617,7 +614,7 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
     translucent: false,
     cameraDistance: _perspectiveDistance,
     fillBounds: true,
-    art: (canvas, unit, role) => engrave(canvas, unit, (paint) {
+    art: (canvas, unit, role) => _engrave(canvas, unit, Color.lerp(color, Colors.black, 0.72)!, (paint) {
       switch (role) {
         case _FaceRole.top:
           canvas.drawCircle(Offset(unit / 2, unit / 2), unit * 0.13, paint);
