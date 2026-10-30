@@ -296,9 +296,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   and keeps it where there is no system back (iOS, desktop). This applies to every new screen;
   `test/ui/app_top_bar_test.dart` fails on any `AppBar(` written elsewhere in `lib/ui`. The home
   screen (`SetupScreen`) has no top bar at all: its menu is a 3×3 rack of dice seen
-  three-quarter (`MenuDie`, `lib/ui/widgets/menu_die.dart`, painted with a `CustomPaint`: each of the three visible faces
+  three-quarter (`MenuDie`, `lib/ui/widgets/menu_die.dart`, drawn in perspective by a `CustomPainter` rendered once into a
+  cached image — the splash precaches them with `precacheMenuDice`, so the home keys (icon, colours, size, pixel ratio)
+  must stay identical: each of the three visible faces
   carries the entry's icon, the die has the entry's colour, its label is written underneath), rules, settings and about
-  included; tests find a die by its `label` (`MenuDie.label`), and the icon painted on it is `MenuDie.icon`.
+  included; tests find a die by its `label` (`MenuDie.label`), and the icon painted on it is `MenuDie.icon`. The same
+  painter, opaque, draws the app icon (`tool/render_app_icon_test.dart`, then `dart run flutter_launcher_icons`).
 
 - `game_screen.dart` (also the spectator replay, `replayMode`, with its controls pinned in a bottom bar
   outside the inert body) is the densest file: it renders different sub-views depending on

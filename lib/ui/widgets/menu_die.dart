@@ -140,7 +140,7 @@ class _MenuDiePicture extends StatefulWidget {
     final canvas = Canvas(recorder)
       ..scale(ratio)
       ..translate(pad, pad);
-    _MenuDiePainter(icon: icon, color: color, ink: ink).paint(canvas, Size(size, size));
+    _MenuDiePainter(icon: icon, color: color, ink: ink, cameraDistance: _perspectiveDistance).paint(canvas, Size(size, size));
     final picture = recorder.endRecording();
     try {
       return await picture.toImage((side * ratio).ceil(), (side * ratio).ceil());
@@ -202,13 +202,17 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
   }
 }
 
+/// La distance de l'œil au centre d'un dé, en côtés de dé : la perspective des dés
+/// du menu et de l'icône de l'app.
+const double _perspectiveDistance = 3.0;
+
 /// Un dé de plastique coloré, transparent dans toute sa masse : ses six faces
 /// sont peintes de la plus lointaine à la plus proche, chacune à moitié
 /// transparente, si bien qu'on voit à travers le dé les faces du fond (leurs
 /// icônes à l'envers) et que la couleur s'épaissit là où les faces se
-/// superposent. La vue est une projection dimétrique : le cube tourné de 45°
-/// autour de la verticale, vu de 30° au-dessus de la table, sans perspective
-/// (les flancs gauche et droit sont raccourcis pareillement, le dessus autrement).
+/// superposent. Le cube est tourné de 45° autour de la verticale, vu de 30°
+/// au-dessus de la table, en perspective (voir [cameraDistance]) : ce qui est près
+/// de l'œil, le sommet de devant, est plus grand que ce qui est loin.
 ///
 /// Avec [translucent] faux, le dé est opaque : plus de faces vues à travers les
 /// autres, plus d'arêtes ni d'icônes du fond. C'est le dé de l'icône de l'app
@@ -222,7 +226,7 @@ class _MenuDiePainter extends CustomPainter {
   final _FaceArt? art;
 
   /// La distance de l'œil au centre du dé, en côtés de dé ; nulle : projection
-  /// parallèle (celle du menu).
+  /// parallèle.
   final double? cameraDistance;
 
   /// Le dé remplit tout son cadre (contour arrondi compris) au lieu de laisser la
@@ -247,10 +251,10 @@ class _MenuDiePainter extends CustomPainter {
     final spin = Matrix4.identity()
       ..rotateX(_tilt)
       ..rotateY(_yaw);
-    // Projection parallèle, sans aucune perspective : les arêtes parallèles du
-    // cube restent parallèles à l'écran. Avec [cameraDistance], l'œil est sur l'axe
-    // à cette distance du centre du cube (le côté du cube vaut 1) et ce qui est plus
-    // près est plus grand : `w = 1 - z / distance` divise x et y.
+    // Projection en perspective : l'œil est sur l'axe, à [cameraDistance] du centre
+    // du cube (dont le côté vaut 1), et ce qui est plus près est plus grand :
+    // `w = 1 - z / distance` divise x et y. Sans [cameraDistance], projection
+    // parallèle : les arêtes parallèles du cube restent parallèles à l'écran.
     final distance = cameraDistance;
     final camera = distance == null
         ? spin
@@ -611,7 +615,7 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
     color: color,
     ink: ink,
     translucent: false,
-    cameraDistance: 3.0,
+    cameraDistance: _perspectiveDistance,
     fillBounds: true,
     art: (canvas, unit, role) => engrave(canvas, unit, (paint) {
       switch (role) {
