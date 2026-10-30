@@ -209,12 +209,35 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
 /// superposent. La vue est une projection dimétrique : le cube tourné de 45°
 /// autour de la verticale, vu de 30° au-dessus de la table, sans perspective
 /// (les flancs gauche et droit sont raccourcis pareillement, le dessus autrement).
+///
+/// Avec [translucent] faux, le dé est opaque : plus de faces vues à travers les
+/// autres, plus d'arêtes ni d'icônes du fond. C'est le dé de l'icône de l'app
+/// (voir [paintAppIconDie]), dont [art] grave un décor propre à chaque face au
+/// lieu de l'[icon] commune.
 class _MenuDiePainter extends CustomPainter {
   final IconData icon;
   final Color color;
   final Color ink;
+  final bool translucent;
+  final _FaceArt? art;
 
-  const _MenuDiePainter({required this.icon, required this.color, required this.ink});
+  /// La distance de l'œil au centre du dé, en côtés de dé ; nulle : projection
+  /// parallèle (celle du menu).
+  final double? cameraDistance;
+
+  /// Le dé remplit tout son cadre (contour arrondi compris) au lieu de laisser la
+  /// place d'une ombre.
+  final bool fillBounds;
+
+  const _MenuDiePainter({
+    required this.icon,
+    required this.color,
+    required this.ink,
+    this.translucent = true,
+    this.art,
+    this.cameraDistance,
+    this.fillBounds = false,
+  });
 
   static const _yaw = math.pi / 4;
   static const _tilt = -30 * math.pi / 180;
@@ -225,8 +248,15 @@ class _MenuDiePainter extends CustomPainter {
       ..rotateX(_tilt)
       ..rotateY(_yaw);
     // Projection parallèle, sans aucune perspective : les arêtes parallèles du
-    // cube restent parallèles à l'écran.
-    final camera = spin;
+    // cube restent parallèles à l'écran. Avec [cameraDistance], l'œil est sur l'axe
+    // à cette distance du centre du cube (le côté du cube vaut 1) et ce qui est plus
+    // près est plus grand : `w = 1 - z / distance` divise x et y.
+    final distance = cameraDistance;
+    final camera = distance == null
+        ? spin
+        : (Matrix4.identity()
+            ..setEntry(3, 2, -1 / distance)
+            ..multiply(spin));
 
     // Les six faces : leur placement sur le cube, et leur teinte (le dessus
     // attrape la lumière, les flancs sont dans l'ombre).
@@ -244,6 +274,13 @@ class _MenuDiePainter extends CustomPainter {
       for (final (placement, tint) in faces)
         (placement, tint, spin.transformed3(placement.transformed3(Vector3(0, 0, 1))).z),
     ]..sort((a, b) => a.$3.compareTo(b.$3));
+    // Les trois faces visibles : le dessus est celle dont la normale est la plus
+    // verticale, des deux flancs celle qui regarde le plus à gauche est la gauche.
+    Vector3 normalOf(Matrix4 placement) => spin.transformed3(placement.transformed3(Vector3(0, 0, 1)));
+    final visible = [for (final (placement, _, z) in ordered) if (z > 0) placement]
+      ..sort((a, b) => normalOf(b).y.abs().compareTo(normalOf(a).y.abs()));
+    final top = visible.first;
+    final left = visible.skip(1).reduce((a, b) => normalOf(a).x < normalOf(b).x ? a : b);
 
     // Les huit sommets du cube unité, vus par la caméra (projection parallèle :
     // on ne garde que x et y).
@@ -252,25 +289,51 @@ class _MenuDiePainter extends CustomPainter {
         for (final y in const [-0.5, 0.5])
           for (final z in const [-0.5, 0.5]) Vector3(x, y, z),
     ];
-    final projected = [for (final v in corners) camera.transformed3(v)];
-    final bounds = projected
-        .map((p) => Rect.fromPoints(Offset(p.x, p.y), Offset(p.x, p.y)))
-        .reduce((a, b) => a.expandToInclude(b));
-    final scale = math.min(size.width / bounds.width, size.height / bounds.height);
-    final shift = Offset(size.width, size.height) / 2 - bounds.center * scale;
-    Offset onScreen(int i) => Offset(projected[i].x, projected[i].y) * scale + shift;
+    final projected = [
+      for (final v in corners)
+        () {
+          final p = spin.transformed3(v);
+          final w = distance == null ? 1.0 : 1 - p.z / distance;
+          return Offset(p.x / w, p.y / w);
+        }(),
+    ];
+    final bounds = projected.map((p) => Rect.fromPoints(p, p)).reduce((a, b) => a.expandToInclude(b));
+    var scale = math.min(size.width / bounds.width, size.height / bounds.height);
+    var shift = Offset(size.width, size.height) / 2 - bounds.center * scale;
+    Offset onScreen(int i) => projected[i] * scale + shift;
 
-    // L'ombre portée sur le feutre.
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(size.width / 2, size.height * 0.97),
-        width: size.width * 0.8,
-        height: size.height * 0.16,
-      ),
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.5)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width / 16),
-    );
+    // Le contour du dé : l'enveloppe convexe des huit sommets, dont on arrondit
+    // chaque coin. Faces et arêtes sont rognées à ce contour, qui donne au dé ses
+    // coins arrondis tout en laissant les faces jointives.
+    final width = size.width / 36;
+    Path outline() => _roundedPolygon(_convexHull([for (var i = 0; i < 8; i++) onScreen(i)]), width * 2.4);
+    if (fillBounds) {
+      // Arrondir les coins rogne le contour : on agrandit le dé pour que ce soit le
+      // contour arrondi, et non l'enveloppe des sommets, qui touche les bords de
+      // [size] (quelques passes suffisent, l'arrondi variant peu avec l'échelle).
+      for (var pass = 0; pass < 3; pass++) {
+        final rounded = _tightBounds(outline());
+        final grow = math.min(size.width / rounded.width, size.height / rounded.height);
+        final center = (rounded.center - shift) / scale;
+        scale *= grow;
+        shift = Offset(size.width, size.height) / 2 - center * scale;
+      }
+    }
+
+    // L'ombre portée sur le feutre. Un dé qui remplit son cadre n'en a pas : elle
+    // en sortirait, rognée.
+    if (!fillBounds) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(size.width / 2, size.height * 0.97),
+          width: size.width * 0.8,
+          height: size.height * 0.16,
+        ),
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.5)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width / 16),
+      );
+    }
 
     const unit = 100.0;
     TextPainter glyph(Color tint) => TextPainter(
@@ -299,12 +362,7 @@ class _MenuDiePainter extends CustomPainter {
       0, 0, 1, 0, //
       shift.dx, shift.dy, 0, 1,
     );
-    // Le contour du dé : l'enveloppe convexe des huit sommets, dont on arrondit
-    // chaque coin. Faces et arêtes sont rognées à ce contour, qui donne au dé ses
-    // coins arrondis tout en laissant les faces jointives.
-    final width = size.width / 36;
-    final hull = _convexHull([for (var i = 0; i < 8; i++) onScreen(i)]);
-    final silhouette = _roundedPolygon(hull, width * 2.4);
+    final silhouette = outline();
     canvas.save();
     canvas.clipPath(silhouette);
 
@@ -313,6 +371,7 @@ class _MenuDiePainter extends CustomPainter {
     const faceRect = Rect.fromLTWH(0, 0, unit, unit);
     for (final (placement, tint, z) in ordered) {
       final facing = z > 0;
+      if (!translucent && !facing) continue;
       final onFace = fitted.multiplied(camera)
         ..multiply(placement)
         ..translateByDouble(0.0, 0.0, 0.5, 1.0)
@@ -321,7 +380,7 @@ class _MenuDiePainter extends CustomPainter {
       canvas.save();
       canvas.transform(onFace.storage);
       // La matière : la couleur, à moitié transparente.
-      canvas.drawRect(faceRect, Paint()..color = tint.withValues(alpha: facing ? 0.42 : 0.3));
+      canvas.drawRect(faceRect, Paint()..color = translucent ? tint.withValues(alpha: facing ? 0.42 : 0.3) : tint);
       if (facing) {
         // Le reflet du plastique.
         canvas.drawRect(
@@ -336,7 +395,9 @@ class _MenuDiePainter extends CustomPainter {
         );
       }
       final at = Offset((unit - frontIcon.width) / 2, (unit - frontIcon.height) / 2);
-      if (facing) {
+      if (art != null) {
+        art!(canvas, unit, identical(placement, top) ? _FaceRole.top : (identical(placement, left) ? _FaceRole.left : _FaceRole.right));
+      } else if (facing) {
         cutLight.paint(canvas, at + const Offset(depth, depth));
         cutShadow.paint(canvas, at - const Offset(depth, depth));
         frontIcon.paint(canvas, at);
@@ -356,6 +417,11 @@ class _MenuDiePainter extends CustomPainter {
     bool facingNormal(Vector3 normal) => spin.transformed3(normal).z > 0;
     final hidden = <(Offset, Offset)>[];
     final shown = <(Offset, Offset)>[];
+    // Les arêtes entre deux faces visibles d'un dé opaque, avec la teinte à mi-chemin
+    // de leurs deux faces : le lissage de l'arrondi (voir plus bas).
+    final creases = <(Offset, Offset, Color)>[];
+    Color tintOf(Vector3 normal) =>
+        faces.firstWhere((f) => f.$1.transformed3(Vector3(0, 0, 1)).dot(normal) > 0.9).$2;
     for (var i = 0; i < 8; i++) {
       for (var j = i + 1; j < 8; j++) {
         final d = corners[j] - corners[i];
@@ -369,6 +435,9 @@ class _MenuDiePainter extends CustomPainter {
           if (mid.z != 0) Vector3(0, 0, mid.z.sign),
         ];
         (normals.any(facingNormal) ? shown : hidden).add((onScreen(i), onScreen(j)));
+        if (!translucent && normals.every(facingNormal)) {
+          creases.add((onScreen(i), onScreen(j), Color.lerp(tintOf(normals[0]), tintOf(normals[1]), 0.5)!));
+        }
       }
     }
     // Pas de jointure visible : une arête arrondie n'a pas de trait, seulement un
@@ -379,11 +448,31 @@ class _MenuDiePainter extends CustomPainter {
       ..strokeWidth = width * factor
       ..strokeCap = StrokeCap.round
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 0.9);
-    for (final (a, b) in hidden) {
-      canvas.drawLine(a, b, soft(0.14, 1.6));
+    // Une arête arrondie fond une face dans l'autre : une bande floue de la teinte
+    // intermédiaire, aux bouts ronds (donc aussi au sommet où les trois faces se
+    // rejoignent, qui sans elle resterait une pointe vive).
+    for (final (a, b, tint) in creases) {
+      canvas.drawLine(
+        a,
+        b,
+        Paint()
+          ..color = tint
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width * 4
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 1.4),
+      );
     }
+    if (translucent) {
+      for (final (a, b) in hidden) {
+        canvas.drawLine(a, b, soft(0.14, 1.6));
+      }
+    }
+    // Opaque, le dé garde des reflets plus discrets : un halo clair aussi large
+    // donnerait un aspect givré.
+    final glow = translucent ? 1.0 : 0.5;
     for (final (a, b) in shown) {
-      canvas.drawLine(a, b, soft(0.3, 2.4));
+      canvas.drawLine(a, b, soft(0.3 * glow, 2.4));
     }
     // Les arêtes du contour sont traitées comme les autres : pas de trait, le même
     // reflet doux, rogné au dé (donc rentrant), avec un léger assombrissement
@@ -400,7 +489,7 @@ class _MenuDiePainter extends CustomPainter {
     canvas.drawPath(
       silhouette,
       Paint()
-        ..color = Colors.white.withValues(alpha: 0.3)
+        ..color = Colors.white.withValues(alpha: 0.3 * glow)
         ..style = PaintingStyle.stroke
         ..strokeWidth = width * 2.4
         ..strokeJoin = StrokeJoin.round
@@ -430,6 +519,21 @@ class _MenuDiePainter extends CustomPainter {
     return [...lower..removeLast(), ...upper..removeLast()];
   }
 
+  /// L'emprise réelle de [path] : `Path.getBounds` compte les points de contrôle
+  /// des courbes (ici ceux des coins arrondis, donc les sommets du polygone), on
+  /// échantillonne donc le tracé.
+  static Rect _tightBounds(Path path) {
+    Rect? bounds;
+    for (final metric in path.computeMetrics()) {
+      const steps = 400;
+      for (var i = 0; i <= steps; i++) {
+        final p = metric.getTangentForOffset(metric.length * i / steps)!.position;
+        bounds = bounds == null ? Rect.fromPoints(p, p) : bounds.expandToInclude(Rect.fromPoints(p, p));
+      }
+    }
+    return bounds!;
+  }
+
   /// Le polygone [points] dont chaque coin est arrondi sur [radius] de chaque côté.
   static Path _roundedPolygon(List<Offset> points, double radius) {
     final path = Path();
@@ -451,5 +555,73 @@ class _MenuDiePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MenuDiePainter old) => old.icon != icon || old.color != color || old.ink != ink;
+  bool shouldRepaint(_MenuDiePainter old) =>
+      old.icon != icon || old.color != color || old.ink != ink || old.translucent != translucent || old.art != art ||
+      old.cameraDistance != cameraDistance || old.fillBounds != fillBounds;
+}
+
+/// Les trois faces que l'on voit d'un dé.
+enum _FaceRole { top, left, right }
+
+/// Ce qui se grave sur une face de [unit] de côté (le repère de la face, origine
+/// en haut à gauche).
+typedef _FaceArt = void Function(Canvas canvas, double unit, _FaceRole role);
+
+/// Peint dans [size] le dé de l'icône de l'app : le dé du menu, mais opaque, en
+/// perspective, remplissant [size],
+/// laiton d'un seul tenant, un as sur le dessus, « 10 » sur la face de gauche et
+/// « K » sur celle de droite, gravés comme les icônes du menu. [numerals] est la
+/// police des chiffres. L'outil `tool/render_app_icon_test.dart` s'en sert pour
+/// produire les PNG de l'icône.
+void paintAppIconDie(Canvas canvas, Size size, {required Color color, required Color ink, required TextStyle numerals}) {
+  // Une gravure en creux : le fond de la cavité, une ombre intérieure floue le long
+  // des bords du haut et de la gauche (là où la paroi cache la lumière), et un mince
+  // liseré clair de l'autre côté, là où la lumière touche le rebord. Pas de copie
+  // sombre décalée dehors, qui ferait un halo.
+  void engrave(Canvas canvas, double unit, void Function(Paint paint) draw) {
+    final bounds = Rect.fromLTWH(-unit * 0.1, -unit * 0.1, unit * 1.2, unit * 1.2);
+    Paint blur(double sigma) => Paint()..imageFilter = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
+    canvas
+      ..saveLayer(bounds, blur(unit * 0.004))
+      ..translate(unit * 0.012, unit * 0.012);
+    draw(Paint()..color = Colors.white.withValues(alpha: 0.45));
+    canvas.restore();
+    draw(Paint()..color = Color.lerp(color, Colors.black, 0.72)!);
+    canvas.saveLayer(bounds, blur(unit * 0.011));
+    draw(Paint()..color = Colors.black.withValues(alpha: 0.95));
+    canvas
+      ..save()
+      ..translate(unit * 0.03, unit * 0.034);
+    draw(Paint()..blendMode = BlendMode.dstOut);
+    canvas
+      ..restore()
+      ..restore();
+  }
+
+  void text(Canvas canvas, double unit, String text, Paint paint) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: numerals.copyWith(fontSize: unit * 0.56, foreground: paint)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(canvas, Offset((unit - painter.width) / 2, (unit - painter.height) / 2));
+  }
+
+  _MenuDiePainter(
+    icon: Icons.circle,
+    color: color,
+    ink: ink,
+    translucent: false,
+    cameraDistance: 3.0,
+    fillBounds: true,
+    art: (canvas, unit, role) => engrave(canvas, unit, (paint) {
+      switch (role) {
+        case _FaceRole.top:
+          canvas.drawCircle(Offset(unit / 2, unit / 2), unit * 0.13, paint);
+        case _FaceRole.left:
+          text(canvas, unit, '10', paint);
+        case _FaceRole.right:
+          text(canvas, unit, 'K', paint);
+      }
+    }),
+  ).paint(canvas, size);
 }
