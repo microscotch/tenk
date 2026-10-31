@@ -301,7 +301,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   singleton whose files would be overwritten). `testWidgets` cannot resolve real `dart:io`: UI tests override
   `backupServiceProvider`, the real service is tested on temp directories (`test/state/backup_test.dart`). No
   biometric plugin: an earlier design bound the key to the phone's biometrics (device-bound, unusable after a
-  reinstall on Android or a new phone) and was dropped for the password.
+  reinstall on Android or a new phone) and was dropped for the password. `tool/open_backup.py <file> [password]`
+  decrypts a backup on a PC and prints its JSON (Python + `cryptography`; checked against a file sealed by the
+  real Dart code) — keep it in step with `BackupEnvelope`.
 
 ### UI layer (`lib/ui/`)
 
