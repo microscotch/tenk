@@ -1280,4 +1280,11 @@ class AppLocalizationsBg extends AppLocalizations {
   String exchangeKeepCount(int count) {
     return 'Запази $count петици';
   }
+
+  @override
+  String get acknowledgementsButton => 'Благодарности';
+
+  @override
+  String get acknowledgementsIntro =>
+      'Голямо благодаря на всички бета тестери от първия час за забележките и съветите им, и по-специално на:';
 }

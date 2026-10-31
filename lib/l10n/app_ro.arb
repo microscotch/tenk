@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Păstrează toți cincii",
 
-  "exchangeKeepCount": "Păstrează {count} de cinci"
+  "exchangeKeepCount": "Păstrează {count} de cinci",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Mulțumiri",
+
+  "acknowledgementsIntro": "Un mare mulțumesc tuturor beta testerilor din prima oră pentru observațiile și sfaturile lor, în special:"
 }

@@ -1078,5 +1078,39 @@
   "@exchangeKeepAll": {"description": "Entrée de la bulle du bouton de recyclage : combien de 5 garder (suivie du total potentiel)."},
 
   "exchangeKeepCount": "Garder {count} cinq",
-  "@exchangeKeepCount": {"description": "Entrée de la bulle du bouton de recyclage : garder {count} des 5 (plus de deux 5 déclinables, rare).", "placeholders": {"count": {"type": "int"}}}
+  "@exchangeKeepCount": {"description": "Entrée de la bulle du bouton de recyclage : garder {count} des 5 (plus de deux 5 déclinables, rare).", "placeholders": {"count": {"type": "int"}}},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Remerciements",
+  "@acknowledgementsButton": {"description": "Bouton du dialogue \"À propos\" qui ouvre l'écran des remerciements, et titre de cet écran."},
+
+  "acknowledgementsIntro": "Un grand merci à tous les bêta-testeurs de la première heure pour leurs remarques et conseils, en particulier :",
+  "@acknowledgementsIntro": {"description": "Texte de l'écran des remerciements, avant la liste des pseudos des beta-testeurs de la première heure (les noms eux-mêmes ne se traduisent pas)."}
 }

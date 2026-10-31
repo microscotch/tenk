@@ -1283,4 +1283,11 @@ class AppLocalizationsFi extends AppLocalizations {
   String exchangeKeepCount(int count) {
     return 'Pidä $count viitosta';
   }
+
+  @override
+  String get acknowledgementsButton => 'Kiitokset';
+
+  @override
+  String get acknowledgementsIntro =>
+      'Suuri kiitos kaikille alkuvaiheen beta-testaajille palautteesta ja neuvoista, erityisesti:';
 }

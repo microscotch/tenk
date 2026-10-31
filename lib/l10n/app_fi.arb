@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Pidä kaikki viitoset",
 
-  "exchangeKeepCount": "Pidä {count} viitosta"
+  "exchangeKeepCount": "Pidä {count} viitosta",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Kiitokset",
+
+  "acknowledgementsIntro": "Suuri kiitos kaikille alkuvaiheen beta-testaajille palautteesta ja neuvoista, erityisesti:"
 }

@@ -1285,4 +1285,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String exchangeKeepCount(int count) {
     return 'Garder $count cinq';
   }
+
+  @override
+  String get acknowledgementsButton => 'Remerciements';
+
+  @override
+  String get acknowledgementsIntro =>
+      'Un grand merci à tous les bêta-testeurs de la première heure pour leurs remarques et conseils, en particulier :';
 }

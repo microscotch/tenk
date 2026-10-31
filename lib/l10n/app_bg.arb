@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Запази всички петици",
 
-  "exchangeKeepCount": "Запази {count} петици"
+  "exchangeKeepCount": "Запази {count} петици",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Благодарности",
+
+  "acknowledgementsIntro": "Голямо благодаря на всички бета тестери от първия час за забележките и съветите им, и по-специално на:"
 }

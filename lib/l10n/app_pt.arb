@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Manter todos os cincos",
 
-  "exchangeKeepCount": "Manter {count} cincos"
+  "exchangeKeepCount": "Manter {count} cincos",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Agradecimentos",
+
+  "acknowledgementsIntro": "Um grande obrigado a todos os beta testers da primeira hora pelos seus comentários e conselhos, em particular:"
 }

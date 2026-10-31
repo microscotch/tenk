@@ -1282,4 +1282,11 @@ class AppLocalizationsNb extends AppLocalizations {
   String exchangeKeepCount(int count) {
     return 'Behold $count femmere';
   }
+
+  @override
+  String get acknowledgementsButton => 'Takk til';
+
+  @override
+  String get acknowledgementsIntro =>
+      'En stor takk til alle betatesterne fra første stund for tilbakemeldinger og råd, spesielt:';
 }

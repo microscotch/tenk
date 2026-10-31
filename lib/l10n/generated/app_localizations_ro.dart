@@ -1291,4 +1291,11 @@ class AppLocalizationsRo extends AppLocalizations {
   String exchangeKeepCount(int count) {
     return 'Păstrează $count de cinci';
   }
+
+  @override
+  String get acknowledgementsButton => 'Mulțumiri';
+
+  @override
+  String get acknowledgementsIntro =>
+      'Un mare mulțumesc tuturor beta testerilor din prima oră pentru observațiile și sfaturile lor, în special:';
 }

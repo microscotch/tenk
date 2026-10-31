@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Alle 5en behalten",
 
-  "exchangeKeepCount": "{count} 5en behalten"
+  "exchangeKeepCount": "{count} 5en behalten",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Danksagung",
+
+  "acknowledgementsIntro": "Ein großes Dankeschön an alle Beta-Tester der ersten Stunde für ihre Anmerkungen und Ratschläge, insbesondere:"
 }

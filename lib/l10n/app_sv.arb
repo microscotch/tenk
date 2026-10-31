@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Behåll alla femmor",
 
-  "exchangeKeepCount": "Behåll {count} femmor"
+  "exchangeKeepCount": "Behåll {count} femmor",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Tack till",
+
+  "acknowledgementsIntro": "Ett stort tack till alla betatestare från första stund för deras synpunkter och råd, särskilt:"
 }

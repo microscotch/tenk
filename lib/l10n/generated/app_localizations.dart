@@ -2263,6 +2263,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Garder {count} cinq'**
   String exchangeKeepCount(int count);
+
+  /// Bouton du dialogue "À propos" qui ouvre l'écran des remerciements, et titre de cet écran.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remerciements'**
+  String get acknowledgementsButton;
+
+  /// Texte de l'écran des remerciements, avant la liste des pseudos des beta-testeurs de la première heure (les noms eux-mêmes ne se traduisent pas).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un grand merci à tous les bêta-testeurs de la première heure pour leurs remarques et conseils, en particulier :'**
+  String get acknowledgementsIntro;
 }
 
 class _AppLocalizationsDelegate

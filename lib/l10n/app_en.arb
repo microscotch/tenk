@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Keep all fives",
 
-  "exchangeKeepCount": "Keep {count} fives"
+  "exchangeKeepCount": "Keep {count} fives",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Acknowledgements",
+
+  "acknowledgementsIntro": "A big thank you to all the first-hour beta testers for their feedback and advice, in particular:"
 }

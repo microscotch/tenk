@@ -380,5 +380,37 @@
 
   "exchangeKeepAll": "Tieni tutti i cinque",
 
-  "exchangeKeepCount": "Tieni {count} cinque"
+  "exchangeKeepCount": "Tieni {count} cinque",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "acknowledgementsButton": "Ringraziamenti",
+
+  "acknowledgementsIntro": "Un grande grazie a tutti i beta tester della prima ora per le loro osservazioni e i loro consigli, in particolare:"
 }

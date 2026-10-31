@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../screens/acknowledgements_screen.dart';
 import 'die_widget.dart';
 
 /// Mention d'auteur affichée à l'identique sur l'écran d'introduction
@@ -81,6 +82,14 @@ Future<void> showAppAboutDialog(BuildContext context) async {
         ],
       ),
       actions: [
+        TextButton(
+          onPressed: () {
+            // Le dialogue se referme : l'écran s'ouvre sur la page qui l'a lancé.
+            Navigator.of(dialogContext).pop();
+            Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AcknowledgementsScreen()));
+          },
+          child: Text(l10n.acknowledgementsButton),
+        ),
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
           child: Text(l10n.closeButton),
