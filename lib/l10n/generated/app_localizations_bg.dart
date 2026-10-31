@@ -1282,6 +1282,100 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Резервно копие на данните';
+
+  @override
+  String get backupSectionHint =>
+      'Експортирайте играите, играчите и настройките си във файл, защитен с парола, и го възстановете на този или на друг телефон.';
+
+  @override
+  String get backupExportButton => 'Експортиране на данните ми';
+
+  @override
+  String get backupImportButton => 'Импортиране на копие';
+
+  @override
+  String get backupExportTitle => 'Защита на копието';
+
+  @override
+  String get backupExportExplain =>
+      'Изберете парола: тя е единственият ключ към файла. Не се съхранява никъде и без нея копието не може да бъде възстановено. Запазете я в мениджъра на пароли на телефона, когато ви предложи.';
+
+  @override
+  String get backupAccountLabel => 'Потребителско име';
+
+  @override
+  String get backupPasswordLabel => 'Парола';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Потвърдете паролата';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Поне $min знака.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'Двете пароли са различни.';
+
+  @override
+  String get backupExportConfirm => 'Експортиране';
+
+  @override
+  String get backupImportTitle => 'Възстановяване на копие';
+
+  @override
+  String get backupImportModeMerge => 'Обединяване';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Добавя липсващите игри и играчи. Настройките от файла заместват текущите.';
+
+  @override
+  String get backupImportModeReplace => 'Замяна на всичко';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Изтрива текущите игри, играчи и настройки и инсталира тези от файла.';
+
+  @override
+  String get backupImportConfirm => 'Възстановяване';
+
+  @override
+  String get backupWrongPassword => 'Грешна парола или файлът е променен.';
+
+  @override
+  String get backupNotABackup => 'Този файл не е резервно копие на TenK.';
+
+  @override
+  String get backupTooNew =>
+      'Това копие е от по-нова версия на TenK. Обновете приложението.';
+
+  @override
+  String get backupCorrupted => 'Копието не може да се прочете.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Завършете или напуснете текущата игра, преди да възстановите копие.';
+
+  @override
+  String get backupExported => 'Копието е експортирано.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Данните са възстановени: $games игри, $profiles играчи.';
+  }
+
+  @override
+  String get backupFailed => 'Операцията не успя.';
+
+  @override
+  String get backupWorking => 'Изчисляване…';
+
+  @override
+  String get backupOk => 'ОК';
+
+  @override
   String get acknowledgementsButton => 'Благодарности';
 
   @override

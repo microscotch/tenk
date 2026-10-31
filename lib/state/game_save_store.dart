@@ -216,6 +216,10 @@ class GameSaveStore {
     return dir;
   }
 
+  /// Le dossier des fichiers, créé au besoin : la sauvegarde des données
+  /// (`BackupService`) en lit et en remplace les fichiers tels quels.
+  Future<Directory> directory() => _ensureDir();
+
   File _fileFor(Directory dir, int seed) => File('${dir.path}/game-$seed.run');
 
   /// Vrai si une partie avec cette seed existe déjà (pour éviter une

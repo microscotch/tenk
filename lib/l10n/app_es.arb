@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Guardar {count} cincos",
 
+  "backupSectionTitle": "Copia de seguridad",
 
+  "backupSectionHint": "Exporta tus partidas, jugadores y ajustes a un archivo protegido con contraseña y restáuralo en este teléfono o en otro.",
 
+  "backupExportButton": "Exportar mis datos",
 
+  "backupImportButton": "Importar una copia",
 
+  "backupExportTitle": "Proteger la copia",
 
+  "backupExportExplain": "Elige una contraseña: es la única llave del archivo. No se guarda en ningún sitio y, sin ella, la copia es irrecuperable. Guárdala en el gestor de contraseñas del teléfono cuando te lo ofrezca.",
 
+  "backupAccountLabel": "Usuario",
 
+  "backupPasswordLabel": "Contraseña",
 
+  "backupPasswordConfirmLabel": "Confirmar contraseña",
 
+  "backupPasswordTooShort": "Al menos {min} caracteres.",
 
+  "backupPasswordMismatch": "Las dos contraseñas no coinciden.",
 
+  "backupExportConfirm": "Exportar",
 
+  "backupImportTitle": "Restaurar una copia",
 
+  "backupImportModeMerge": "Combinar",
 
+  "backupImportModeMergeHint": "Añade las partidas y los jugadores que faltan. Los ajustes del archivo sustituyen a los actuales.",
 
+  "backupImportModeReplace": "Reemplazar todo",
 
+  "backupImportModeReplaceHint": "Borra las partidas, los jugadores y los ajustes actuales e instala los del archivo.",
 
+  "backupImportConfirm": "Restaurar",
 
+  "backupWrongPassword": "Contraseña incorrecta o archivo modificado.",
 
+  "backupNotABackup": "Este archivo no es una copia de seguridad de TenK.",
 
+  "backupTooNew": "Esta copia procede de una versión más reciente de TenK. Actualiza la aplicación.",
 
+  "backupCorrupted": "La copia es ilegible.",
 
+  "backupBlockedByGame": "Termina o abandona la partida en curso antes de restaurar una copia.",
 
+  "backupExported": "Copia exportada.",
 
+  "backupRestored": "Datos restaurados: {games} partidas, {profiles} jugadores.",
 
+  "backupFailed": "La operación ha fallado.",
 
+  "backupWorking": "Procesando…",
 
+  "backupOk": "Aceptar",
 
   "acknowledgementsButton": "Agradecimientos",
 

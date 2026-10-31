@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Pidä {count} viitosta",
 
+  "backupSectionTitle": "Tietojen varmuuskopio",
 
+  "backupSectionHint": "Vie pelisi, pelaajasi ja asetuksesi salasanalla suojattuun tiedostoon ja palauta se tähän tai toiseen puhelimeen.",
 
+  "backupExportButton": "Vie tietoni",
 
+  "backupImportButton": "Tuo varmuuskopio",
 
+  "backupExportTitle": "Suojaa varmuuskopio",
 
+  "backupExportExplain": "Valitse salasana: se on tiedoston ainoa avain. Sitä ei tallenneta mihinkään, eikä varmuuskopiota voi ilman sitä palauttaa. Tallenna se puhelimen salasanojen hallintaan, kun se ehdottaa sitä.",
 
+  "backupAccountLabel": "Käyttäjätunnus",
 
+  "backupPasswordLabel": "Salasana",
 
+  "backupPasswordConfirmLabel": "Vahvista salasana",
 
+  "backupPasswordTooShort": "Vähintään {min} merkkiä.",
 
+  "backupPasswordMismatch": "Salasanat eivät täsmää.",
 
+  "backupExportConfirm": "Vie",
 
+  "backupImportTitle": "Palauta varmuuskopio",
 
+  "backupImportModeMerge": "Yhdistä",
 
+  "backupImportModeMergeHint": "Lisää puuttuvat pelit ja pelaajat. Tiedoston asetukset korvaavat nykyiset.",
 
+  "backupImportModeReplace": "Korvaa kaikki",
 
+  "backupImportModeReplaceHint": "Poistaa nykyiset pelit, pelaajat ja asetukset ja asentaa tiedoston tiedot.",
 
+  "backupImportConfirm": "Palauta",
 
+  "backupWrongPassword": "Väärä salasana tai tiedostoa on muokattu.",
 
+  "backupNotABackup": "Tämä tiedosto ei ole TenK-varmuuskopio.",
 
+  "backupTooNew": "Tämä varmuuskopio on TenK:n uudemmasta versiosta. Päivitä sovellus.",
 
+  "backupCorrupted": "Varmuuskopiota ei voi lukea.",
 
+  "backupBlockedByGame": "Lopeta tai poistu käynnissä olevasta pelistä ennen varmuuskopion palauttamista.",
 
+  "backupExported": "Varmuuskopio viety.",
 
+  "backupRestored": "Tiedot palautettu: {games} peliä, {profiles} pelaajaa.",
 
+  "backupFailed": "Toiminto epäonnistui.",
 
+  "backupWorking": "Lasketaan…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Kiitokset",
 

@@ -16,6 +16,9 @@ class FakePlayerStore implements PlayerStore {
   Future<Directory> Function() get rootDirectory => throw UnimplementedError();
 
   @override
+  Future<Directory> directory() => throw UnimplementedError();
+
+  @override
   Future<bool> exists(String id) async => _players.containsKey(id);
 
   @override

@@ -1292,6 +1292,101 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Datensicherung';
+
+  @override
+  String get backupSectionHint =>
+      'Exportiere deine Spiele, Spieler und Einstellungen in eine passwortgeschützte Datei und stelle sie auf diesem oder einem anderen Telefon wieder her.';
+
+  @override
+  String get backupExportButton => 'Meine Daten exportieren';
+
+  @override
+  String get backupImportButton => 'Sicherung importieren';
+
+  @override
+  String get backupExportTitle => 'Sicherung schützen';
+
+  @override
+  String get backupExportExplain =>
+      'Wähle ein Passwort: Es ist der einzige Schlüssel zur Datei. Es wird nirgends gespeichert, und ohne es ist die Sicherung nicht wiederherstellbar. Speichere es im Passwortmanager deines Telefons, wenn er es anbietet.';
+
+  @override
+  String get backupAccountLabel => 'Benutzername';
+
+  @override
+  String get backupPasswordLabel => 'Passwort';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Passwort bestätigen';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Mindestens $min Zeichen.';
+  }
+
+  @override
+  String get backupPasswordMismatch =>
+      'Die beiden Passwörter sind verschieden.';
+
+  @override
+  String get backupExportConfirm => 'Exportieren';
+
+  @override
+  String get backupImportTitle => 'Sicherung wiederherstellen';
+
+  @override
+  String get backupImportModeMerge => 'Zusammenführen';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Fügt fehlende Spiele und Spieler hinzu. Die Einstellungen der Datei ersetzen die aktuellen.';
+
+  @override
+  String get backupImportModeReplace => 'Alles ersetzen';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Löscht die aktuellen Spiele, Spieler und Einstellungen und installiert die der Datei.';
+
+  @override
+  String get backupImportConfirm => 'Wiederherstellen';
+
+  @override
+  String get backupWrongPassword => 'Falsches Passwort oder Datei verändert.';
+
+  @override
+  String get backupNotABackup => 'Diese Datei ist keine TenK-Sicherung.';
+
+  @override
+  String get backupTooNew =>
+      'Diese Sicherung stammt aus einer neueren TenK-Version. Bitte aktualisiere die App.';
+
+  @override
+  String get backupCorrupted => 'Die Sicherung ist nicht lesbar.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Beende oder verlasse das laufende Spiel, bevor du eine Sicherung wiederherstellst.';
+
+  @override
+  String get backupExported => 'Sicherung exportiert.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Daten wiederhergestellt: $games Spiele, $profiles Spieler.';
+  }
+
+  @override
+  String get backupFailed => 'Der Vorgang ist fehlgeschlagen.';
+
+  @override
+  String get backupWorking => 'Wird berechnet…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Danksagung';
 
   @override

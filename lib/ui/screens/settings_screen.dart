@@ -9,6 +9,7 @@ import '../../state/player_store.dart';
 import '../../state/settings_providers.dart';
 import '../widgets/app_title.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/backup_section.dart';
 import '../widgets/player_avatar.dart';
 import 'player_edit_screen.dart';
 
@@ -198,6 +199,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 value: settings.confirmBeforeDeleteGame,
                 onChanged: notifier.setConfirmBeforeDeleteGame,
               ),
+              const SizedBox(height: 28),
+              // Après une restauration, cet écran affiche des valeurs lues avant (les
+              // champs de délais) : on le referme, l'accueil se relit.
+              BackupSection(onRestored: () => Navigator.of(context).pop()),
             ],
           ),
         ),

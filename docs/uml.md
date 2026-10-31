@@ -18,6 +18,9 @@ Les trois couches (plus le serveur des parties en ligne, qui réutilise `lib/gam
 moteur, et le moteur (`lib/game`) n'importe ni Flutter ni aucun paquet, ce qui permet de le tester en
 isolation. Chaque bibliothèque externe est rattachée à la couche qui l'utilise, ainsi que les deux
 stockages de l'appareil (fichiers JSON et SharedPreferences).
+La sauvegarde des données (`BackupService`, chiffrée par un mot de passe) lit ces deux stockages et ne sort de
+l'appareil que par la feuille de partage du système (`share_plus`) ; `cryptography`, `file_picker` et `share_plus`
+figurent avec les bibliothèques diverses.
 
 ### Déploiement — [`uml/deployment.png`](uml/deployment.png)
 

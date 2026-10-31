@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "{count} 5en behalten",
 
+  "backupSectionTitle": "Datensicherung",
 
+  "backupSectionHint": "Exportiere deine Spiele, Spieler und Einstellungen in eine passwortgeschützte Datei und stelle sie auf diesem oder einem anderen Telefon wieder her.",
 
+  "backupExportButton": "Meine Daten exportieren",
 
+  "backupImportButton": "Sicherung importieren",
 
+  "backupExportTitle": "Sicherung schützen",
 
+  "backupExportExplain": "Wähle ein Passwort: Es ist der einzige Schlüssel zur Datei. Es wird nirgends gespeichert, und ohne es ist die Sicherung nicht wiederherstellbar. Speichere es im Passwortmanager deines Telefons, wenn er es anbietet.",
 
+  "backupAccountLabel": "Benutzername",
 
+  "backupPasswordLabel": "Passwort",
 
+  "backupPasswordConfirmLabel": "Passwort bestätigen",
 
+  "backupPasswordTooShort": "Mindestens {min} Zeichen.",
 
+  "backupPasswordMismatch": "Die beiden Passwörter sind verschieden.",
 
+  "backupExportConfirm": "Exportieren",
 
+  "backupImportTitle": "Sicherung wiederherstellen",
 
+  "backupImportModeMerge": "Zusammenführen",
 
+  "backupImportModeMergeHint": "Fügt fehlende Spiele und Spieler hinzu. Die Einstellungen der Datei ersetzen die aktuellen.",
 
+  "backupImportModeReplace": "Alles ersetzen",
 
+  "backupImportModeReplaceHint": "Löscht die aktuellen Spiele, Spieler und Einstellungen und installiert die der Datei.",
 
+  "backupImportConfirm": "Wiederherstellen",
 
+  "backupWrongPassword": "Falsches Passwort oder Datei verändert.",
 
+  "backupNotABackup": "Diese Datei ist keine TenK-Sicherung.",
 
+  "backupTooNew": "Diese Sicherung stammt aus einer neueren TenK-Version. Bitte aktualisiere die App.",
 
+  "backupCorrupted": "Die Sicherung ist nicht lesbar.",
 
+  "backupBlockedByGame": "Beende oder verlasse das laufende Spiel, bevor du eine Sicherung wiederherstellst.",
 
+  "backupExported": "Sicherung exportiert.",
 
+  "backupRestored": "Daten wiederhergestellt: {games} Spiele, {profiles} Spieler.",
 
+  "backupFailed": "Der Vorgang ist fehlgeschlagen.",
 
+  "backupWorking": "Wird berechnet…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Danksagung",
 

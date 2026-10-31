@@ -288,6 +288,20 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   build only. Debug builds and desktop never check. Never merge `store-builds` into `main`, and never move the
   version number to a tag (the changelog counts commits since the last tag). Phones never contact GitHub (privacy
   policy); the reverse proxy must forward `/latest-build` too.
+- `backup_service.dart`, `backup_archive.dart` — **backup and restore of the user's data** (finished and paused
+  games, player fiches, `settings.*` preferences), from the settings screen (`BackupSection`). The file is encrypted
+  (`BackupEnvelope`: AES-256-GCM over gzipped JSON, header authenticated) with a key derived from a **password the
+  user types** (mandatory, 8 characters at least; PBKDF2-HMAC-SHA256, 600 000 iterations written in the file, run in an
+  isolate): nothing stores it, so a lost password is a lost backup, and the dialogs offer the system password manager
+  (`AutofillGroup`). A wrong password and a modified file give the same `BackupFailure.wrongPassword`. **Only
+  `settings.*` preference keys travel — never `online.*` (the reconnect token)** — and archive file names are filtered
+  to the exact `game-<seed>.run` / `player-<id>.json` shapes on read, or `../x` would write outside the folder. Import
+  order: `check` (no password) → mode dialog (merge keeps what the phone has, replace swaps whole folders) → `open`
+  (decrypt, writes nothing) → `restore`; it is refused while a local or online game is live (`GameNotifier` is a
+  singleton whose files would be overwritten). `testWidgets` cannot resolve real `dart:io`: UI tests override
+  `backupServiceProvider`, the real service is tested on temp directories (`test/state/backup_test.dart`). No
+  biometric plugin: an earlier design bound the key to the phone's biometrics (device-bound, unusable after a
+  reinstall on Android or a new phone) and was dropped for the password.
 
 ### UI layer (`lib/ui/`)
 

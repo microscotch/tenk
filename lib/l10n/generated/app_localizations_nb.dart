@@ -1284,6 +1284,100 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Sikkerhetskopi av data';
+
+  @override
+  String get backupSectionHint =>
+      'Eksporter spill, spillere og innstillinger til en passordbeskyttet fil, og gjenopprett den på denne telefonen eller en annen.';
+
+  @override
+  String get backupExportButton => 'Eksporter dataene mine';
+
+  @override
+  String get backupImportButton => 'Importer en sikkerhetskopi';
+
+  @override
+  String get backupExportTitle => 'Beskytt sikkerhetskopien';
+
+  @override
+  String get backupExportExplain =>
+      'Velg et passord: det er den eneste nøkkelen til filen. Det lagres ingen steder, og uten det kan ikke sikkerhetskopien gjenopprettes. Lagre det i telefonens passordbehandler når den foreslår det.';
+
+  @override
+  String get backupAccountLabel => 'Brukernavn';
+
+  @override
+  String get backupPasswordLabel => 'Passord';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Bekreft passord';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Minst $min tegn.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'De to passordene er forskjellige.';
+
+  @override
+  String get backupExportConfirm => 'Eksporter';
+
+  @override
+  String get backupImportTitle => 'Gjenopprett en sikkerhetskopi';
+
+  @override
+  String get backupImportModeMerge => 'Slå sammen';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Legger til spillene og spillerne som mangler. Innstillingene i filen erstatter de nåværende.';
+
+  @override
+  String get backupImportModeReplace => 'Erstatt alt';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Sletter nåværende spill, spillere og innstillinger og installerer de fra filen.';
+
+  @override
+  String get backupImportConfirm => 'Gjenopprett';
+
+  @override
+  String get backupWrongPassword => 'Feil passord, eller filen er endret.';
+
+  @override
+  String get backupNotABackup => 'Denne filen er ikke en TenK-sikkerhetskopi.';
+
+  @override
+  String get backupTooNew =>
+      'Denne sikkerhetskopien kommer fra en nyere versjon av TenK. Oppdater appen.';
+
+  @override
+  String get backupCorrupted => 'Sikkerhetskopien er uleselig.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Fullfør eller forlat det pågående spillet før du gjenoppretter en sikkerhetskopi.';
+
+  @override
+  String get backupExported => 'Sikkerhetskopien er eksportert.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Data gjenopprettet: $games spill, $profiles spillere.';
+  }
+
+  @override
+  String get backupFailed => 'Handlingen mislyktes.';
+
+  @override
+  String get backupWorking => 'Beregner…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Takk til';
 
   @override

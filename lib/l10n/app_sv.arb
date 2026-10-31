@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Behåll {count} femmor",
 
+  "backupSectionTitle": "Säkerhetskopia av data",
 
+  "backupSectionHint": "Exportera dina spel, spelare och inställningar till en lösenordsskyddad fil och återställ den på den här telefonen eller en annan.",
 
+  "backupExportButton": "Exportera mina data",
 
+  "backupImportButton": "Importera en säkerhetskopia",
 
+  "backupExportTitle": "Skydda säkerhetskopian",
 
+  "backupExportExplain": "Välj ett lösenord: det är filens enda nyckel. Det sparas ingenstans, och utan det går säkerhetskopian inte att återskapa. Spara det i telefonens lösenordshanterare när den erbjuder det.",
 
+  "backupAccountLabel": "Användarnamn",
 
+  "backupPasswordLabel": "Lösenord",
 
+  "backupPasswordConfirmLabel": "Bekräfta lösenord",
 
+  "backupPasswordTooShort": "Minst {min} tecken.",
 
+  "backupPasswordMismatch": "De två lösenorden skiljer sig åt.",
 
+  "backupExportConfirm": "Exportera",
 
+  "backupImportTitle": "Återställ en säkerhetskopia",
 
+  "backupImportModeMerge": "Slå ihop",
 
+  "backupImportModeMergeHint": "Lägger till de spel och spelare som saknas. Filens inställningar ersätter de nuvarande.",
 
+  "backupImportModeReplace": "Ersätt allt",
 
+  "backupImportModeReplaceHint": "Raderar nuvarande spel, spelare och inställningar och installerar filens.",
 
+  "backupImportConfirm": "Återställ",
 
+  "backupWrongPassword": "Fel lösenord, eller så har filen ändrats.",
 
+  "backupNotABackup": "Den här filen är inte en TenK-säkerhetskopia.",
 
+  "backupTooNew": "Säkerhetskopian kommer från en nyare version av TenK. Uppdatera appen.",
 
+  "backupCorrupted": "Säkerhetskopian går inte att läsa.",
 
+  "backupBlockedByGame": "Avsluta eller lämna det pågående spelet innan du återställer en säkerhetskopia.",
 
+  "backupExported": "Säkerhetskopian är exporterad.",
 
+  "backupRestored": "Data återställd: {games} spel, {profiles} spelare.",
 
+  "backupFailed": "Åtgärden misslyckades.",
 
+  "backupWorking": "Beräknar…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Tack till",
 

@@ -249,6 +249,27 @@ acquise.
   toujours). Tout ce qui touche l'appareil et le réseau passe par `UpdateCheckEnvironment`, que les tests
   remplacent ; un build de debug ou le bureau (`platform` nul) ne vérifie rien. L'accueil l'affiche dans un
   bandeau (`UpdateBanner`), jamais dans une fenêtre qui recouvrirait la reprise ou un lien d'invitation.
+- **La sauvegarde des données** (`backup_service.dart`, `backup_archive.dart`) : l'utilisateur exporte ses
+  parties (terminées et en pause), ses fiches joueurs et ses réglages dans un fichier, depuis les paramètres
+  (`BackupSection`), et le restaure sur ce téléphone ou un autre. `BackupService.collect` lit les fichiers
+  **tels qu'ils sont sur le disque** (`game-<seed>.run`, `player-<id>.json`, via `GameSaveStore.directory()` et
+  `PlayerStore.directory()`) et les clefs `SharedPreferences` qui commencent par `settings.` — **rien d'autre** : le
+  jeton de reconnexion d'une partie en ligne (`online.*`) ne sort jamais, et un fichier illisible n'entre pas dans une
+  sauvegarde. `BackupEnvelope` chiffre le tout (JSON compressé, AES-256-GCM, en-tête authentifié) avec une clef
+  dérivée du **mot de passe saisi par l'utilisateur** (PBKDF2-HMAC-SHA256, 600 000 itérations, sel aléatoire, calculée
+  dans un isolat) : rien ne le garde, qui le perd perd la sauvegarde, d'où le gestionnaire de mots de passe du système
+  que l'interface propose. Le nombre d'itérations est écrit dans le fichier (on peut l'augmenter un jour, les tests
+  en prennent peu) et borné à la lecture. **Un mauvais mot de passe et un fichier modifié donnent la même erreur**
+  (`BackupFailure.wrongPassword`) : le chiffrement authentifié ne distingue pas. À l'import, `check` valide la forme
+  du fichier **sans mot de passe**, `open` déchiffre sans rien écrire, puis `restore` applique, selon le choix de
+  l'utilisateur (`BackupImportMode`) : `merge` ajoute les fichiers absents (même nom = même partie, même fiche : celle
+  du téléphone est gardée) et laisse les réglages du fichier l'emporter ; `replace` échange chaque dossier d'un bloc
+  (écrit à côté, puis renommé, pour qu'une erreur laisse l'ancien contenu) et remplace les réglages. Les noms de
+  fichier de l'archive sont filtrés à la lecture (`BackupArchive.gameFileName` / `playerFileName`), faute de quoi un nom
+  comme `../x` écrirait hors du dossier. L'interface refuse l'import tant qu'une partie est en cours (locale ou en
+  ligne) : `GameNotifier` est un singleton dont les fichiers seraient écrasés. Les tests de widgets remplacent
+  `backupServiceProvider` (les vraies E/S ne se résolvent pas sous `testWidgets`) ; le vrai service est testé sur
+  de vrais dossiers dans `test/state/backup_test.dart`.
 
 ## Les parties en ligne (turquoise, zone de droite)
 

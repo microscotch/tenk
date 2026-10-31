@@ -39,6 +39,10 @@ class PlayerStore {
     return dir;
   }
 
+  /// Le dossier des fichiers, créé au besoin : la sauvegarde des données
+  /// (`BackupService`) en lit et en remplace les fichiers tels quels.
+  Future<Directory> directory() => _ensureDir();
+
   File _fileFor(Directory dir, String id) => File('${dir.path}/player-$id.json');
 
   Future<bool> exists(String id) async {

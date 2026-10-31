@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Запази {count} петици",
 
+  "backupSectionTitle": "Резервно копие на данните",
 
+  "backupSectionHint": "Експортирайте играите, играчите и настройките си във файл, защитен с парола, и го възстановете на този или на друг телефон.",
 
+  "backupExportButton": "Експортиране на данните ми",
 
+  "backupImportButton": "Импортиране на копие",
 
+  "backupExportTitle": "Защита на копието",
 
+  "backupExportExplain": "Изберете парола: тя е единственият ключ към файла. Не се съхранява никъде и без нея копието не може да бъде възстановено. Запазете я в мениджъра на пароли на телефона, когато ви предложи.",
 
+  "backupAccountLabel": "Потребителско име",
 
+  "backupPasswordLabel": "Парола",
 
+  "backupPasswordConfirmLabel": "Потвърдете паролата",
 
+  "backupPasswordTooShort": "Поне {min} знака.",
 
+  "backupPasswordMismatch": "Двете пароли са различни.",
 
+  "backupExportConfirm": "Експортиране",
 
+  "backupImportTitle": "Възстановяване на копие",
 
+  "backupImportModeMerge": "Обединяване",
 
+  "backupImportModeMergeHint": "Добавя липсващите игри и играчи. Настройките от файла заместват текущите.",
 
+  "backupImportModeReplace": "Замяна на всичко",
 
+  "backupImportModeReplaceHint": "Изтрива текущите игри, играчи и настройки и инсталира тези от файла.",
 
+  "backupImportConfirm": "Възстановяване",
 
+  "backupWrongPassword": "Грешна парола или файлът е променен.",
 
+  "backupNotABackup": "Този файл не е резервно копие на TenK.",
 
+  "backupTooNew": "Това копие е от по-нова версия на TenK. Обновете приложението.",
 
+  "backupCorrupted": "Копието не може да се прочете.",
 
+  "backupBlockedByGame": "Завършете или напуснете текущата игра, преди да възстановите копие.",
 
+  "backupExported": "Копието е експортирано.",
 
+  "backupRestored": "Данните са възстановени: {games} игри, {profiles} играчи.",
 
+  "backupFailed": "Операцията не успя.",
 
+  "backupWorking": "Изчисляване…",
 
+  "backupOk": "ОК",
 
   "acknowledgementsButton": "Благодарности",
 

@@ -1080,33 +1080,89 @@
   "exchangeKeepCount": "Garder {count} cinq",
   "@exchangeKeepCount": {"description": "Entrée de la bulle du bouton de recyclage : garder {count} des 5 (plus de deux 5 déclinables, rare).", "placeholders": {"count": {"type": "int"}}},
 
+  "backupSectionTitle": "Sauvegarde des données",
+  "@backupSectionTitle": {"description": "Titre de la section de sauvegarde des données, dans les paramètres."},
 
+  "backupSectionHint": "Exportez vos parties, vos joueurs et vos paramètres dans un fichier protégé par un mot de passe, puis restaurez-le sur ce téléphone ou sur un autre.",
+  "@backupSectionHint": {"description": "Phrase d'explication sous le titre de la section de sauvegarde."},
 
+  "backupExportButton": "Exporter mes données",
+  "@backupExportButton": {"description": "Bouton qui lance l'export des données."},
 
+  "backupImportButton": "Importer une sauvegarde",
+  "@backupImportButton": {"description": "Bouton qui lance la restauration d'une sauvegarde."},
 
+  "backupExportTitle": "Protéger la sauvegarde",
+  "@backupExportTitle": {"description": "Titre de la boîte de dialogue où l'on choisit le mot de passe de l'export."},
 
+  "backupExportExplain": "Choisissez un mot de passe : c'est la seule clef du fichier. Il n'est enregistré nulle part, et sans lui la sauvegarde est irrécupérable. Enregistrez-le dans le gestionnaire de mots de passe de votre téléphone quand il vous le propose.",
+  "@backupExportExplain": {"description": "Explique que le mot de passe est la seule clef du fichier, n'est enregistré nulle part, et qu'il vaut mieux le garder dans le gestionnaire de mots de passe."},
 
+  "backupAccountLabel": "Identifiant",
+  "@backupAccountLabel": {"description": "Libellé du champ d'identifiant (fixe, \"TenK\") : il sert au gestionnaire de mots de passe à ranger le mot de passe."},
 
+  "backupPasswordLabel": "Mot de passe",
+  "@backupPasswordLabel": {"description": "Libellé du champ de mot de passe."},
 
+  "backupPasswordConfirmLabel": "Confirmer le mot de passe",
+  "@backupPasswordConfirmLabel": {"description": "Libellé du champ de confirmation du mot de passe."},
 
+  "backupPasswordTooShort": "Au moins {min} caractères.",
+  "@backupPasswordTooShort": {"description": "Erreur : mot de passe trop court, {min} est le minimum de caractères.", "placeholders": {"min": {"type": "int"}}},
 
+  "backupPasswordMismatch": "Les deux mots de passe sont différents.",
+  "@backupPasswordMismatch": {"description": "Erreur : la confirmation ne correspond pas au mot de passe."},
 
+  "backupExportConfirm": "Exporter",
+  "@backupExportConfirm": {"description": "Bouton qui valide le mot de passe et exporte."},
 
+  "backupImportTitle": "Restaurer une sauvegarde",
+  "@backupImportTitle": {"description": "Titre de la boîte de dialogue de restauration (mot de passe et mode)."},
 
+  "backupImportModeMerge": "Fusionner",
+  "@backupImportModeMerge": {"description": "Choix de restauration : fusionner avec les données actuelles."},
 
+  "backupImportModeMergeHint": "Ajoute les parties et les joueurs qui manquent. Les paramètres du fichier remplacent les actuels.",
+  "@backupImportModeMergeHint": {"description": "Explication du mode fusion."},
 
+  "backupImportModeReplace": "Tout remplacer",
+  "@backupImportModeReplace": {"description": "Choix de restauration : tout remplacer."},
 
+  "backupImportModeReplaceHint": "Efface les parties, les joueurs et les paramètres actuels pour installer ceux du fichier.",
+  "@backupImportModeReplaceHint": {"description": "Explication du mode remplacement (destructif)."},
 
+  "backupImportConfirm": "Restaurer",
+  "@backupImportConfirm": {"description": "Bouton qui valide le mot de passe et restaure."},
 
+  "backupWrongPassword": "Mot de passe incorrect, ou fichier modifié.",
+  "@backupWrongPassword": {"description": "Erreur : le mot de passe ne déchiffre pas le fichier (ou le fichier a été modifié)."},
 
+  "backupNotABackup": "Ce fichier n'est pas une sauvegarde de TenK.",
+  "@backupNotABackup": {"description": "Erreur : le fichier choisi n'est pas une sauvegarde de l'app."},
 
+  "backupTooNew": "Cette sauvegarde vient d'une version plus récente de TenK. Mettez l'application à jour.",
+  "@backupTooNew": {"description": "Erreur : sauvegarde faite par une version de l'app plus récente."},
 
+  "backupCorrupted": "La sauvegarde est illisible.",
+  "@backupCorrupted": {"description": "Erreur : sauvegarde déchiffrée mais illisible."},
 
+  "backupBlockedByGame": "Terminez ou quittez la partie en cours avant de restaurer une sauvegarde.",
+  "@backupBlockedByGame": {"description": "Erreur : la restauration est refusée tant qu'une partie est en cours."},
 
+  "backupExported": "Sauvegarde exportée.",
+  "@backupExported": {"description": "Message après un export réussi."},
 
+  "backupRestored": "Données restaurées : {games} parties, {profiles} joueurs.",
+  "@backupRestored": {"description": "Bilan d'une restauration : nombre de parties ({games}) et de joueurs ({profiles}) ajoutés.", "placeholders": {"games": {"type": "int"}, "profiles": {"type": "int"}}},
 
+  "backupFailed": "L'opération a échoué.",
+  "@backupFailed": {"description": "Erreur générique d'export ou de restauration."},
 
+  "backupWorking": "Calcul en cours…",
+  "@backupWorking": {"description": "Texte d'attente pendant le calcul du chiffrement (plusieurs secondes)."},
 
+  "backupOk": "OK",
+  "@backupOk": {"description": "Bouton OK du bilan de restauration."},
 
   "acknowledgementsButton": "Remerciements",
   "@acknowledgementsButton": {"description": "Bouton du dialogue \"À propos\" qui ouvre l'écran des remerciements, et titre de cet écran."},

@@ -1293,6 +1293,101 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Copie de siguranță';
+
+  @override
+  String get backupSectionHint =>
+      'Exportă partidele, jucătorii și setările într-un fișier protejat cu parolă, apoi restaurează-l pe acest telefon sau pe altul.';
+
+  @override
+  String get backupExportButton => 'Exportă datele mele';
+
+  @override
+  String get backupImportButton => 'Importă o copie';
+
+  @override
+  String get backupExportTitle => 'Protejează copia';
+
+  @override
+  String get backupExportExplain =>
+      'Alege o parolă: este singura cheie a fișierului. Nu este salvată nicăieri, iar fără ea copia nu poate fi recuperată. Salveaz-o în managerul de parole al telefonului când ți-o propune.';
+
+  @override
+  String get backupAccountLabel => 'Utilizator';
+
+  @override
+  String get backupPasswordLabel => 'Parolă';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Confirmă parola';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Cel puțin $min caractere.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'Cele două parole sunt diferite.';
+
+  @override
+  String get backupExportConfirm => 'Exportă';
+
+  @override
+  String get backupImportTitle => 'Restaurează o copie';
+
+  @override
+  String get backupImportModeMerge => 'Îmbină';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Adaugă partidele și jucătorii care lipsesc. Setările din fișier le înlocuiesc pe cele actuale.';
+
+  @override
+  String get backupImportModeReplace => 'Înlocuiește tot';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Șterge partidele, jucătorii și setările actuale și le instalează pe cele din fișier.';
+
+  @override
+  String get backupImportConfirm => 'Restaurează';
+
+  @override
+  String get backupWrongPassword => 'Parolă greșită sau fișier modificat.';
+
+  @override
+  String get backupNotABackup =>
+      'Acest fișier nu este o copie de siguranță TenK.';
+
+  @override
+  String get backupTooNew =>
+      'Această copie provine dintr-o versiune mai nouă a TenK. Actualizează aplicația.';
+
+  @override
+  String get backupCorrupted => 'Copia nu poate fi citită.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Termină sau părăsește partida în curs înainte de a restaura o copie.';
+
+  @override
+  String get backupExported => 'Copie exportată.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Date restaurate: $games partide, $profiles jucători.';
+  }
+
+  @override
+  String get backupFailed => 'Operațiunea a eșuat.';
+
+  @override
+  String get backupWorking => 'Se calculează…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Mulțumiri';
 
   @override

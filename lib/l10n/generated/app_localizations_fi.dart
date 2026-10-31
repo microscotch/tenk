@@ -1285,6 +1285,100 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Tietojen varmuuskopio';
+
+  @override
+  String get backupSectionHint =>
+      'Vie pelisi, pelaajasi ja asetuksesi salasanalla suojattuun tiedostoon ja palauta se tähän tai toiseen puhelimeen.';
+
+  @override
+  String get backupExportButton => 'Vie tietoni';
+
+  @override
+  String get backupImportButton => 'Tuo varmuuskopio';
+
+  @override
+  String get backupExportTitle => 'Suojaa varmuuskopio';
+
+  @override
+  String get backupExportExplain =>
+      'Valitse salasana: se on tiedoston ainoa avain. Sitä ei tallenneta mihinkään, eikä varmuuskopiota voi ilman sitä palauttaa. Tallenna se puhelimen salasanojen hallintaan, kun se ehdottaa sitä.';
+
+  @override
+  String get backupAccountLabel => 'Käyttäjätunnus';
+
+  @override
+  String get backupPasswordLabel => 'Salasana';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Vahvista salasana';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Vähintään $min merkkiä.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'Salasanat eivät täsmää.';
+
+  @override
+  String get backupExportConfirm => 'Vie';
+
+  @override
+  String get backupImportTitle => 'Palauta varmuuskopio';
+
+  @override
+  String get backupImportModeMerge => 'Yhdistä';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Lisää puuttuvat pelit ja pelaajat. Tiedoston asetukset korvaavat nykyiset.';
+
+  @override
+  String get backupImportModeReplace => 'Korvaa kaikki';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Poistaa nykyiset pelit, pelaajat ja asetukset ja asentaa tiedoston tiedot.';
+
+  @override
+  String get backupImportConfirm => 'Palauta';
+
+  @override
+  String get backupWrongPassword => 'Väärä salasana tai tiedostoa on muokattu.';
+
+  @override
+  String get backupNotABackup => 'Tämä tiedosto ei ole TenK-varmuuskopio.';
+
+  @override
+  String get backupTooNew =>
+      'Tämä varmuuskopio on TenK:n uudemmasta versiosta. Päivitä sovellus.';
+
+  @override
+  String get backupCorrupted => 'Varmuuskopiota ei voi lukea.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Lopeta tai poistu käynnissä olevasta pelistä ennen varmuuskopion palauttamista.';
+
+  @override
+  String get backupExported => 'Varmuuskopio viety.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Tiedot palautettu: $games peliä, $profiles pelaajaa.';
+  }
+
+  @override
+  String get backupFailed => 'Toiminto epäonnistui.';
+
+  @override
+  String get backupWorking => 'Lasketaan…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Kiitokset';
 
   @override

@@ -1286,6 +1286,102 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Cópia de segurança';
+
+  @override
+  String get backupSectionHint =>
+      'Exporte as suas partidas, jogadores e definições para um ficheiro protegido por palavra-passe e restaure-o neste telemóvel ou noutro.';
+
+  @override
+  String get backupExportButton => 'Exportar os meus dados';
+
+  @override
+  String get backupImportButton => 'Importar uma cópia';
+
+  @override
+  String get backupExportTitle => 'Proteger a cópia';
+
+  @override
+  String get backupExportExplain =>
+      'Escolha uma palavra-passe: é a única chave do ficheiro. Não é guardada em lado nenhum e, sem ela, a cópia é irrecuperável. Guarde-a no gestor de palavras-passe do telemóvel quando ele o propuser.';
+
+  @override
+  String get backupAccountLabel => 'Utilizador';
+
+  @override
+  String get backupPasswordLabel => 'Palavra-passe';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Confirmar palavra-passe';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Pelo menos $min caracteres.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'As duas palavras-passe são diferentes.';
+
+  @override
+  String get backupExportConfirm => 'Exportar';
+
+  @override
+  String get backupImportTitle => 'Restaurar uma cópia';
+
+  @override
+  String get backupImportModeMerge => 'Juntar';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Acrescenta as partidas e os jogadores em falta. As definições do ficheiro substituem as atuais.';
+
+  @override
+  String get backupImportModeReplace => 'Substituir tudo';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Apaga as partidas, os jogadores e as definições atuais e instala os do ficheiro.';
+
+  @override
+  String get backupImportConfirm => 'Restaurar';
+
+  @override
+  String get backupWrongPassword =>
+      'Palavra-passe incorreta ou ficheiro modificado.';
+
+  @override
+  String get backupNotABackup =>
+      'Este ficheiro não é uma cópia de segurança do TenK.';
+
+  @override
+  String get backupTooNew =>
+      'Esta cópia vem de uma versão mais recente do TenK. Atualize a aplicação.';
+
+  @override
+  String get backupCorrupted => 'A cópia está ilegível.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Termine ou abandone a partida em curso antes de restaurar uma cópia.';
+
+  @override
+  String get backupExported => 'Cópia exportada.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Dados restaurados: $games partidas, $profiles jogadores.';
+  }
+
+  @override
+  String get backupFailed => 'A operação falhou.';
+
+  @override
+  String get backupWorking => 'A processar…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Agradecimentos';
 
   @override

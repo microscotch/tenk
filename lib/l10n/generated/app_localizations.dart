@@ -2264,6 +2264,174 @@ abstract class AppLocalizations {
   /// **'Garder {count} cinq'**
   String exchangeKeepCount(int count);
 
+  /// Titre de la section de sauvegarde des données, dans les paramètres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sauvegarde des données'**
+  String get backupSectionTitle;
+
+  /// Phrase d'explication sous le titre de la section de sauvegarde.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exportez vos parties, vos joueurs et vos paramètres dans un fichier protégé par un mot de passe, puis restaurez-le sur ce téléphone ou sur un autre.'**
+  String get backupSectionHint;
+
+  /// Bouton qui lance l'export des données.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter mes données'**
+  String get backupExportButton;
+
+  /// Bouton qui lance la restauration d'une sauvegarde.
+  ///
+  /// In fr, this message translates to:
+  /// **'Importer une sauvegarde'**
+  String get backupImportButton;
+
+  /// Titre de la boîte de dialogue où l'on choisit le mot de passe de l'export.
+  ///
+  /// In fr, this message translates to:
+  /// **'Protéger la sauvegarde'**
+  String get backupExportTitle;
+
+  /// Explique que le mot de passe est la seule clef du fichier, n'est enregistré nulle part, et qu'il vaut mieux le garder dans le gestionnaire de mots de passe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un mot de passe : c\'est la seule clef du fichier. Il n\'est enregistré nulle part, et sans lui la sauvegarde est irrécupérable. Enregistrez-le dans le gestionnaire de mots de passe de votre téléphone quand il vous le propose.'**
+  String get backupExportExplain;
+
+  /// Libellé du champ d'identifiant (fixe, "TenK") : il sert au gestionnaire de mots de passe à ranger le mot de passe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant'**
+  String get backupAccountLabel;
+
+  /// Libellé du champ de mot de passe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe'**
+  String get backupPasswordLabel;
+
+  /// Libellé du champ de confirmation du mot de passe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le mot de passe'**
+  String get backupPasswordConfirmLabel;
+
+  /// Erreur : mot de passe trop court, {min} est le minimum de caractères.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au moins {min} caractères.'**
+  String backupPasswordTooShort(int min);
+
+  /// Erreur : la confirmation ne correspond pas au mot de passe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les deux mots de passe sont différents.'**
+  String get backupPasswordMismatch;
+
+  /// Bouton qui valide le mot de passe et exporte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter'**
+  String get backupExportConfirm;
+
+  /// Titre de la boîte de dialogue de restauration (mot de passe et mode).
+  ///
+  /// In fr, this message translates to:
+  /// **'Restaurer une sauvegarde'**
+  String get backupImportTitle;
+
+  /// Choix de restauration : fusionner avec les données actuelles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fusionner'**
+  String get backupImportModeMerge;
+
+  /// Explication du mode fusion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute les parties et les joueurs qui manquent. Les paramètres du fichier remplacent les actuels.'**
+  String get backupImportModeMergeHint;
+
+  /// Choix de restauration : tout remplacer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout remplacer'**
+  String get backupImportModeReplace;
+
+  /// Explication du mode remplacement (destructif).
+  ///
+  /// In fr, this message translates to:
+  /// **'Efface les parties, les joueurs et les paramètres actuels pour installer ceux du fichier.'**
+  String get backupImportModeReplaceHint;
+
+  /// Bouton qui valide le mot de passe et restaure.
+  ///
+  /// In fr, this message translates to:
+  /// **'Restaurer'**
+  String get backupImportConfirm;
+
+  /// Erreur : le mot de passe ne déchiffre pas le fichier (ou le fichier a été modifié).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe incorrect, ou fichier modifié.'**
+  String get backupWrongPassword;
+
+  /// Erreur : le fichier choisi n'est pas une sauvegarde de l'app.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce fichier n\'est pas une sauvegarde de TenK.'**
+  String get backupNotABackup;
+
+  /// Erreur : sauvegarde faite par une version de l'app plus récente.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette sauvegarde vient d\'une version plus récente de TenK. Mettez l\'application à jour.'**
+  String get backupTooNew;
+
+  /// Erreur : sauvegarde déchiffrée mais illisible.
+  ///
+  /// In fr, this message translates to:
+  /// **'La sauvegarde est illisible.'**
+  String get backupCorrupted;
+
+  /// Erreur : la restauration est refusée tant qu'une partie est en cours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminez ou quittez la partie en cours avant de restaurer une sauvegarde.'**
+  String get backupBlockedByGame;
+
+  /// Message après un export réussi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sauvegarde exportée.'**
+  String get backupExported;
+
+  /// Bilan d'une restauration : nombre de parties ({games}) et de joueurs ({profiles}) ajoutés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Données restaurées : {games} parties, {profiles} joueurs.'**
+  String backupRestored(int games, int profiles);
+
+  /// Erreur générique d'export ou de restauration.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'opération a échoué.'**
+  String get backupFailed;
+
+  /// Texte d'attente pendant le calcul du chiffrement (plusieurs secondes).
+  ///
+  /// In fr, this message translates to:
+  /// **'Calcul en cours…'**
+  String get backupWorking;
+
+  /// Bouton OK du bilan de restauration.
+  ///
+  /// In fr, this message translates to:
+  /// **'OK'**
+  String get backupOk;
+
   /// Bouton du dialogue "À propos" qui ouvre l'écran des remerciements, et titre de cet écran.
   ///
   /// In fr, this message translates to:

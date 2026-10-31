@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Păstrează {count} de cinci",
 
+  "backupSectionTitle": "Copie de siguranță",
 
+  "backupSectionHint": "Exportă partidele, jucătorii și setările într-un fișier protejat cu parolă, apoi restaurează-l pe acest telefon sau pe altul.",
 
+  "backupExportButton": "Exportă datele mele",
 
+  "backupImportButton": "Importă o copie",
 
+  "backupExportTitle": "Protejează copia",
 
+  "backupExportExplain": "Alege o parolă: este singura cheie a fișierului. Nu este salvată nicăieri, iar fără ea copia nu poate fi recuperată. Salveaz-o în managerul de parole al telefonului când ți-o propune.",
 
+  "backupAccountLabel": "Utilizator",
 
+  "backupPasswordLabel": "Parolă",
 
+  "backupPasswordConfirmLabel": "Confirmă parola",
 
+  "backupPasswordTooShort": "Cel puțin {min} caractere.",
 
+  "backupPasswordMismatch": "Cele două parole sunt diferite.",
 
+  "backupExportConfirm": "Exportă",
 
+  "backupImportTitle": "Restaurează o copie",
 
+  "backupImportModeMerge": "Îmbină",
 
+  "backupImportModeMergeHint": "Adaugă partidele și jucătorii care lipsesc. Setările din fișier le înlocuiesc pe cele actuale.",
 
+  "backupImportModeReplace": "Înlocuiește tot",
 
+  "backupImportModeReplaceHint": "Șterge partidele, jucătorii și setările actuale și le instalează pe cele din fișier.",
 
+  "backupImportConfirm": "Restaurează",
 
+  "backupWrongPassword": "Parolă greșită sau fișier modificat.",
 
+  "backupNotABackup": "Acest fișier nu este o copie de siguranță TenK.",
 
+  "backupTooNew": "Această copie provine dintr-o versiune mai nouă a TenK. Actualizează aplicația.",
 
+  "backupCorrupted": "Copia nu poate fi citită.",
 
+  "backupBlockedByGame": "Termină sau părăsește partida în curs înainte de a restaura o copie.",
 
+  "backupExported": "Copie exportată.",
 
+  "backupRestored": "Date restaurate: {games} partide, {profiles} jucători.",
 
+  "backupFailed": "Operațiunea a eșuat.",
 
+  "backupWorking": "Se calculează…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Mulțumiri",
 

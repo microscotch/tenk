@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Keep {count} fives",
 
+  "backupSectionTitle": "Data backup",
 
+  "backupSectionHint": "Export your games, players and settings to a password-protected file, then restore it on this phone or another one.",
 
+  "backupExportButton": "Export my data",
 
+  "backupImportButton": "Import a backup",
 
+  "backupExportTitle": "Protect the backup",
 
+  "backupExportExplain": "Choose a password: it is the only key to the file. It is stored nowhere, and without it the backup cannot be recovered. Save it in your phone's password manager when it offers to.",
 
+  "backupAccountLabel": "Username",
 
+  "backupPasswordLabel": "Password",
 
+  "backupPasswordConfirmLabel": "Confirm password",
 
+  "backupPasswordTooShort": "At least {min} characters.",
 
+  "backupPasswordMismatch": "The two passwords differ.",
 
+  "backupExportConfirm": "Export",
 
+  "backupImportTitle": "Restore a backup",
 
+  "backupImportModeMerge": "Merge",
 
+  "backupImportModeMergeHint": "Adds the games and players that are missing. The file's settings replace the current ones.",
 
+  "backupImportModeReplace": "Replace everything",
 
+  "backupImportModeReplaceHint": "Erases the current games, players and settings and installs those of the file.",
 
+  "backupImportConfirm": "Restore",
 
+  "backupWrongPassword": "Wrong password, or the file was modified.",
 
+  "backupNotABackup": "This file is not a TenK backup.",
 
+  "backupTooNew": "This backup comes from a newer version of TenK. Please update the app.",
 
+  "backupCorrupted": "The backup is unreadable.",
 
+  "backupBlockedByGame": "Finish or leave the current game before restoring a backup.",
 
+  "backupExported": "Backup exported.",
 
+  "backupRestored": "Data restored: {games} games, {profiles} players.",
 
+  "backupFailed": "The operation failed.",
 
+  "backupWorking": "Working…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Acknowledgements",
 

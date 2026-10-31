@@ -1280,6 +1280,100 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Data backup';
+
+  @override
+  String get backupSectionHint =>
+      'Export your games, players and settings to a password-protected file, then restore it on this phone or another one.';
+
+  @override
+  String get backupExportButton => 'Export my data';
+
+  @override
+  String get backupImportButton => 'Import a backup';
+
+  @override
+  String get backupExportTitle => 'Protect the backup';
+
+  @override
+  String get backupExportExplain =>
+      'Choose a password: it is the only key to the file. It is stored nowhere, and without it the backup cannot be recovered. Save it in your phone\'s password manager when it offers to.';
+
+  @override
+  String get backupAccountLabel => 'Username';
+
+  @override
+  String get backupPasswordLabel => 'Password';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Confirm password';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'At least $min characters.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'The two passwords differ.';
+
+  @override
+  String get backupExportConfirm => 'Export';
+
+  @override
+  String get backupImportTitle => 'Restore a backup';
+
+  @override
+  String get backupImportModeMerge => 'Merge';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Adds the games and players that are missing. The file\'s settings replace the current ones.';
+
+  @override
+  String get backupImportModeReplace => 'Replace everything';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Erases the current games, players and settings and installs those of the file.';
+
+  @override
+  String get backupImportConfirm => 'Restore';
+
+  @override
+  String get backupWrongPassword => 'Wrong password, or the file was modified.';
+
+  @override
+  String get backupNotABackup => 'This file is not a TenK backup.';
+
+  @override
+  String get backupTooNew =>
+      'This backup comes from a newer version of TenK. Please update the app.';
+
+  @override
+  String get backupCorrupted => 'The backup is unreadable.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Finish or leave the current game before restoring a backup.';
+
+  @override
+  String get backupExported => 'Backup exported.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Data restored: $games games, $profiles players.';
+  }
+
+  @override
+  String get backupFailed => 'The operation failed.';
+
+  @override
+  String get backupWorking => 'Working…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Acknowledgements';
 
   @override

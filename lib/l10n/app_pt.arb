@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Manter {count} cincos",
 
+  "backupSectionTitle": "Cópia de segurança",
 
+  "backupSectionHint": "Exporte as suas partidas, jogadores e definições para um ficheiro protegido por palavra-passe e restaure-o neste telemóvel ou noutro.",
 
+  "backupExportButton": "Exportar os meus dados",
 
+  "backupImportButton": "Importar uma cópia",
 
+  "backupExportTitle": "Proteger a cópia",
 
+  "backupExportExplain": "Escolha uma palavra-passe: é a única chave do ficheiro. Não é guardada em lado nenhum e, sem ela, a cópia é irrecuperável. Guarde-a no gestor de palavras-passe do telemóvel quando ele o propuser.",
 
+  "backupAccountLabel": "Utilizador",
 
+  "backupPasswordLabel": "Palavra-passe",
 
+  "backupPasswordConfirmLabel": "Confirmar palavra-passe",
 
+  "backupPasswordTooShort": "Pelo menos {min} caracteres.",
 
+  "backupPasswordMismatch": "As duas palavras-passe são diferentes.",
 
+  "backupExportConfirm": "Exportar",
 
+  "backupImportTitle": "Restaurar uma cópia",
 
+  "backupImportModeMerge": "Juntar",
 
+  "backupImportModeMergeHint": "Acrescenta as partidas e os jogadores em falta. As definições do ficheiro substituem as atuais.",
 
+  "backupImportModeReplace": "Substituir tudo",
 
+  "backupImportModeReplaceHint": "Apaga as partidas, os jogadores e as definições atuais e instala os do ficheiro.",
 
+  "backupImportConfirm": "Restaurar",
 
+  "backupWrongPassword": "Palavra-passe incorreta ou ficheiro modificado.",
 
+  "backupNotABackup": "Este ficheiro não é uma cópia de segurança do TenK.",
 
+  "backupTooNew": "Esta cópia vem de uma versão mais recente do TenK. Atualize a aplicação.",
 
+  "backupCorrupted": "A cópia está ilegível.",
 
+  "backupBlockedByGame": "Termine ou abandone a partida em curso antes de restaurar uma cópia.",
 
+  "backupExported": "Cópia exportada.",
 
+  "backupRestored": "Dados restaurados: {games} partidas, {profiles} jogadores.",
 
+  "backupFailed": "A operação falhou.",
 
+  "backupWorking": "A processar…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Agradecimentos",
 

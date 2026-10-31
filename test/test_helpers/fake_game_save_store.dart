@@ -15,6 +15,9 @@ class FakeGameSaveStore implements GameSaveStore {
   Future<Directory> Function() get rootDirectory => () => throw UnimplementedError();
 
   @override
+  Future<Directory> directory() => throw UnimplementedError();
+
+  @override
   Future<bool> exists(int seed) async => _games.containsKey(seed);
 
   @override

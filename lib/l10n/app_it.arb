@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Tieni {count} cinque",
 
+  "backupSectionTitle": "Backup dei dati",
 
+  "backupSectionHint": "Esporta partite, giocatori e impostazioni in un file protetto da password, poi ripristinalo su questo telefono o su un altro.",
 
+  "backupExportButton": "Esporta i miei dati",
 
+  "backupImportButton": "Importa un backup",
 
+  "backupExportTitle": "Proteggi il backup",
 
+  "backupExportExplain": "Scegli una password: è l'unica chiave del file. Non viene salvata da nessuna parte e senza di essa il backup è irrecuperabile. Salvala nel gestore di password del telefono quando te lo propone.",
 
+  "backupAccountLabel": "Nome utente",
 
+  "backupPasswordLabel": "Password",
 
+  "backupPasswordConfirmLabel": "Conferma password",
 
+  "backupPasswordTooShort": "Almeno {min} caratteri.",
 
+  "backupPasswordMismatch": "Le due password sono diverse.",
 
+  "backupExportConfirm": "Esporta",
 
+  "backupImportTitle": "Ripristina un backup",
 
+  "backupImportModeMerge": "Unisci",
 
+  "backupImportModeMergeHint": "Aggiunge le partite e i giocatori mancanti. Le impostazioni del file sostituiscono quelle attuali.",
 
+  "backupImportModeReplace": "Sostituisci tutto",
 
+  "backupImportModeReplaceHint": "Cancella partite, giocatori e impostazioni attuali e installa quelli del file.",
 
+  "backupImportConfirm": "Ripristina",
 
+  "backupWrongPassword": "Password errata o file modificato.",
 
+  "backupNotABackup": "Questo file non è un backup di TenK.",
 
+  "backupTooNew": "Questo backup proviene da una versione più recente di TenK. Aggiorna l'app.",
 
+  "backupCorrupted": "Il backup è illeggibile.",
 
+  "backupBlockedByGame": "Termina o abbandona la partita in corso prima di ripristinare un backup.",
 
+  "backupExported": "Backup esportato.",
 
+  "backupRestored": "Dati ripristinati: {games} partite, {profiles} giocatori.",
 
+  "backupFailed": "Operazione non riuscita.",
 
+  "backupWorking": "Elaborazione in corso…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Ringraziamenti",
 

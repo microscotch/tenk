@@ -1292,6 +1292,100 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get backupSectionTitle => 'Backup dei dati';
+
+  @override
+  String get backupSectionHint =>
+      'Esporta partite, giocatori e impostazioni in un file protetto da password, poi ripristinalo su questo telefono o su un altro.';
+
+  @override
+  String get backupExportButton => 'Esporta i miei dati';
+
+  @override
+  String get backupImportButton => 'Importa un backup';
+
+  @override
+  String get backupExportTitle => 'Proteggi il backup';
+
+  @override
+  String get backupExportExplain =>
+      'Scegli una password: è l\'unica chiave del file. Non viene salvata da nessuna parte e senza di essa il backup è irrecuperabile. Salvala nel gestore di password del telefono quando te lo propone.';
+
+  @override
+  String get backupAccountLabel => 'Nome utente';
+
+  @override
+  String get backupPasswordLabel => 'Password';
+
+  @override
+  String get backupPasswordConfirmLabel => 'Conferma password';
+
+  @override
+  String backupPasswordTooShort(int min) {
+    return 'Almeno $min caratteri.';
+  }
+
+  @override
+  String get backupPasswordMismatch => 'Le due password sono diverse.';
+
+  @override
+  String get backupExportConfirm => 'Esporta';
+
+  @override
+  String get backupImportTitle => 'Ripristina un backup';
+
+  @override
+  String get backupImportModeMerge => 'Unisci';
+
+  @override
+  String get backupImportModeMergeHint =>
+      'Aggiunge le partite e i giocatori mancanti. Le impostazioni del file sostituiscono quelle attuali.';
+
+  @override
+  String get backupImportModeReplace => 'Sostituisci tutto';
+
+  @override
+  String get backupImportModeReplaceHint =>
+      'Cancella partite, giocatori e impostazioni attuali e installa quelli del file.';
+
+  @override
+  String get backupImportConfirm => 'Ripristina';
+
+  @override
+  String get backupWrongPassword => 'Password errata o file modificato.';
+
+  @override
+  String get backupNotABackup => 'Questo file non è un backup di TenK.';
+
+  @override
+  String get backupTooNew =>
+      'Questo backup proviene da una versione più recente di TenK. Aggiorna l\'app.';
+
+  @override
+  String get backupCorrupted => 'Il backup è illeggibile.';
+
+  @override
+  String get backupBlockedByGame =>
+      'Termina o abbandona la partita in corso prima di ripristinare un backup.';
+
+  @override
+  String get backupExported => 'Backup esportato.';
+
+  @override
+  String backupRestored(int games, int profiles) {
+    return 'Dati ripristinati: $games partite, $profiles giocatori.';
+  }
+
+  @override
+  String get backupFailed => 'Operazione non riuscita.';
+
+  @override
+  String get backupWorking => 'Elaborazione in corso…';
+
+  @override
+  String get backupOk => 'OK';
+
+  @override
   String get acknowledgementsButton => 'Ringraziamenti';
 
   @override

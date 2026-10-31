@@ -382,33 +382,61 @@
 
   "exchangeKeepCount": "Behold {count} femmere",
 
+  "backupSectionTitle": "Sikkerhetskopi av data",
 
+  "backupSectionHint": "Eksporter spill, spillere og innstillinger til en passordbeskyttet fil, og gjenopprett den på denne telefonen eller en annen.",
 
+  "backupExportButton": "Eksporter dataene mine",
 
+  "backupImportButton": "Importer en sikkerhetskopi",
 
+  "backupExportTitle": "Beskytt sikkerhetskopien",
 
+  "backupExportExplain": "Velg et passord: det er den eneste nøkkelen til filen. Det lagres ingen steder, og uten det kan ikke sikkerhetskopien gjenopprettes. Lagre det i telefonens passordbehandler når den foreslår det.",
 
+  "backupAccountLabel": "Brukernavn",
 
+  "backupPasswordLabel": "Passord",
 
+  "backupPasswordConfirmLabel": "Bekreft passord",
 
+  "backupPasswordTooShort": "Minst {min} tegn.",
 
+  "backupPasswordMismatch": "De to passordene er forskjellige.",
 
+  "backupExportConfirm": "Eksporter",
 
+  "backupImportTitle": "Gjenopprett en sikkerhetskopi",
 
+  "backupImportModeMerge": "Slå sammen",
 
+  "backupImportModeMergeHint": "Legger til spillene og spillerne som mangler. Innstillingene i filen erstatter de nåværende.",
 
+  "backupImportModeReplace": "Erstatt alt",
 
+  "backupImportModeReplaceHint": "Sletter nåværende spill, spillere og innstillinger og installerer de fra filen.",
 
+  "backupImportConfirm": "Gjenopprett",
 
+  "backupWrongPassword": "Feil passord, eller filen er endret.",
 
+  "backupNotABackup": "Denne filen er ikke en TenK-sikkerhetskopi.",
 
+  "backupTooNew": "Denne sikkerhetskopien kommer fra en nyere versjon av TenK. Oppdater appen.",
 
+  "backupCorrupted": "Sikkerhetskopien er uleselig.",
 
+  "backupBlockedByGame": "Fullfør eller forlat det pågående spillet før du gjenoppretter en sikkerhetskopi.",
 
+  "backupExported": "Sikkerhetskopien er eksportert.",
 
+  "backupRestored": "Data gjenopprettet: {games} spill, {profiles} spillere.",
 
+  "backupFailed": "Handlingen mislyktes.",
 
+  "backupWorking": "Beregner…",
 
+  "backupOk": "OK",
 
   "acknowledgementsButton": "Takk til",
 
