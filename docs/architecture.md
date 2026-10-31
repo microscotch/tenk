@@ -83,7 +83,10 @@ une partie rejouable à l'identique.
   joueur : un renommage ne casse rien. `reordered(ordre)` la réordonne dans
   l'ordre de jeu, chaque joueur gardant son IA, son mode auto et sa fiche.
 - **Le radar** (`lib/game/score_radar.dart`) sert la liste des joueurs de l'écran de jeu, statique (ordre de la
-  partie). Sur la ligne du joueur courant, `firstEntryBelow` donne le premier score non barré de sa grille, en
+  partie), lue depuis un **joueur de référence** : le joueur courant en partie locale (le téléphone passe de main en main),
+  moi en partie en ligne (chacun est devant son téléphone ; hors de mon tour, mon potentiel est mon score, rien ne se
+  barre) — `GameScreen._referenceIndex`, `ScoreSheet.referenceIndex` ; les grilles (`ScoreGridScreen.reference`) s'en
+  servent aussi. Sur la ligne de ce joueur, `firstEntryBelow` donne le premier score non barré de sa grille, en
   remontant, strictement sous son total potentiel (son score + sa main en cours), affiché en petit après le total.
   Sur celle d'un adversaire, `radarDifference` donne l'écart signé : son score moins le potentiel quand celui-ci le
   dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; `signedGap` en écrit le signe. Quand

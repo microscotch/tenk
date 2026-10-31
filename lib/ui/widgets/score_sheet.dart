@@ -12,6 +12,13 @@ class ScoreSheet extends StatelessWidget {
   final List<Player> players;
   final int currentPlayerIndex;
 
+  /// Le joueur depuis lequel le radar se lit : sa ligne montre son total
+  /// potentiel, celles des autres leur écart avec lui. En partie locale c'est le
+  /// joueur courant (le téléphone passe de main en main) ; en ligne c'est moi,
+  /// qui reste devant mon téléphone quel que soit celui dont c'est le tour. Nul :
+  /// le joueur courant.
+  final int? referenceIndex;
+
   /// Appelé avec le joueur concerné quand on clique sur sa ligne (ouvre sa
   /// grille de score complète). Aucune ligne n'est cliquable si null.
   final ValueChanged<Player>? onTapPlayer;
@@ -26,8 +33,8 @@ class ScoreSheet extends StatelessWidget {
   /// sa droite, sur plusieurs lignes s'il le faut (voir [AvatarWithBubble]).
   final Map<int, String> bubbles;
 
-  /// Le total qu'aurait le joueur courant s'il s'arrêtait maintenant (son score
-  /// + sa main courante, sélection de 5 comprise) : c'est depuis lui que se lit
+  /// Le total qu'aurait le joueur de référence s'il s'arrêtait maintenant (son
+  /// score + sa main courante si c'est son tour, sélection de 5 comprise) : c'est depuis lui que se lit
   /// l'écart affiché sur les lignes des autres joueurs (voir
   /// [radarDifference]). Nul : son score seul.
   final int? potentialTotal;
@@ -49,6 +56,7 @@ class ScoreSheet extends StatelessWidget {
     super.key,
     required this.players,
     required this.currentPlayerIndex,
+    this.referenceIndex,
     this.onTapPlayer,
     this.displayNames = const {},
     this.bubbles = const {},
@@ -62,7 +70,8 @@ class ScoreSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatarColors = assignAvatarColors(players.map((p) => p.name));
     final ranks = podiumRanks(players);
-    final potential = potentialTotal ?? players[currentPlayerIndex].totalScore;
+    final reference = referenceIndex ?? currentPlayerIndex;
+    final potential = potentialTotal ?? players[reference].totalScore;
     // La liste est statique : les joueurs restent à leur place, dans l'ordre de
     // la partie. Chaque ligne est clée par son joueur, pour que son état (la
     // bulle d'émotion en cours) lui reste attaché.
@@ -76,6 +85,7 @@ class ScoreSheet extends StatelessWidget {
               displayName: displayNameOf(displayNames, players[i].name),
               player: players[i],
               isCurrent: i == currentPlayerIndex,
+              isReference: i == reference,
               gaps: _scoreGaps(players, i),
               potentialTotal: potential,
               handRevealed: handRevealed,
@@ -152,6 +162,10 @@ _ScoreGaps _scoreGaps(List<Player> players, int index) {
 class _PlayerRow extends StatelessWidget {
   final Player player;
   final bool isCurrent;
+
+  /// Voir [ScoreSheet.referenceIndex] : la ligne qui montre le total potentiel
+  /// plutôt qu'un écart.
+  final bool isReference;
   final _ScoreGaps gaps;
   final VoidCallback? onTap;
   final Color? avatarColor;
@@ -184,6 +198,7 @@ class _PlayerRow extends StatelessWidget {
     required this.displayName,
     this.bubble,
     required this.isCurrent,
+    required this.isReference,
     required this.gaps,
     required this.onTap,
     required this.avatarColor,
@@ -275,7 +290,7 @@ class _PlayerRow extends StatelessWidget {
                 // Les icônes d'alerte (écart de 200, tiret) viennent à gauche des
                 // chiffres : leur nombre change d'un tour à l'autre, mais elles ne
                 // décalent que le nom, jamais la zone chiffrée.
-                if (isCurrent) ...[
+                if (isReference) ...[
                   if (opportunityAbove)
                     Padding(
                       padding: const EdgeInsets.only(right: 6),
@@ -303,7 +318,7 @@ class _PlayerRow extends StatelessWidget {
                   ),
                 // Le score et l'écart gardent leur largeur : le nom, le blason et
                 // la médaille, à gauche, prennent tout le reste.
-                isCurrent ? _currentZone(context, l10n, previousEntry) : _radar(context),
+                isReference ? _currentZone(context, l10n, previousEntry) : _radar(context),
               ],
             ),
           ),
