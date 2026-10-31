@@ -86,9 +86,28 @@ class SoundEffects with WidgetsBindingObserver {
     _pauseMusic();
   }
 
+  Future<void>? _audioContext;
+
+  /// Règle une fois pour toutes la façon dont les lecteurs partagent le son de
+  /// l'appareil : ils se mélangent, sans prendre le « focus audio ». Par défaut,
+  /// chaque bruit (un lancer de dés) le réclame et la musique de fond, qui l'a
+  /// déjà, est coupée net — puis ne reprend pas quand le bruit se termine. À
+  /// attendre avant de créer un lecteur : le réglage s'applique à ceux qui
+  /// naissent ensuite.
+  Future<void> _mixAudio() => _audioContext ??= () async {
+    try {
+      await AudioPlayer.global.setAudioContext(
+        AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build(),
+      );
+    } catch (_) {
+      // Plateforme sans ce réglage (Linux...) : sans conséquence, rien n'y coupe la musique.
+    }
+  }();
+
   Future<void> _play(String assetPath) async {
     if (_testDisabled || !_effectsEnabled || _inBackground) return;
     try {
+      await _mixAudio();
       final player = AudioPlayer();
       await player.setReleaseMode(ReleaseMode.release);
       await player.play(AssetSource(assetPath));
@@ -110,6 +129,7 @@ class SoundEffects with WidgetsBindingObserver {
     _playingTrack = track;
     if (_testDisabled) return;
     try {
+      await _mixAudio();
       final player = AudioPlayer();
       await player.setReleaseMode(ReleaseMode.loop);
       await player.play(AssetSource(track.asset));
