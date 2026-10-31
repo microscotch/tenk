@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Blandet",
   "settingsSoundsTitle": "Lyd",
   "settingsMusicLabel": "Bakgrunnsmusikk",
+  "settingsMusicTrackLabel": "Musikksløyfe",
+  "settingsMusicTrackOriginal": "Original",
   "settingsSoundEffectsLabel": "Lydeffekter",
   "settingsPausedGamesTitle": "Pausede spill",
   "settingsConfirmBeforeDeleteGameLabel": "Bekreft før du sletter et spill",

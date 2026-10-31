@@ -508,6 +508,10 @@
 
   "settingsMusicLabel": "Musique de fond",
   "@settingsMusicLabel": {"description": "Interrupteur activant/désactivant la musique de fond."},
+  "settingsMusicTrackLabel": "Boucle de la musique",
+  "@settingsMusicTrackLabel": {"description": "Titre du choix de la boucle de musique de fond, sous l'interrupteur de la musique."},
+  "settingsMusicTrackOriginal": "Originale",
+  "@settingsMusicTrackOriginal": {"description": "Nom de la boucle de musique d'origine de l'app, à côté de « Next to You » (un titre, non traduit)."},
 
   "settingsSoundEffectsLabel": "Effets sonores",
   "@settingsSoundEffectsLabel": {"description": "Interrupteur activant/désactivant les effets sonores."},

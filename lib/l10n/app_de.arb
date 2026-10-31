@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Bunt gemischt",
   "settingsSoundsTitle": "Sound",
   "settingsMusicLabel": "Hintergrundmusik",
+  "settingsMusicTrackLabel": "Musikschleife",
+  "settingsMusicTrackOriginal": "Original",
   "settingsSoundEffectsLabel": "Soundeffekte",
   "settingsPausedGamesTitle": "Pausierte Spiele",
   "settingsConfirmBeforeDeleteGameLabel": "Vor dem Löschen eines Spiels bestätigen",

@@ -537,6 +537,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsMusicLabel => 'Bakgrundsmusik';
 
   @override
+  String get settingsMusicTrackLabel => 'Musikslinga';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Original';
+
+  @override
   String get settingsSoundEffectsLabel => 'Ljudeffekter';
 
   @override

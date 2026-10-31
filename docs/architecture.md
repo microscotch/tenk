@@ -116,7 +116,9 @@ une partie rejouable à l'identique.
   en direct). `themeFor` construit le `ThemeData` ; les couleurs hors `ColorScheme` — le
   feutre du fond et les teintes de sens (gain, perte, alerte, texte discret) — sont dans
   l'extension `TableColors` (`TableColors.of(context)`), jamais en dur dans les écrans. La
-  musique de fond est coupée par défaut (`musicEnabled` faux).
+  musique de fond est coupée par défaut (`musicEnabled` faux) ; la boucle jouée est `musicTrack`
+  (`MusicTrack` : `nextToYou` par défaut, ou `original`, l'ancienne), choisie dans les réglages — `SoundEffects`
+  relance la musique sur-le-champ si elle change pendant l'écoute.
 - **`DiceOffState`** est le tirage au sort qui fixe l'ordre de jeu : tout le
   monde lance son dé en même temps (`rollAll`), le plus faible commence, les
   ex-aequo au plus bas relancent seuls. `playOrder` donne les sièges dans

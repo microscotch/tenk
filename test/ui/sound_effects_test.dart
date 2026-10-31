@@ -28,4 +28,24 @@ void main() {
     sounds.applySettings(const AppSettings(loaded: true));
     expect(sounds.musicStartCount, before + 1);
   });
+
+  test('changer de boucle pendant l\'écoute relance la musique avec la nouvelle', () async {
+    final sounds = SoundEffects.instance;
+    sounds.applySettings(const AppSettings(loaded: true)); // musique coupée : état de départ
+    final before = sounds.musicStartCount;
+
+    sounds.applySettings(const AppSettings(musicEnabled: true, loaded: true));
+    expect(sounds.musicStartCount, before + 1);
+
+    // Même boucle, autre réglage : rien ne redémarre.
+    sounds.applySettings(const AppSettings(musicEnabled: true, soundEffectsEnabled: false, loaded: true));
+    expect(sounds.musicStartCount, before + 1);
+
+    sounds.applySettings(const AppSettings(musicEnabled: true, musicTrack: MusicTrack.original, loaded: true));
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(sounds.musicStartCount, before + 2, reason: 'la nouvelle boucle démarre une fois l\'ancienne arrêtée');
+
+    sounds.applySettings(const AppSettings(loaded: true));
+  });
 }

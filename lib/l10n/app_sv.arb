@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Blandad",
   "settingsSoundsTitle": "Ljud",
   "settingsMusicLabel": "Bakgrundsmusik",
+  "settingsMusicTrackLabel": "Musikslinga",
+  "settingsMusicTrackOriginal": "Original",
   "settingsSoundEffectsLabel": "Ljudeffekter",
   "settingsPausedGamesTitle": "Pausade spel",
   "settingsConfirmBeforeDeleteGameLabel": "Bekräfta innan ett spel raderas",

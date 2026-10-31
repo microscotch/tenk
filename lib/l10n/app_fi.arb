@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Kirjava",
   "settingsSoundsTitle": "Äänet",
   "settingsMusicLabel": "Taustamusiikki",
+  "settingsMusicTrackLabel": "Musiikkisilmukka",
+  "settingsMusicTrackOriginal": "Alkuperäinen",
   "settingsSoundEffectsLabel": "Äänitehosteet",
   "settingsPausedGamesTitle": "Tauolla olevat pelit",
   "settingsConfirmBeforeDeleteGameLabel": "Vahvista ennen pelin poistamista",

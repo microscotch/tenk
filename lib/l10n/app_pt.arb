@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Variado",
   "settingsSoundsTitle": "Som",
   "settingsMusicLabel": "Música de fundo",
+  "settingsMusicTrackLabel": "Loop de música",
+  "settingsMusicTrackOriginal": "Original",
   "settingsSoundEffectsLabel": "Efeitos sonoros",
   "settingsPausedGamesTitle": "Jogos em pausa",
   "settingsConfirmBeforeDeleteGameLabel": "Confirmar antes de eliminar um jogo",

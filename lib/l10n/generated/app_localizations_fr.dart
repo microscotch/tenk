@@ -537,6 +537,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsMusicLabel => 'Musique de fond';
 
   @override
+  String get settingsMusicTrackLabel => 'Boucle de la musique';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Originale';
+
+  @override
   String get settingsSoundEffectsLabel => 'Effets sonores';
 
   @override

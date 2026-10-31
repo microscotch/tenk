@@ -48,4 +48,22 @@ void main() {
     await pumpSettings(tester, {'settings.soundEffectsEnabled': false});
     expect(selector(tester).onSelectionChanged, isNull);
   });
+
+  SegmentedButton<MusicTrack> trackSelector(WidgetTester tester) =>
+      tester.widget<SegmentedButton<MusicTrack>>(find.byType(SegmentedButton<MusicTrack>));
+
+  testWidgets('musique : « Next to You » par défaut, grisé tant qu\'elle est coupée, « Originale » la remplace', (tester) async {
+    await pumpSettings(tester, {});
+    expect(find.text('Boucle de la musique'), findsOneWidget);
+    expect(trackSelector(tester).selected, {MusicTrack.nextToYou});
+    expect(trackSelector(tester).onSelectionChanged, isNull);
+
+    container.read(settingsProvider.notifier).setMusicEnabled(true);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Originale'));
+    await tester.tap(find.text('Originale'));
+    await tester.pumpAndSettle();
+    expect(container.read(settingsProvider).musicTrack, MusicTrack.original);
+    container.read(settingsProvider.notifier).setMusicEnabled(false);
+  });
 }

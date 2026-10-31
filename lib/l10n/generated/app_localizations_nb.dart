@@ -536,6 +536,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsMusicLabel => 'Bakgrunnsmusikk';
 
   @override
+  String get settingsMusicTrackLabel => 'Musikksløyfe';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Original';
+
+  @override
   String get settingsSoundEffectsLabel => 'Lydeffekter';
 
   @override

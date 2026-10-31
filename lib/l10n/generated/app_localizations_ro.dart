@@ -544,6 +544,12 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsMusicLabel => 'Muzică de fundal';
 
   @override
+  String get settingsMusicTrackLabel => 'Buclă muzicală';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Originală';
+
+  @override
   String get settingsSoundEffectsLabel => 'Efecte sonore';
 
   @override

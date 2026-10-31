@@ -536,6 +536,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsMusicLabel => 'Фонова музика';
 
   @override
+  String get settingsMusicTrackLabel => 'Музикален цикъл';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Оригинален';
+
+  @override
   String get settingsSoundEffectsLabel => 'Звукови ефекти';
 
   @override

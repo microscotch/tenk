@@ -537,6 +537,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsMusicLabel => 'Taustamusiikki';
 
   @override
+  String get settingsMusicTrackLabel => 'Musiikkisilmukka';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Alkuperäinen';
+
+  @override
   String get settingsSoundEffectsLabel => 'Äänitehosteet';
 
   @override

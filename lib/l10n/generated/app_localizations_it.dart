@@ -538,6 +538,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsMusicLabel => 'Musica di sottofondo';
 
   @override
+  String get settingsMusicTrackLabel => 'Brano musicale';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Originale';
+
+  @override
   String get settingsSoundEffectsLabel => 'Effetti sonori';
 
   @override

@@ -156,6 +156,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 value: settings.musicEnabled,
                 onChanged: notifier.setMusicEnabled,
               ),
+              Text(l10n.settingsMusicTrackLabel, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 6),
+              SegmentedButton<MusicTrack>(
+                segments: [
+                  // Un titre est un nom propre : jamais traduit.
+                  const ButtonSegment(value: MusicTrack.nextToYou, label: Text('Next to You')),
+                  ButtonSegment(value: MusicTrack.original, label: Text(l10n.settingsMusicTrackOriginal)),
+                ],
+                selected: {settings.musicTrack},
+                // Sans musique, le choix n'a rien à faire entendre : grisé.
+                onSelectionChanged: settings.musicEnabled ? (s) => notifier.setMusicTrack(s.first) : null,
+              ),
+              const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.settingsSoundEffectsLabel),

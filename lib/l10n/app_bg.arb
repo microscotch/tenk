@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Разноцветни",
   "settingsSoundsTitle": "Звук",
   "settingsMusicLabel": "Фонова музика",
+  "settingsMusicTrackLabel": "Музикален цикъл",
+  "settingsMusicTrackOriginal": "Оригинален",
   "settingsSoundEffectsLabel": "Звукови ефекти",
   "settingsPausedGamesTitle": "Игри на пауза",
   "settingsConfirmBeforeDeleteGameLabel": "Потвърждение преди изтриване на игра",

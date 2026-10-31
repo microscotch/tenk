@@ -537,6 +537,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsMusicLabel => 'Música de fundo';
 
   @override
+  String get settingsMusicTrackLabel => 'Loop de música';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Original';
+
+  @override
   String get settingsSoundEffectsLabel => 'Efeitos sonoros';
 
   @override

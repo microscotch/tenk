@@ -16,6 +16,28 @@ void main() {
     expect(settings.themeChoice, isNull);
   });
 
+  test('la boucle de musique par défaut est Next to You, le choix est relu, une boucle inconnue revient au défaut', () async {
+    expect(const AppSettings().musicTrack, MusicTrack.nextToYou);
+
+    SharedPreferences.setMockInitialValues({'settings.musicTrack': 'original'});
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(settingsProvider);
+    await Future<void>.delayed(Duration.zero);
+    expect(container.read(settingsProvider).musicTrack, MusicTrack.original);
+
+    container.read(settingsProvider.notifier).setMusicTrack(MusicTrack.nextToYou);
+    await Future<void>.delayed(Duration.zero);
+    expect((await SharedPreferences.getInstance()).getString('settings.musicTrack'), 'nextToYou');
+
+    SharedPreferences.setMockInitialValues({'settings.musicTrack': 'inconnue'});
+    final other = ProviderContainer();
+    addTearDown(other.dispose);
+    other.read(settingsProvider);
+    await Future<void>.delayed(Duration.zero);
+    expect(other.read(settingsProvider).musicTrack, MusicTrack.nextToYou);
+  });
+
   test('le thème choisi est relu, un thème inconnu compte pour non choisi', () async {
     SharedPreferences.setMockInitialValues({'settings.themeChoice': 'light'});
     final container = ProviderContainer();

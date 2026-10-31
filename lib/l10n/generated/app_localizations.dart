@@ -962,6 +962,18 @@ abstract class AppLocalizations {
   /// **'Musique de fond'**
   String get settingsMusicLabel;
 
+  /// Titre du choix de la boucle de musique de fond, sous l'interrupteur de la musique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Boucle de la musique'**
+  String get settingsMusicTrackLabel;
+
+  /// Nom de la boucle de musique d'origine de l'app, à côté de « Next to You » (un titre, non traduit).
+  ///
+  /// In fr, this message translates to:
+  /// **'Originale'**
+  String get settingsMusicTrackOriginal;
+
   /// Interrupteur activant/désactivant les effets sonores.
   ///
   /// In fr, this message translates to:

@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Variado",
   "settingsSoundsTitle": "Sonido",
   "settingsMusicLabel": "Música de fondo",
+  "settingsMusicTrackLabel": "Bucle de música",
+  "settingsMusicTrackOriginal": "Original",
   "settingsSoundEffectsLabel": "Efectos de sonido",
   "settingsPausedGamesTitle": "Partidas en pausa",
   "settingsConfirmBeforeDeleteGameLabel": "Confirmar antes de eliminar una partida",

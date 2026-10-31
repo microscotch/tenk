@@ -11,6 +11,21 @@ enum DiceColorMode { uniform, varied }
 /// le même pour tous les lancers.
 enum DiceSoundMode { realistic, synthetic }
 
+/// La boucle jouée en musique de fond. Les valeurs sont écrites par leur nom
+/// dans les préférences : ne pas les renommer.
+enum MusicTrack {
+  /// « Next to You » (défaut).
+  nextToYou('sounds/next_to_you.m4a'),
+
+  /// La boucle d'origine de l'application.
+  original('sounds/background_music.wav');
+
+  const MusicTrack(this.asset);
+
+  /// Chemin de l'asset, relatif à `assets/`.
+  final String asset;
+}
+
 /// L'apparence de l'application : la table sombre d'origine, ou sa variante
 /// claire.
 enum ThemeChoice { dark, light }
@@ -39,6 +54,9 @@ class AppSettings {
   /// Désactivée par défaut : la musique n'est lancée que si l'utilisateur la
   /// demande.
   final bool musicEnabled;
+
+  /// La boucle jouée quand la musique est activée.
+  final MusicTrack musicTrack;
   final bool soundEffectsEnabled;
 
   /// Le thème choisi ; nul tant qu'il n'a jamais été choisi — l'app le propose
@@ -91,6 +109,7 @@ class AppSettings {
     this.diceColorMode = DiceColorMode.uniform,
     this.diceSoundMode = DiceSoundMode.realistic,
     this.musicEnabled = false,
+    this.musicTrack = MusicTrack.nextToYou,
     this.soundEffectsEnabled = true,
     this.themeChoice,
     this.confirmBeforeDeleteGame = true,
@@ -113,6 +132,7 @@ class AppSettings {
     DiceColorMode? diceColorMode,
     DiceSoundMode? diceSoundMode,
     bool? musicEnabled,
+    MusicTrack? musicTrack,
     bool? soundEffectsEnabled,
     ThemeChoice? themeChoice,
     bool? confirmBeforeDeleteGame,
@@ -131,6 +151,7 @@ class AppSettings {
       diceColorMode: diceColorMode ?? this.diceColorMode,
       diceSoundMode: diceSoundMode ?? this.diceSoundMode,
       musicEnabled: musicEnabled ?? this.musicEnabled,
+      musicTrack: musicTrack ?? this.musicTrack,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       themeChoice: themeChoice ?? this.themeChoice,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
@@ -156,6 +177,7 @@ const _keyAutoActionDelayMs = 'settings.autoActionDelayMs';
 const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyDiceSoundMode = 'settings.diceSoundMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
+const _keyMusicTrack = 'settings.musicTrack';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyThemeChoice = 'settings.themeChoice';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
@@ -193,6 +215,8 @@ class SettingsNotifier extends Notifier<AppSettings> {
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
         diceSoundMode: prefs.getString(_keyDiceSoundMode) == 'synthetic' ? DiceSoundMode.synthetic : DiceSoundMode.realistic,
         musicEnabled: prefs.getBool(_keyMusicEnabled) ?? false,
+        musicTrack: MusicTrack.values.where((t) => t.name == prefs.getString(_keyMusicTrack)).firstOrNull ??
+            MusicTrack.nextToYou,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
         themeChoice: ThemeChoice.values.where((t) => t.name == prefs.getString(_keyThemeChoice)).firstOrNull,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
@@ -263,6 +287,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setMusicEnabled(bool enabled) {
     state = state.copyWith(musicEnabled: enabled);
     _save(_keyMusicEnabled, enabled);
+  }
+
+  void setMusicTrack(MusicTrack track) {
+    state = state.copyWith(musicTrack: track);
+    _save(_keyMusicTrack, track.name);
   }
 
   void setThemeChoice(ThemeChoice choice) {

@@ -33,6 +33,8 @@ class SoundEffects with WidgetsBindingObserver {
   bool _effectsEnabled = true;
   DiceSoundMode _diceSoundMode = DiceSoundMode.realistic;
   bool _musicWanted = true;
+  MusicTrack _musicTrack = MusicTrack.nextToYou;
+  MusicTrack? _playingTrack;
   bool _musicPlaying = false;
   bool _testDisabled = false;
   bool _observing = false;
@@ -55,8 +57,14 @@ class SoundEffects with WidgetsBindingObserver {
     _effectsEnabled = settings.soundEffectsEnabled;
     _diceSoundMode = settings.diceSoundMode;
     _musicWanted = settings.musicEnabled;
+    _musicTrack = settings.musicTrack;
     if (_inBackground) return; // repris/coupé au retour, voir didChangeAppLifecycleState
-    if (_musicWanted && !_musicPlaying) {
+    if (_musicWanted && _musicPlaying && _playingTrack != _musicTrack) {
+      // Autre boucle choisie pendant l'écoute : on change sur-le-champ.
+      _stopMusic().then((_) {
+        if (_musicWanted && !_musicPlaying && !_inBackground) _startMusic();
+      });
+    } else if (_musicWanted && !_musicPlaying) {
       _startMusic();
     } else if (!_musicWanted && _musicPlaying) {
       _stopMusic();
@@ -97,12 +105,14 @@ class SoundEffects with WidgetsBindingObserver {
 
   Future<void> _startMusic() async {
     musicStartCount++;
-    if (_testDisabled) return;
     _musicPlaying = true; // évite les démarrages concurrents si appelé deux fois
+    final track = _musicTrack;
+    _playingTrack = track;
+    if (_testDisabled) return;
     try {
       final player = AudioPlayer();
       await player.setReleaseMode(ReleaseMode.loop);
-      await player.play(AssetSource('sounds/background_music.wav'));
+      await player.play(AssetSource(track.asset));
       _musicPlayer = player;
     } catch (_) {
       // Pas de backend audio disponible : la musique reste simplement coupée.
@@ -111,6 +121,7 @@ class SoundEffects with WidgetsBindingObserver {
 
   Future<void> _stopMusic() async {
     _musicPlaying = false;
+    _playingTrack = null;
     final player = _musicPlayer;
     _musicPlayer = null;
     try {

@@ -539,6 +539,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsMusicLabel => 'Hintergrundmusik';
 
   @override
+  String get settingsMusicTrackLabel => 'Musikschleife';
+
+  @override
+  String get settingsMusicTrackOriginal => 'Original';
+
+  @override
   String get settingsSoundEffectsLabel => 'Soundeffekte';
 
   @override

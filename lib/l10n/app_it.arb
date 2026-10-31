@@ -46,6 +46,8 @@
   "settingsDiceVaried": "Variopinto",
   "settingsSoundsTitle": "Audio",
   "settingsMusicLabel": "Musica di sottofondo",
+  "settingsMusicTrackLabel": "Brano musicale",
+  "settingsMusicTrackOriginal": "Originale",
   "settingsSoundEffectsLabel": "Effetti sonori",
   "settingsPausedGamesTitle": "Partite in pausa",
   "settingsConfirmBeforeDeleteGameLabel": "Conferma prima di eliminare una partita",
