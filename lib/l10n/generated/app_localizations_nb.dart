@@ -1407,6 +1407,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get acknowledgementsButton => 'Takk til';
 
   @override
+  String get creditsButton => 'Medvirkende';
+
+  @override
   String get acknowledgementsIntro =>
       'En stor takk til alle betatesterne fra første stund for tilbakemeldinger og råd, spesielt:';
 }

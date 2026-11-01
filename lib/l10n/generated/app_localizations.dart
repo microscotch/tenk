@@ -2486,6 +2486,12 @@ abstract class AppLocalizations {
   /// **'Remerciements'**
   String get acknowledgementsButton;
 
+  /// Bouton du dialogue "À propos" qui ouvre la fenêtre des crédits (les bibliothèques utilisées), et titre de cette fenêtre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Crédits'**
+  String get creditsButton;
+
   /// Texte de l'écran des remerciements, avant la liste des pseudos des beta-testeurs de la première heure (les noms eux-mêmes ne se traduisent pas).
   ///
   /// In fr, this message translates to:

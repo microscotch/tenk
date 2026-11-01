@@ -1406,6 +1406,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get acknowledgementsButton => 'Tack till';
 
   @override
+  String get creditsButton => 'Medverkande';
+
+  @override
   String get acknowledgementsIntro =>
       'Ett stort tack till alla betatestare från första stund för deras synpunkter och råd, särskilt:';
 }

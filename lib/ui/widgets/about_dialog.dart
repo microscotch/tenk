@@ -6,6 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../state/konami_code.dart';
 import '../../state/settings_providers.dart';
 import '../screens/acknowledgements_screen.dart';
+import 'credits_dialog.dart';
 import 'die_widget.dart';
 
 /// Mention d'auteur affichée à l'identique sur l'écran d'introduction
@@ -121,6 +122,11 @@ Future<void> showAppAboutDialog(BuildContext context) async {
               );
             },
             child: Text(l10n.acknowledgementsButton),
+          ),
+          // La fenêtre des crédits s'ouvre par-dessus ce dialogue, qui reste en place.
+          TextButton(
+            onPressed: () => showCreditsDialog(dialogContext),
+            child: Text(l10n.creditsButton),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),

@@ -1408,6 +1408,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get acknowledgementsButton => 'Kiitokset';
 
   @override
+  String get creditsButton => 'Tekijät';
+
+  @override
   String get acknowledgementsIntro =>
       'Suuri kiitos kaikille alkuvaiheen beta-testaajille palautteesta ja neuvoista, erityisesti:';
 }

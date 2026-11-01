@@ -447,6 +447,7 @@
   "backupOk": "OK",
 
   "acknowledgementsButton": "Kiitokset",
+  "creditsButton": "Tekijät",
 
   "acknowledgementsIntro": "Suuri kiitos kaikille alkuvaiheen beta-testaajille palautteesta ja neuvoista, erityisesti:"
 }

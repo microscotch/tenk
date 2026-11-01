@@ -1405,6 +1405,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get acknowledgementsButton => 'Благодарности';
 
   @override
+  String get creditsButton => 'Кредити';
+
+  @override
   String get acknowledgementsIntro =>
       'Голямо благодаря на всички бета тестери от първия час за забележките и съветите им, и по-специално на:';
 }

@@ -1412,6 +1412,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get acknowledgementsButton => 'Agradecimientos';
 
   @override
+  String get creditsButton => 'Créditos';
+
+  @override
   String get acknowledgementsIntro =>
       'Muchas gracias a todos los beta testers de la primera hora por sus comentarios y consejos, en particular:';
 }

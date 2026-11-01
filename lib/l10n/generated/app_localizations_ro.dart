@@ -1417,6 +1417,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get acknowledgementsButton => 'Mulțumiri';
 
   @override
+  String get creditsButton => 'Credite';
+
+  @override
   String get acknowledgementsIntro =>
       'Un mare mulțumesc tuturor beta testerilor din prima oră pentru observațiile și sfaturile lor, în special:';
 }
