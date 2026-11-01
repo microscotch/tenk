@@ -12,6 +12,13 @@ class ScoreSheet extends StatelessWidget {
   final List<Player> players;
   final int currentPlayerIndex;
 
+  /// Le joueur depuis lequel le radar se lit : sa ligne montre son total
+  /// potentiel, celles des autres leur écart avec lui. En partie locale c'est le
+  /// joueur courant (le téléphone passe de main en main) ; en ligne c'est moi,
+  /// qui reste devant mon téléphone quel que soit celui dont c'est le tour. Nul :
+  /// le joueur courant.
+  final int? referenceIndex;
+
   /// Appelé avec le joueur concerné quand on clique sur sa ligne (ouvre sa
   /// grille de score complète). Aucune ligne n'est cliquable si null.
   final ValueChanged<Player>? onTapPlayer;
@@ -26,11 +33,17 @@ class ScoreSheet extends StatelessWidget {
   /// sa droite, sur plusieurs lignes s'il le faut (voir [AvatarWithBubble]).
   final Map<int, String> bubbles;
 
-  /// Le total qu'aurait le joueur courant s'il s'arrêtait maintenant (son score
-  /// + sa main courante, sélection de 5 comprise) : c'est depuis lui que se lit
+  /// Le total qu'aurait le joueur de référence s'il s'arrêtait maintenant (son
+  /// score + sa main courante si c'est son tour, sélection de 5 comprise) : c'est depuis lui que se lit
   /// l'écart affiché sur les lignes des autres joueurs (voir
   /// [radarDifference]). Nul : son score seul.
   final int? potentialTotal;
+
+  /// Quand le joueur dont c'est le tour n'est pas le joueur de référence (en
+  /// ligne, c'est un autre qui joue) : le total qu'il aurait en s'arrêtant, que
+  /// sa ligne montre en direct à chaque lancer et chaque sélection, sur tous les
+  /// écrans. Nul : sa ligne reste celle d'un adversaire (score et écart).
+  final int? currentPotentialTotal;
 
   /// Vrai quand les dés de la main courante sont montrés : alors seulement le
   /// score d'un adversaire que le joueur courant barrerait en s'arrêtant passe
@@ -49,10 +62,12 @@ class ScoreSheet extends StatelessWidget {
     super.key,
     required this.players,
     required this.currentPlayerIndex,
+    this.referenceIndex,
     this.onTapPlayer,
     this.displayNames = const {},
     this.bubbles = const {},
     this.potentialTotal,
+    this.currentPotentialTotal,
     this.handRevealed = true,
     this.botIndices = const {},
     this.rowKeys = const {},
@@ -62,7 +77,8 @@ class ScoreSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatarColors = assignAvatarColors(players.map((p) => p.name));
     final ranks = podiumRanks(players);
-    final potential = potentialTotal ?? players[currentPlayerIndex].totalScore;
+    final reference = referenceIndex ?? currentPlayerIndex;
+    final potential = potentialTotal ?? players[reference].totalScore;
     // La liste est statique : les joueurs restent à leur place, dans l'ordre de
     // la partie. Chaque ligne est clée par son joueur, pour que son état (la
     // bulle d'émotion en cours) lui reste attaché.
@@ -76,8 +92,12 @@ class ScoreSheet extends StatelessWidget {
               displayName: displayNameOf(displayNames, players[i].name),
               player: players[i],
               isCurrent: i == currentPlayerIndex,
+              isReference: i == reference,
               gaps: _scoreGaps(players, i),
               potentialTotal: potential,
+              ownPotentialTotal: i == reference
+                  ? potential
+                  : (i == currentPlayerIndex ? currentPotentialTotal : null),
               handRevealed: handRevealed,
               onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
               avatarColor: avatarColors[players[i].name],
@@ -152,6 +172,10 @@ _ScoreGaps _scoreGaps(List<Player> players, int index) {
 class _PlayerRow extends StatelessWidget {
   final Player player;
   final bool isCurrent;
+
+  /// Voir [ScoreSheet.referenceIndex] : la ligne qui montre le total potentiel
+  /// plutôt qu'un écart.
+  final bool isReference;
   final _ScoreGaps gaps;
   final VoidCallback? onTap;
   final Color? avatarColor;
@@ -169,6 +193,12 @@ class _PlayerRow extends StatelessWidget {
   /// pas celle du joueur courant.
   final int potentialTotal;
 
+  /// Le total potentiel que cette ligne montre elle-même, à la place d'un score
+  /// et d'un écart : celui du joueur de référence, ou, en ligne, celui du joueur
+  /// dont c'est le tour (voir [ScoreSheet.currentPotentialTotal]). Nul pour une
+  /// ligne d'adversaire ordinaire.
+  final int? ownPotentialTotal;
+
   /// Voir [ScoreSheet.handRevealed].
   final bool handRevealed;
 
@@ -180,10 +210,12 @@ class _PlayerRow extends StatelessWidget {
     super.key,
     required this.player,
     required this.potentialTotal,
+    this.ownPotentialTotal,
     required this.handRevealed,
     required this.displayName,
     this.bubble,
     required this.isCurrent,
+    required this.isReference,
     required this.gaps,
     required this.onTap,
     required this.avatarColor,
@@ -198,7 +230,7 @@ class _PlayerRow extends StatelessWidget {
     // collision au prochain tour de l'adversaire concerné.
     final dangerBelow = gaps.below == 200;
     final opportunityAbove = gaps.above == 200;
-    final previousEntry = firstEntryBelow(player, potentialTotal);
+    final previousEntry = ownPotentialTotal == null ? null : firstEntryBelow(player, ownPotentialTotal!);
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -275,7 +307,7 @@ class _PlayerRow extends StatelessWidget {
                 // Les icônes d'alerte (écart de 200, tiret) viennent à gauche des
                 // chiffres : leur nombre change d'un tour à l'autre, mais elles ne
                 // décalent que le nom, jamais la zone chiffrée.
-                if (isCurrent) ...[
+                if (isReference) ...[
                   if (opportunityAbove)
                     Padding(
                       padding: const EdgeInsets.only(right: 6),
@@ -303,7 +335,7 @@ class _PlayerRow extends StatelessWidget {
                   ),
                 // Le score et l'écart gardent leur largeur : le nom, le blason et
                 // la médaille, à gauche, prennent tout le reste.
-                isCurrent ? _currentZone(context, l10n, previousEntry) : _radar(context),
+                isReference ? _currentZone(context, l10n, previousEntry) : _radar(context),
               ],
             ),
           ),
@@ -321,13 +353,16 @@ class _PlayerRow extends StatelessWidget {
   /// une fois la main visible —, puis l'écart signé (voir [radarDifference]).
   Widget _radar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final difference = radarDifference(player, potentialTotal);
+    // Celui qui joue, vu depuis un autre siège : son total potentiel en direct à
+    // la place de son score, et son écart avec moi.
+    final shownScore = ownPotentialTotal ?? player.totalScore;
+    final difference = radarDifference(player, potentialTotal, score: ownPotentialTotal);
     final barred = handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
     final muted = _mutedStyle(context);
     return _radarZone(
       context,
       score: Text(
-        '${player.totalScore}',
+        '$shownScore',
         style: _scoreStyle.copyWith(
           fontWeight: barred ? FontWeight.bold : FontWeight.w600,
           color: barred ? TableColors.of(context).negative : null,
@@ -353,7 +388,7 @@ class _PlayerRow extends StatelessWidget {
   Widget _currentZone(BuildContext context, AppLocalizations l10n, ScoreEntry? previousEntry) {
     return _radarZone(
       context,
-      score: Text('$potentialTotal', style: _scoreStyle),
+      score: Text('${ownPotentialTotal ?? potentialTotal}', style: _scoreStyle),
       second: Text('${previousEntry?.value ?? 0}', style: _mutedStyle(context)),
       // Le tiret est à droite de ce score précédent : il le qualifie lui, pas le
       // total potentiel qui le précède.

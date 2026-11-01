@@ -11,6 +11,112 @@ import 'package:le10000/ui/widgets/score_sheet.dart';
 Finder _rowOf(String playerName) => find.ancestor(of: find.text(playerName), matching: find.byType(Container)).first;
 
 void main() {
+  testWidgets('en ligne, chaque écran lit le radar depuis son siège (J1 joue, 200 de main)', (tester) async {
+    Player grid(String name, List<int> lines) {
+      var player = Player(name: name, totalScore: lines.first, hasEntered: true);
+      for (final line in lines.skip(1)) {
+        player = player.applySuccessfulTurn(line - player.totalScore);
+      }
+      return player;
+    }
+
+    final players = [
+      grid('J1', [800, 1300, 1500]),
+      grid('J2', [500, 700, 1000]),
+      grid('J3', [900, 1900, 2000]),
+    ];
+
+    Future<void> seenFrom(int me, {required int j1Potential}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ScoreSheet(
+            players: players,
+            currentPlayerIndex: 0,
+            referenceIndex: me,
+            potentialTotal: me == 0 ? j1Potential : players[me].totalScore,
+            currentPotentialTotal: me == 0 ? null : j1Potential,
+          ),
+        ),
+      );
+    }
+
+    bool shows(String name, String text) =>
+        find.descendant(of: _rowOf(name), matching: find.text(text)).evaluate().isNotEmpty;
+
+    // J2 : J1 montre son total en direct (1700) et l'écart à son premier score
+    // barrable depuis 1000 (+300) ; ma ligne, mon score et le précédent.
+    await seenFrom(1, j1Potential: 1700);
+    expect(shows('J1', '1700') && shows('J1', '+300'), isTrue);
+    expect(shows('J2', '1000') && shows('J2', '700'), isTrue);
+    expect(shows('J3', '2000') && shows('J3', '+900'), isTrue);
+
+    // J3 : J1 est à 1700, soit 300 sous mon 2000 ; J2 à 1000 de moins.
+    await seenFrom(2, j1Potential: 1700);
+    expect(shows('J1', '1700') && shows('J1', '\u2212300'), isTrue);
+    expect(shows('J2', '1000') && shows('J2', '\u22121000'), isTrue);
+    expect(shows('J3', '2000') && shows('J3', '1900'), isTrue);
+
+    // J1 : ma ligne, 1700 puis mon dernier score non barré sous lui (1500).
+    await seenFrom(0, j1Potential: 1700);
+    expect(shows('J1', '1700') && shows('J1', '1500'), isTrue);
+  });
+
+  testWidgets('en ligne, la ligne de celui qui joue suit sa main en direct (currentPotentialTotal)', (tester) async {
+    final players = [
+      Player(name: 'A', totalScore: 800, hasEntered: true),
+      Player(name: 'B', totalScore: 1000, hasEntered: true),
+    ];
+
+    // Je suis A ; B joue et a 350 de main : sa ligne montre 1350, la mienne reste à 800.
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(
+          players: players,
+          currentPlayerIndex: 1,
+          referenceIndex: 0,
+          potentialTotal: 800,
+          currentPotentialTotal: 1350,
+        ),
+      ),
+    );
+
+    expect(find.descendant(of: _rowOf('B'), matching: find.text('1350')), findsOneWidget);
+    expect(find.descendant(of: _rowOf('A'), matching: find.text('800')), findsOneWidget);
+  });
+
+  testWidgets('en ligne, le radar se lit depuis moi (referenceIndex), pas depuis le joueur dont c\'est le tour', (
+    tester,
+  ) async {
+    final players = [
+      Player(name: 'A', totalScore: 800, hasEntered: true),
+      Player(name: 'B', totalScore: 1000, hasEntered: true),
+      Player(name: 'C', totalScore: 2000, hasEntered: true),
+    ];
+
+    // C'est à B de jouer, mais je suis A : son potentiel est son score, et les
+    // écarts des autres se comptent depuis lui.
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 1, referenceIndex: 0, potentialTotal: 800),
+      ),
+    );
+
+    // Mon écart de 200 avec B est signalé sur MA ligne, pas sur celle de B.
+    expect(find.descendant(of: _rowOf('A'), matching: find.byIcon(Icons.gps_fixed)), findsOneWidget);
+    expect(find.descendant(of: _rowOf('B'), matching: find.byIcon(Icons.gps_fixed)), findsNothing);
+    // Ma ligne montre mon total potentiel ; celle de B, son score et son écart avec moi.
+    expect(find.descendant(of: _rowOf('A'), matching: find.text('800')), findsOneWidget);
+    expect(find.descendant(of: _rowOf('B'), matching: find.text('1000')), findsOneWidget);
+    expect(find.descendant(of: _rowOf('B'), matching: find.text('+200')), findsOneWidget);
+    expect(find.descendant(of: _rowOf('C'), matching: find.text('+1200')), findsOneWidget);
+  });
+
   testWidgets('signale un écart de 200 : danger pour celui au-dessus, opportunité pour celui en dessous', (
     tester,
   ) async {

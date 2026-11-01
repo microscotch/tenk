@@ -29,8 +29,12 @@ int? nextBarrableScore(Player other, int potentialTotal) {
 /// [potentialTotal] quand le total potentiel du joueur courant le dépasse (donc
 /// négatif), sinon la distance de [potentialTotal] à son premier score barrable
 /// (voir [nextBarrableScore]). Nul quand il n'a plus rien à barrer.
-int? radarDifference(Player other, int potentialTotal) {
-  if (potentialTotal > other.totalScore) return other.totalScore - potentialTotal;
+///
+/// [score] remplace le score de [other] quand sa ligne montre un total potentiel
+/// (le joueur dont c'est le tour, vu depuis un autre siège).
+int? radarDifference(Player other, int potentialTotal, {int? score}) {
+  final shown = score ?? other.totalScore;
+  if (potentialTotal > shown) return shown - potentialTotal;
   final next = nextBarrableScore(other, potentialTotal);
   return next == null ? null : next - potentialTotal;
 }
