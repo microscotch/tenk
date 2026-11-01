@@ -44,7 +44,11 @@ void main() {
       find.text('Un grand merci à tous les bêta-testeurs de la première heure pour leurs remarques et conseils, en particulier :'),
       findsOneWidget,
     );
-    expect(AcknowledgementsScreen.betaTesters, ['IvenKor', 'Cam', 'Fluo', 'Popoche', 'Sam', 'Town God', 'Finette', 'Greg', 'R1', 'Seb']);
+    expect(AcknowledgementsScreen.betaTesters, [
+      'Alex', 'Cam', 'Chris', 'Deepsound', 'Finette', 'Fluo', 'Greg', 'IvenKor', 'Kali78', 'Nico', 'Popoche', 'R1', 'Sam', 'Seb', 'Town God', //
+    ]);
+    final sorted = [...AcknowledgementsScreen.betaTesters]..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    expect(AcknowledgementsScreen.betaTesters, sorted, reason: 'par ordre alphabétique');
     expect(find.text('Rrr'), findsNothing);
     for (final name in AcknowledgementsScreen.betaTesters) {
       expect(find.text(name), findsOneWidget, reason: name);

@@ -8,18 +8,23 @@ import '../widgets/app_top_bar.dart';
 class AcknowledgementsScreen extends StatelessWidget {
   const AcknowledgementsScreen({super.key});
 
-  /// Les beta-testeurs de la première heure, dans l'ordre où on les remercie.
+  /// Les beta-testeurs de la première heure, par ordre alphabétique.
   static const betaTesters = [
-    'IvenKor',
+    'Alex',
     'Cam',
-    'Fluo',
-    'Popoche',
-    'Sam',
-    'Town God',
+    'Chris',
+    'Deepsound',
     'Finette',
+    'Fluo',
     'Greg',
+    'IvenKor',
+    'Kali78',
+    'Nico',
+    'Popoche',
     'R1',
+    'Sam',
     'Seb',
+    'Town God',
   ];
 
   @override
