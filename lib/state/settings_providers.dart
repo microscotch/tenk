@@ -15,7 +15,7 @@ enum DiceSoundMode { realistic, synthetic }
 /// dans les préférences : ne pas les renommer.
 enum MusicTrack {
   /// « Next to You » (défaut).
-  nextToYou('sounds/next_to_you.m4a'),
+  nextToYou('sounds/next_to_you.mp3'),
 
   /// La boucle d'origine de l'application.
   original('sounds/background_music.wav');
