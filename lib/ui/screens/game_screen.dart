@@ -1614,17 +1614,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // permis (main pleine) : rouge s'il finit par 50, vert s'il barre un
     // autre joueur et que la main peut être encaissée, blanc sinon.
     final potentialTotal = engine.currentPlayer.totalScore + liveScore;
-    // Les grilles se lisent depuis le joueur de référence : le joueur courant en
-    // partie locale, moi en ligne (voir [_referenceIndex]). Quand ce n'est pas
-    // son tour, il n'a pas de main : son total potentiel est son score, et rien
-    // ne se barre. Le radar de la liste des joueurs, lui, suit toujours la main
-    // du joueur courant, en direct sur tous les écrans.
-    final referenceIndex = _referenceIndex(engine);
-    final referenceTurn = referenceIndex == engine.currentPlayerIndex;
-    final referencePotential =
-        referenceTurn ? potentialTotal : engine.players[referenceIndex].totalScore;
-    _gridPotential = referencePotential;
-    _gridBankable = referenceTurn && _handBankable(engine, turn, showRollPreview);
+    _gridPotential = potentialTotal;
+    _gridBankable = _handBankable(engine, turn, showRollPreview);
     final Color potentialColor;
     if (potentialTotal % 100 == 50) {
       potentialColor = TableColors.of(context).negative;
@@ -2061,24 +2052,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Le joueur depuis lequel le radar et les grilles se lisent : le joueur
-  /// courant en partie locale (l'appareil passe de main en main), moi en ligne
-  /// — chacun est devant son téléphone, le tour des autres ne change pas ce
-  /// qu'il lit.
-  int _referenceIndex(GameEngine engine) {
-    final mine = ref.read(gameProvider.notifier).onlineLink?.myEngineIndex;
-    return mine != null && mine >= 0 && mine < engine.players.length ? mine : engine.currentPlayerIndex;
-  }
-
-  /// La grille de score de [players], lue depuis [_referenceIndex] et son total
-  /// potentiel. Même seul à l'écran, un joueur garde sa couleur
+  /// La grille de score de [players], lue depuis le joueur dont c'est le tour
+  /// et son total potentiel. Même seul à l'écran, un joueur garde sa couleur
   /// de blason de la table entière (voir [ScoreGridScreen.roster]).
   ScoreGridScreen _gridScreen(List<Player> players) {
     final engine = ref.read(gameProvider);
     return ScoreGridScreen(
       players: players,
       roster: engine?.players,
-      reference: engine == null ? null : engine.players[_referenceIndex(engine)],
+      reference: engine?.currentPlayer,
       potentialTotal: _gridPotential,
       displayNames: ref.read(displayNamesProvider),
       handBankable: _gridBankable,

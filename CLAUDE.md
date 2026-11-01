@@ -200,11 +200,8 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   a journal is what marks it as using the current order rule. `presetOrder` (an online rematch) is a roll-off
   action too: the play order imposed without dice (`DiceOffState.preset`); it only appears in games where every
   participant announced `rematchFeature`, since an older app couldn't parse it.
-- `game/score_radar.dart` — the game screen's player list, **static** (game order, never rotated), read from a
-  **reference player**: the current player in a local game (the phone changes hands), **me in an online game** (each
-  player sits in front of their own phone — `GameScreen._referenceIndex`, `ScoreSheet.referenceIndex`; on someone else's
-  turn my potential is just my score and nothing can be struck out). The current player's row is the bold one;
-  the reference player's row reads "potential total · <small: `firstEntryBelow`, the latest non-barred grid line below the
+- `game/score_radar.dart` — the game screen's player list, **static** (game order, never rotated): the current
+  player's row is bold and reads "potential total · <small: `firstEntryBelow`, the latest non-barred grid line below the
   potential>"; another player's row shows their score (red and bold when stopping on the potential would equal it,
   only once the hand's dice are shown — `ScoreSheet.handRevealed` — so the colour never spoils the roll), then
   `radarDifference`: signed gap, their score minus the potential when the potential is above it, otherwise
