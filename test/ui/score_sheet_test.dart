@@ -45,10 +45,13 @@ void main() {
     bool shows(String name, String text) =>
         find.descendant(of: _rowOf(name), matching: find.text(text)).evaluate().isNotEmpty;
 
-    // J2 : J1 montre son total en direct (1700) et l'écart à son premier score
-    // barrable depuis 1000 (+300) ; ma ligne, mon score et le précédent.
+    // J2 : J1 montre son total en direct (1700) et son avance sur moi (+700) ;
+    // ma ligne, mon score et le précédent.
     await seenFrom(1, j1Potential: 1700);
-    expect(shows('J1', '1700') && shows('J1', '+300'), isTrue);
+    expect(shows('J1', '1700') && shows('J1', '+700'), isTrue);
+    await seenFrom(1, j1Potential: 1900);
+    expect(shows('J1', '1900') && shows('J1', '+900'), isTrue, reason: 'l\'écart suit la main à chaque lancer');
+    await seenFrom(1, j1Potential: 1700);
     expect(shows('J2', '1000') && shows('J2', '700'), isTrue);
     expect(shows('J3', '2000') && shows('J3', '+900'), isTrue);
 

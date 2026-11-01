@@ -381,7 +381,7 @@ class _PlayerRow extends StatelessWidget {
           ? null
           : Tooltip(
               message: l10n.radarGapTooltip,
-              child: difference == 0
+              child: difference == 0 && ownPotentialTotal == null
                   // Écart nul : à la place, le score barrable lui-même, en rouge.
                   ? Text(
                       '${nextBarrableScore(player, potentialTotal)}',

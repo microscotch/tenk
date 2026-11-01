@@ -88,7 +88,7 @@ une partie rejouable à l'identique.
   barre) — `GameScreen._referenceIndex`, `ScoreSheet.referenceIndex` ; les grilles (`ScoreGridScreen.reference`) s'en
   servent aussi. En ligne, la ligne de celui qui joue, quand ce n'est pas moi, montre son total potentiel en direct
   à chaque lancer (`ScoreSheet.currentPotentialTotal`), sur tous les écrans, à la place de son score, suivi de l'écart
-  avec *mon* potentiel (`radarDifference(..., score:)`). Sur la ligne de ce joueur, `firstEntryBelow` donne le premier score non barré de sa grille, en
+  avec *mon* potentiel (`radarDifference(..., score:)`) : l'écart signé de son potentiel au mien, qui suit sa main à chaque lancer. Sur la ligne de ce joueur, `firstEntryBelow` donne le premier score non barré de sa grille, en
   remontant, strictement sous son total potentiel (son score + sa main en cours), affiché en petit après le total.
   Sur celle d'un adversaire, `radarDifference` donne l'écart signé : son score moins le potentiel quand celui-ci le
   dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; `signedGap` en écrit le signe. Quand
