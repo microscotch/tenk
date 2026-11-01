@@ -140,6 +140,24 @@ void main() {
     expect(find.byIcon(Icons.gps_fixed), findsOneWidget);
   });
 
+  testWidgets('les indices de 200 se lisent sur le total potentiel, pas sur le score', (tester) async {
+    final players = [
+      Player(name: 'A', totalScore: 800, hasEntered: true),
+      Player(name: 'B', totalScore: 1200, hasEntered: true),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(players: players, currentPlayerIndex: 0, potentialTotal: 1000),
+      ),
+    );
+
+    // A est à 800 (400 sous B), mais 1000 avec sa main : B est à 200.
+    expect(find.descendant(of: _rowOf('A'), matching: find.byIcon(Icons.gps_fixed)), findsOneWidget);
+  });
+
   testWidgets('aucun hint si aucun écart ne vaut exactement 200', (tester) async {
     final players = [
       Player(name: 'A', totalScore: 300, hasEntered: true),

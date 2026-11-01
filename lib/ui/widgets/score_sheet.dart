@@ -79,6 +79,15 @@ class ScoreSheet extends StatelessWidget {
     final ranks = podiumRanks(players);
     final reference = referenceIndex ?? currentPlayerIndex;
     final potential = potentialTotal ?? players[reference].totalScore;
+    // Les écarts de 200 se lisent sur ce que chacun vaut maintenant : le total
+    // potentiel (score + main en cours) pour moi et pour celui qui joue, le score
+    // pour les autres.
+    final effectiveScores = [
+      for (var i = 0; i < players.length; i++)
+        i == reference
+            ? potential
+            : (i == currentPlayerIndex ? (currentPotentialTotal ?? players[i].totalScore) : players[i].totalScore),
+    ];
     // La liste est statique : les joueurs restent à leur place, dans l'ordre de
     // la partie. Chaque ligne est clée par son joueur, pour que son état (la
     // bulle d'émotion en cours) lui reste attaché.
@@ -93,7 +102,7 @@ class ScoreSheet extends StatelessWidget {
               player: players[i],
               isCurrent: i == currentPlayerIndex,
               isReference: i == reference,
-              gaps: _scoreGaps(players, i),
+              gaps: _scoreGaps(effectiveScores, i),
               potentialTotal: potential,
               ownPotentialTotal: i == reference
                   ? potential
@@ -153,13 +162,13 @@ class _ScoreGaps {
   const _ScoreGaps({this.below, this.above});
 }
 
-_ScoreGaps _scoreGaps(List<Player> players, int index) {
-  final score = players[index].totalScore;
+_ScoreGaps _scoreGaps(List<int> scores, int index) {
+  final score = scores[index];
   int? nearestBelow;
   int? nearestAbove;
-  for (var i = 0; i < players.length; i++) {
+  for (var i = 0; i < scores.length; i++) {
     if (i == index) continue;
-    final other = players[i].totalScore;
+    final other = scores[i];
     if (other < score && (nearestBelow == null || other > nearestBelow)) nearestBelow = other;
     if (other > score && (nearestAbove == null || other < nearestAbove)) nearestAbove = other;
   }

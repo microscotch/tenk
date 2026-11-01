@@ -205,7 +205,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   player sits in front of their own phone — `GameScreen._referenceIndex`, `ScoreSheet.referenceIndex`; on someone else's
   turn my potential is just my score and nothing can be struck out). The current player's row is the bold one; seen from
   another seat it stays live (`ScoreSheet.currentPotentialTotal`): their potential total in place of their score, then the
-  gap to *my* potential (`radarDifference(..., score:)`);
+  gap to *my* potential (`radarDifference(..., score:)`); the 200-point alert icons also read potentials, not scores;
   the reference player's row reads "potential total · <small: `firstEntryBelow`, the latest non-barred grid line below the
   potential>"; another player's row shows their score (red and bold when stopping on the potential would equal it,
   only once the hand's dice are shown — `ScoreSheet.handRevealed` — so the colour never spoils the roll), then
