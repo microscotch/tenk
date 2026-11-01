@@ -1614,10 +1614,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // permis (main pleine) : rouge s'il finit par 50, vert s'il barre un
     // autre joueur et que la main peut être encaissée, blanc sinon.
     final potentialTotal = engine.currentPlayer.totalScore + liveScore;
-    // Le radar et les grilles se lisent depuis le joueur de référence : le joueur
-    // courant en partie locale, moi en ligne (voir [_referenceIndex]). Quand ce
-    // n'est pas son tour, il n'a pas de main : son total potentiel est son score,
-    // et rien ne se barre.
+    // Les grilles se lisent depuis le joueur de référence : le joueur courant en
+    // partie locale, moi en ligne (voir [_referenceIndex]). Quand ce n'est pas
+    // son tour, il n'a pas de main : son total potentiel est son score, et rien
+    // ne se barre. Le radar de la liste des joueurs, lui, suit toujours la main
+    // du joueur courant, en direct sur tous les écrans.
     final referenceIndex = _referenceIndex(engine);
     final referenceTurn = referenceIndex == engine.currentPlayerIndex;
     final referencePotential =
@@ -1755,18 +1756,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ScoreSheet(
                       players: engine.players,
                       currentPlayerIndex: engine.currentPlayerIndex,
-                      referenceIndex: referenceIndex,
                       onTapPlayer: _openPlayerGrid,
                       displayNames: ref.watch(displayNamesProvider),
                       bubbles: _bubbles,
                       botIndices: _botIndices(engine),
                       // Les écarts des autres joueurs suivent la main en direct,
                       // sélection de 5 comprise ; le rouge attend les dés posés.
-                      potentialTotal: referenceTurn ? engine.currentPlayer.totalScore + liveScore : referencePotential,
-                      // En ligne, la ligne de celui qui joue suit sa main en direct sur tous
-                      // les écrans, le mien compris.
-                      currentPotentialTotal: referenceTurn ? null : potentialTotal,
-                      handRevealed: referenceTurn && _previewFrameShown && liveScore > 0,
+                      potentialTotal: engine.currentPlayer.totalScore + liveScore,
+                      handRevealed: _previewFrameShown && liveScore > 0,
                       rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                     ),
                     const SizedBox(height: 12),
