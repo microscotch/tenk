@@ -1763,6 +1763,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       // Les écarts des autres joueurs suivent la main en direct,
                       // sélection de 5 comprise ; le rouge attend les dés posés.
                       potentialTotal: referenceTurn ? engine.currentPlayer.totalScore + liveScore : referencePotential,
+                      // En ligne, la ligne de celui qui joue suit sa main en direct sur tous
+                      // les écrans, le mien compris.
+                      currentPotentialTotal: referenceTurn ? null : potentialTotal,
                       handRevealed: referenceTurn && _previewFrameShown && liveScore > 0,
                       rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                     ),
