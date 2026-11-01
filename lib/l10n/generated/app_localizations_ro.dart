@@ -550,6 +550,26 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Originală';
 
   @override
+  String get settingsAdvancedTitle => 'Opțiuni avansate';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Mod avansat';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Dezactivează-l pentru a reveni la modul normal (Wonderland).';
+
+  @override
+  String get advancedModePromptTitle => 'Activezi modul avansat?';
+
+  @override
+  String get advancedModePromptBody =>
+      'Modul avansat arată opțiuni pentru curioși: temporizări, probabilități, salvarea datelor. Poți reveni oricând la modul normal (Wonderland).';
+
+  @override
+  String get advancedModeEnableButton => 'Activează';
+
+  @override
   String get settingsSoundEffectsLabel => 'Efecte sonore';
 
   @override

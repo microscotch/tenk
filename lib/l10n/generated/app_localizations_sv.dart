@@ -543,6 +543,26 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Original';
 
   @override
+  String get settingsAdvancedTitle => 'Avancerade alternativ';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Avancerat läge';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Stäng av det för att gå tillbaka till normalt läge (Wonderland).';
+
+  @override
+  String get advancedModePromptTitle => 'Aktivera avancerat läge?';
+
+  @override
+  String get advancedModePromptBody =>
+      'Avancerat läge visar alternativ för de nyfikna: fördröjningar, sannolikheter, säkerhetskopiering av data. Du kan gå tillbaka till normalt läge (Wonderland) när som helst.';
+
+  @override
+  String get advancedModeEnableButton => 'Aktivera';
+
+  @override
   String get settingsSoundEffectsLabel => 'Ljudeffekter';
 
   @override

@@ -292,7 +292,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   version number to a tag (the changelog counts commits since the last tag). Phones never contact GitHub (privacy
   policy); the reverse proxy must forward `/latest-build` too.
 - `backup_service.dart`, `backup_archive.dart` — **backup and restore of the user's data** (finished and paused
-  games, player fiches, `settings.*` preferences), from the settings screen (`BackupSection`). The file is encrypted
+  games, player fiches, `settings.*` preferences), from the settings screen (`BackupSection`), one of the **advanced options** (delays, probabilities, backup) that only show in **advanced mode** (`AppSettings.advancedMode`; the default is normal mode, called "Wonderland"). Advanced mode is unlocked in the About dialog with the **Konami code** (`KonamiDetector`, `lib/state/konami_code.dart`: ↑ ↑ ↓ ↓ ← → ← → B A Start within 10 s) typed on the dice cross — top die ↑, bottom die ↓, left die ←, right die →, centre die B — the avatar (A) and the "10K" text (Start); a dialog then offers to turn it on, refusing keeps normal mode. It is switched off from the advanced options themselves. The file is encrypted
   (`BackupEnvelope`: AES-256-GCM over gzipped JSON, header authenticated) with a key derived from a **password the
   user types** (mandatory, 8 characters at least; PBKDF2-HMAC-SHA256, 600 000 iterations written in the file, run in an
   isolate): nothing stores it, so a lost password is a lost backup, and the dialogs offer the system password manager

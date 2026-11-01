@@ -119,7 +119,12 @@ une partie rejouable à l'identique.
   `ThemeChoiceScreen` avant le tutoriel et le profil (toucher une vignette applique le thème
   en direct). `themeFor` construit le `ThemeData` ; les couleurs hors `ColorScheme` — le
   feutre du fond et les teintes de sens (gain, perte, alerte, texte discret) — sont dans
-  l'extension `TableColors` (`TableColors.of(context)`), jamais en dur dans les écrans. La
+  l'extension `TableColors` (`TableColors.of(context)`), jamais en dur dans les écrans. Le
+  mode avancé (`advancedMode`, faux par défaut : le mode normal s'appelle « Wonderland ») montre les options avancées
+  des réglages : temporisations, probabilités, sauvegarde des données. On l'allume dans le dialogue « À propos » avec le
+  code Konami (`KonamiDetector`, `lib/state/konami_code.dart` : ↑ ↑ ↓ ↓ ← → ← → B A Start en moins de 10 s), saisi sur la
+  croix de dés (haut ↑, bas ↓, gauche ←, droite →, centre B), l'avatar (A) et le texte « 10K » (Start) ; une fenêtre
+  propose alors de l'activer, la refuser laisse le mode normal. La
   musique de fond est coupée par défaut (`musicEnabled` faux) ; la boucle jouée est `musicTrack`
   (`MusicTrack` : `nextToYou` par défaut, ou `original`, l'ancienne), choisie dans les réglages — `SoundEffects`
   relance la musique sur-le-champ si elle change pendant l'écoute.

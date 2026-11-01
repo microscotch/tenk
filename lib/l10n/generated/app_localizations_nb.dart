@@ -542,6 +542,26 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Original';
 
   @override
+  String get settingsAdvancedTitle => 'Avanserte alternativer';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Avansert modus';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Slå den av for å gå tilbake til normal modus (Wonderland).';
+
+  @override
+  String get advancedModePromptTitle => 'Slå på avansert modus?';
+
+  @override
+  String get advancedModePromptBody =>
+      'Avansert modus viser valg for nysgjerrige: forsinkelser, sannsynligheter, sikkerhetskopi av data. Du kan gå tilbake til normal modus (Wonderland) når som helst.';
+
+  @override
+  String get advancedModeEnableButton => 'Slå på';
+
+  @override
   String get settingsSoundEffectsLabel => 'Lydeffekter';
 
   @override

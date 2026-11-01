@@ -974,6 +974,42 @@ abstract class AppLocalizations {
   /// **'Originale'**
   String get settingsMusicTrackOriginal;
 
+  /// Titre de la section des options avancées des réglages, visible seulement en mode admin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Options avancées'**
+  String get settingsAdvancedTitle;
+
+  /// Interrupteur du mode avancé, dans les options avancées des réglages : l'éteindre les cache et ramène au mode normal (Wonderland).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode avancé'**
+  String get settingsAdvancedModeLabel;
+
+  /// No description provided for @settingsAdvancedModeSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivez-le pour revenir au mode normal (Wonderland).'**
+  String get settingsAdvancedModeSubtitle;
+
+  /// Titre de la fenêtre proposée une fois le code Konami saisi dans le dialogue À propos.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le mode avancé ?'**
+  String get advancedModePromptTitle;
+
+  /// No description provided for @advancedModePromptBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mode avancé affiche des options réservées aux curieux : temporisations, probabilités, sauvegarde des données. Vous pourrez revenir au mode normal (Wonderland) à tout moment.'**
+  String get advancedModePromptBody;
+
+  /// No description provided for @advancedModeEnableButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer'**
+  String get advancedModeEnableButton;
+
   /// Interrupteur activant/désactivant les effets sonores.
   ///
   /// In fr, this message translates to:

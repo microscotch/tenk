@@ -59,6 +59,12 @@ class AppSettings {
   final MusicTrack musicTrack;
   final bool soundEffectsEnabled;
 
+  /// Le mode admin : il montre les options avancées des réglages (temporisations,
+  /// probabilités, sauvegarde des données). Éteint par défaut ; on l'allume en
+  /// touchant sept fois la version dans le dialogue « À propos », comme le mode
+  /// développeur d'Android, et on l'éteint depuis les options avancées.
+  final bool advancedMode;
+
   /// Le thème choisi ; nul tant qu'il n'a jamais été choisi — l'app le propose
   /// alors au lancement (voir `launchScreenFor`) et reste sombre en attendant.
   final ThemeChoice? themeChoice;
@@ -111,6 +117,7 @@ class AppSettings {
     this.musicEnabled = false,
     this.musicTrack = MusicTrack.nextToYou,
     this.soundEffectsEnabled = true,
+    this.advancedMode = false,
     this.themeChoice,
     this.confirmBeforeDeleteGame = true,
     this.shakeToRollEnabled = false,
@@ -134,6 +141,7 @@ class AppSettings {
     bool? musicEnabled,
     MusicTrack? musicTrack,
     bool? soundEffectsEnabled,
+    bool? advancedMode,
     ThemeChoice? themeChoice,
     bool? confirmBeforeDeleteGame,
     bool? shakeToRollEnabled,
@@ -153,6 +161,7 @@ class AppSettings {
       musicEnabled: musicEnabled ?? this.musicEnabled,
       musicTrack: musicTrack ?? this.musicTrack,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
+      advancedMode: advancedMode ?? this.advancedMode,
       themeChoice: themeChoice ?? this.themeChoice,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
@@ -179,6 +188,7 @@ const _keyDiceSoundMode = 'settings.diceSoundMode';
 const _keyMusicEnabled = 'settings.musicEnabled';
 const _keyMusicTrack = 'settings.musicTrack';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
+const _keyAdvancedMode = 'settings.advancedMode';
 const _keyThemeChoice = 'settings.themeChoice';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 // `settings.aiDifficulty` n'est plus lue : tous les bots jouent au niveau
@@ -218,6 +228,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         musicTrack: MusicTrack.values.where((t) => t.name == prefs.getString(_keyMusicTrack)).firstOrNull ??
             MusicTrack.nextToYou,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
+        advancedMode: prefs.getBool(_keyAdvancedMode) ?? false,
         themeChoice: ThemeChoice.values.where((t) => t.name == prefs.getString(_keyThemeChoice)).firstOrNull,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
@@ -297,6 +308,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setThemeChoice(ThemeChoice choice) {
     state = state.copyWith(themeChoice: choice);
     _save(_keyThemeChoice, choice.name);
+  }
+
+  void setAdvancedMode(bool enabled) {
+    state = state.copyWith(advancedMode: enabled);
+    _save(_keyAdvancedMode, enabled);
   }
 
   void setSoundEffectsEnabled(bool enabled) {

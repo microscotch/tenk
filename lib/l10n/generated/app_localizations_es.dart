@@ -543,6 +543,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Original';
 
   @override
+  String get settingsAdvancedTitle => 'Opciones avanzadas';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Modo avanzado';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Desactívalo para volver al modo normal (Wonderland).';
+
+  @override
+  String get advancedModePromptTitle => '¿Activar el modo avanzado?';
+
+  @override
+  String get advancedModePromptBody =>
+      'El modo avanzado muestra opciones para curiosos: temporizaciones, probabilidades, copia de seguridad de los datos. Puedes volver al modo normal (Wonderland) cuando quieras.';
+
+  @override
+  String get advancedModeEnableButton => 'Activar';
+
+  @override
   String get settingsSoundEffectsLabel => 'Efectos de sonido';
 
   @override

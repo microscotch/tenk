@@ -118,25 +118,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onSelectionChanged: (s) => notifier.setThemeChoice(s.first),
               ),
               const SizedBox(height: 28),
-              Text(l10n.settingsDelaysTitle, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Text(
-                l10n.settingsDelaysDescription,
-                style: TextStyle(color: TableColors.of(context).muted, fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              _DelayField(
-                label: l10n.settingsAiDelayLabel,
-                controller: _aiDelayController,
-                onChanged: (ms) => notifier.setAiMessageDelayMs(ms),
-              ),
-              const SizedBox(height: 12),
-              _DelayField(
-                label: l10n.settingsAutoActionDelayLabel,
-                controller: _autoActionDelayController,
-                onChanged: (ms) => notifier.setAutoActionDelayMs(ms),
-              ),
-              const SizedBox(height: 28),
               Text(l10n.settingsDiceTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               SegmentedButton<DiceColorMode>(
@@ -196,13 +177,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 value: settings.shakeToRollEnabled,
                 onChanged: notifier.setShakeToRollEnabled,
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.showProbabilitiesSetting),
-                subtitle: Text(l10n.showProbabilitiesSettingSubtitle),
-                value: settings.showProbabilities,
-                onChanged: notifier.setShowProbabilities,
-              ),
               const SizedBox(height: 28),
               Text(l10n.settingsPausedGamesTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
@@ -213,9 +187,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onChanged: notifier.setConfirmBeforeDeleteGame,
               ),
               const SizedBox(height: 28),
-              // Après une restauration, cet écran affiche des valeurs lues avant (les
-              // champs de délais) : on le referme, l'accueil se relit.
-              BackupSection(onRestored: () => Navigator.of(context).pop()),
+              // Les options avancées n'existent qu'en mode admin (voir
+              // [AppSettings.advancedMode]).
+              if (settings.advancedMode) ...[
+                const Divider(),
+                const SizedBox(height: 12),
+                Text(l10n.settingsAdvancedTitle, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                Text(l10n.settingsDelaysTitle, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.settingsDelaysDescription,
+                  style: TextStyle(color: TableColors.of(context).muted, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                _DelayField(
+                  label: l10n.settingsAiDelayLabel,
+                  controller: _aiDelayController,
+                  onChanged: (ms) => notifier.setAiMessageDelayMs(ms),
+                ),
+                const SizedBox(height: 12),
+                _DelayField(
+                  label: l10n.settingsAutoActionDelayLabel,
+                  controller: _autoActionDelayController,
+                  onChanged: (ms) => notifier.setAutoActionDelayMs(ms),
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.showProbabilitiesSetting),
+                  subtitle: Text(l10n.showProbabilitiesSettingSubtitle),
+                  value: settings.showProbabilities,
+                  onChanged: notifier.setShowProbabilities,
+                ),
+                const SizedBox(height: 28),
+                // Après une restauration, cet écran affiche des valeurs lues avant (les
+                // champs de délais) : on le referme, l'accueil se relit.
+                BackupSection(onRestored: () => Navigator.of(context).pop()),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsAdvancedModeLabel),
+                  subtitle: Text(l10n.settingsAdvancedModeSubtitle),
+                  value: settings.advancedMode,
+                  onChanged: notifier.setAdvancedMode,
+                ),
+              ],
             ],
           ),
         ),

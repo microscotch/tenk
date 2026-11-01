@@ -545,6 +545,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Original';
 
   @override
+  String get settingsAdvancedTitle => 'Erweiterte Optionen';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Erweiterter Modus';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Schalte ihn aus, um zum normalen Modus (Wonderland) zurückzukehren.';
+
+  @override
+  String get advancedModePromptTitle => 'Erweiterten Modus aktivieren?';
+
+  @override
+  String get advancedModePromptBody =>
+      'Der erweiterte Modus zeigt Optionen für Neugierige: Verzögerungen, Wahrscheinlichkeiten, Datensicherung. Du kannst jederzeit zum normalen Modus (Wonderland) zurückkehren.';
+
+  @override
+  String get advancedModeEnableButton => 'Aktivieren';
+
+  @override
   String get settingsSoundEffectsLabel => 'Soundeffekte';
 
   @override

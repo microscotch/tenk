@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/ui/widgets/about_dialog.dart';
@@ -20,15 +21,19 @@ void main() {
   });
 
   Widget wrap() {
-    return MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => showAppAboutDialog(context),
-              child: const Text('ouvrir'),
+    // L'app entière vit sous un ProviderScope : le dialogue y lit les réglages
+    // (mode avancé, voir le code Konami).
+    return ProviderScope(
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => showAppAboutDialog(context),
+                child: const Text('ouvrir'),
+              ),
             ),
           ),
         ),

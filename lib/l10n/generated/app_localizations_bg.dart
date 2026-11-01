@@ -542,6 +542,26 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Оригинален';
 
   @override
+  String get settingsAdvancedTitle => 'Разширени опции';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Разширен режим';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Изключи го, за да се върнеш към нормалния режим (Wonderland).';
+
+  @override
+  String get advancedModePromptTitle => 'Да се включи ли разширеният режим?';
+
+  @override
+  String get advancedModePromptBody =>
+      'Разширеният режим показва опции за любопитните: забавяния, вероятности, архивиране на данните. Можеш да се върнеш към нормалния режим (Wonderland) по всяко време.';
+
+  @override
+  String get advancedModeEnableButton => 'Включи';
+
+  @override
   String get settingsSoundEffectsLabel => 'Звукови ефекти';
 
   @override

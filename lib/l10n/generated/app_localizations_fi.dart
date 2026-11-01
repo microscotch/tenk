@@ -543,6 +543,26 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsMusicTrackOriginal => 'Alkuperäinen';
 
   @override
+  String get settingsAdvancedTitle => 'Lisäasetukset';
+
+  @override
+  String get settingsAdvancedModeLabel => 'Lisäasetustila';
+
+  @override
+  String get settingsAdvancedModeSubtitle =>
+      'Sammuta se palataksesi normaalitilaan (Wonderland).';
+
+  @override
+  String get advancedModePromptTitle => 'Otetaanko lisäasetustila käyttöön?';
+
+  @override
+  String get advancedModePromptBody =>
+      'Lisäasetustila näyttää uteliaille tarkoitettuja asetuksia: viiveet, todennäköisyydet, tietojen varmuuskopiointi. Voit palata normaalitilaan (Wonderland) milloin tahansa.';
+
+  @override
+  String get advancedModeEnableButton => 'Ota käyttöön';
+
+  @override
   String get settingsSoundEffectsLabel => 'Äänitehosteet';
 
   @override
