@@ -48,17 +48,17 @@ void main() {
     // J2 : J1 montre son total en direct (1700) et son avance sur moi (+700) ;
     // ma ligne, mon score et le précédent.
     await seenFrom(1, j1Potential: 1700);
-    expect(shows('J1', '1700') && shows('J1', '+700'), isTrue);
+    expect(shows('J1', '1700') && shows('J1', '700 devant'), isTrue);
     await seenFrom(1, j1Potential: 1900);
-    expect(shows('J1', '1900') && shows('J1', '+900'), isTrue, reason: 'l\'écart suit la main à chaque lancer');
+    expect(shows('J1', '1900') && shows('J1', '900 devant'), isTrue, reason: 'l\'écart suit la main à chaque lancer');
     await seenFrom(1, j1Potential: 1700);
     expect(shows('J2', '1000') && shows('J2', '700'), isTrue);
-    expect(shows('J3', '2000') && shows('J3', '+900'), isTrue);
+    expect(shows('J3', '2000') && shows('J3', '900 devant'), isTrue);
 
     // J3 : J1 est à 1700, soit 300 sous mon 2000 ; J2 à 1000 de moins.
     await seenFrom(2, j1Potential: 1700);
-    expect(shows('J1', '1700') && shows('J1', '\u2212300'), isTrue);
-    expect(shows('J2', '1000') && shows('J2', '\u22121000'), isTrue);
+    expect(shows('J1', '1700') && shows('J1', '300 derrière'), isTrue);
+    expect(shows('J2', '1000') && shows('J2', '1000 derrière'), isTrue);
     expect(shows('J3', '2000') && shows('J3', '1900'), isTrue);
 
     // J1 : ma ligne, 1700 puis mon dernier score non barré sous lui (1500).
@@ -116,8 +116,8 @@ void main() {
     // Ma ligne montre mon total potentiel ; celle de B, son score et son écart avec moi.
     expect(find.descendant(of: _rowOf('A'), matching: find.text('800')), findsOneWidget);
     expect(find.descendant(of: _rowOf('B'), matching: find.text('1000')), findsOneWidget);
-    expect(find.descendant(of: _rowOf('B'), matching: find.text('+200')), findsOneWidget);
-    expect(find.descendant(of: _rowOf('C'), matching: find.text('+1200')), findsOneWidget);
+    expect(find.descendant(of: _rowOf('B'), matching: find.text('200 devant')), findsOneWidget);
+    expect(find.descendant(of: _rowOf('C'), matching: find.text('1200 devant')), findsOneWidget);
   });
 
   testWidgets('signale un écart de 200 : danger pour celui au-dessus, opportunité pour celui en dessous', (
@@ -343,10 +343,12 @@ void main() {
       required int current,
       int? potential,
       bool handRevealed = true,
+      Locale? locale,
     }) => tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        locale: locale,
         home: Scaffold(
           body: ScoreSheet(
             players: players,
@@ -414,7 +416,7 @@ void main() {
       final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
       await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
-      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('\u2212950')), findsOneWidget);
+      expect(find.descendant(of: _rowOf('Bob'), matching: find.text('950 derrière')), findsOneWidget);
     });
 
     testWidgets('le nom d\'un adversaire n\'est pas rogné tant qu\'il y a la place : le score ne prend que sa largeur',
@@ -446,11 +448,14 @@ void main() {
         await pumpSheet(tester, [me, bob], current: 0, potential: potential);
         final row = _rowOf('Bob');
         final bobRight = tester.getTopRight(find.descendant(of: row, matching: find.text('$bobScore'))).dx;
-        // Dans l'ordre : le nom, le score, le point, l'écart.
-        final gapText = find.descendant(of: row, matching: find.byType(Text));
+        // L'écart, écrit « N devant » / « N derrière » (ou « 0 »).
+        final gapText = find.descendant(
+          of: row,
+          matching: find.byWidgetPredicate((w) => w is Text && RegExp(r'devant|derrière').hasMatch(w.data ?? '')),
+        );
         final meRow = _rowOf('Moi');
         final potentialRight = tester.getTopRight(find.descendant(of: meRow, matching: find.text('$potential'))).dx;
-        return (bobRight, tester.getTopRight(gapText.last).dx, potentialRight);
+        return (bobRight, tester.getTopRight(gapText).dx, potentialRight);
       }
 
       final a = await edges(500, 2300);
@@ -463,6 +468,34 @@ void main() {
       expect(c.$3, a.$3);
       // Celui de l'écart aussi, quand il y en a un.
       expect(b.$2, a.$2);
+    });
+
+    testWidgets('le score et l\'écart sont l\'un au-dessus de l\'autre, alignés à droite, sans changer la hauteur des lignes', (
+      tester,
+    ) async {
+      final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
+      final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
+      await pumpSheet(tester, [me, bob], current: 0, potential: 2750);
+      final row = _rowOf('Bob');
+      final score = find.descendant(of: row, matching: find.text('1800'));
+      final gap = find.descendant(of: row, matching: find.text('950 derrière'));
+      expect(tester.getTopRight(gap).dx, tester.getTopRight(score).dx);
+      expect(tester.getTopLeft(gap).dy, greaterThan(tester.getBottomLeft(score).dy - 1));
+      // 47,6 : la hauteur d'une ligne avant que le score et l'écart ne passent
+      // l'un sous l'autre (un score seul, 10 de marge dessus et dessous).
+      for (final name in ['Moi', 'Bob']) {
+        final inkWell = find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first;
+        expect(tester.getSize(inkWell).height, closeTo(47.6, 0.01), reason: 'la ligne de $name');
+      }
+    });
+
+    testWidgets('l\'écart d\'un adversaire s\'écrit « N devant » ou « N derrière », comme dans la grille', (tester) async {
+      final me = Player(name: 'Moi', totalScore: 2300, hasEntered: true);
+      final ahead = Player(name: 'Devant').applySuccessfulTurn(5000);
+      final behind = Player(name: 'Derriere').applySuccessfulTurn(1800);
+      await pumpSheet(tester, [me, ahead, behind], current: 0, potential: 2750, locale: const Locale('fr'));
+      expect(find.descendant(of: _rowOf('Devant'), matching: find.text('2250 devant')), findsOneWidget);
+      expect(find.descendant(of: _rowOf('Derriere'), matching: find.text('950 derrière')), findsOneWidget);
     });
   });
 }

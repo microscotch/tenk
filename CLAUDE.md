@@ -205,14 +205,17 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   player sits in front of their own phone — `GameScreen._referenceIndex`, `ScoreSheet.referenceIndex`; on someone else's
   turn my potential is just my score and nothing can be struck out). The current player's row is the bold one; seen from
   another seat it stays live (`ScoreSheet.currentPotentialTotal`): their potential total in place of their score, then the
-  signed gap to *my* potential (`radarDifference(..., score:)`: simply their potential minus mine, moving at every roll); the 200-point alert icons also read potentials, not scores;
-  the reference player's row reads "potential total · <small: `firstEntryBelow`, the latest non-barred grid line below the
-  potential>"; another player's row shows their score (red and bold when stopping on the potential would equal it,
-  only once the hand's dice are shown — `ScoreSheet.handRevealed` — so the colour never spoils the roll), then
-  `radarDifference`: signed gap, their score minus the potential when the potential is above it, otherwise
+  gap to *my* potential (`radarDifference(..., score:)`: simply their potential minus mine, moving at every roll); the 200-point alert icons also read potentials, not scores;
+  the reference player's row reads the potential total with, **under it**, `firstEntryBelow` in small (the latest non-barred grid
+  line below the potential); another player's row shows their score (red and bold when stopping on the potential would equal it,
+  only once the hand's dice are shown — `ScoreSheet.handRevealed` — so the colour never spoils the roll), and under it
+  the gap, written as in the score grid — "<N> devant" / "<N> derrière" (`gridGapAhead` / `gridGapBehind`, by the sign of
+  `radarDifference`; a plain "0" when nil with no barrable score to show): their score minus the potential when the potential is above it, otherwise
   `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
   whether stopping on the potential would strike someone out (the hand label's green).
-  `signedGap` writes the sign. The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
+  The score and the line under it are stacked **without changing the row's height**: `_radarZone` keeps the height of a
+  lone score (an invisible text of the same style gives it) and the two lines overflow into the row's 10-point margin.
+  The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
   player with `potentialTotal` and `handBankable` (`GameScreen._gridScreen`, fed by `_gridPotential` / `_gridBankable`,
   set at each build), the winner on the game-over screen: each grid takes **half the width**, and the page is always the
   `reference` player's on the left, one opponent's on the right (one page per opponent — a carousel from 3 players —,
@@ -221,8 +224,8 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   and centred over the full width above a lone grid), a row is score + state (tiret, or struck with the striker's
   crest) left-aligned, and on every non-barred line of the other players the gap to the potential at the right:
   absolute value + "devant" / "derrière" (`gridGapAhead` / `gridGapBehind`; a plain "0" when nil), the score in red
-  when the gap is nil and the hand can be banked. In the player list, the right-hand radar zone has a **fixed width** (score + a `−10000`
-  gap; never a `Flexible`; a nil gap shows the barrable score in red instead): the crest, name and medal on the left take the rest.
+  when the gap is nil and the hand can be banked. In the player list, the right-hand radar zone has a **fixed width** (a column as wide as the
+  widest of `10000` and "10000 derrière" in the device's language, plus the strike slot; never a `Flexible`; a nil gap shows the barrable score in red instead): the crest, name and medal on the left take the rest.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.

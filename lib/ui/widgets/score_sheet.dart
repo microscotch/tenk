@@ -359,7 +359,8 @@ class _PlayerRow extends StatelessWidget {
 
   /// Ce qu'une ligne d'adversaire montre à droite : son score — en rouge et en
   /// gras quand s'arrêter sur le total potentiel du joueur courant le barrerait,
-  /// une fois la main visible —, puis l'écart signé (voir [radarDifference]).
+  /// une fois la main visible —, et dessous l'écart, écrit comme dans la grille
+  /// de scores : « 300 devant » / « 300 derrière » (voir [radarDifference]).
   Widget _radar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // Celui qui joue, vu depuis un autre siège : son total potentiel en direct à
@@ -387,7 +388,14 @@ class _PlayerRow extends StatelessWidget {
                       '${nextBarrableScore(player, potentialTotal)}',
                       style: muted.copyWith(color: TableColors.of(context).negative),
                     )
-                  : Text(signedGap(difference), style: muted),
+                  : Text(
+                      difference == 0
+                          ? '0'
+                          : difference > 0
+                          ? l10n.gridGapAhead(difference)
+                          : l10n.gridGapBehind(-difference),
+                      style: muted,
+                    ),
             ),
     );
   }
@@ -411,31 +419,74 @@ class _PlayerRow extends StatelessWidget {
   }
 
   TextStyle _mutedStyle(BuildContext context) =>
-      TextStyle(fontSize: 13, color: TableColors.of(context).muted, fontFeatures: _digits);
+      TextStyle(fontSize: 12, color: TableColors.of(context).muted, fontFeatures: _digits);
 
-  /// La zone de droite : trois cases de largeur fixe — le score, un point, puis
-  /// l'écart (au plus large : signe et 10000) —, le texte de chaque case aligné à
-  /// droite et en chiffres de même chasse. Quelle que soit la valeur, rien ne
-  /// bouge d'un tour à l'autre ; une case vide garde sa place. Un contenu trop
-  /// large (grande police système) est réduit dans sa case.
+  /// La zone de droite : le score, et dessous l'écart (ou le score précédent),
+  /// tous deux alignés à droite et en chiffres de même chasse. La colonne a la
+  /// largeur du plus large des deux (« 10000 derrière » dans la langue de
+  /// l'appareil) et une case réserve la place du tiret, à droite de la seconde
+  /// ligne : quelle que soit la valeur, rien ne bouge d'un tour à l'autre, et
+  /// toutes les lignes alignent leurs colonnes. Une seconde ligne absente garde
+  /// sa place. Un contenu trop large (grande police système) est réduit.
+  ///
+  /// **La hauteur de la ligne ne change pas** : elle reste celle d'un score seul
+  /// (un texte invisible de même style la donne), les deux lignes sont centrées
+  /// dessus et débordent dans la marge de la ligne, qui est de 10 de chaque côté.
   Widget _radarZone(BuildContext context, {required Widget score, Widget? second, Widget? tiret}) {
+    final l10n = AppLocalizations.of(context);
+    final muted = _mutedStyle(context);
     final scoreWidth = _textWidth(context, '10000', _scoreStyle);
-    final secondWidth = _textWidth(context, '\u221210000', _mutedStyle(context));
-    final dotWidth = _textWidth(context, '\u00b7', _mutedStyle(context)) + 10;
-    Widget slot(double width, Widget? child, [Alignment alignment = Alignment.centerRight]) => SizedBox(
-      width: width,
-      child: child == null ? null : FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: child),
+    final secondWidth = [
+      _textWidth(context, '\u221210000', muted),
+      _textWidth(context, l10n.gridGapAhead(10000), muted),
+      _textWidth(context, l10n.gridGapBehind(10000), muted),
+    ].reduce((a, b) => a > b ? a : b);
+    final columnWidth = scoreWidth > secondWidth ? scoreWidth : secondWidth;
+    // Une ligne invisible : sa seule raison d'être est sa hauteur.
+    Widget ghost(TextStyle style) => ExcludeSemantics(
+      child: Opacity(opacity: 0, child: Text(' ', style: style)),
     );
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        slot(scoreWidth, score),
-        slot(dotWidth, second == null ? null : Text('\u00b7', style: _mutedStyle(context)), Alignment.center),
-        slot(secondWidth, second),
-        // Le tiret du score précédent du joueur courant y tient ; vide chez les
-        // adversaires, pour que toutes les lignes alignent leurs colonnes.
-        SizedBox(width: _tiretSlot, child: tiret),
-      ],
+    return SizedBox(
+      width: columnWidth + _tiretSlot,
+      child: Stack(
+        children: [
+          ghost(_scoreStyle),
+          Positioned.fill(
+            child: OverflowBox(
+              minHeight: 0,
+              maxHeight: double.infinity,
+              alignment: Alignment.centerRight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: columnWidth,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [score, second ?? ghost(muted)],
+                      ),
+                    ),
+                    // Le tiret du score précédent du joueur courant y tient, à la
+                    // hauteur de la seconde ligne ; vide chez les adversaires.
+                    SizedBox(
+                      width: _tiretSlot,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [ghost(_scoreStyle), tiret ?? ghost(muted)],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

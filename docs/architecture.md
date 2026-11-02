@@ -88,12 +88,14 @@ une partie rejouable à l'identique.
   barre) — `GameScreen._referenceIndex`, `ScoreSheet.referenceIndex` ; les grilles (`ScoreGridScreen.reference`) s'en
   servent aussi. En ligne, la ligne de celui qui joue, quand ce n'est pas moi, montre son total potentiel en direct
   à chaque lancer (`ScoreSheet.currentPotentialTotal`), sur tous les écrans, à la place de son score, suivi de l'écart
-  avec *mon* potentiel (`radarDifference(..., score:)`) : l'écart signé de son potentiel au mien, qui suit sa main à chaque lancer. Sur la ligne de ce joueur, `firstEntryBelow` donne le premier score non barré de sa grille, en
-  remontant, strictement sous son total potentiel (son score + sa main en cours), affiché en petit après le total.
+  avec *mon* potentiel (`radarDifference(..., score:)`) : l'écart de son potentiel au mien, qui suit sa main à chaque lancer. Sur la ligne de ce joueur, `firstEntryBelow` donne le premier score non barré de sa grille, en
+  remontant, strictement sous son total potentiel (son score + sa main en cours), affiché en petit **sous** le total.
   Sur celle d'un adversaire, `radarDifference` donne l'écart signé : son score moins le potentiel quand celui-ci le
-  dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; `signedGap` en écrit le signe. Quand
+  dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; la ligne l'écrit comme la grille de scores, sous le score : « N devant » / « N derrière »
+  (`gridGapAhead` / `gridGapBehind`, selon le signe). Quand
   cet écart est nul, la ligne affiche à sa place ce score barrable, en rouge. La zone de droite de la ligne a une largeur
-  fixe (le score, puis un écart `−10000`).
+  fixe (une colonne aussi large que « 10000 derrière » dans la langue de l'appareil) et **ne change pas la hauteur de la
+  ligne** : le score et l'écart, empilés, débordent dans sa marge (`_radarZone`).
   La grille de scores complète (`ScoreGridScreen`) reprend le même écart sur chaque ligne des autres joueurs, lu depuis
   `reference` (le joueur courant avec son total potentiel, le gagnant d'une partie finie), en valeur absolue suivie de
   « devant » / « derrière » (sauf sur une ligne barrée) ; chaque grille y prend la moitié de la largeur, sous un
