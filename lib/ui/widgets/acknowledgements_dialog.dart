@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../widgets/app_top_bar.dart';
 
-/// Les remerciements, ouverts depuis le dialogue « À propos » : les testeurs de la
-/// première heure, par leur pseudo (des noms propres, jamais traduits).
-class AcknowledgementsScreen extends StatelessWidget {
-  const AcknowledgementsScreen({super.key});
+/// Les remerciements, ouverts depuis le dialogue « À propos », par-dessus lui comme
+/// la fenêtre des crédits : les testeurs de la première heure, par leur pseudo (des
+/// noms propres, jamais traduits).
+Future<void> showAcknowledgementsDialog(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (_) => const AcknowledgementsDialog(),
+  );
+}
+
+class AcknowledgementsDialog extends StatelessWidget {
+  const AcknowledgementsDialog({super.key});
 
   /// Les beta-testeurs de la première heure, par ordre alphabétique.
   static const betaTesters = [
@@ -31,12 +38,13 @@ class AcknowledgementsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppTopBar(title: Text(l10n.acknowledgementsButton)),
-      body: SafeArea(
+    return AlertDialog(
+      title: Text(l10n.acknowledgementsButton),
+      content: SizedBox(
+        width: double.maxFinite,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.acknowledgementsIntro, style: textTheme.titleMedium),
@@ -56,6 +64,12 @@ class AcknowledgementsScreen extends StatelessWidget {
           ),
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.closeButton),
+        ),
+      ],
     );
   }
 }

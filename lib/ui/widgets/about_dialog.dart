@@ -5,7 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/konami_code.dart';
 import '../../state/settings_providers.dart';
-import '../screens/acknowledgements_screen.dart';
+import 'acknowledgements_dialog.dart';
 import 'credits_dialog.dart';
 import 'die_widget.dart';
 
@@ -118,15 +118,8 @@ Future<void> showAppAboutDialog(BuildContext context) async {
             key: const ValueKey('about-acknowledgements'),
             emoji: '\u{1F64F}',
             tooltip: l10n.acknowledgementsButton,
-            onPressed: () {
-              // Le dialogue se referme : l'écran s'ouvre sur la page qui l'a lancé.
-              Navigator.of(dialogContext).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const AcknowledgementsScreen(),
-                ),
-              );
-            },
+            // Comme les crédits, la fenêtre s'ouvre par-dessus ce dialogue, qui reste en place.
+            onPressed: () => showAcknowledgementsDialog(dialogContext),
           ),
           // La fenêtre des crédits s'ouvre par-dessus ce dialogue, qui reste en place.
           _RoundEmojiButton(

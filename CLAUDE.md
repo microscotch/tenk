@@ -371,8 +371,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     tests that land on a human "idle, can't bank yet" state should expect it to progress on its own
     rather than staying static.
 
-- **Credits** (`lib/ui/widgets/credits_dialog.dart`): the About dialog's actions are three round emoji buttons in a row (🙏 acknowledgements, © credits, ❌ close; their name is the tooltip), and ©  opens a window that renders
-  `assets/credits.md` as Markdown (`flutter_markdown_plus`), in English whatever the app language. To credit something, edit that file, not the code.
+- **Credits** (`lib/ui/widgets/credits_dialog.dart`): the About dialog's actions are three round emoji buttons in a row (🙏 acknowledgements, © credits, ❌ close; their name is the tooltip). 🙏 opens the acknowledgements and © the credits, each as a dialog **on top of** the About dialog, which stays
+  (`AcknowledgementsDialog`, `lib/ui/widgets/acknowledgements_dialog.dart`; the credits window renders
+  `assets/credits.md` as Markdown (`flutter_markdown_plus`), in English whatever the app language). To credit something, edit that file, not the code.
   It has one `###` paragraph per direct dependency of `pubspec.yaml` (`test/ui/credits_test.dart` fails when a new
   dependency has none), plus the music ("Next to You" by Joth, CC0, OpenGameArt) and the font.
 

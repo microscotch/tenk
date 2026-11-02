@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
-import 'package:le10000/ui/screens/acknowledgements_screen.dart';
+import 'package:le10000/ui/widgets/acknowledgements_dialog.dart';
 import 'package:le10000/ui/widgets/about_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -16,52 +16,102 @@ void main() {
       buildNumber: '1',
       buildSignature: '',
     );
-    await tester.pumpWidget(ProviderScope(
-      child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(child: TextButton(onPressed: () => showAppAboutDialog(context), child: const Text('ouvrir'))),
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => showAppAboutDialog(context),
+                  child: const Text('ouvrir'),
+                ),
+              ),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('ouvrir'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('le dialogue propose « Remerciements », qui ouvre l\'écran des beta-testeurs', (tester) async {
-    await pumpAbout(tester);
-    expect(find.byType(AlertDialog), findsOneWidget);
+  testWidgets(
+    'le dialogue propose « Remerciements », qui ouvre la fenêtre des beta-testeurs, par-dessus lui',
+    (tester) async {
+      await pumpAbout(tester);
+      expect(find.byType(AlertDialog), findsOneWidget);
 
+      await tester.tap(find.byKey(const ValueKey('about-acknowledgements')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(AlertDialog),
+        findsNWidgets(2),
+        reason: 'le dialogue « À propos » reste en place dessous',
+      );
+      expect(find.byType(AcknowledgementsDialog), findsOneWidget);
+      expect(
+        find.text(
+          'Un grand merci à tous les bêta-testeurs de la première heure pour leurs remarques et conseils, en particulier :',
+        ),
+        findsOneWidget,
+      );
+      expect(AcknowledgementsDialog.betaTesters, [
+        'Alex',
+        'Cam',
+        'Chris',
+        'Deepsound',
+        'Finette',
+        'Fluo',
+        'Greg',
+        'IvenKor',
+        'Kali78',
+        'Nico',
+        'Popoche',
+        'R1',
+        'Sam',
+        'Seb',
+        'Town God', //
+      ]);
+      final sorted = [...AcknowledgementsDialog.betaTesters]
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      expect(
+        AcknowledgementsDialog.betaTesters,
+        sorted,
+        reason: 'par ordre alphabétique',
+      );
+      expect(find.text('Rrr'), findsNothing);
+      for (final name in AcknowledgementsDialog.betaTesters) {
+        expect(find.text(name), findsOneWidget, reason: name);
+      }
+    },
+  );
+
+  testWidgets('fermer la fenêtre laisse le dialogue « À propos »', (
+    tester,
+  ) async {
+    await pumpAbout(tester);
     await tester.tap(find.byKey(const ValueKey('about-acknowledgements')));
     await tester.pumpAndSettle();
-
-    expect(find.byType(AlertDialog), findsNothing, reason: 'le dialogue se referme');
-    expect(find.byType(AcknowledgementsScreen), findsOneWidget);
-    expect(
-      find.text('Un grand merci à tous les bêta-testeurs de la première heure pour leurs remarques et conseils, en particulier :'),
-      findsOneWidget,
-    );
-    expect(AcknowledgementsScreen.betaTesters, [
-      'Alex', 'Cam', 'Chris', 'Deepsound', 'Finette', 'Fluo', 'Greg', 'IvenKor', 'Kali78', 'Nico', 'Popoche', 'R1', 'Sam', 'Seb', 'Town God', //
-    ]);
-    final sorted = [...AcknowledgementsScreen.betaTesters]..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    expect(AcknowledgementsScreen.betaTesters, sorted, reason: 'par ordre alphabétique');
-    expect(find.text('Rrr'), findsNothing);
-    for (final name in AcknowledgementsScreen.betaTesters) {
-      expect(find.text(name), findsOneWidget, reason: name);
-    }
+    await tester.tap(find.text('Fermer'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AcknowledgementsDialog), findsNothing);
+    expect(find.byKey(const ValueKey('about-close')), findsOneWidget);
   });
 
-  testWidgets('le retour ramène à la page d\'où l\'on est venu', (tester) async {
-    await pumpAbout(tester);
-    await tester.tap(find.byKey(const ValueKey('about-acknowledgements')));
-    await tester.pumpAndSettle();
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.byType(AcknowledgementsScreen), findsNothing);
-    expect(find.text('ouvrir'), findsOneWidget);
-  });
+  testWidgets(
+    'le retour système ferme la fenêtre, pas le dialogue en dessous',
+    (tester) async {
+      await pumpAbout(tester);
+      await tester.tap(find.byKey(const ValueKey('about-acknowledgements')));
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(AcknowledgementsDialog), findsNothing);
+      expect(find.byType(AlertDialog), findsOneWidget);
+    },
+  );
 }
