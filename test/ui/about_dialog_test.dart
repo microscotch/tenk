@@ -88,7 +88,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('10K'), findsOneWidget);
 
-    await tester.tap(find.text('Fermer'));
+    await tester.tap(find.byKey(const ValueKey('about-close')));
     await tester.pumpAndSettle();
 
     expect(find.text('10K'), findsNothing);

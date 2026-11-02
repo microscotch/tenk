@@ -35,7 +35,7 @@ void main() {
     await pumpAbout(tester);
     expect(find.byType(AlertDialog), findsOneWidget);
 
-    await tester.tap(find.text('Remerciements'));
+    await tester.tap(find.byKey(const ValueKey('about-acknowledgements')));
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsNothing, reason: 'le dialogue se referme');
@@ -57,7 +57,7 @@ void main() {
 
   testWidgets('le retour ramène à la page d\'où l\'on est venu', (tester) async {
     await pumpAbout(tester);
-    await tester.tap(find.text('Remerciements'));
+    await tester.tap(find.byKey(const ValueKey('about-acknowledgements')));
     await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();

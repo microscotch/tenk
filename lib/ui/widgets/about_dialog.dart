@@ -110,8 +110,14 @@ Future<void> showAppAboutDialog(BuildContext context) async {
             ),
           ],
         ),
+        // Trois boutons ronds alignés, sous le dialogue : leur texte est
+        // l'infobulle (et le libellé d'accessibilité) de chacun.
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
+          _RoundEmojiButton(
+            key: const ValueKey('about-acknowledgements'),
+            emoji: '\u{1F64F}',
+            tooltip: l10n.acknowledgementsButton,
             onPressed: () {
               // Le dialogue se referme : l'écran s'ouvre sur la page qui l'a lancé.
               Navigator.of(dialogContext).pop();
@@ -121,16 +127,19 @@ Future<void> showAppAboutDialog(BuildContext context) async {
                 ),
               );
             },
-            child: Text(l10n.acknowledgementsButton),
           ),
           // La fenêtre des crédits s'ouvre par-dessus ce dialogue, qui reste en place.
-          TextButton(
+          _RoundEmojiButton(
+            key: const ValueKey('about-credits'),
+            emoji: '\u00A9\uFE0F',
+            tooltip: l10n.creditsButton,
             onPressed: () => showCreditsDialog(dialogContext),
-            child: Text(l10n.creditsButton),
           ),
-          TextButton(
+          _RoundEmojiButton(
+            key: const ValueKey('about-close'),
+            emoji: '\u274C',
+            tooltip: l10n.closeButton,
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(l10n.closeButton),
           ),
         ],
       );
@@ -213,6 +222,45 @@ class _AceCross extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// Un bouton rond qui montre un emoji ; [tooltip] sert d'infobulle et de libellé
+/// d'accessibilité.
+class _RoundEmojiButton extends StatelessWidget {
+  final String emoji;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _RoundEmojiButton({
+    super.key,
+    required this.emoji,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  static const _size = 48.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
+            width: _size,
+            height: _size,
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
