@@ -137,7 +137,7 @@ void main() {
         find.ancestor(of: find.byTooltip(tooltip), matching: find.byType(IconButton)),
       );
 
-  /// Le sélecteur « Main reprise » de la popup de reprise de main.
+  /// Le sélecteur de la popup de reprise de main.
   SwitchListTile selector(WidgetTester tester) =>
       tester.widget<SwitchListTile>(find.byKey(const ValueKey('inherited-hand-resume')));
 
@@ -216,7 +216,7 @@ void main() {
       await pumpUntil(tester, () => handPopup.evaluate().isNotEmpty);
 
       expect(selector(tester).value, isFalse, reason: 'le joueur est reparti à 5 dés neufs');
-      expect(find.text('Non'), findsOneWidget);
+      expect(find.text('Nouvelle main'), findsOneWidget);
     });
 
     testWidgets('le sélecteur montre la reprise quand le joueur a repris la main', (tester) async {
@@ -232,7 +232,7 @@ void main() {
       await pumpUntil(tester, () => handPopup.evaluate().isNotEmpty);
 
       expect(selector(tester).value, isTrue, reason: 'le joueur a repris la main laissée');
-      expect(find.text('Oui'), findsOneWidget);
+      expect(find.text('Garder la main'), findsOneWidget);
     });
 
     testWidgets('le début du rejeu n\'ouvre pas de popup : aucune main n\'est encore engagée',

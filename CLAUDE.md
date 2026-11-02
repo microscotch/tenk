@@ -381,8 +381,8 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   dependency has none), plus the music ("Next to You" by Joth, CC0, OpenGameArt) and the font.
   - **The inherited-hand dialog** (`_showInheritedHandDialog`) is one decision made of a value and a confirmation: below
     the dice, the score and the grid / chart / stats buttons come the **score radar** (a `ScoreSheet`, read from the player's
-    score plus the inherited points when the choice is on, from the score alone otherwise), then a **"Main reprise"
-    switch** (its subtitle says "Oui" / "Non") and a single ✓ button, which only closes the dialog and sends the switch's
+    score plus the inherited points when the choice is on, from the score alone otherwise), then a **resume
+    switch** (no title: its label says "Garder la main" / "Nouvelle main") and a single ✓ button, which only closes the dialog and sends the switch's
     value to `startTurn(useFullHand: !value)`. It **does not roll**: the dice leave on their own only in AutoRoll mode
     (`_isAutoSeat`, through `_scheduleAutoAdvanceIfNeeded`). The tutorial's inherited-hand lesson therefore has a `roll` beat
     after `take`. Tests close the dialog with `dismissInheritedHand(tester, resume:)`.

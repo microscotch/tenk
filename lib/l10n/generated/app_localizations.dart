@@ -878,23 +878,17 @@ abstract class AppLocalizations {
   /// **'Nouvelle main'**
   String get newHandButton;
 
-  /// Libellé de l'interrupteur de la popup de reprise de main : activé, le joueur reprend la main laissée par le précédent ; désactivé, il repart d'une main neuve de 5 dés.
+  /// Valeur de l'interrupteur de la popup de reprise de main quand il est activé : le joueur garde (reprend) la main laissée par le précédent.
   ///
   /// In fr, this message translates to:
-  /// **'Main reprise'**
-  String get inheritedHandResumeLabel;
+  /// **'Garder la main'**
+  String get inheritedHandKeep;
 
-  /// Valeur « oui » d'un interrupteur (ex. Main reprise, dans la popup de reprise de main).
+  /// Valeur de l'interrupteur de la popup de reprise de main quand il est désactivé : le joueur repart d'une main neuve de 5 dés.
   ///
   /// In fr, this message translates to:
-  /// **'Oui'**
-  String get yesLabel;
-
-  /// Valeur « non » d'un interrupteur.
-  ///
-  /// In fr, this message translates to:
-  /// **'Non'**
-  String get noLabel;
+  /// **'Nouvelle main'**
+  String get inheritedHandFresh;
 
   /// Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis.
   ///

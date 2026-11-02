@@ -2173,7 +2173,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             _ => null,
           }
         : null;
-    // La valeur du sélecteur « Main reprise » : c'est elle qui fait la réponse, que le
+    // La valeur du sélecteur de reprise : c'est elle qui fait la réponse, que le
     // bouton de validation transmet en fermant la popup. Reprendre par défaut quand
     // c'est possible ; en rejeu, le choix que le joueur avait fait.
     final resume = ValueNotifier<bool>(replayResumes ?? canResume);
@@ -2307,7 +2307,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Le choix de main héritée : un sélecteur « Main reprise » (activé : on reprend la main
+  /// Le choix de main héritée : un sélecteur de reprise (activé : on reprend la main
   /// laissée par le joueur précédent ; désactivé : on repart à 5 dés neufs) au-dessus d'un
   /// unique bouton de validation, qui ferme la popup en transmettant la valeur du sélecteur.
   /// Valider ne lance PAS les dés : le joueur les lance lui-même, sauf en mode AutoRoll
@@ -2340,9 +2340,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
             key: const ValueKey('inherited-hand-resume'),
             contentPadding: EdgeInsets.zero,
             dense: true,
-            title: Text(l10n.inheritedHandResumeLabel),
-            // Sa valeur en toutes lettres : « Oui » reprend la main, « Non » repart à neuf.
-            subtitle: Text(resumed ? l10n.yesLabel : l10n.noLabel),
+            // Pas de titre : le libellé dit la valeur, « Garder la main » ou « Nouvelle main ».
+            title: Text(resumed ? l10n.inheritedHandKeep : l10n.inheritedHandFresh),
             value: resumed,
             onChanged: canResume && !inert ? (value) => resume.value = value : null,
           ),

@@ -489,13 +489,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get newHandButton => 'Нова ръка';
 
   @override
-  String get inheritedHandResumeLabel => 'Поета ръка';
+  String get inheritedHandKeep => 'Запази ръката';
 
   @override
-  String get yesLabel => 'Да';
-
-  @override
-  String get noLabel => 'Не';
+  String get inheritedHandFresh => 'Нова ръка';
 
   @override
   String get failureBelowMinimum => 'Недостатъчен резултат, за да спреш.';

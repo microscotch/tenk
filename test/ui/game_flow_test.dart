@@ -446,7 +446,7 @@ void main() {
     expect(diceBottom, lessThanOrEqualTo(score.top), reason: 'les dés au-dessus du score');
     expect(score.bottom, lessThanOrEqualTo(selector.top), reason: 'le score au-dessus du sélecteur');
     expect(selector.bottom, lessThanOrEqualTo(validate.top),
-        reason: 'le sélecteur « Main reprise » au-dessus du bouton de validation');
+        reason: 'le sélecteur de reprise au-dessus du bouton de validation');
 
     // Le titre occupe toute la largeur de la popup : son cadre est centré
     // quel que soit l'alignement, c'est donc l'alignement du texte lui-même
@@ -1107,7 +1107,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Popup dédiée (voir _showInheritedHandDialog) : le sélecteur « Main reprise »
+    // Popup dédiée (voir _showInheritedHandDialog) : le sélecteur de reprise
     // reste à sa place, mais éteint et grisé ; valider repart à 5 dés neufs.
     final selector = tester.widget<SwitchListTile>(find.byKey(const ValueKey('inherited-hand-resume')));
     expect(selector.value, isFalse, reason: 'reprendre cette main garantirait un dépassement de 10000');
@@ -1661,7 +1661,8 @@ void main() {
     // bouton "Reprendre la main" reprend la main héritée ET lance en un seul
     // geste, "Nouvelle main" repart à 5 dés neufs à la place.
     expect(find.byKey(const ValueKey('inherited-hand-resume')), findsOneWidget);
-    expect(find.text('Oui'), findsOneWidget, reason: 'la main est reprise par défaut, et le sélecteur le dit en toutes lettres');
+    expect(find.text('Garder la main'), findsOneWidget, reason: 'la main est reprise par défaut, et le sélecteur le dit en toutes lettres');
+    expect(find.text('Main reprise'), findsNothing, reason: 'le sélecteur n\'a plus de titre');
     expect(find.byTooltip('Valider'), findsOneWidget);
     expect(container.read(gameProvider)!.activeTurn, isNull, reason: 'rien n\'est encore décidé');
 
@@ -2363,7 +2364,7 @@ void main() {
       if (after.activeTurn == null) {
         // L'IA a laissé des dés hérités : popup dédiée (voir
         // _showInheritedHandDialog) avant que le joueur humain puisse lancer
-        // les dés -- « Main reprise » sur « Non » repart à 5 dés neufs (le joueur
+        // les dés -- le sélecteur sur « Nouvelle main » repart à 5 dés neufs (le joueur
         // est en mode auto, les dés partent donc seuls).
         // Ce lancer-là est fait de vrais dés aléatoires : la suite dépend de
         // ce qu'ils donnent (garde à appliquer, craque...), donc on s'arrête
@@ -2833,7 +2834,7 @@ void main() {
   });
 }
 
-/// Referme la fenêtre de reprise de main : règle le sélecteur « Main reprise » sur [resume],
+/// Referme la fenêtre de reprise de main : règle le sélecteur de reprise sur [resume],
 /// puis valide. Ses commandes sont brièvement inertes après chaque transition : on
 /// retouche tant que la fenêtre est là.
 Future<void> dismissInheritedHand(WidgetTester tester, {bool resume = false}) async {

@@ -490,13 +490,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newHandButton => 'Nueva mano';
 
   @override
-  String get inheritedHandResumeLabel => 'Mano retomada';
+  String get inheritedHandKeep => 'Mantener la mano';
 
   @override
-  String get yesLabel => 'Sí';
-
-  @override
-  String get noLabel => 'No';
+  String get inheritedHandFresh => 'Mano nueva';
 
   @override
   String get failureBelowMinimum => 'Puntuación insuficiente para plantarse.';

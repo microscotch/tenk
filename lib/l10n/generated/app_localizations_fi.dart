@@ -490,13 +490,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get newHandButton => 'Uusi käsi';
 
   @override
-  String get inheritedHandResumeLabel => 'Käsi otettu haltuun';
+  String get inheritedHandKeep => 'Pidä käsi';
 
   @override
-  String get yesLabel => 'Kyllä';
-
-  @override
-  String get noLabel => 'Ei';
+  String get inheritedHandFresh => 'Uusi käsi';
 
   @override
   String get failureBelowMinimum => 'Pisteet liian alhaiset lopettamiseen.';

@@ -490,13 +490,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newHandButton => 'Nouvelle main';
 
   @override
-  String get inheritedHandResumeLabel => 'Main reprise';
+  String get inheritedHandKeep => 'Garder la main';
 
   @override
-  String get yesLabel => 'Oui';
-
-  @override
-  String get noLabel => 'Non';
+  String get inheritedHandFresh => 'Nouvelle main';
 
   @override
   String get failureBelowMinimum => 'Score insuffisant pour s\'arrêter.';

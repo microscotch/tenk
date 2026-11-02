@@ -497,13 +497,10 @@ class AppLocalizationsRo extends AppLocalizations {
   String get newHandButton => 'Mână nouă';
 
   @override
-  String get inheritedHandResumeLabel => 'Mână reluată';
+  String get inheritedHandKeep => 'Păstrează mâna';
 
   @override
-  String get yesLabel => 'Da';
-
-  @override
-  String get noLabel => 'Nu';
+  String get inheritedHandFresh => 'Mână nouă';
 
   @override
   String get failureBelowMinimum => 'Scor insuficient pentru a te opri.';
