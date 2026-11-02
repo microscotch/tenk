@@ -21,6 +21,7 @@ import 'package:le10000/ui/screens/score_grid_screen.dart';
 import 'package:le10000/ui/widgets/dice3d/dice_face_texture.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
+import 'package:le10000/ui/widgets/score_sheet.dart';
 
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/history.dart';
@@ -435,18 +436,17 @@ void main() {
     // deux suites possibles.
     final diceBottom = tester.getRect(diceInDialog.at(0)).bottom;
     final score = tester.getRect(
-      find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('300')),
+      find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('2 dés')),
     );
-    final resume = tester.getRect(find.byTooltip('Reprendre la main'));
-    final newHand = tester.getRect(find.byTooltip('Nouvelle main'));
+    final selector = tester.getRect(find.byKey(const ValueKey('inherited-hand-resume')));
+    final validate = tester.getRect(
+      find.descendant(of: find.byType(AlertDialog), matching: find.byTooltip('Valider')),
+    );
 
     expect(diceBottom, lessThanOrEqualTo(score.top), reason: 'les dés au-dessus du score');
-    expect(score.bottom, lessThanOrEqualTo(resume.top),
-        reason: 'le score au-dessus des deux icônes de décision');
-    expect(resume.top, newHand.top,
-        reason: 'les deux icônes de décision sont côte à côte, sur une même ligne');
-    expect(resume.right, lessThanOrEqualTo(newHand.left),
-        reason: 'valider à gauche, refuser à droite');
+    expect(score.bottom, lessThanOrEqualTo(selector.top), reason: 'le score au-dessus du sélecteur');
+    expect(selector.bottom, lessThanOrEqualTo(validate.top),
+        reason: 'le sélecteur « Main reprise » au-dessus du bouton de validation');
 
     // Le titre occupe toute la largeur de la popup : son cadre est centré
     // quel que soit l'alignement, c'est donc l'alignement du texte lui-même
@@ -466,18 +466,20 @@ void main() {
       matching: find.byTooltip('Grille des scores'),
     ));
     expect(score.bottom, lessThanOrEqualTo(grid.top), reason: 'la grille est sous la ligne du score');
-    expect(grid.bottom, lessThanOrEqualTo(resume.top),
-        reason: 'et au-dessus des deux icônes de décision');
+    expect(grid.bottom, lessThanOrEqualTo(selector.top), reason: 'et au-dessus du sélecteur');
+    // Entre les deux : le radar des scores, une ligne par joueur.
+    final radar = tester.getRect(find.descendant(of: find.byType(AlertDialog), matching: find.byType(ScoreSheet)));
+    expect(grid.bottom, lessThanOrEqualTo(radar.top), reason: 'le radar sous la ligne des boutons de consultation');
+    expect(radar.bottom, lessThanOrEqualTo(selector.top), reason: 'le radar au-dessus du sélecteur');
     expect(find.descendant(of: find.byType(AlertDialog), matching: find.byIcon(Icons.grid_on)), findsOneWidget);
 
-    // Le score est centré, et la paire d'icônes l'est en bloc (l'espace à
-    // gauche de la première vaut celui à droite de la seconde).
+    // Le score est centré, et le bouton de validation aussi.
     expect((score.center.dx - dialogRect.center.dx).abs(), lessThan(1.0),
         reason: 'le score doit être centré dans la popup');
     expect(
-      ((resume.left - dialogRect.left) - (dialogRect.right - newHand.right)).abs(),
+      (validate.center.dx - dialogRect.center.dx).abs(),
       lessThan(1.0),
-      reason: 'la rangée des deux icônes doit être centrée dans la popup',
+      reason: 'le bouton de validation doit être centré dans la popup',
     );
   });
 
@@ -529,7 +531,7 @@ void main() {
     final grid = tester.getRect(inDialog(find.byTooltip('Grille des scores')));
     final chart = tester.getRect(inDialog(find.byTooltip('Évolution des scores')));
     final stats = tester.getRect(inDialog(find.byTooltip('Statistiques de la partie')));
-    final score = tester.getRect(inDialog(find.textContaining('300')));
+    final score = tester.getRect(inDialog(find.textContaining('2 dés')));
 
     expect(grid.top, chart.top, reason: 'côte à côte, sur une même ligne');
     expect(chart.top, stats.top);
@@ -551,14 +553,11 @@ void main() {
     final title = tester.getRect(inDialog(find.text('Reprendre ?')));
     expect(grid.top, greaterThan(title.bottom));
 
-    // Les deux décisions gardent leurs deux moitiés de rangée : valider à
-    // gauche, refuser à droite, chacune centrée dans sa moitié.
-    final resume = tester.getRect(inDialog(find.byTooltip('Reprendre la main')));
-    final newHand = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
-    expect(resume.center.dx, closeTo(row.left + row.width / 4, 1.0), reason: 'valider au centre de la moitié gauche');
-    expect(newHand.center.dx, closeTo(row.left + row.width * 3 / 4, 1.0), reason: 'refuser au centre de la moitié droite');
-    expect(resume.top, newHand.top);
-    expect(chart.bottom, lessThanOrEqualTo(resume.top), reason: 'les décisions sous les icônes de consultation');
+    // Sous les icônes de consultation : le radar, le sélecteur, puis la validation.
+    final selector = tester.getRect(find.byKey(const ValueKey('inherited-hand-resume')));
+    final validate = tester.getRect(inDialog(find.byTooltip('Valider')));
+    expect(chart.bottom, lessThanOrEqualTo(selector.top), reason: 'le sélecteur sous les icônes de consultation');
+    expect(selector.bottom, lessThanOrEqualTo(validate.top), reason: 'la validation sous le sélecteur');
   });
 
   testWidgets('pour un gaucher, les trois icônes de consultation passent dans l\'ordre inverse', (tester) async {
@@ -572,10 +571,9 @@ void main() {
     expect(chart.right, lessThanOrEqualTo(grid.left));
     expect(grid.top, chart.top);
 
-    // Les décisions gardent leur ordre : valider à gauche, refuser à droite.
-    final resume = tester.getRect(inDialog(find.byTooltip('Reprendre la main')));
-    final newHand = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
-    expect(resume.right, lessThanOrEqualTo(newHand.left));
+    // La validation reste au centre, quelle que soit la main.
+    final validate = tester.getRect(inDialog(find.byTooltip('Valider')));
+    expect(validate.center.dx, closeTo(tester.getRect(find.byType(AlertDialog)).center.dx, 1.0));
   });
 
   testWidgets('la courbe de la popup s\'ouvre par-dessus, et on revient sur la popup', (tester) async {
@@ -1109,24 +1107,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Popup dédiée (voir _showInheritedHandDialog) : la rangée d'icônes est
-    // fixe, l'icône de reprise reste donc à sa place — mais désactivée, pour
-    // ne pas recentrer l'autre en disparaissant.
-    final resume = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byTooltip('Reprendre la main'),
-        matching: find.byType(IconButton),
-      ),
+    // Popup dédiée (voir _showInheritedHandDialog) : le sélecteur « Main reprise »
+    // reste à sa place, mais éteint et grisé ; valider repart à 5 dés neufs.
+    final selector = tester.widget<SwitchListTile>(find.byKey(const ValueKey('inherited-hand-resume')));
+    expect(selector.value, isFalse, reason: 'reprendre cette main garantirait un dépassement de 10000');
+    expect(selector.onChanged, isNull, reason: 'et le sélecteur ne peut plus être activé');
+    final validate = tester.widget<IconButton>(
+      find.ancestor(of: find.byTooltip('Valider'), matching: find.byType(IconButton)),
     );
-    expect(resume.onPressed, isNull,
-        reason: 'reprendre cette main garantirait un dépassement de 10000');
-    final newHand = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byTooltip('Nouvelle main'),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(newHand.onPressed, isNotNull, reason: 'repartir à 5 dés neufs reste possible');
+    expect(validate.onPressed, isNotNull, reason: 'repartir à 5 dés neufs reste possible');
     expect(find.textContaining('impossible de banquer'), findsOneWidget);
   });
 
@@ -1171,8 +1160,7 @@ void main() {
 
     expect(find.text('Reprendre ?'), findsNothing,
         reason: 'aucune popup : il n\'y a pas de choix à faire');
-    expect(find.byTooltip('Reprendre la main'), findsNothing);
-    expect(find.byTooltip('Nouvelle main'), findsNothing);
+    expect(find.byKey(const ValueKey('inherited-hand-resume')), findsNothing);
   });
 
   testWidgets('un second craque barre le score : le tiret disparaît et le score retombe', (tester) async {
@@ -1337,6 +1325,8 @@ void main() {
     expect(find.byType(PassDeviceScreen), findsOneWidget);
     await tester.tap(find.text('Prêt'));
     await tester.pumpAndSettle();
+    // A hérite de dés : la popup de reprise (qui a son propre radar) est refermée avant de lire la feuille.
+    if (find.byKey(const ValueKey('inherited-hand-resume')).evaluate().isNotEmpty) await dismissInheritedHand(tester);
 
     // De retour sur la feuille de score : B est à 2000, A est retombé à
     // 1800 (barré par la collision) et n'a plus son tiret.
@@ -1482,8 +1472,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Reprendre la main'));
-    await tester.pump();
+    await dismissInheritedHand(tester, resume: true);
 
     await expectInHistory(tester, '400 pts sont repris', findsOneWidget);
   });
@@ -1640,13 +1629,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle(const Duration(seconds: 3));
-    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull, reason: 'sans AutoRoll, rien ne part seul');
+    expect(container.read(gameProvider)!.activeTurn!.hasRolledThisTurn, isFalse, reason: 'sans AutoRoll, rien ne part seul');
 
     // En pleine partie, A active AutoRoll (depuis les réglages) : le lancer part.
     await store.write(profile.copyWith(autoRoll: true));
     container.invalidate(playersProvider);
     await tester.pumpAndSettle(const Duration(seconds: 3));
-    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull, reason: 'AutoRoll activé en cours de partie');
+    expect(container.read(gameProvider)!.activeTurn!.hasRolledThisTurn, isTrue, reason: 'AutoRoll activé en cours de partie');
   });
 
   testWidgets('le choix de main héritée ouvre une popup dédiée qui relance directement', (tester) async {
@@ -1671,16 +1660,19 @@ void main() {
     // Popup dédiée (voir _showInheritedHandDialog), pas d'écran séparé : le
     // bouton "Reprendre la main" reprend la main héritée ET lance en un seul
     // geste, "Nouvelle main" repart à 5 dés neufs à la place.
-    expect(find.byTooltip('Reprendre la main'), findsOneWidget);
-    expect(find.byTooltip('Nouvelle main'), findsOneWidget);
+    expect(find.byKey(const ValueKey('inherited-hand-resume')), findsOneWidget);
+    expect(find.text('Oui'), findsOneWidget, reason: 'la main est reprise par défaut, et le sélecteur le dit en toutes lettres');
+    expect(find.byTooltip('Valider'), findsOneWidget);
     expect(container.read(gameProvider)!.activeTurn, isNull, reason: 'rien n\'est encore décidé');
 
-    await tester.tap(find.byTooltip('Reprendre la main'));
-    await tester.pump();
+    await dismissInheritedHand(tester, resume: true);
 
     final after = container.read(gameProvider)!;
     expect(after.activeTurn!.diceToRoll, 3);
-    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'reprendre la main héritée lance directement, sans étape intermédiaire');
+    // Valider ne fait que fermer la popup : les dés ne partent seuls qu'en mode AutoRoll
+    // (ici le joueur 0 l'est, après le délai d'auto-avancement).
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    expect(container.read(gameProvider)!.activeTurn!.hasRolledThisTurn, isTrue, reason: 'en AutoRoll, les dés partent seuls');
   });
 
   testWidgets('refuser la main héritée lance directement une main neuve de 5 dés, sans étape intermédiaire', (tester) async {
@@ -1702,16 +1694,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Nouvelle main'));
-    await tester.pump();
+    await dismissInheritedHand(tester, resume: false);
 
     final after = container.read(gameProvider)!;
     expect(after.activeTurn!.diceToRoll, 5);
-    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'refuser la main héritée lance directement, sans repasser par le bouton Lancer');
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    expect(container.read(gameProvider)!.activeTurn!.hasRolledThisTurn, isTrue, reason: 'en AutoRoll, les dés partent seuls');
   });
 
   testWidgets(
-      'sans le mode auto, la main héritée n\'est reprise/lancée que sur clic manuel, même après un long délai',
+      'sans le mode auto, la main héritée n\'est reprise que sur clic manuel et les dés ne partent pas seuls, même après un long délai',
       (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -1738,11 +1730,12 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn, isNull,
         reason: 'sans mode auto, rien ne doit se déclencher sans clic, quel que soit le délai écoulé');
 
-    await tester.tap(find.byTooltip('Reprendre la main'));
-    await tester.pump();
+    await dismissInheritedHand(tester, resume: true);
     final after = container.read(gameProvider)!;
     expect(after.activeTurn!.diceToRoll, 3);
-    expect(after.activeTurn!.pendingRoll, isNotNull, reason: 'le clic manuel reprend la main ET lance en un seul geste');
+    expect(after.activeTurn!.hasRolledThisTurn, isFalse, reason: 'valider ne fait que reprendre la main : le lancer reste au joueur');
+    await tester.pump(const Duration(seconds: 30));
+    expect(container.read(gameProvider)!.activeTurn!.hasRolledThisTurn, isFalse, reason: 'et rien ne part seul sans AutoRoll');
   });
 
   testWidgets(
@@ -1771,13 +1764,13 @@ void main() {
 
     expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
 
-    await tester.tap(find.byTooltip('Reprendre la main'));
-    await tester.pump();
+    await dismissInheritedHand(tester, resume: true);
 
     final after = container.read(gameProvider)!;
     expect(after.activeTurn!.bankedScore, 500);
-    expect(after.activeTurn!.pendingRoll, isNotNull,
-        reason: 'le score hérité seul ne suffit pas à s\'arrêter : reprendre relance directement');
+    expect(after.activeTurn!.pendingRoll, isNull, reason: 'valider ne lance pas : le joueur lance lui-même');
+    expect(after.activeTurn!.hasRolledThisTurn, isFalse,
+        reason: 'le score hérité seul ne suffit pas à s\'arrêter : il faut lancer avant');
   });
 
   testWidgets('après un lancer avec un choix de 5 à garder, "S\'arrêter" banque directement', (tester) async {
@@ -2233,8 +2226,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Nouvelle main'));
-    await tester.pump();
+    await dismissInheritedHand(tester, resume: false);
 
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
   });
@@ -2371,14 +2363,14 @@ void main() {
       if (after.activeTurn == null) {
         // L'IA a laissé des dés hérités : popup dédiée (voir
         // _showInheritedHandDialog) avant que le joueur humain puisse lancer
-        // les dés -- "Nouvelle main" repart à 5 dés neufs ET lance aussitôt.
+        // les dés -- « Main reprise » sur « Non » repart à 5 dés neufs (le joueur
+        // est en mode auto, les dés partent donc seuls).
         // Ce lancer-là est fait de vrais dés aléatoires : la suite dépend de
         // ce qu'ils donnent (garde à appliquer, craque...), donc on s'arrête
         // ici plutôt que de deviner. Le détail de ce chemin est couvert, avec
         // des dés déterministes, par "refuser la main héritée lance
         // directement une main neuve de 5 dés".
-        await tester.tap(find.byTooltip('Nouvelle main'));
-        await tester.pump();
+        await dismissInheritedHand(tester, resume: false);
         expect(container.read(gameProvider)!.activeTurn, isNotNull,
             reason: 'le joueur humain a bien repris la main, sur une main neuve');
         return;
@@ -2841,14 +2833,20 @@ void main() {
   });
 }
 
-/// Referme la fenêtre de reprise de main par « Nouvelle main ». Ses commandes
-/// sont brièvement inertes après chaque transition : on retouche tant que la
-/// fenêtre est là.
-Future<void> dismissInheritedHand(WidgetTester tester) async {
-  for (var i = 0; i < 5 && find.byTooltip('Nouvelle main').evaluate().isNotEmpty; i++) {
+/// Referme la fenêtre de reprise de main : règle le sélecteur « Main reprise » sur [resume],
+/// puis valide. Ses commandes sont brièvement inertes après chaque transition : on
+/// retouche tant que la fenêtre est là.
+Future<void> dismissInheritedHand(WidgetTester tester, {bool resume = false}) async {
+  final selector = find.byKey(const ValueKey('inherited-hand-resume'));
+  final validate = find.descendant(of: find.byType(AlertDialog), matching: find.byTooltip('Valider'));
+  for (var i = 0; i < 5 && selector.evaluate().isNotEmpty; i++) {
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byTooltip('Nouvelle main'), warnIfMissed: false);
+    if (tester.widget<SwitchListTile>(selector).value != resume && tester.widget<SwitchListTile>(selector).onChanged != null) {
+      await tester.tap(selector, warnIfMissed: false);
+      await tester.pump();
+    }
+    await tester.tap(validate, warnIfMissed: false);
     await tester.pumpAndSettle();
   }
-  expect(find.byTooltip('Nouvelle main'), findsNothing, reason: 'la fenêtre de reprise de main est refermée');
+  expect(selector, findsNothing, reason: 'la fenêtre de reprise de main est refermée');
 }

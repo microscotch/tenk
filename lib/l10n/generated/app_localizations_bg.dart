@@ -489,6 +489,15 @@ class AppLocalizationsBg extends AppLocalizations {
   String get newHandButton => 'Нова ръка';
 
   @override
+  String get inheritedHandResumeLabel => 'Поета ръка';
+
+  @override
+  String get yesLabel => 'Да';
+
+  @override
+  String get noLabel => 'Не';
+
+  @override
   String get failureBelowMinimum => 'Недостатъчен резултат, за да спреш.';
 
   @override
@@ -775,7 +784,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Ботът спря на 1000 и остави 2 зара. Поемете ръката: започвате от неговите 1000 точки, а двата зара се хвърлят веднага (преди спиране винаги се хвърля поне веднъж).';
+      'Ботът спря на 1000 и остави 2 зара. Оставете „Поета ръка“ включено и потвърдете: започвате от неговите 1000 точки.';
 
   @override
   String get tutorialInheritIntro =>

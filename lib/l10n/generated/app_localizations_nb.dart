@@ -490,6 +490,15 @@ class AppLocalizationsNb extends AppLocalizations {
   String get newHandButton => 'Ny hånd';
 
   @override
+  String get inheritedHandResumeLabel => 'Hånd overtatt';
+
+  @override
+  String get yesLabel => 'Ja';
+
+  @override
+  String get noLabel => 'Nei';
+
+  @override
   String get failureBelowMinimum => 'For lav poengsum til å stoppe.';
 
   @override
@@ -774,7 +783,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Boten stoppet på 1000 og etterlot 2 terninger. Overta hånden: du starter fra dens 1000 poeng, og de 2 terningene kastes med en gang (man kaster alltid minst én gang før man stopper).';
+      'Boten stoppet på 1000 og etterlot 2 terninger. La «Hånd overtatt» stå på og bekreft: du starter fra dens 1000 poeng.';
 
   @override
   String get tutorialInheritIntro =>

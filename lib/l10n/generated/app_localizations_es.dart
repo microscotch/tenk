@@ -490,6 +490,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newHandButton => 'Nueva mano';
 
   @override
+  String get inheritedHandResumeLabel => 'Mano retomada';
+
+  @override
+  String get yesLabel => 'Sí';
+
+  @override
+  String get noLabel => 'No';
+
+  @override
   String get failureBelowMinimum => 'Puntuación insuficiente para plantarse.';
 
   @override
@@ -777,7 +786,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'El bot se plantó en 1000 dejando 2 dados. Retoma la mano: partes de sus 1000 puntos y los 2 dados se tiran enseguida (siempre se tira al menos una vez antes de plantarse).';
+      'El bot se plantó en 1000 dejando 2 dados. Deja «Mano retomada» activado y confirma: partes de sus 1000 puntos.';
 
   @override
   String get tutorialInheritIntro =>

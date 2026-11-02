@@ -71,8 +71,8 @@ import 'package:le10000/game/tutorial.dart';
       case TutorialTarget.bustOk:
         engine = startIfNoChoice(engine.endBustedTurn());
       case TutorialTarget.inheritTake:
-        // Comme la fenêtre : reprendre la main, c'est aussitôt lancer.
-        engine = engine.startTurn(useFullHand: false).roll(random: random);
+        // Comme la fenêtre : valider la reprise ouvre le tour, sans lancer.
+        engine = engine.startTurn(useFullHand: false);
       case TutorialTarget.opponentRow:
       case TutorialTarget.finalBanner:
         fail('${lesson.id}: une cible à regarder attend « Suivant »');
@@ -127,7 +127,7 @@ void main() {
 
   test('la main héritée : le bot s\'arrête à 1000 avec 2 dés, on les reprend', () {
     final run = play(tutorialLesson(TutorialLessonId.inheritedHand));
-    expect(run.beats, ['intro', 'botTurn', 'take', 'stop', 'outro']);
+    expect(run.beats, ['intro', 'botTurn', 'take', 'roll', 'stop', 'outro']);
     expect(run.engine.players[1].totalScore, 3500);
     expect(run.engine.players[0].totalScore, 4100);
   });

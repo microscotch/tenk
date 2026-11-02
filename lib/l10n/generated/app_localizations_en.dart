@@ -490,6 +490,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newHandButton => 'New hand';
 
   @override
+  String get inheritedHandResumeLabel => 'Hand taken over';
+
+  @override
+  String get yesLabel => 'Yes';
+
+  @override
+  String get noLabel => 'No';
+
+  @override
   String get failureBelowMinimum => 'Score too low to stop.';
 
   @override
@@ -773,7 +782,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'The bot stopped at 1,000 leaving 2 dice. Take the hand: you start from its 1,000 points, and the 2 dice are rolled at once (you always roll at least once before stopping).';
+      'The bot stopped at 1,000 leaving 2 dice. Leave “Hand taken over” on and confirm: you start from its 1,000 points.';
 
   @override
   String get tutorialInheritIntro =>

@@ -490,6 +490,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get newHandButton => 'Nova mão';
 
   @override
+  String get inheritedHandResumeLabel => 'Mão retomada';
+
+  @override
+  String get yesLabel => 'Sim';
+
+  @override
+  String get noLabel => 'Não';
+
+  @override
   String get failureBelowMinimum => 'Pontuação insuficiente para parar.';
 
   @override
@@ -777,7 +786,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'O bot parou nos 1000 deixando 2 dados. Retoma a mão: partes dos 1000 pontos dele, e os 2 dados são lançados logo (lança-se sempre pelo menos uma vez antes de parar).';
+      'O bot parou nos 1000 deixando 2 dados. Deixa «Mão retomada» ativado e confirma: partes dos 1000 pontos dele.';
 
   @override
   String get tutorialInheritIntro =>

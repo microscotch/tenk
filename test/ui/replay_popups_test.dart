@@ -137,9 +137,9 @@ void main() {
         find.ancestor(of: find.byTooltip(tooltip), matching: find.byType(IconButton)),
       );
 
-  /// L'icône est-elle dessinée pleine (choisie) plutôt qu'en contour ?
-  bool isFilled(IconButton button) =>
-      button.style!.backgroundColor!.resolve({WidgetState.disabled}) != Colors.transparent;
+  /// Le sélecteur « Main reprise » de la popup de reprise de main.
+  SwitchListTile selector(WidgetTester tester) =>
+      tester.widget<SwitchListTile>(find.byKey(const ValueKey('inherited-hand-resume')));
 
   group('popup de craque', () {
     testWidgets('elle s\'affiche une seule fois, sans bouton, et le rejeu la referme', (tester) async {
@@ -199,8 +199,8 @@ void main() {
       expect(dialog, findsOneWidget);
       expect(find.text('Reprendre ?'), findsOneWidget);
 
-      expect(iconWithTooltip(tester, 'Reprendre la main').onPressed, isNull);
-      expect(iconWithTooltip(tester, 'Nouvelle main').onPressed, isNull);
+      expect(iconWithTooltip(tester, 'Valider').onPressed, isNull);
+      expect(selector(tester).onChanged, isNull, reason: 'le spectateur ne change pas le choix du joueur');
       expect(find.byTooltip('Grille des scores'), findsNothing,
           reason: 'la grille s\'ouvrirait par-dessus une popup qui se referme seule');
 
@@ -211,15 +211,15 @@ void main() {
       expect(identical(container.read(gameProvider), before), isFalse);
     });
 
-    testWidgets('la nouvelle main choisie par le joueur est mise en évidence', (tester) async {
+    testWidgets('le sélecteur montre une nouvelle main quand le joueur est reparti à neuf', (tester) async {
       await pumpReplay(tester, humans, scenario(humans, inheritedChoice));
       await pumpUntil(tester, () => handPopup.evaluate().isNotEmpty);
 
-      expect(isFilled(iconWithTooltip(tester, 'Nouvelle main')), isTrue);
-      expect(isFilled(iconWithTooltip(tester, 'Reprendre la main')), isFalse);
+      expect(selector(tester).value, isFalse, reason: 'le joueur est reparti à 5 dés neufs');
+      expect(find.text('Non'), findsOneWidget);
     });
 
-    testWidgets('la reprise choisie par le joueur est mise en évidence', (tester) async {
+    testWidgets('le sélecteur montre la reprise quand le joueur a repris la main', (tester) async {
       await pumpReplay(
         tester,
         humans,
@@ -231,8 +231,8 @@ void main() {
       );
       await pumpUntil(tester, () => handPopup.evaluate().isNotEmpty);
 
-      expect(isFilled(iconWithTooltip(tester, 'Reprendre la main')), isTrue);
-      expect(isFilled(iconWithTooltip(tester, 'Nouvelle main')), isFalse);
+      expect(selector(tester).value, isTrue, reason: 'le joueur a repris la main laissée');
+      expect(find.text('Oui'), findsOneWidget);
     });
 
     testWidgets('le début du rejeu n\'ouvre pas de popup : aucune main n\'est encore engagée',

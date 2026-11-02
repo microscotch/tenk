@@ -491,6 +491,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get newHandButton => 'Nuova mano';
 
   @override
+  String get inheritedHandResumeLabel => 'Mano ripresa';
+
+  @override
+  String get yesLabel => 'Sì';
+
+  @override
+  String get noLabel => 'No';
+
+  @override
   String get failureBelowMinimum => 'Punteggio insufficiente per fermarsi.';
 
   @override
@@ -779,7 +788,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Il bot si è fermato a 1.000 lasciando 2 dadi. Riprendi la mano: parti dai suoi 1.000 punti, e i 2 dadi vengono lanciati subito (si lancia sempre almeno una volta prima di fermarsi).';
+      'Il bot si è fermato a 1.000 lasciando 2 dadi. Lascia attivo «Mano ripresa» e conferma: parti dai suoi 1.000 punti.';
 
   @override
   String get tutorialInheritIntro =>

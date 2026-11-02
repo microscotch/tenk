@@ -102,7 +102,7 @@ void main() {
           case TutorialTarget.bustOk:
             await tester.tap(find.byTooltip('Continuer'));
           case TutorialTarget.inheritTake:
-            await tester.tap(find.byTooltip('Reprendre la main'));
+            await tester.tap(find.byTooltip('Valider'));
           case TutorialTarget.opponentRow:
           case TutorialTarget.finalBanner:
           case null:
@@ -121,7 +121,7 @@ void main() {
       TutorialLessonId.hotDice: ['intro', 'roll', 'kept', 'fullHand', 'fives', 'stop', 'outro'],
       TutorialLessonId.bust: ['intro', 'roll', 'tiret', 'botTurn', 'rollAgain', 'barred', 'outro'],
       TutorialLessonId.extension: ['intro', 'roll', 'brelan', 'extended', 'outro'],
-      TutorialLessonId.inheritedHand: ['intro', 'botTurn', 'take', 'stop', 'outro'],
+      TutorialLessonId.inheritedHand: ['intro', 'botTurn', 'take', 'roll', 'stop', 'outro'],
       TutorialLessonId.collision: ['intro', 'roll', 'collide', 'outro'],
       TutorialLessonId.finalRound: ['intro', 'roll', 'noStop', 'exact', 'outro'],
     };

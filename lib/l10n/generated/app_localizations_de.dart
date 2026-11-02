@@ -492,6 +492,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newHandButton => 'Neue Hand';
 
   @override
+  String get inheritedHandResumeLabel => 'Hand übernommen';
+
+  @override
+  String get yesLabel => 'Ja';
+
+  @override
+  String get noLabel => 'Nein';
+
+  @override
   String get failureBelowMinimum => 'Punktzahl zu niedrig, um aufzuhören.';
 
   @override
@@ -780,7 +789,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Übernimm die Hand: Du startest mit seinen 1.000 Punkten, und die 2 Würfel werden sofort geworfen (vor dem Aufhören wirft man immer mindestens einmal).';
+      'Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Lass „Hand übernommen“ eingeschaltet und bestätige: Du startest mit seinen 1.000 Punkten.';
 
   @override
   String get tutorialInheritIntro =>

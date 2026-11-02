@@ -497,6 +497,15 @@ class AppLocalizationsRo extends AppLocalizations {
   String get newHandButton => 'Mână nouă';
 
   @override
+  String get inheritedHandResumeLabel => 'Mână reluată';
+
+  @override
+  String get yesLabel => 'Da';
+
+  @override
+  String get noLabel => 'Nu';
+
+  @override
   String get failureBelowMinimum => 'Scor insuficient pentru a te opri.';
 
   @override
@@ -782,7 +791,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Botul s-a oprit la 1.000 lăsând 2 zaruri. Preia mâna: pornești de la cele 1.000 de puncte ale lui, iar cele 2 zaruri se aruncă imediat (se aruncă mereu cel puțin o dată înainte de oprire).';
+      'Botul s-a oprit la 1.000 lăsând 2 zaruri. Lasă „Mână reluată” activat și confirmă: pornești de la cele 1.000 de puncte ale lui.';
 
   @override
   String get tutorialInheritIntro =>

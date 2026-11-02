@@ -490,6 +490,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get newHandButton => 'Uusi käsi';
 
   @override
+  String get inheritedHandResumeLabel => 'Käsi otettu haltuun';
+
+  @override
+  String get yesLabel => 'Kyllä';
+
+  @override
+  String get noLabel => 'Ei';
+
+  @override
   String get failureBelowMinimum => 'Pisteet liian alhaiset lopettamiseen.';
 
   @override
@@ -776,7 +785,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Botti lopetti 1000:een jättäen 2 noppaa. Ota käsi: aloitat sen 1000 pisteestä, ja 2 noppaa heitetään heti (ennen lopettamista heitetään aina vähintään kerran).';
+      'Botti lopetti 1000:een jättäen 2 noppaa. Jätä ”Käsi otettu haltuun” päälle ja vahvista: aloitat sen 1000 pisteestä.';
 
   @override
   String get tutorialInheritIntro =>

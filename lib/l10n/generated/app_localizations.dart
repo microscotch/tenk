@@ -878,6 +878,24 @@ abstract class AppLocalizations {
   /// **'Nouvelle main'**
   String get newHandButton;
 
+  /// Libellé de l'interrupteur de la popup de reprise de main : activé, le joueur reprend la main laissée par le précédent ; désactivé, il repart d'une main neuve de 5 dés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Main reprise'**
+  String get inheritedHandResumeLabel;
+
+  /// Valeur « oui » d'un interrupteur (ex. Main reprise, dans la popup de reprise de main).
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui'**
+  String get yesLabel;
+
+  /// Valeur « non » d'un interrupteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non'**
+  String get noLabel;
+
   /// Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis.
   ///
   /// In fr, this message translates to:
@@ -1361,7 +1379,7 @@ abstract class AppLocalizations {
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le bot s\'est arrêté à 1000 en laissant 2 dés. Reprenez la main : vous partez de ses 1000 points, et les 2 dés se lancent aussitôt (on lance toujours au moins une fois avant de s\'arrêter).'**
+  /// **'Le bot s\'est arrêté à 1000 en laissant 2 dés. Laissez « Main reprise » activé et validez : vous partez de ses 1000 points.'**
   String get tutorialInheritTake;
 
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).

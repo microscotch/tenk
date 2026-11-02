@@ -282,9 +282,10 @@ final List<TutorialLesson> tutorialLessons = [
     beats: [
       _intro(),
       TutorialBeat('botTurn', when: (c) => !c.myTurn),
-      // Reprendre la main lance aussitôt les dés hérités : il faut lancer au
-      // moins une fois avant de s'arrêter.
+      // Valider la reprise ouvre le tour sans lancer : il faut lancer au moins une
+      // fois, soi-même, avant de s'arrêter.
       TutorialBeat('take', target: TutorialTarget.inheritTake, when: (c) => c.myTurn && c.turn == null),
+      TutorialBeat('roll', target: TutorialTarget.roll, when: (c) => c.myIdleTurn),
       TutorialBeat('stop', target: TutorialTarget.stop, when: (c) => c.showing(const [1, 3])),
       _outro,
     ],

@@ -490,6 +490,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get newHandButton => 'Ny hand';
 
   @override
+  String get inheritedHandResumeLabel => 'Övertagen hand';
+
+  @override
+  String get yesLabel => 'Ja';
+
+  @override
+  String get noLabel => 'Nej';
+
+  @override
   String get failureBelowMinimum => 'För lågt poäng för att stanna.';
 
   @override
@@ -774,7 +783,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Boten stannade på 1000 och lämnade 2 tärningar. Ta över handen: du börjar från dess 1000 poäng, och de 2 tärningarna kastas direkt (man kastar alltid minst en gång innan man stannar).';
+      'Boten stannade på 1000 och lämnade 2 tärningar. Låt ”Övertagen hand” vara på och bekräfta: du börjar från dess 1000 poäng.';
 
   @override
   String get tutorialInheritIntro =>

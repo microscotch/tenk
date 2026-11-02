@@ -490,6 +490,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newHandButton => 'Nouvelle main';
 
   @override
+  String get inheritedHandResumeLabel => 'Main reprise';
+
+  @override
+  String get yesLabel => 'Oui';
+
+  @override
+  String get noLabel => 'Non';
+
+  @override
   String get failureBelowMinimum => 'Score insuffisant pour s\'arrêter.';
 
   @override
@@ -777,7 +786,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Le bot s\'est arrêté à 1000 en laissant 2 dés. Reprenez la main : vous partez de ses 1000 points, et les 2 dés se lancent aussitôt (on lance toujours au moins une fois avant de s\'arrêter).';
+      'Le bot s\'est arrêté à 1000 en laissant 2 dés. Laissez « Main reprise » activé et validez : vous partez de ses 1000 points.';
 
   @override
   String get tutorialInheritIntro =>
