@@ -41,6 +41,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Хвърлянията ви се правят сами, когато няма какво да избирате.';
+
+  @override
   String get startGameButton => 'Започни играта';
 
   @override

@@ -41,6 +41,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Your rolls fire on their own when there is no choice to make.';
+
+  @override
   String get startGameButton => 'Start game';
 
   @override

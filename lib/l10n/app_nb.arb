@@ -5,6 +5,7 @@
   "settingsTooltip": "Innstillinger",
   "playersCountTitle": "Spillere ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Kastene dine skjer av seg selv når det ikke er noe å velge.",
   "startGameButton": "Start spillet",
   "newGameSectionLabel": "Ny run...",
   "pausedGamesSectionLabel": "Avbrutte runs ({count})",

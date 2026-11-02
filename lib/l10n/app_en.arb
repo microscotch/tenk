@@ -5,6 +5,7 @@
   "settingsTooltip": "Settings",
   "playersCountTitle": "Players ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Your rolls fire on their own when there is no choice to make.",
   "startGameButton": "Start game",
   "newGameSectionLabel": "New run...",
   "pausedGamesSectionLabel": "Interrupted runs ({count})",

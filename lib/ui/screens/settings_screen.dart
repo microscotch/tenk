@@ -59,6 +59,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
+  Future<void> _setAutoRoll(PlayerProfile me, bool value) async {
+    await ref.read(playerStoreProvider).write(me.copyWith(autoRoll: value));
+    ref.invalidate(playersProvider);
+  }
+
   Future<void> _editProfile(PlayerProfile me) async {
     await Navigator.of(context).push<PlayerProfile>(
       MaterialPageRoute(builder: (_) => PlayerEditScreen(existing: me, isMyProfile: true)),
@@ -92,6 +97,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 subtitle: me?.nickname == null ? null : Text(me!.name),
                 trailing: const Icon(Icons.edit),
                 onTap: me == null ? null : () => _editProfile(me),
+              ),
+              // « AutoRoll » : un réglage de la fiche, qui joue dès la partie en cours
+              // (voir [PlayerProfile.autoRoll]) — d'où sa place ici, accessible du ☰ de la partie.
+              SwitchListTile(
+                key: const ValueKey('settings-auto-roll'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.autoChipLabel),
+                subtitle: Text(l10n.settingsAutoRollSubtitle),
+                value: me?.autoRoll ?? false,
+                onChanged: me == null ? null : (value) => _setAutoRoll(me, value),
               ),
               const SizedBox(height: 28),
               Text(l10n.settingsLanguageTitle, style: Theme.of(context).textTheme.titleMedium),

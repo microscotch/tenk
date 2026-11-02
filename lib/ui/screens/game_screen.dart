@@ -10,12 +10,14 @@ import '../../game/combination.dart';
 import '../../game/game_engine.dart';
 import '../../game/game_recording.dart';
 import '../../game/player.dart';
+import '../../game/player_profile.dart';
 import '../../game/turn_result.dart';
 import '../../game/turn_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_providers.dart';
 import '../../state/online_providers.dart';
 import '../../state/player_providers.dart';
+import '../../state/player_store.dart';
 import '../../state/replay_pause_provider.dart';
 import '../../state/replay_speed_provider.dart';
 import '../../state/settings_providers.dart';
@@ -1304,12 +1306,26 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// méthodes `_build*View`), mais ne se déclenche seul que si les deux
   /// conditions sont réunies (délai > 0 requis, sinon "désactivé").
   void _scheduleIfAuto(int playerIndex, VoidCallback action, Duration delay) {
-    final notifier = ref.read(gameProvider.notifier);
-    if (notifier.isAutoPlayer(playerIndex) && delay > Duration.zero) {
+    if (_isAutoSeat(playerIndex) && delay > Duration.zero) {
       _scheduleAutoAction(action, delay);
     } else {
       _cancelAutoAction();
     }
+  }
+
+  /// Le mode auto du siège [index] : celui de la fiche du joueur quand le siège
+  /// y est rattaché — lu à chaque action, pour que le réglage « AutoRoll » change en
+  /// pleine partie (voir [PlayerProfile.autoRoll]) —, sinon celui de la config de la
+  /// partie (un bot, une partie d'avant les fiches, une leçon du tutoriel).
+  bool _isAutoSeat(int index) {
+    final notifier = ref.read(gameProvider.notifier);
+    final id = notifier.orderedSetup?.playerIdAt(index);
+    if (id != null) {
+      for (final player in ref.read(playersProvider).value ?? const <PlayerProfile>[]) {
+        if (player.id == id) return player.autoRoll;
+      }
+    }
+    return notifier.isAutoPlayer(index);
   }
 
   void _scheduleAiIfNeeded() {
@@ -1429,6 +1445,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
         }
       });
     }
+    // Le réglage « AutoRoll » d'une fiche change en cours de partie (depuis les
+    // réglages) : l'action en attente s'arme ou se désarme aussitôt.
+    ref.listen<AsyncValue<List<PlayerProfile>>>(playersProvider, (previous, next) {
+      if (widget.replayMode || _coveredByReplay || _seeking) return;
+      final before = previous?.value, after = next.value;
+      if (before == null || after == null) return;
+      final changed = after.any((p) => before.any((q) => q.id == p.id && q.autoRoll != p.autoRoll));
+      if (changed) _scheduleAutoAdvanceIfNeeded();
+    });
     // L'autre joueur en ligne change sa sélection de 5 : mon écran la suit.
     ref.listen<OnlineKeepSelection?>(onlineKeepSelectionProvider, (previous, next) {
       final engine = ref.read(gameProvider);

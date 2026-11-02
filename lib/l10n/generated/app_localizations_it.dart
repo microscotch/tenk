@@ -41,6 +41,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'I tuoi lanci partono da soli quando non c\'è nulla da scegliere.';
+
+  @override
   String get startGameButton => 'Inizia partita';
 
   @override

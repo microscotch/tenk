@@ -5,6 +5,7 @@
   "settingsTooltip": "Setări",
   "playersCountTitle": "Jucători ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Aruncările tale pornesc singure când nu ai nimic de ales.",
   "startGameButton": "Începe jocul",
   "newGameSectionLabel": "Run nou...",
   "pausedGamesSectionLabel": "Run-uri întrerupte ({count})",

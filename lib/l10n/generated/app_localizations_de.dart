@@ -41,6 +41,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Deine Würfe lösen sich von selbst aus, wenn es nichts zu entscheiden gibt.';
+
+  @override
   String get startGameButton => 'Spiel starten';
 
   @override

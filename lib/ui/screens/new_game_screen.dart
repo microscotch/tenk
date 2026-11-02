@@ -38,13 +38,16 @@ sealed class _Seat {
 
 class _HumanSeat extends _Seat {
   final PlayerProfile profile;
-  const _HumanSeat(this.profile, {required super.isAuto, required super.key});
+  /// Le mode auto d'un humain est celui de sa fiche ([PlayerProfile.autoRoll]) : la
+  /// puce « AutoRoll » le règle donc pour toutes ses parties, et il se change aussi
+  /// en pleine partie, depuis les réglages.
+  _HumanSeat(this.profile, {required super.key}) : super(isAuto: profile.autoRoll);
 
   @override
   String get name => profile.name;
 
   @override
-  _Seat withAuto(bool auto) => _HumanSeat(profile, isAuto: auto, key: key);
+  _Seat withAuto(bool auto) => _HumanSeat(profile.copyWith(autoRoll: auto), key: key);
 }
 
 class _BotSeat extends _Seat {
@@ -98,7 +101,7 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
         continue;
       }
       final profile = byId[setup.playerIdAt(i)];
-      if (profile != null) seats.add(_HumanSeat(profile, isAuto: setup.isAuto(i), key: _Seat.newKey()));
+      if (profile != null) seats.add(_HumanSeat(profile, key: _Seat.newKey()));
     }
 
     if (!mounted || seats.length < _minPlayers) return;
@@ -120,8 +123,8 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
     setState(() {
       for (final profile in picked) {
         if (_seats.length >= _maxPlayers) break;
-        // Un humain clique lui-même : pas d'auto-validation par défaut.
-        _seats.add(_HumanSeat(profile, isAuto: false, key: _Seat.newKey()));
+        // Un humain clique lui-même, sauf si sa fiche dit « AutoRoll ».
+        _seats.add(_HumanSeat(profile, key: _Seat.newKey()));
       }
       _error = null;
     });
@@ -253,7 +256,14 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
             label: Text(l10n.autoChipLabel),
             avatar: const Icon(Icons.bolt, size: 18),
             selected: seat.isAuto,
-            onSelected: (v) => setState(() => _seats[index] = seat.withAuto(v)),
+            onSelected: (v) {
+              final next = seat.withAuto(v);
+              // Pour un humain, c'est sa fiche qui porte le réglage.
+              if (next is _HumanSeat) {
+                ref.read(playerStoreProvider).write(next.profile).then((_) => ref.invalidate(playersProvider));
+              }
+              setState(() => _seats[index] = next);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.close),

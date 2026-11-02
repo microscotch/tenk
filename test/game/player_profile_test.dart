@@ -72,7 +72,7 @@ void main() {
 
   group('sérialisation', () {
     test('aller-retour complet, statistiques comprises', () {
-      final player = PlayerProfile.create(name: 'Marie', nickname: 'Mimi', rightHanded: false)
+      final player = PlayerProfile.create(name: 'Marie', nickname: 'Mimi', rightHanded: false, autoRoll: true)
           .renamedTo('Marie Curie')
           .copyWith(stats: const PlayerStats(gamesPlayed: 3, gamesWon: 1, brelans: {4: 2}));
 
@@ -82,6 +82,7 @@ void main() {
       expect(restored.name, 'Marie Curie');
       expect(restored.nickname, 'Mimi');
       expect(restored.rightHanded, isFalse);
+      expect(restored.autoRoll, isTrue);
       expect(restored.formerNames, ['Marie']);
       expect(restored.stats.gamesPlayed, 3);
       expect(restored.stats.brelans, {4: 2});
@@ -92,6 +93,7 @@ void main() {
 
       expect(restored.nickname, isNull);
       expect(restored.rightHanded, isTrue);
+      expect(restored.autoRoll, isFalse, reason: 'jamais d\'AutoRoll sur une fiche qui n\'en parle pas');
       expect(restored.formerNames, isEmpty);
       expect(restored.stats.gamesPlayed, 0);
     });

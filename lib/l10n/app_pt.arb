@@ -5,6 +5,7 @@
   "settingsTooltip": "Definições",
   "playersCountTitle": "Jogadores ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Os teus lançamentos fazem-se sozinhos quando não há nada a decidir.",
   "startGameButton": "Começar jogo",
   "newGameSectionLabel": "Nova run...",
   "pausedGamesSectionLabel": "Runs interrompidas ({count})",

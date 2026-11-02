@@ -7,9 +7,11 @@ import 'package:le10000/game/ai/ai_profiles.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/player.dart';
+import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/player_providers.dart';
+import 'package:le10000/state/player_store.dart';
 import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_over_screen.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
@@ -20,6 +22,7 @@ import 'package:le10000/ui/widgets/dice3d/dice_face_texture.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
 
+import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/history.dart';
 import '../test_helpers/scripted_game.dart';
 
@@ -1616,6 +1619,34 @@ void main() {
     final after = container.read(gameProvider)!;
     expect(after.players[0].totalScore, 10000);
     expect(after.currentPlayerIndex, 1, reason: 'le tour de A doit être banqué et passé à B');
+  });
+
+  testWidgets('AutoRoll de la fiche : le lancer part seul, et le réglage se change en pleine partie', (tester) async {
+    final store = FakePlayerStore();
+    final profile = PlayerProfile.create(name: 'A');
+    await store.write(profile);
+    final container = ProviderContainer(overrides: [playerStoreProvider.overrideWithValue(store)]);
+    addTearDown(container.dispose);
+    // La config ne dit pas « auto » : seule la fiche de A le dit, ou pas.
+    container.read(gameProvider.notifier).debugLoadState(
+          GameEngine.newGame(['A', 'B']).startTurn(),
+          GameSetup(playerNames: const ['A', 'B'], playerIds: {0: profile.id}),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull, reason: 'sans AutoRoll, rien ne part seul');
+
+    // En pleine partie, A active AutoRoll (depuis les réglages) : le lancer part.
+    await store.write(profile.copyWith(autoRoll: true));
+    container.invalidate(playersProvider);
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull, reason: 'AutoRoll activé en cours de partie');
   });
 
   testWidgets('le choix de main héritée ouvre une popup dédiée qui relance directement', (tester) async {

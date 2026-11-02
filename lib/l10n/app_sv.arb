@@ -5,6 +5,7 @@
   "settingsTooltip": "Inställningar",
   "playersCountTitle": "Spelare ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Dina kast görs av sig själva när det inte finns något att välja.",
   "startGameButton": "Starta spelet",
   "newGameSectionLabel": "Ny run...",
   "pausedGamesSectionLabel": "Avbrutna runs ({count})",

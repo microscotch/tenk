@@ -5,6 +5,7 @@
   "settingsTooltip": "Asetukset",
   "playersCountTitle": "Pelaajat ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Heitot tapahtuvat itsestään, kun ei ole mitään valittavaa.",
   "startGameButton": "Aloita peli",
   "newGameSectionLabel": "Uusi run...",
   "pausedGamesSectionLabel": "Keskeytyneet runit ({count})",

@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'AutoRoll'**
   String get autoChipLabel;
 
+  /// Sous-titre de l'interrupteur AutoRoll des réglages (section Mon profil) : le lancer se déclenche seul quand le joueur n'a aucun choix à faire. Se règle en pleine partie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos lancers se déclenchent seuls quand il n\'y a aucun choix à faire.'**
+  String get settingsAutoRollSubtitle;
+
   /// Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort).
   ///
   /// In fr, this message translates to:

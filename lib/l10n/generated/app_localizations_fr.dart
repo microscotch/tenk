@@ -41,6 +41,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Vos lancers se déclenchent seuls quand il n\'y a aucun choix à faire.';
+
+  @override
   String get startGameButton => 'Commencer la partie';
 
   @override

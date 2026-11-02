@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
+import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test_helpers/fake_player_store.dart';
+import '../test_helpers/my_profile.dart';
 
 /// Le choix du bruit des dés, dans la section Sons des réglages.
 void main() {
@@ -65,5 +67,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(container.read(settingsProvider).musicTrack, MusicTrack.original);
     container.read(settingsProvider.notifier).setMusicEnabled(false);
+  });
+
+  testWidgets('AutoRoll : l\'interrupteur des réglages écrit dans la fiche de l\'utilisateur', (tester) async {
+    final store = FakePlayerStore();
+    final marie = PlayerProfile.create(name: 'Marie');
+    await seedMyProfile(store, marie);
+    container = ProviderContainer(overrides: [playerStoreProvider.overrideWithValue(store)]);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SettingsScreen(),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final toggle = find.byKey(const ValueKey('settings-auto-roll'));
+    expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect((await store.list()).single.autoRoll, isTrue);
+    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect((await store.list()).single.autoRoll, isFalse);
   });
 }

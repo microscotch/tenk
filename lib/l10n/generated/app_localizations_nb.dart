@@ -41,6 +41,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Kastene dine skjer av seg selv når det ikke er noe å velge.';
+
+  @override
   String get startGameButton => 'Start spillet';
 
   @override

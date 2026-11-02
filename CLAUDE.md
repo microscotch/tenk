@@ -227,7 +227,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.
 - `game/player_profile.dart`, `game/player_stats.dart` — a player's record (`displayName` is the
-  nickname if any, else the name — the display rule everywhere) and its cumulated counters.
+  nickname if any, else the name — the display rule everywhere); `autoRoll` is a record setting like handedness: a human seat linked to a record auto-validates according to the record (`GameScreen._isAutoSeat`, read at every action), so the Settings switch ("My profile" section, reachable from the game's ☰) works mid-game, and the new-game chip reads and writes the record and its cumulated counters.
   Statistics are never migrated: they are recomputed from the archived games (see
   `syncPlayerStatistics` below).
 - `game/ai/` — `AiStrategy` interface plus three difficulty profiles (`ai_profiles.dart`) built on a

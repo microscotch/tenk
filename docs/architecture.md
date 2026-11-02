@@ -180,7 +180,7 @@ son rejeu — **se dérive du journal**, rien de plus n'est stocké :
   (`operator +`). Il est immuable et tolérant à la lecture : un champ absent d'un
   fichier ancien vaut zéro.
 - **`PlayerProfile`** est la fiche d'un joueur (nom, surnom, latéralité,
-  anciens noms, statistiques). `displayName` est le surnom quand il y en a un, le
+  « AutoRoll », anciens noms, statistiques). `displayName` est le surnom quand il y en a un, le
   nom sinon : c'est la règle d'affichage partout dans le jeu.
 
 Conséquence de conception : les statistiques des fiches ne se **migrent** pas, elles
@@ -239,7 +239,11 @@ acquise.
 - **`SettingsNotifier` / `AppSettings`** portent les préférences persistées ; la
   latéralité d'un joueur, elle, vient de sa fiche (`currentSeatRightHandedProvider`),
   celle du profil de l'utilisateur servant de repli (puis l'ancien réglage d'appareil,
-  tant que le profil n'est pas relu).
+  tant que le profil n'est pas relu). **« AutoRoll »** (`PlayerProfile.autoRoll`) suit le même
+  principe : le mode auto d'un siège rattaché à une fiche est celui de la fiche, relu à chaque action
+  (`GameScreen._isAutoSeat`), et non celui de la config de la partie — d'où son interrupteur dans les
+  réglages (section « Mon profil »), accessible du ☰ en pleine partie ; la config ne sert plus qu'aux bots
+  et aux sièges sans fiche. La puce « AutoRoll » de la nouvelle partie lit et écrit la fiche.
 - **Le profil de l'utilisateur est une fiche comme les autres**, désignée par
   `AppSettings.myProfileId` et résolue par `myProfileProvider` : ses parties, locales
   comme en ligne, s'y cumulent, et elle ne se supprime pas. Au lancement,

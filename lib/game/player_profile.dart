@@ -19,6 +19,11 @@ class PlayerProfile {
   /// son tour (voir `_controlRow` dans `game_screen.dart`).
   final bool rightHanded;
 
+  /// « AutoRoll » : les actions de ce joueur se valident seules, après le délai
+  /// des préférences, au lieu d'attendre un appui. C'est le réglage de SA fiche,
+  /// relu à chaque action : on le change en pleine partie, depuis les réglages.
+  final bool autoRoll;
+
   /// Réservé à un avatar image, toujours `null` pour l'instant : le blason
   /// dessiné à partir du nom reste le seul rendu (voir `PlayerAvatarWidget`).
   /// Le champ est écrit dès maintenant pour qu'ajouter l'image plus tard ne
@@ -40,6 +45,7 @@ class PlayerProfile {
     required this.name,
     this.nickname,
     this.rightHanded = true,
+    this.autoRoll = false,
     this.avatarRef,
     this.formerNames = const [],
     this.stats = PlayerStats.empty,
@@ -52,6 +58,7 @@ class PlayerProfile {
     required String name,
     String? nickname,
     bool rightHanded = true,
+    bool autoRoll = false,
   }) {
     final random = Random.secure();
     final suffix = List.generate(4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
@@ -60,6 +67,7 @@ class PlayerProfile {
       name: name.trim(),
       nickname: (nickname?.trim().isEmpty ?? true) ? null : nickname!.trim(),
       rightHanded: rightHanded,
+      autoRoll: autoRoll,
     );
   }
 
@@ -88,6 +96,7 @@ class PlayerProfile {
     String? nickname,
     bool clearNickname = false,
     bool? rightHanded,
+    bool? autoRoll,
     List<String>? formerNames,
     PlayerStats? stats,
   }) {
@@ -96,6 +105,7 @@ class PlayerProfile {
       name: name ?? this.name,
       nickname: clearNickname ? null : (nickname ?? this.nickname),
       rightHanded: rightHanded ?? this.rightHanded,
+      autoRoll: autoRoll ?? this.autoRoll,
       avatarRef: avatarRef,
       formerNames: formerNames ?? this.formerNames,
       stats: stats ?? this.stats,
@@ -107,6 +117,7 @@ class PlayerProfile {
         'name': name,
         'nickname': nickname,
         'rightHanded': rightHanded,
+        'autoRoll': autoRoll,
         'avatarRef': avatarRef,
         'formerNames': formerNames,
         'stats': stats.toJson(),
@@ -117,6 +128,7 @@ class PlayerProfile {
         name: json['name'] as String,
         nickname: json['nickname'] as String?,
         rightHanded: json['rightHanded'] as bool? ?? true,
+        autoRoll: json['autoRoll'] as bool? ?? false,
         avatarRef: json['avatarRef'] as String?,
         formerNames: List<String>.from(json['formerNames'] as List? ?? const []),
         stats: PlayerStats.fromJson(json['stats'] as Map<String, dynamic>? ?? const {}),

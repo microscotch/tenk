@@ -41,6 +41,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Heitot tapahtuvat itsestään, kun ei ole mitään valittavaa.';
+
+  @override
   String get startGameButton => 'Aloita peli';
 
   @override

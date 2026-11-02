@@ -5,6 +5,7 @@
   "settingsTooltip": "Настройки",
   "playersCountTitle": "Играчи ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Хвърлянията ви се правят сами, когато няма какво да избирате.",
   "startGameButton": "Започни играта",
   "newGameSectionLabel": "Нов run...",
   "pausedGamesSectionLabel": "Прекъснати runs ({count})",

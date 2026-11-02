@@ -5,6 +5,7 @@
   "settingsTooltip": "Einstellungen",
   "playersCountTitle": "Spieler ({count})",
   "autoChipLabel": "AutoRoll",
+  "settingsAutoRollSubtitle": "Deine Würfe lösen sich von selbst aus, wenn es nichts zu entscheiden gibt.",
   "startGameButton": "Spiel starten",
   "newGameSectionLabel": "Neuer Run...",
   "pausedGamesSectionLabel": "Unterbrochene Runs ({count})",

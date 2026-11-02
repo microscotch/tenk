@@ -33,6 +33,8 @@
 
   "autoChipLabel": "AutoRoll",
   "@autoChipLabel": {"description": "Libellé du bouton à bascule activant le mode automatique d'un joueur."},
+  "settingsAutoRollSubtitle": "Vos lancers se déclenchent seuls quand il n'y a aucun choix à faire.",
+  "@settingsAutoRollSubtitle": {"description": "Sous-titre de l'interrupteur AutoRoll des réglages (section Mon profil) : le lancer se déclenche seul quand le joueur n'a aucun choix à faire. Se règle en pleine partie."},
 
   "startGameButton": "Commencer la partie",
   "@startGameButton": {"description": "Bouton pour démarrer la partie (écran de configuration et écran de tirage au sort)."},

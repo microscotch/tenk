@@ -41,6 +41,10 @@ class AppLocalizationsRo extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Aruncările tale pornesc singure când nu ai nimic de ales.';
+
+  @override
   String get startGameButton => 'Începe jocul';
 
   @override

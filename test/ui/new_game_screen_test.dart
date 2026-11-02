@@ -104,6 +104,20 @@ void main() {
     expect(chip.selected, isTrue, reason: 'rien ne justifie de cliquer à la place d\'un bot');
   });
 
+  testWidgets('la puce AutoRoll d\'un humain reflète sa fiche, et la modifie', (tester) async {
+    await players.write(PlayerProfile.create(name: 'Marie', autoRoll: true));
+    await players.write(PlayerProfile.create(name: 'Paul'));
+    await pump(tester);
+    await addHuman(tester, 'Marie');
+    expect(tester.widget<FilterChip>(find.byType(FilterChip)).selected, isTrue, reason: 'sa fiche dit AutoRoll');
+
+    await tester.tap(find.byType(FilterChip));
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilterChip>(find.byType(FilterChip)).selected, isFalse);
+    final stored = (await players.list()).firstWhere((p) => p.name == 'Marie');
+    expect(stored.autoRoll, isFalse, reason: 'le réglage vit dans la fiche, pas seulement dans cette partie');
+  });
+
   testWidgets('démarrer refuse en dessous de deux joueurs', (tester) async {
     await pump(tester);
     await tester.tap(find.byIcon(Icons.smart_toy));

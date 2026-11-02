@@ -41,6 +41,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get autoChipLabel => 'AutoRoll';
 
   @override
+  String get settingsAutoRollSubtitle =>
+      'Dina kast görs av sig själva när det inte finns något att välja.';
+
+  @override
   String get startGameButton => 'Starta spelet';
 
   @override
