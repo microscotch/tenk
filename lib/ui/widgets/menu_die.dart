@@ -210,11 +210,15 @@ const double _perspectiveDistance = 3.0;
 /// verticale), deux flancs égaux.
 const double _cornerYaw = math.pi / 4;
 
-/// L'angle des dés de l'accueil et de l'icône de l'app : un peu tournés par rapport
-/// à [_cornerYaw] (de 12°, vers la gauche), pour qu'ils ne soient pas vus tout à
-/// fait de face — les deux flancs ne sont plus égaux, celui de droite est le plus
-/// large.
+/// L'angle des dés de l'accueil : un peu tournés par rapport à [_cornerYaw] (de 12°,
+/// vers la gauche), pour qu'ils ne soient pas vus tout à fait de face — les deux
+/// flancs ne sont plus égaux, celui de droite est le plus large.
 const double _menuYaw = _cornerYaw - 12 * math.pi / 180;
+
+/// L'angle du dé de l'icône de l'app : tourné de 8° vers la droite par rapport à
+/// [_cornerYaw], donc dans l'autre sens que [_menuYaw] — le flanc de gauche (le
+/// « 10 ») est le plus large, celui de droite (le « K ») le plus étroit.
+const double _iconYaw = _cornerYaw + 8 * math.pi / 180;
 
 /// Un dé de plastique coloré, transparent dans toute sa masse : ses six faces
 /// sont peintes de la plus lointaine à la plus proche, chacune à moitié
@@ -626,7 +630,7 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
     ink: ink,
     translucent: false,
     cameraDistance: _perspectiveDistance,
-    yaw: _menuYaw,
+    yaw: _iconYaw,
     fillBounds: true,
     art: (canvas, unit, role) => _engrave(canvas, unit, Color.lerp(color, Colors.black, 0.72)!, (paint) {
       switch (role) {
