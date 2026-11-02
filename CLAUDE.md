@@ -328,7 +328,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   must stay identical: each of the three visible faces
   carries the entry's icon, the die has the entry's colour, its label is written underneath), rules, settings and about
   included; tests find a die by its `label` (`MenuDie.label`), and the icon painted on it is `MenuDie.icon`. The same
-  painter, opaque, draws the app icon (`tool/render_app_icon_test.dart`, then `dart run flutter_launcher_icons`).
+  painter, opaque, draws the app icon (`tool/render_app_icon_test.dart`, then `dart run flutter_launcher_icons`, then check that `project.pbxproj` was left alone). Both are turned 33° around the vertical (`_menuYaw`, 12° off the symmetric 45° view `_cornerYaw`), so the right face is the wide one — the icon's "K"; the painter's `yaw` defaults to 45°.
 
 - `game_screen.dart` (also the spectator replay, `replayMode`, with its controls pinned in a bottom bar
   outside the inert body) is the densest file: it renders different sub-views depending on

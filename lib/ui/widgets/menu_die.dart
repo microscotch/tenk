@@ -140,7 +140,7 @@ class _MenuDiePicture extends StatefulWidget {
     final canvas = Canvas(recorder)
       ..scale(ratio)
       ..translate(pad, pad);
-    _MenuDiePainter(icon: icon, color: color, ink: ink, cameraDistance: _perspectiveDistance).paint(canvas, Size(size, size));
+    _MenuDiePainter(icon: icon, color: color, ink: ink, cameraDistance: _perspectiveDistance, yaw: _menuYaw).paint(canvas, Size(size, size));
     final picture = recorder.endRecording();
     try {
       return await picture.toImage((side * ratio).ceil(), (side * ratio).ceil());
@@ -206,11 +206,21 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
 /// du menu et de l'icône de l'app.
 const double _perspectiveDistance = 3.0;
 
+/// Le quart de tour de base : un dé vu exactement de biais (45° autour de la
+/// verticale), deux flancs égaux.
+const double _cornerYaw = math.pi / 4;
+
+/// L'angle des dés de l'accueil et de l'icône de l'app : un peu tournés par rapport
+/// à [_cornerYaw] (de 12°, vers la gauche), pour qu'ils ne soient pas vus tout à
+/// fait de face — les deux flancs ne sont plus égaux, celui de droite est le plus
+/// large.
+const double _menuYaw = _cornerYaw - 12 * math.pi / 180;
+
 /// Un dé de plastique coloré, transparent dans toute sa masse : ses six faces
 /// sont peintes de la plus lointaine à la plus proche, chacune à moitié
 /// transparente, si bien qu'on voit à travers le dé les faces du fond (leurs
 /// icônes à l'envers) et que la couleur s'épaissit là où les faces se
-/// superposent. Le cube est tourné de 45° autour de la verticale, vu de 30°
+/// superposent. Le cube est tourné autour de la verticale (45° par défaut, voir [yaw]), vu de 30°
 /// au-dessus de la table, en perspective (voir [cameraDistance]) : ce qui est près
 /// de l'œil, le sommet de devant, est plus grand que ce qui est loin.
 ///
@@ -229,6 +239,9 @@ class _MenuDiePainter extends CustomPainter {
   /// parallèle.
   final double? cameraDistance;
 
+  /// De combien le dé est tourné autour de la verticale ([_cornerYaw] : de biais).
+  final double yaw;
+
   /// Le dé remplit tout son cadre (contour arrondi compris) au lieu de laisser la
   /// place d'une ombre.
   final bool fillBounds;
@@ -240,17 +253,17 @@ class _MenuDiePainter extends CustomPainter {
     this.translucent = true,
     this.art,
     this.cameraDistance,
+    this.yaw = _cornerYaw,
     this.fillBounds = false,
   });
 
-  static const _yaw = math.pi / 4;
   static const _tilt = -30 * math.pi / 180;
 
   @override
   void paint(Canvas canvas, Size size) {
     final spin = Matrix4.identity()
       ..rotateX(_tilt)
-      ..rotateY(_yaw);
+      ..rotateY(yaw);
     // Projection en perspective : l'œil est sur l'axe, à [cameraDistance] du centre
     // du cube (dont le côté vaut 1), et ce qui est plus près est plus grand :
     // `w = 1 - z / distance` divise x et y. Sans [cameraDistance], projection
@@ -613,6 +626,7 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
     ink: ink,
     translucent: false,
     cameraDistance: _perspectiveDistance,
+    yaw: _menuYaw,
     fillBounds: true,
     art: (canvas, unit, role) => _engrave(canvas, unit, Color.lerp(color, Colors.black, 0.72)!, (paint) {
       switch (role) {
