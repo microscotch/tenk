@@ -178,6 +178,15 @@ _ScoreGaps _scoreGaps(List<int> scores, int index) {
   );
 }
 
+/// Les chiffres d'une ligne : le score (première ligne), la valeur du radar
+/// dessous, et le tiret qui qualifie cette valeur.
+class _RowParts {
+  final Widget score;
+  final Widget? second;
+  final Widget? tiret;
+  const _RowParts({required this.score, this.second, this.tiret});
+}
+
 class _PlayerRow extends StatelessWidget {
   final Player player;
   final bool isCurrent;
@@ -235,11 +244,8 @@ class _PlayerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    // Un écart de 200 (le score minimum d'un tour) signale un risque réel de
-    // collision au prochain tour de l'adversaire concerné.
-    final dangerBelow = gaps.below == 200;
-    final opportunityAbove = gaps.above == 200;
     final previousEntry = ownPotentialTotal == null ? null : firstEntryBelow(player, ownPotentialTotal!);
+    final parts = isReference ? _currentParts(context, l10n, previousEntry) : _radarParts(context);
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -254,98 +260,53 @@ class _PlayerRow extends StatelessWidget {
               color: isCurrent ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Le nom cède la place (points de suspension) au score et au
-                // radar, qui ne doivent jamais être rognés.
-                Expanded(
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: AvatarWithBubble(
-                          bubble: bubble,
-                          child: PlayerAvatarWidget(name: player.name, size: 24, color: avatarColor),
-                        ),
+            // La hauteur de la ligne est celle d'avant les deux lignes de texte : un
+            // texte invisible (de la hauteur de l'ancien blason, ou un score) la donne, et le blason avec
+            // ses deux lignes, centrés dessus, débordent dans la marge de 10.
+            child: SizedBox(
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  ExcludeSemantics(
+                    child: Opacity(
+                      opacity: 0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        // 24 × 1,15 : la hauteur du blason de 24 de l'ancienne ligne.
+                        children: [const SizedBox(height: 24 * 1.15), Text(' ', style: _scoreStyle)],
                       ),
-                      Flexible(
-                        child: Text(
-                          displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
-                        ),
-                      ),
-                      if (isBot)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6),
-                          child: Tooltip(
-                            message: l10n.botSeatTooltip,
-                            child: Icon(Icons.smart_toy_outlined, size: 18, color: TableColors.of(context).muted),
-                          ),
-                        ),
-                      if (podiumRank != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6),
-                          child: Tooltip(
-                            message: switch (podiumRank!) {
-                              1 => l10n.rankFirstTooltip,
-                              2 => l10n.rankSecondTooltip,
-                              _ => l10n.rankThirdTooltip,
-                            },
-                            child: Icon(Icons.military_tech, size: 18, color: _medalColor(podiumRank!)),
-                          ),
-                        ),
-                      if (!player.hasEntered)
-                        Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text(
-                              l10n.notEnteredLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 11, color: TableColors.of(context).muted),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: OverflowBox(
+                      minHeight: 0,
+                      maxHeight: double.infinity,
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: AvatarWithBubble(
+                              bubble: bubble,
+                              child: PlayerAvatarWidget(name: player.name, size: 32, color: avatarColor),
                             ),
                           ),
-                        ),
-                    ],
+                          // Deux lignes : le nom, la médaille et le robot, avec le score
+                          // en face ; dessous, la valeur du radar.
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _nameLine(context, l10n, parts),
+                                _radarLine(context, l10n, parts),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                // Les icônes d'alerte (écart de 200, tiret) viennent à gauche des
-                // chiffres : leur nombre change d'un tour à l'autre, mais elles ne
-                // décalent que le nom, jamais la zone chiffrée.
-                if (isReference) ...[
-                  if (opportunityAbove)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: Tooltip(
-                        message: l10n.opportunityTooltip,
-                        child: Icon(Icons.gps_fixed, size: 18, color: TableColors.of(context).positive),
-                      ),
-                    ),
-                  if (dangerBelow)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: Tooltip(
-                        message: l10n.dangerTooltip,
-                        child: Icon(Icons.warning_amber_rounded, size: 18, color: TableColors.of(context).negative),
-                      ),
-                    ),
                 ],
-                if (player.hasTiret)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: Tooltip(
-                      message: l10n.tiretTooltip,
-                      child: Icon(Icons.priority_high, size: 18, color: TableColors.of(context).warning),
-                    ),
-                  ),
-                // Le score et l'écart gardent leur largeur : le nom, le blason et
-                // la médaille, à gauche, prennent tout le reste.
-                isReference ? _currentZone(context, l10n, previousEntry) : _radar(context),
-              ],
+              ),
             ),
           ),
         ),
@@ -357,11 +318,130 @@ class _PlayerRow extends StatelessWidget {
   static const _digits = [FontFeature.tabularFigures()];
   static const _scoreStyle = TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFeatures: _digits);
 
-  /// Ce qu'une ligne d'adversaire montre à droite : son score — en rouge et en
-  /// gras quand s'arrêter sur le total potentiel du joueur courant le barrerait,
-  /// une fois la main visible —, et dessous l'écart, écrit comme dans la grille
-  /// de scores : « 300 devant » / « 300 derrière » (voir [radarDifference]).
-  Widget _radar(BuildContext context) {
+  /// La première ligne : à gauche le nom (qui cède la place, points de
+  /// suspension, au score, qui ne doit jamais être rogné) ; en face, les icônes
+  /// d'alerte (écart de 200, tiret) puis le score. Les icônes
+  /// viennent à gauche du chiffre : leur nombre change d'un tour à l'autre, mais
+  /// elles ne décalent que le nom, jamais le score.
+  Widget _nameLine(BuildContext context, AppLocalizations l10n, _RowParts parts) {
+    final dangerBelow = gaps.below == 200;
+    final opportunityAbove = gaps.above == 200;
+    final scoreWidth = _textWidth(context, '10000', _scoreStyle);
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            displayName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
+          ),
+        ),
+        const SizedBox(width: 8),
+        if (isReference) ...[
+          if (opportunityAbove)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Tooltip(
+                message: l10n.opportunityTooltip,
+                child: Icon(Icons.gps_fixed, size: 18, color: TableColors.of(context).positive),
+              ),
+            ),
+          if (dangerBelow)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Tooltip(
+                message: l10n.dangerTooltip,
+                child: Icon(Icons.warning_amber_rounded, size: 18, color: TableColors.of(context).negative),
+              ),
+            ),
+        ],
+        if (player.hasTiret)
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Tooltip(
+              message: l10n.tiretTooltip,
+              child: Icon(Icons.priority_high, size: 18, color: TableColors.of(context).warning),
+            ),
+          ),
+        // Le score garde sa largeur, alignée à droite : même bord droit d'une ligne
+        // à l'autre. Un contenu trop large (grande police système) est réduit.
+        SizedBox(
+          width: scoreWidth,
+          child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: parts.score),
+        ),
+        const SizedBox(width: _tiretSlot),
+      ],
+    );
+  }
+
+  /// La seconde ligne : la valeur du radar (l'écart d'un adversaire, ou le score
+  /// précédent du joueur courant), alignée à droite sous le score ; à gauche, le
+  /// robot, la médaille et la mention « pas encore entré » quand elles s'appliquent. Une valeur absente garde
+  /// la hauteur de la ligne, et la case du tiret du score précédent (vide chez
+  /// les adversaires) garde le bord droit des deux lignes aligné.
+  Widget _radarLine(BuildContext context, AppLocalizations l10n, _RowParts parts) {
+    final muted = _mutedStyle(context);
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          // À gauche : le robot (un bot a repris le siège), la médaille du podium, puis
+          // « pas encore entré » ; le nom, au-dessus, garde toute sa place. Réduit si la
+          // valeur du radar, à droite, ne laisse pas la place.
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isBot)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Tooltip(
+                        message: l10n.botSeatTooltip,
+                        child: Icon(Icons.smart_toy_outlined, size: 16, color: TableColors.of(context).muted),
+                      ),
+                    ),
+                  if (podiumRank != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Tooltip(
+                        message: switch (podiumRank!) {
+                          1 => l10n.rankFirstTooltip,
+                          2 => l10n.rankSecondTooltip,
+                          _ => l10n.rankThirdTooltip,
+                        },
+                        child: Icon(Icons.military_tech, size: 16, color: _medalColor(podiumRank!)),
+                      ),
+                    ),
+                  if (!player.hasEntered)
+                    Text(l10n.notEnteredLabel, style: TextStyle(fontSize: 11, color: TableColors.of(context).muted)),
+                ],
+              ),
+            ),
+          ),
+          // La valeur du radar garde sa largeur, réduite seulement si elle dépasse la
+          // ligne (grande police système).
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: (constraints.maxWidth - _tiretSlot).clamp(0.0, double.infinity)),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: parts.second ?? Text(' ', style: muted),
+            ),
+          ),
+          SizedBox(width: _tiretSlot, child: parts.tiret),
+        ],
+      ),
+    );
+  }
+
+  /// Ce qu'une ligne d'adversaire montre : son score — en rouge et en gras quand
+  /// s'arrêter sur le total potentiel du joueur courant le barrerait, une fois la
+  /// main visible — et l'écart, écrit comme dans la grille de scores :
+  /// « 300 devant » / « 300 derrière » (voir [radarDifference]).
+  _RowParts _radarParts(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // Celui qui joue, vu depuis un autre siège : son total potentiel en direct à
     // la place de son score, et son écart avec moi.
@@ -369,8 +449,7 @@ class _PlayerRow extends StatelessWidget {
     final difference = radarDifference(player, potentialTotal, score: ownPotentialTotal);
     final barred = handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
     final muted = _mutedStyle(context);
-    return _radarZone(
-      context,
+    return _RowParts(
       score: Text(
         '$shownScore',
         style: _scoreStyle.copyWith(
@@ -400,11 +479,10 @@ class _PlayerRow extends StatelessWidget {
     );
   }
 
-  /// La zone du joueur courant : le total potentiel, puis le dernier score non
-  /// barré en dessous ([firstEntryBelow]).
-  Widget _currentZone(BuildContext context, AppLocalizations l10n, ScoreEntry? previousEntry) {
-    return _radarZone(
-      context,
+  /// Ce que montre la ligne du joueur courant : le total potentiel, puis le
+  /// dernier score non barré en dessous ([firstEntryBelow]).
+  _RowParts _currentParts(BuildContext context, AppLocalizations l10n, ScoreEntry? previousEntry) {
+    return _RowParts(
       score: Text('${ownPotentialTotal ?? potentialTotal}', style: _scoreStyle),
       second: Text('${previousEntry?.value ?? 0}', style: _mutedStyle(context)),
       // Le tiret est à droite de ce score précédent : il le qualifie lui, pas le
@@ -420,75 +498,6 @@ class _PlayerRow extends StatelessWidget {
 
   TextStyle _mutedStyle(BuildContext context) =>
       TextStyle(fontSize: 12, color: TableColors.of(context).muted, fontFeatures: _digits);
-
-  /// La zone de droite : le score, et dessous l'écart (ou le score précédent),
-  /// tous deux alignés à droite et en chiffres de même chasse. La colonne a la
-  /// largeur du plus large des deux (« 10000 derrière » dans la langue de
-  /// l'appareil) et une case réserve la place du tiret, à droite de la seconde
-  /// ligne : quelle que soit la valeur, rien ne bouge d'un tour à l'autre, et
-  /// toutes les lignes alignent leurs colonnes. Une seconde ligne absente garde
-  /// sa place. Un contenu trop large (grande police système) est réduit.
-  ///
-  /// **La hauteur de la ligne ne change pas** : elle reste celle d'un score seul
-  /// (un texte invisible de même style la donne), les deux lignes sont centrées
-  /// dessus et débordent dans la marge de la ligne, qui est de 10 de chaque côté.
-  Widget _radarZone(BuildContext context, {required Widget score, Widget? second, Widget? tiret}) {
-    final l10n = AppLocalizations.of(context);
-    final muted = _mutedStyle(context);
-    final scoreWidth = _textWidth(context, '10000', _scoreStyle);
-    final secondWidth = [
-      _textWidth(context, '\u221210000', muted),
-      _textWidth(context, l10n.gridGapAhead(10000), muted),
-      _textWidth(context, l10n.gridGapBehind(10000), muted),
-    ].reduce((a, b) => a > b ? a : b);
-    final columnWidth = scoreWidth > secondWidth ? scoreWidth : secondWidth;
-    // Une ligne invisible : sa seule raison d'être est sa hauteur.
-    Widget ghost(TextStyle style) => ExcludeSemantics(
-      child: Opacity(opacity: 0, child: Text(' ', style: style)),
-    );
-    return SizedBox(
-      width: columnWidth + _tiretSlot,
-      child: Stack(
-        children: [
-          ghost(_scoreStyle),
-          Positioned.fill(
-            child: OverflowBox(
-              minHeight: 0,
-              maxHeight: double.infinity,
-              alignment: Alignment.centerRight,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: columnWidth,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [score, second ?? ghost(muted)],
-                      ),
-                    ),
-                    // Le tiret du score précédent du joueur courant y tient, à la
-                    // hauteur de la seconde ligne ; vide chez les adversaires.
-                    SizedBox(
-                      width: _tiretSlot,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [ghost(_scoreStyle), tiret ?? ghost(muted)],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   static const _tiretSlot = 16.0;
   static double _textWidth(BuildContext context, String text, TextStyle style) {

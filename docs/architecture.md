@@ -94,8 +94,9 @@ une partie rejouable à l'identique.
   dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; la ligne l'écrit comme la grille de scores, sous le score : « N devant » / « N derrière »
   (`gridGapAhead` / `gridGapBehind`, selon le signe). Quand
   cet écart est nul, la ligne affiche à sa place ce score barrable, en rouge. La zone de droite de la ligne a une largeur
-  fixe (une colonne aussi large que « 10000 derrière » dans la langue de l'appareil) et **ne change pas la hauteur de la
-  ligne** : le score et l'écart, empilés, débordent dans sa marge (`_radarZone`).
+  fixe pour le score, et la ligne **ne change pas de hauteur** : le blason est suivi de deux lignes — le nom avec le score
+  en face (`_nameLine`), puis, dessous (`_radarLine`), le robot, la médaille et « pas encore entré » à gauche, la valeur du
+  radar à droite — qui débordent dans la marge de la ligne, un texte invisible donnant la hauteur d'origine.
   La grille de scores complète (`ScoreGridScreen`) reprend le même écart sur chaque ligne des autres joueurs, lu depuis
   `reference` (le joueur courant avec son total potentiel, le gagnant d'une partie finie), en valeur absolue suivie de
   « devant » / « derrière » (sauf sur une ligne barrée) ; chaque grille y prend la moitié de la largeur, sous un

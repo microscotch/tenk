@@ -213,8 +213,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `radarDifference`; a plain "0" when nil with no barrable score to show): their score minus the potential when the potential is above it, otherwise
   `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
   whether stopping on the potential would strike someone out (the hand label's green).
-  The score and the line under it are stacked **without changing the row's height**: `_radarZone` keeps the height of a
-  lone score (an invisible text of the same style gives it) and the two lines overflow into the row's 10-point margin.
+  A player's row is the crest followed by **two lines**: the name with the score opposite (`_PlayerRow._nameLine`, the 200-point
+  alert and strike icons just left of the score), and under it (`_radarLine`) the robot icon, the podium medal and "not
+  entered" on the left, the radar value on the right (the gap, or the reference player's previous score and its strike).
+  This is done **without changing the row's height**: a ghost (an invisible crest and score text) gives the old height, and
+  the crest with its two lines, centred on it, overflow into the row's 10-point margin.
   The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
   player with `potentialTotal` and `handBankable` (`GameScreen._gridScreen`, fed by `_gridPotential` / `_gridBankable`,
   set at each build), the winner on the game-over screen: each grid takes **half the width**, and the page is always the
@@ -225,7 +228,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   crest) left-aligned, and on every non-barred line of the other players the gap to the potential at the right:
   absolute value + "devant" / "derrière" (`gridGapAhead` / `gridGapBehind`; a plain "0" when nil), the score in red
   when the gap is nil and the hand can be banked. In the player list, the right-hand radar zone has a **fixed width** (a column as wide as the
-  widest of `10000` and "10000 derrière" in the device's language, plus the strike slot; never a `Flexible`; a nil gap shows the barrable score in red instead): the crest, name and medal on the left take the rest.
+  widest of `10000` and "10000 derrière" in the device's language, plus the strike slot; never a `Flexible`; a nil gap shows the barrable score in red instead): the name takes the rest of the first line.
 - `game/game_statistics.dart`, `game/score_series.dart` — statistics of one game
   (`GameStatisticsCollector` only observes the engine through `replayGame`'s callback, it
   re-implements no rule) and the per-player score curve, both **derived from the journal**.
