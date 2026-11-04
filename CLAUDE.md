@@ -58,8 +58,10 @@ should be public (check its visibility once in the repo's Packages settings); ot
 **Publishing can be turned off**: the Google Play and TestFlight uploads are then skipped *and* the build
 number isn't bumped (the builds and their artifacts are still produced). Untick `publish` on a manual
 `workflow_dispatch` run, or put `[no-publish]` in the message of a push's tip commit (only the tip is
-looked at, by the workflow and by the pre-push hook alike). Pull requests behave as before. The condition
-is `env.PUBLISH` at the top of the workflow, repeated in `bump-build-number`'s `if:` (no `env` context there).
+looked at, by the workflow and by the pre-push hook alike). It is also **always off outside `main`**: a pull
+request or a manual run on another branch builds but never uploads (no build-number bump there, so the upload
+would fail on a reused `versionCode` or ship unmerged code). The condition is `env.PUBLISH` at the top of the
+workflow, repeated in `bump-build-number`'s `if:` (no `env` context there).
 
 Both store-upload steps are deliberately `continue-on-error: true`, so **a green run does not mean
 the build reached Google Play or TestFlight** — a failed upload still shows as a green step. The

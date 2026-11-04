@@ -22,12 +22,14 @@ on:
 # number. Désactivé (les builds et leurs artefacts restent produits) :
 #  - à la main, en décochant « publish » sur un workflow_dispatch ;
 #  - sur un push, par la balise `[no-publish]` dans le message du commit de
-#    tête (seul celui-ci est regardé, comme le hook .githooks/pre-push).
-# Sur une pull request, rien ne change. La même condition est répétée dans le
-# `if:` de bump-build-number : le contexte `env` n'est pas disponible à ce
-# niveau.
+#    tête (seul celui-ci est regardé, comme le hook .githooks/pre-push) ;
+#  - hors de `main` : une pull request ou un lancement manuel sur une autre
+#    branche ne publie jamais (le build number n'y est pas incrémenté, l'envoi
+#    échouerait sur un versionCode déjà pris ou livrerait du code non fusionné).
+# La même condition est répétée dans le `if:` de bump-build-number : le contexte
+# `env` n'est pas disponible à ce niveau.
 env:
-  PUBLISH: ${{ (github.event_name != 'workflow_dispatch' || inputs.publish) && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[no-publish]')) }}
+  PUBLISH: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.publish) && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[no-publish]')) }}
 
 jobs:
   # Filet de sécurité côté CI pour le hook local .githooks/pre-push : celui-ci
