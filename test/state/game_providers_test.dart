@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
+import 'package:le10000/game/dice_roll.dart';
 import 'package:le10000/game/game_engine.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/player.dart';
@@ -190,6 +191,45 @@ void main() {
     await _flushMicrotasks();
 
     expect(await store.exists(42), isTrue);
+  });
+
+  test('une quinte d\'as en partie locale lance seule le tour du joueur suivant', () {
+    final notifier = container.read(gameProvider.notifier);
+    const setup = GameSetup(playerNames: ['A', 'B']);
+    notifier.debugLoadState(
+      GameEngine.newGame(['A', 'B']).startTurn(),
+      setup,
+      random: ScriptedRandom([1, 1, 1, 1, 1]),
+    );
+
+    notifier.roll();
+    notifier.applyKeep();
+
+    final after = container.read(gameProvider)!;
+    expect(after.players[0].totalScore, 10000);
+    expect(after.currentPlayerIndex, 1);
+    // La main héritée (10000 déjà acquis) ne pourrait plus banquer : B repart
+    // à 5 dés neufs sans question, comme après un banquage ordinaire.
+    expect(after.activeTurn, isNotNull, reason: 'le tour de B doit démarrer, sinon la manche finale est bloquée');
+  });
+
+  test('stopTurn sur une quinte d\'as réussit sans banquer pour le joueur suivant', () {
+    final notifier = container.read(gameProvider.notifier);
+    notifier.debugLoadState(
+      GameEngine.newGame(['A', 'B']).startTurn(),
+      const GameSetup(playerNames: ['A', 'B']),
+      random: ScriptedRandom([1, 1, 1, 1, 1]),
+    );
+
+    notifier.roll();
+    final attempt = notifier.stopTurn();
+
+    final after = container.read(gameProvider)!;
+    expect(attempt.success, isTrue);
+    expect(after.players[0].totalScore, 10000);
+    expect(after.players[1].totalScore, 0);
+    expect(after.currentPlayerIndex, 1);
+    expect(after.activeTurn, isNotNull);
   });
 
   test(

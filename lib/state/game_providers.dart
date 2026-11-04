@@ -537,6 +537,10 @@ class GameNotifier extends Notifier<GameEngine?> {
       state!.applyKeep(declineFivesCount: declineFivesCount),
       [GameAction.applyKeep(declineFivesCount: declineFivesCount)],
     );
+    // La quinte d'as banque dans la garde même : le tour est fini sans passer par
+    // [bank], et le joueur suivant doit démarrer comme après un banquage (sans
+    // effet quand le tour continue, ou que la partie est finie).
+    _startTurnIfNoChoice();
   }
 
   void endBustedTurn() {
@@ -580,7 +584,16 @@ class GameNotifier extends Notifier<GameEngine?> {
     final engine = state!;
     final pending = engine.activeTurn?.pendingRoll;
     if (_online == null) {
-      if (pending != null) applyKeep(declineFivesCount: declineFivesCount);
+      if (pending != null) {
+        final afterKeep = engine.applyKeep(declineFivesCount: declineFivesCount);
+        applyKeep(declineFivesCount: declineFivesCount);
+        // La quinte d'as banque dans la garde même : le tour est déjà fini, et
+        // [bank] banquerait pour le joueur suivant.
+        if (afterKeep.activeTurn == null || afterKeep.gameOver) {
+          final me = engine.currentPlayerIndex;
+          return BankAttempt.success(afterKeep.players[me].totalScore - engine.players[me].totalScore);
+        }
+      }
       return bank();
     }
     final afterKeep = pending != null ? engine.applyKeep(declineFivesCount: declineFivesCount) : engine;
