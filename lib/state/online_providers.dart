@@ -406,6 +406,9 @@ class OnlineSession extends Notifier<OnlineState> {
   Future<void> leave({bool tellServer = true}) async {
     if (tellServer) _send(ClientMessage.leave());
     _credentials = null;
+    // Une reconnexion déjà armée rouvrirait la partie qu'on quitte, avec le jeton
+    // d'avant (le serveur a encore le siège quand la coupure a empêché le `leave`).
+    _reconnectTimer?.cancel();
     // La connexion cesse d'écouter tout de suite (rien de ce qui arriverait
     // encore ne doit repeupler l'état), mais l'état n'attend pas qu'elle soit
     // fermée. Il attend en revanche l'effacement du jeton : sa remise à zéro
@@ -745,7 +748,10 @@ class OnlineSession extends Notifier<OnlineState> {
     _reconnectTimer?.cancel();
     final delay = ref.read(onlineReconnectDelayProvider)(_attempt++);
     _reconnectTimer = Timer(delay, () {
-      unawaited(_open(ClientMessage.rejoin(token: credentials.token), url: credentials.url, automatic: true));
+      // Le jeton lu maintenant, pas celui d'il y a un instant : un `leave` entre-temps l'a oublié.
+      final current = _credentials;
+      if (current == null) return;
+      unawaited(_open(ClientMessage.rejoin(token: current.token), url: current.url, automatic: true));
     });
   }
 

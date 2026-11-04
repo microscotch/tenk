@@ -852,6 +852,19 @@ void main() {
       expect(transport.channels.length, 1);
     });
 
+    test('quitter pendant qu\'une reconnexion est en attente ne rouvre pas la connexion', () async {
+      await joinedAndStarted(0, serverJournal());
+
+      // La coupure arme le minuteur de reconnexion ; on quitte avant qu'il ne sonne.
+      await transport.current.serverDrops();
+      await session().leave();
+      await settle();
+
+      expect(transport.channels.length, 1, reason: 'aucune reconnexion avec le jeton oublié');
+      expect(online().inRoom, isFalse);
+      expect(game().isOnline, isFalse);
+    });
+
     test('une partie finie ne cherche plus à se reconnecter (serveur sans revanche)', () async {
       await joinedAndStarted(0, serverJournal(), features: v1Server);
       transport.current.serverSends(ServerMessage.room(
