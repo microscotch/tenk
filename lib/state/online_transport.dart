@@ -117,7 +117,15 @@ class WebSocketTransport implements OnlineTransport {
     //   d'IOWebSocketChannel.connect (sans customClient) y échappe.
     WebSocket.userAgent = await tenkUserAgent();
     final channel = IOWebSocketChannel.connect(url);
-    await channel.ready.timeout(const Duration(seconds: 10));
+    try {
+      await channel.ready.timeout(const Duration(seconds: 10));
+    } catch (_) {
+      // Délai dépassé (ou refus) : la tentative n'a plus de lecteur. Sans cette
+      // fermeture, elle pourrait aboutir plus tard et laisser une connexion ouverte
+      // que personne n'écoute, comptée contre la limite du serveur.
+      unawaited(channel.sink.close().catchError((Object _) {}));
+      rethrow;
+    }
     return _WebSocketOnlineChannel(channel);
   }
 }
