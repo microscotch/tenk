@@ -16,7 +16,14 @@ import 'online_transport.dart' show tenkUserAgent;
 /// `tool/publish_store_build.sh`) : l'application ne contacte que lui.
 Uri latestBuildUrlFor(String serverUrl) {
   final server = Uri.parse(serverUrl);
-  return server.replace(scheme: server.scheme == 'ws' ? 'http' : 'https', path: '/latest-build', query: null);
+  // Construite champ par champ : `replace(query: null)` garde la requête et le
+  // fragment d'origine, qu'une adresse de serveur personnalisée peut porter.
+  return Uri(
+    scheme: server.scheme == 'ws' ? 'http' : 'https',
+    host: server.host,
+    port: server.hasPort ? server.port : null,
+    path: '/latest-build',
+  );
 }
 
 /// Le store d'où vient l'application installée, et donc ses mises à jour.

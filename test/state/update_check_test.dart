@@ -11,6 +11,11 @@ void main() {
   test('latestBuildUrlFor : la route du serveur des parties, à côté de /ws', () {
     expect(latestBuildUrlFor('wss://tenk.microscotch.net/ws'), Uri.parse('https://tenk.microscotch.net/latest-build'));
     expect(latestBuildUrlFor('ws://localhost:8080/ws'), Uri.parse('http://localhost:8080/latest-build'));
+    expect(
+      latestBuildUrlFor('wss://hote.example/ws?jeton=x#frag'),
+      Uri.parse('https://hote.example/latest-build'),
+      reason: 'ni la requête ni le fragment de l\'adresse du serveur ne suivent',
+    );
   });
 
   group('PublishedBuild.parse', () {
