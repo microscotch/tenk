@@ -31,11 +31,8 @@ class Le10000App extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Démarre/arrête la musique de fond et active/désactive les effets
     // sonores dès que les préférences changent (y compris au tout premier
-    // build, avec les valeurs par défaut).
-    ref.listen(
-      settingsProvider,
-      (previous, next) => SoundEffects.instance.applySettings(next),
-    );
+    // build, avec les valeurs par défaut) : ce build se refait à chaque
+    // changement, un `ref.listen` en plus l'appliquerait deux fois.
     SoundEffects.instance.applySettings(ref.watch(settingsProvider));
     // Écoute les liens d'invitation dès le premier build : c'est ce qui attrape
     // celui qui lance l'application.
