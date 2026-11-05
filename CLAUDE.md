@@ -102,7 +102,7 @@ it hasn't already increased past what's on the remote — CI attempts a Google P
 *every* push to `main` (`.github/workflows/build_apk.yaml`), and Google Play rejects any reused
 `versionCode`, which is exactly the recurring failure this hook exists to prevent. It cannot inject
 a commit into the push already in flight (git resolves which refs to push before invoking
-`pre-push` — verified empirically, not just per docs), so instead it commits the bump locally and
+`pre-push` — verified empirically, not just per docs), so instead it commits the bump locally (only `pubspec.yaml` and `Changelog.MD`: whatever else is staged stays staged) and
 **blocks that push** (exit 1) with a message asking to run `git push` again; the retry then goes
 through cleanly since the local build number is now ahead of the remote's. It does nothing when the tip
 commit's message contains `[no-publish]` (CI won't publish that push, so no build number is consumed).
