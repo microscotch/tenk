@@ -592,9 +592,16 @@ class Room {
   bool sweep() {
     final t = now();
     if (_phase == RoomPhase.lobby) {
+      final seatsBefore = _seats.length;
       _seats.removeWhere((s) => s.disconnectedAt != null && t.difference(s.disconnectedAt!) > config.reconnectGrace);
-      if (_host != null && !_seats.contains(_host)) _host = _seats.isEmpty ? null : _seats.first;
-      _renumber();
+      // Seulement si un siège a été libéré : renumérotation et état du salon ne sont
+      // envoyés qu'alors (sinon chaque ménage renverrait un `joined` à tout le monde),
+      // et ils le sont bien — les autres joueurs gardaient sinon le siège fantôme.
+      if (_seats.length != seatsBefore) {
+        if (_host != null && !_seats.contains(_host)) _host = _seats.isEmpty ? null : _seats.first;
+        _renumber();
+        _broadcastRoom();
+      }
     }
     final before = _phase;
     _refreshPhase();

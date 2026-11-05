@@ -478,6 +478,31 @@ void main() {
     });
   });
 
+  group('ménage du salon d\'attente', () {
+    test('un siège libéré par le ménage est annoncé aux autres, qui n\'ont plus de siège fantôme', () {
+      final (code, players) = lobby(3);
+      manager.disconnect(players[1].$2);
+      clock = clock.add(const Duration(minutes: 3));
+      manager.sweep();
+
+      expect(manager.room(code)!.seatCount, 2);
+      expect(players.first.$1.lastRoom.seats.map((s) => s.name), ['J1', 'J3']);
+      expect(players[2].$1.seat, 1, reason: 'le dernier joueur a changé de numéro');
+    });
+
+    test('un ménage qui ne libère rien n\'envoie rien aux joueurs', () {
+      final (_, players) = lobby(2);
+      final before = players.first.$1.of(ServerMessageType.joined).length;
+      final rooms = players.first.$1.of(ServerMessageType.room).length;
+
+      clock = clock.add(const Duration(seconds: 40));
+      manager.sweep();
+
+      expect(players.first.$1.of(ServerMessageType.joined).length, before);
+      expect(players.first.$1.of(ServerMessageType.room).length, rooms);
+    });
+  });
+
   group('ménage', () {
     test('un salon abandonné disparaît, fermant ses connexions', () {
       final (code, players) = lobby(2);
