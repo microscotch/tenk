@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/game_statistics.dart';
@@ -55,8 +57,6 @@ Future<int> syncPlayerStatistics({
     }
   }
 
-  final byId = {for (final p in profiles) p.id: p};
-
   final totals = {for (final p in profiles) p.id: PlayerStats.empty};
 
   for (final game in games) {
@@ -74,15 +74,24 @@ Future<int> syncPlayerStatistics({
       if (!_countsForProfiles(game, seat)) continue;
       // L'identifiant d'abord, le nom ensuite : le lien explicite survit à un
       // renommage, le nom n'est qu'un repli pour les parties antérieures.
-      final id = game.setup.playerIdAt(seat) ??
-          idByName[normalizeName(game.setup.playerNames[seat])];
+      // Un identifiant sans fiche (la fiche a été supprimée, puis recréée par son nom
+      // à l'amorçage) vaut un siège non rattaché : même règle que l'amorçage.
+      var id = game.setup.playerIdAt(seat);
+      if (id == null || !totals.containsKey(id)) id = idByName[normalizeName(game.setup.playerNames[seat])];
       if (id == null || !totals.containsKey(id)) continue;
       totals[id] = totals[id]! + stats.bySeat[seat];
     }
   }
 
+  // Les fiches sont relues au moment d'écrire : le calcul a pu durer, et une
+  // modification faite entre-temps (surnom, main, AutoRoll) ne doit pas être
+  // écrasée par l'état d'avant. Rien n'est réécrit quand les statistiques n'ont
+  // pas changé.
+  final current = {for (final p in await players.list()) p.id: p};
   for (final entry in totals.entries) {
-    final profile = byId[entry.key]!;
+    final profile = current[entry.key];
+    if (profile == null) continue; // supprimée pendant le calcul
+    if (jsonEncode(profile.stats.toJson()) == jsonEncode(entry.value.toJson())) continue;
     // Remplacement, jamais addition : c'est ce qui rend un second passage
     // inoffensif.
     await players.write(profile.copyWith(stats: entry.value));

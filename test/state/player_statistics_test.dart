@@ -36,6 +36,19 @@ void main() {
     return game;
   }
 
+  test('un siège rattaché à une fiche supprimée compte pour la fiche recréée par son nom', () async {
+    await archiveFinishedGame(
+      seed: 5,
+      setup: const GameSetup(playerNames: ['Alice', 'Bob'], playerIds: {0: 'fiche-supprimee'}),
+    );
+
+    await syncPlayerStatistics(archive: archive, players: players);
+    await syncPlayerStatistics(archive: archive, players: players);
+
+    final alice = (await players.list()).firstWhere((p) => p.name == 'Alice');
+    expect(alice.stats.gamesPlayed, 1, reason: 'sans repli sur le nom, elle resterait à 0 à chaque passage');
+  });
+
   group('parties en ligne', () {
     /// Une partie en ligne terminée, archivée comme le fait `GameNotifier`.
     Future<void> archiveOnlineGame({required List<String> names, required int mySeat}) async {
