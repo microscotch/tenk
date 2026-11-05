@@ -29,6 +29,20 @@ void main() {
     expect(points, turnsPlayed, reason: 'un point par tour terminé, et pas un de plus');
   });
 
+  test('une quinte d\'as, qui banque dans la garde même, termine bien le tour du gagnant', () {
+    final actions = [
+      GameAction.presetOrder(const [0, 1]),
+      GameAction.startTurn(useFullHand: false),
+      GameAction.roll(faces: const [1, 1, 1, 1, 1]),
+      GameAction.applyKeep(declineFivesCount: 0),
+    ];
+
+    final series = scoreSeriesByPlayer(setup, 0, actions);
+
+    expect(series[0], [0, 10000], reason: 'le tour de la quinte compte, avec son 10000');
+    expect(series[1], [0]);
+  });
+
   test('un tour craqué laisse un palier plutôt qu\'un trou', () {
     final played = playScriptedGame(setup, 42);
 

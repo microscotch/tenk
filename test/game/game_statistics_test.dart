@@ -165,6 +165,22 @@ void main() {
     });
   });
 
+  test('la quinte d\'as, qui banque dans la garde, est le meilleur tour banqué', () {
+    final stats = collectGameStatistics(
+      setup: const GameSetup(playerNames: ['A', 'B']),
+      seed: 0,
+      actions: [
+        GameAction.presetOrder(const [0, 1]),
+        GameAction.startTurn(useFullHand: false),
+        GameAction.roll(faces: const [1, 1, 1, 1, 1]),
+        GameAction.applyKeep(declineFivesCount: 0),
+      ],
+      includeUnfinished: true,
+    ).bySeat[0];
+
+    expect(stats.bestBankedTurn, 10000);
+  });
+
   group('mains pleines et meilleur tour', () {
     test('la plus longue série de mains pleines d\'un tour est retenue', () {
       final before = engineAtTurn();

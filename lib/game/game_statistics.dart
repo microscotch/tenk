@@ -122,7 +122,16 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
       // nul a donc banqué sur place — le cas de la quinte d'as, seule figure
       // autorisée à conclure une main pleine.
       if (next.activeTurn == null) {
-        _endTurnByBank(tally, previous);
+        // Le gain se lit aussi sur le compteur : le lancer en attente (la quinte) n'est
+        // pas encore dans `previous.activeTurn.bankedScore`.
+        _endTurnByBank(
+          tally,
+          previous,
+          banked: _max(
+            previous.activeTurn?.bankedScore ?? 0,
+            next.players[seat].totalScore - previous.players[seat].totalScore,
+          ),
+        );
       }
 
     case GameActionType.bank:
@@ -148,11 +157,11 @@ void _observe(List<_SeatTally> tallies, GameEngine? previous, GameEngine next, G
   _countBars(tallies, previous, next);
 }
 
-void _endTurnByBank(_SeatTally tally, GameEngine previous) {
+void _endTurnByBank(_SeatTally tally, GameEngine previous, {int? banked}) {
   tally.turns++;
   tally.hotDiceRun = 0;
   tally.bustStreak = 0;
-  tally.bestBankedTurn = _max(tally.bestBankedTurn, previous.activeTurn?.bankedScore ?? 0);
+  tally.bestBankedTurn = _max(tally.bestBankedTurn, banked ?? previous.activeTurn?.bankedScore ?? 0);
 }
 
 /// Figures comptées dès qu'elles SORTENT, même sur un lancer qui fait craquer

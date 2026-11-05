@@ -23,7 +23,10 @@ List<List<int>> scoreSeriesByPlayer(GameSetup setup, int seed, List<GameAction> 
 
   replayGame(setup, seed, actions, onGameAction: (previous, next, action) {
     if (previous == null) return;
-    if (action.type != GameActionType.bank && action.type != GameActionType.endBustedTurn) {
+    // La quinte d'as banque dans la garde même : un `applyKeep` qui vide
+    // `activeTurn` a fini le tour sans passer par un `bank`.
+    final endedInKeep = action.type == GameActionType.applyKeep && next.activeTurn == null;
+    if (action.type != GameActionType.bank && action.type != GameActionType.endBustedTurn && !endedInKeep) {
       return;
     }
     // Le joueur dont le tour s'achève est celui d'AVANT la transition : après
