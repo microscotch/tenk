@@ -11,10 +11,16 @@ String avatarInitialsFor(String name) {
   final words = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   if (words.isEmpty) return '??';
 
+  // Par point de code, pas par unité UTF-16 : un emoji en tête ou en queue de nom
+  // se coupait en deux moitiés de paire de substitution, et le texte du blason
+  // refusait de s'afficher (« string is not well-formed UTF-16 »).
+  String first(String word) => String.fromCharCode(word.runes.first);
+  String last(String word) => String.fromCharCode(word.runes.last);
+
   if (words.length == 1) {
     final word = words.first;
-    return (word[0] + word[word.length - 1]).toUpperCase();
+    return (first(word) + last(word)).toUpperCase();
   }
 
-  return (words[0][0] + words[1][0]).toUpperCase();
+  return (first(words[0]) + first(words[1])).toUpperCase();
 }

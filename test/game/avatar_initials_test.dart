@@ -31,4 +31,14 @@ void main() {
   test('accents et casse : initiales toujours en majuscules', () {
     expect(avatarInitialsFor('éric dupont'), 'ÉD');
   });
+
+  test('un emoji n\'est jamais coupé en deux : le texte reste de l\'UTF-16 bien formé', () {
+    for (final name in ['Lolo🎲', 'Lolo 🎲', '🎲Lolo', '🎲 🎲', '🎲']) {
+      final initials = avatarInitialsFor(name);
+      // Une moitié de paire de substitution isolée n'est pas un point de code valide.
+      expect(initials.runes.every((r) => r < 0xD800 || r > 0xDFFF), isTrue, reason: name);
+    }
+    expect(avatarInitialsFor('Lolo🎲'), 'L🎲');
+    expect(avatarInitialsFor('🎲 Lolo'), '🎲L');
+  });
 }
