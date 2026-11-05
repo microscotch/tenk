@@ -235,7 +235,6 @@ class _TutorialBubbleLayerState extends State<TutorialBubbleLayer> {
   @override
   Widget build(BuildContext context) {
     _measureAfterLayout();
-    final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
     final hole = widget.letThrough && widget.visible ? _target?.inflate(6) : null;
 
@@ -251,35 +250,41 @@ class _TutorialBubbleLayerState extends State<TutorialBubbleLayer> {
     final showBubble =
         widget.visible && widget.text.isNotEmpty && (widget.anchor == null || _target != null);
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (hole == null)
-          absorber(left: 0, top: 0, right: 0, bottom: 0)
-        else ...[
-          absorber(left: 0, top: 0, right: 0, bottom: size.height - hole.top),
-          absorber(left: 0, top: hole.bottom, right: 0, bottom: 0),
-          absorber(left: 0, top: hole.top, right: size.width - hole.left, bottom: size.height - hole.bottom),
-          absorber(left: hole.right, top: hole.top, right: 0, bottom: size.height - hole.bottom),
+    // La taille de cette couche, pas celle de l'écran : posée dans un dialogue, elle
+    // est rognée par les marges de sécurité, et la mesure de l'élément (faite dans
+    // son repère) ne tomberait plus dans les mêmes bandes.
+    return LayoutBuilder(builder: (context, constraints) {
+      final size = constraints.biggest;
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hole == null)
+            absorber(left: 0, top: 0, right: 0, bottom: 0)
+          else ...[
+            absorber(left: 0, top: 0, right: 0, bottom: size.height - hole.top),
+            absorber(left: 0, top: hole.bottom, right: 0, bottom: 0),
+            absorber(left: 0, top: hole.top, right: size.width - hole.left, bottom: size.height - hole.bottom),
+            absorber(left: hole.right, top: hole.top, right: 0, bottom: size.height - hole.bottom),
+          ],
+          if (showBubble)
+            if (widget.anchor == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _bubble(context, tailX: null, tailUp: false),
+                ),
+              )
+            else
+              _anchoredBubble(context, _target!, size),
+          if (widget.onSkip != null)
+            Positioned(
+              top: padding.top + 4,
+              right: 8,
+              child: TextButton(onPressed: widget.onSkip, child: Text(AppLocalizations.of(context).tutorialSkip)),
+            ),
         ],
-        if (showBubble)
-          if (widget.anchor == null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: _bubble(context, tailX: null, tailUp: false),
-              ),
-            )
-          else
-            _anchoredBubble(context, _target!, size),
-        if (widget.onSkip != null)
-          Positioned(
-            top: padding.top + 4,
-            right: 8,
-            child: TextButton(onPressed: widget.onSkip, child: Text(AppLocalizations.of(context).tutorialSkip)),
-          ),
-      ],
-    );
+      );
+    });
   }
 
   /// La bulle d'un élément : sous lui quand il y a la place, sinon au-dessus ;
