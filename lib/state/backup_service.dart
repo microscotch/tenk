@@ -112,9 +112,12 @@ class BackupService {
   /// mémoire avant la première écriture : un fichier de l'archive illisible est
   /// écarté et compté, il n'arrête pas la restauration.
   Future<BackupRestoreResult> restore(BackupArchive archive, BackupImportMode mode) async {
-    final playerFiles = _filter(archive.players, _validPlayer);
-    final pausedFiles = _filter(archive.paused, _validGame);
-    final finishedFiles = _filter(archive.finished, _validGame);
+    // Les noms sont revérifiés ici aussi, pas seulement à l'ouverture : cette méthode
+    // écrit sur le disque, et une archive construite autrement ne doit pas pouvoir
+    // sortir du dossier (`../x`) ni y déposer un fichier hors des formes de l'app.
+    final playerFiles = _filter(archive.players, _validPlayer, _isPlayerFile);
+    final pausedFiles = _filter(archive.paused, _validGame, _isGameFile);
+    final finishedFiles = _filter(archive.finished, _validGame, _isGameFile);
     final skipped = (archive.players.length - playerFiles.length) +
         (archive.paused.length - pausedFiles.length) +
         (archive.finished.length - finishedFiles.length);
@@ -162,8 +165,12 @@ class BackupService {
     }
   }
 
-  static Map<String, String> _filter(Map<String, String> files, bool Function(String) valid) =>
-      {for (final e in files.entries) if (valid(e.value)) e.key: e.value};
+  static Map<String, String> _filter(
+    Map<String, String> files,
+    bool Function(String content) valid,
+    bool Function(String name) acceptsName,
+  ) =>
+      {for (final e in files.entries) if (acceptsName(e.key) && valid(e.value)) e.key: e.value};
 
   /// Les fichiers de [dir] dont le nom est accepté et le contenu lisible : un
   /// fichier corrompu n'entre pas dans une sauvegarde (le reste de l'app les

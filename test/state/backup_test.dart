@@ -298,6 +298,22 @@ void main() {
       expect((await b.finished.list()).map((g) => g.seed), [1]);
     });
 
+    test('restaurer écarte un nom de fichier hors des formes de l\'app, même d\'une archive non passée par open', () async {
+      final b = phone('b');
+      final archive = BackupArchive(
+        createdAt: DateTime.utc(2026),
+        finished: {'../hors-du-dossier.run': gameJson(1), 'game-2.run': gameJson(2)},
+      );
+
+      final result = await b.service.restore(archive, BackupImportMode.merge);
+
+      expect(result.games, 1);
+      expect(result.skipped, 1);
+      expect((await b.finished.list()).map((g) => g.seed), [2]);
+      expect(File('${root.path}/b/hors-du-dossier.run').existsSync(), isFalse);
+      expect(File('${root.path}/hors-du-dossier.run').existsSync(), isFalse);
+    });
+
     test('un fichier de sauvegarde qui n\'est pas une sauvegarde est refusé sans rien écrire', () async {
       final b = phone('b');
       await b.finished.write(game(1));
