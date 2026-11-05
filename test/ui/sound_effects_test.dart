@@ -48,4 +48,34 @@ void main() {
 
     sounds.applySettings(const AppSettings(loaded: true));
   });
+
+  test('un lecteur de musique qui ne démarre pas n\'est pas gardé : la reprise relance au lieu de reprendre un lecteur mort', () async {
+    final sounds = SoundEffects.instance;
+    sounds.applySettings(const AppSettings(loaded: true)); // musique coupée : état de départ
+    debugEnableSoundEffects(); // vrai chemin audio : sans backend, `play` échoue
+    addTearDown(debugDisableSoundEffects);
+
+    sounds.applySettings(const AppSettings(musicEnabled: true, loaded: true));
+    for (var i = 0; i < 20; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    expect(sounds.musicPlayerForTest, isNull, reason: 'le lecteur qui a échoué ne doit pas rester le lecteur courant');
+    sounds.applySettings(const AppSettings(loaded: true));
+  });
+
+  test('un effet sonore qui ne démarre pas ne laisse pas son lecteur derrière lui', () async {
+    final sounds = SoundEffects.instance;
+    sounds.applySettings(const AppSettings(loaded: true));
+    debugEnableSoundEffects(); // vrai chemin audio : sans backend, `play` échoue
+    addTearDown(debugDisableSoundEffects);
+
+    final before = sounds.effectPlayersAlive;
+    await sounds.playDiceRoll(3);
+    for (var i = 0; i < 20; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    expect(sounds.effectPlayersAlive, before, reason: 'le lecteur de l\'effet raté doit être libéré');
+  });
 }

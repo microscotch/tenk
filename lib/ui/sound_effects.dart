@@ -107,16 +107,30 @@ class SoundEffects with WidgetsBindingObserver {
 
   Future<void> _play(String assetPath) async {
     if (_testDisabled || !_effectsEnabled || _inBackground) return;
+    Future<void> Function()? dispose;
     try {
       await _mixAudio();
-      final player = AudioPlayer();
+      final created = AudioPlayer();
+      effectPlayersAlive++;
+      var disposed = false;
+      dispose = () async {
+        if (disposed) return;
+        disposed = true;
+        effectPlayersAlive--;
+        try {
+          await created.dispose();
+        } catch (_) {}
+      };
+
       // `release` libère les ressources natives à la fin du son, pas l'objet Dart ni
       // ses flux : sans ce `dispose`, chaque effet joué en laisserait un de plus.
-      unawaited(player.onPlayerComplete.first.then((_) => player.dispose()).catchError((Object _) {}));
-      await player.setReleaseMode(ReleaseMode.release);
-      await player.play(AssetSource(assetPath));
+      unawaited(created.onPlayerComplete.first.then((_) => dispose!()).catchError((Object _) {}));
+      await created.setReleaseMode(ReleaseMode.release);
+      await created.play(AssetSource(assetPath));
     } catch (_) {
-      // Son indisponible sur cette plateforme : sans conséquence pour le jeu.
+      // Son indisponible sur cette plateforme : sans conséquence pour le jeu. Le
+      // lecteur qui n'a pas pu démarrer ne finira jamais : on le libère ici.
+      await dispose?.call();
     }
   }
 
@@ -126,15 +140,24 @@ class SoundEffects with WidgetsBindingObserver {
   @visibleForTesting
   int musicStartCount = 0;
 
+  /// Nombre de lecteurs d'effets créés et pas encore libérés.
+  @visibleForTesting
+  int effectPlayersAlive = 0;
+
+  /// Le lecteur de la musique, s'il y en a un de gardé.
+  @visibleForTesting
+  Object? get musicPlayerForTest => _musicPlayer;
+
   Future<void> _startMusic() async {
     musicStartCount++;
     _musicPlaying = true; // évite les démarrages concurrents si appelé deux fois
     final track = _musicTrack;
     _playingTrack = track;
     if (_testDisabled) return;
+    AudioPlayer? player;
     try {
       await _mixAudio();
-      final player = AudioPlayer();
+      player = AudioPlayer();
       // Connu de [_stopMusic] dès sa création : un arrêt demandé pendant les `await`
       // qui suivent l'atteint, au lieu de laisser la boucle démarrer ensuite.
       _musicPlayer = player;
@@ -146,7 +169,13 @@ class SoundEffects with WidgetsBindingObserver {
         await player.dispose();
       }
     } catch (_) {
-      // Pas de backend audio disponible : la musique reste simplement coupée.
+      // Pas de backend audio disponible : la musique reste simplement coupée. Le
+      // lecteur qui n'a pas démarré n'est pas gardé : [_resumeMusic] reprendrait
+      // sinon un lecteur mort au lieu de relancer la musique.
+      if (player != null && identical(_musicPlayer, player)) _musicPlayer = null;
+      try {
+        await player?.dispose();
+      } catch (_) {}
     }
   }
 
@@ -235,4 +264,11 @@ String diceRollAsset(int diceCount, Random random, {String? avoid, DiceSoundMode
 @visibleForTesting
 void debugDisableSoundEffects() {
   SoundEffects.instance._testDisabled = true;
+}
+
+/// Remet le vrai chemin audio (sans backend, dans un test : il échoue), pour
+/// vérifier ce qui se passe quand un lecteur ne démarre pas.
+@visibleForTesting
+void debugEnableSoundEffects() {
+  SoundEffects.instance._testDisabled = false;
 }
