@@ -248,6 +248,29 @@ void main() {
       expect(room.seatCount, 2);
     });
 
+    test('un votant dont la connexion tombe compte aussitôt comme un refus, sans attendre les 60 s', () {
+      final (code, players) = finished(count: 3);
+      send(players[0].$2, ClientMessage.rematch(RematchAnswer.propose));
+      send(players[1].$2, ClientMessage.rematch(RematchAnswer.accept));
+      final room = manager.room(code)!;
+      expect(room.phase, RoomPhase.over, reason: 'J3 n\'a pas encore répondu');
+
+      manager.disconnect(players[2].$2);
+
+      expect(room.phase, RoomPhase.playing, reason: 'les deux qui restent ont répondu : la revanche part');
+      expect(room.seatCount, 2);
+    });
+
+    test('quand les derniers humains quittent une partie finie, le salon se ferme', () {
+      final (code, players) = finished();
+
+      send(players[0].$2, ClientMessage.leave());
+      expect(manager.room(code), isNotNull, reason: 'un joueur reste');
+      send(players[1].$2, ClientMessage.leave());
+
+      expect(manager.room(code), isNull);
+    });
+
     test('un client d\'avant ne reçoit rien de la revanche, et compte comme un refus', () {
       final (code, players) = finished(count: 3, features: [serverFeatures, serverFeatures, const []]);
       send(players[0].$2, ClientMessage.rematch(RematchAnswer.propose));

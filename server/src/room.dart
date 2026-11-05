@@ -205,6 +205,9 @@ class Room {
     session.room = null;
     _touch();
     _broadcastRoom();
+    // Un votant déconnecté vaut un refus (voir [_resolveVoteIfComplete]) : le vote
+    // est rejugé tout de suite, sans attendre la fin du délai.
+    if (_phase == RoomPhase.over) _resolveVoteIfComplete();
   }
 
   /// Le joueur part pour de bon.
@@ -238,6 +241,8 @@ class Room {
         } else {
           _broadcastRoom();
         }
+        // Plus aucun humain dans la partie finie : rien à garder jusqu'à l'expiration.
+        if (isAbandoned) _close();
     }
   }
 
