@@ -228,6 +228,33 @@ void main() {
       expect(siblings, everyElement(isNot(anyOf(endsWith('.restore'), endsWith('.previous')))));
     });
 
+    test('remplacer : un échec en route laisse tout l\'ancien état, dossiers comme réglages', () async {
+      SharedPreferences.setMockInitialValues({'settings.themeChoice': 'light'});
+      final b = phone('b');
+      await b.paused.write(game(10));
+      await b.finished.write(game(20));
+      final bob = PlayerProfile.create(name: 'Bob');
+      await b.players.write(bob);
+      // Le dossier voisin des parties finies (où l'on prépare le nouveau) est pris par un fichier :
+      // l'écriture de ce dossier, le dernier, échoue.
+      File('${root.path}/b/over.restore').writeAsStringSync('en travers');
+      final anna = PlayerProfile.create(name: 'Anna');
+      final archive = BackupArchive(
+        createdAt: DateTime.utc(2026),
+        settings: {'settings.themeChoice': 'dark'},
+        paused: {'game-1.run': gameJson(1)},
+        finished: {'game-2.run': gameJson(2)},
+        players: {'player-${anna.id}.json': playerJson(anna)},
+      );
+
+      await expectLater(b.service.restore(archive, BackupImportMode.replace), throwsA(isA<FileSystemException>()));
+
+      expect((await b.paused.list()).map((g) => g.seed), [10]);
+      expect((await b.finished.list()).map((g) => g.seed), [20]);
+      expect((await b.players.list()).map((p) => p.id), [bob.id]);
+      expect((await SharedPreferences.getInstance()).getString('settings.themeChoice'), 'light');
+    });
+
     test('fusionner : ajoute ce qui manque, garde ce qui existe, réglages du fichier par-dessus', () async {
       SharedPreferences.setMockInitialValues({'settings.themeChoice': 'dark', 'settings.rightHanded': false});
       final a = phone('a');

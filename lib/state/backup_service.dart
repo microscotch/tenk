@@ -127,9 +127,11 @@ class BackupService {
         await _writeSettings(archive.settings, clear: false);
         return BackupRestoreResult(games: games, profiles: profiles, skipped: skipped);
       case BackupImportMode.replace:
-        await _replace(await players.directory(), playerFiles);
-        await _replace(await paused.directory(), pausedFiles);
-        await _replace(await finished.directory(), finishedFiles);
+        await _replaceAll([
+          (await players.directory(), playerFiles),
+          (await paused.directory(), pausedFiles),
+          (await finished.directory(), finishedFiles),
+        ]);
         await _writeSettings(archive.settings, clear: true);
         return BackupRestoreResult(
           games: pausedFiles.length + finishedFiles.length,
@@ -202,26 +204,54 @@ class BackupService {
     return added;
   }
 
-  /// Remplace tout le contenu de [dir] par [files] : on écrit dans un dossier
-  /// voisin, puis on échange les deux, pour qu'une erreur en route laisse
-  /// l'ancien contenu en place.
-  Future<void> _replace(Directory dir, Map<String, String> files) async {
-    final fresh = Directory('${dir.path}.restore');
-    final old = Directory('${dir.path}.previous');
-    if (await fresh.exists()) await fresh.delete(recursive: true);
-    if (await old.exists()) await old.delete(recursive: true);
-    await fresh.create(recursive: true);
-    for (final e in files.entries) {
-      await File('${fresh.path}/${e.key}').writeAsString(e.value);
-    }
-    await dir.rename(old.path);
+  /// Remplace tout le contenu de chaque dossier par ses fichiers, **tous ou aucun** :
+  /// d'abord on écrit chaque nouveau contenu dans un dossier voisin (c'est là que
+  /// l'on peut échouer, disque plein par exemple : rien n'a encore bougé), puis on
+  /// échange les dossiers, un à un, en défaisant les échanges déjà faits si l'un
+  /// échoue. L'ancien contenu n'est supprimé qu'une fois tout en place.
+  Future<void> _replaceAll(List<(Directory, Map<String, String>)> targets) async {
+    final staged = <(Directory dir, Directory fresh, Directory old)>[];
     try {
-      await fresh.rename(dir.path);
+      for (final (dir, files) in targets) {
+        final fresh = Directory('${dir.path}.restore');
+        final old = Directory('${dir.path}.previous');
+        if (await fresh.exists()) await fresh.delete(recursive: true);
+        if (await old.exists()) await old.delete(recursive: true);
+        await fresh.create(recursive: true);
+        staged.add((dir, fresh, old));
+        for (final e in files.entries) {
+          await File('${fresh.path}/${e.key}').writeAsString(e.value);
+        }
+      }
     } catch (_) {
-      await old.rename(dir.path);
+      for (final (_, fresh, _) in staged) {
+        if (await fresh.exists()) await fresh.delete(recursive: true);
+      }
       rethrow;
     }
-    await old.delete(recursive: true);
+    final swapped = <(Directory dir, Directory fresh, Directory old)>[];
+    try {
+      for (final step in staged) {
+        final (dir, fresh, old) = step;
+        await dir.rename(old.path);
+        swapped.add(step);
+        await fresh.rename(dir.path);
+      }
+    } catch (_) {
+      // Chaque dossier échangé reprend son ancien contenu ; celui qui était en cours
+      // (renommé en `.previous` mais pas encore remplacé) aussi.
+      for (final (dir, _, old) in swapped.reversed) {
+        if (await dir.exists()) await dir.delete(recursive: true);
+        await old.rename(dir.path);
+      }
+      for (final (_, fresh, _) in staged) {
+        if (await fresh.exists()) await fresh.delete(recursive: true);
+      }
+      rethrow;
+    }
+    for (final (_, _, old) in staged) {
+      await old.delete(recursive: true);
+    }
   }
 
   Future<void> _writeSettings(Map<String, Object> settings, {required bool clear}) async {
