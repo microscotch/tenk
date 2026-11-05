@@ -246,18 +246,29 @@ class BackupService {
       }
     } catch (_) {
       // Chaque dossier échangé reprend son ancien contenu ; celui qui était en cours
-      // (renommé en `.previous` mais pas encore remplacé) aussi.
+      // (renommé en `.previous` mais pas encore remplacé) aussi. Chaque pas se fait
+      // au mieux : qu'un seul échoue ne doit ni empêcher les suivants, ni cacher
+      // l'erreur d'origine.
       for (final (dir, _, old) in swapped.reversed) {
-        if (await dir.exists()) await dir.delete(recursive: true);
-        await old.rename(dir.path);
+        try {
+          if (await dir.exists()) await dir.delete(recursive: true);
+          await old.rename(dir.path);
+        } catch (_) {}
       }
       for (final (_, fresh, _) in staged) {
-        if (await fresh.exists()) await fresh.delete(recursive: true);
+        try {
+          if (await fresh.exists()) await fresh.delete(recursive: true);
+        } catch (_) {}
       }
       rethrow;
     }
+    // Tout est en place : l'ancien contenu n'est plus qu'un reste. Qu'on n'arrive pas à
+    // le supprimer (fichier verrouillé) ne rend pas la restauration ratée — elle a eu
+    // lieu —, et les réglages doivent encore suivre. Le prochain essai le nettoiera.
     for (final (_, _, old) in staged) {
-      await old.delete(recursive: true);
+      try {
+        await old.delete(recursive: true);
+      } catch (_) {}
     }
   }
 

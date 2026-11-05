@@ -255,6 +255,32 @@ void main() {
       expect((await SharedPreferences.getInstance()).getString('settings.themeChoice'), 'light');
     });
 
+    test('remplacer : un ancien contenu impossible à supprimer ne fait pas échouer la restauration', () async {
+      if (Platform.isWindows || Process.runSync('id', ['-u']).stdout.toString().trim() == '0') {
+        return; // les droits de fichier ne bloquent pas la suppression dans ces cas
+      }
+      SharedPreferences.setMockInitialValues({'settings.themeChoice': 'light'});
+      final b = phone('b');
+      await b.finished.write(game(20));
+      // Un sous-dossier non modifiable dans l'ancien contenu : sa suppression échoue.
+      final locked = Directory('${root.path}/b/over/verrou')..createSync(recursive: true);
+      File('${locked.path}/x').writeAsStringSync('x');
+      Process.runSync('chmod', ['555', locked.path]);
+      addTearDown(() => Process.runSync('chmod', ['755', '${root.path}/b/over.previous/verrou']));
+      final archive = BackupArchive(
+        createdAt: DateTime.utc(2026),
+        settings: {'settings.themeChoice': 'dark'},
+        finished: {'game-2.run': gameJson(2)},
+      );
+
+      final result = await b.service.restore(archive, BackupImportMode.replace);
+
+      expect(result.games, 1);
+      expect((await b.finished.list()).map((g) => g.seed), [2]);
+      expect((await SharedPreferences.getInstance()).getString('settings.themeChoice'), 'dark',
+          reason: 'les réglages suivent la restauration, malgré le reste impossible à nettoyer');
+    });
+
     test('fusionner : ajoute ce qui manque, garde ce qui existe, réglages du fichier par-dessus', () async {
       SharedPreferences.setMockInitialValues({'settings.themeChoice': 'dark', 'settings.rightHanded': false});
       final a = phone('a');
