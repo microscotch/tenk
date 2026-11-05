@@ -412,7 +412,7 @@ class GameNotifier extends Notifier<GameEngine?> {
   /// Applique la prochaine action du journal de rejeu, via le même dispatch
   /// que [replayGame] (voir [applyGameAction]), sans jamais persister.
   void applyNextReplayAction() {
-    if (_replayQueue.isEmpty) return;
+    if (!_isReplay || _replayQueue.isEmpty) return;
     final action = _replayQueue.removeAt(0);
     // Une reprise ne change rien à l'écran : la consommer sans y passer un
     // tic de temporisation, sinon le rejeu spectateur marquerait une pause
@@ -454,6 +454,11 @@ class GameNotifier extends Notifier<GameEngine?> {
     _setup = replay.orderedSetup;
     _originalSetup = original;
     _isReplay = false;
+    // Un rejeu ouvert avant (depuis l'écran de fin de la partie précédente) ne doit
+    // pas continuer d'appliquer ses actions à cette partie.
+    _replayQueue = const [];
+    _replayGameActions = const [];
+    _replayTurnStarts = const [];
     _replaySource = null;
     _seed = null;
     _random = null;

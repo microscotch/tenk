@@ -664,6 +664,31 @@ void main() {
       expect([for (final p in container.read(gameProvider)!.players) p.name], local.playerNames);
     });
 
+    test('une revanche qui démarre pendant un rejeu de la partie finie est bien vue comme une nouvelle partie', () async {
+      final first = fullJournal();
+      await joinedAndStarted(0, first);
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.over,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await settle();
+      final serial = online().gameSerial;
+      // Le joueur ouvre le rejeu depuis l'écran de fin : la partie en ligne quitte le notifier.
+      game().startGameReplay(setup, _handoffOf(first), source: null);
+      expect(game().isOnline, isFalse);
+
+      // La revanche démarre : un autre journal, dans le même salon.
+      final second = fullJournal(seed: 11);
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: second.sublist(0, 2)));
+      await settle();
+
+      expect(online().gameSerial, serial + 1, reason: 'sinon l\'écran de fin n\'ouvre jamais la nouvelle partie');
+      expect(game().isReplay, isFalse);
+      expect(game().hasNextReplayAction, isFalse, reason: 'le rejeu ne continue pas d\'appliquer ses actions à la partie en ligne');
+    });
+
     test('quitter le salon ne vide pas la partie locale', () async {
       await onlineThenLocal();
       final engine = container.read(gameProvider);

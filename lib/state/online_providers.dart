@@ -272,6 +272,11 @@ class OnlineSession extends Notifier<OnlineState> {
   OnlineChannel? _channel;
   StreamSubscription<String>? _subscription;
   Timer? _reconnectTimer;
+
+  /// La première action du journal de la partie que cette session a démarrée en
+  /// dernier : ce qui distingue une revanche (un autre journal, dans le même salon)
+  /// d'un simple renvoi de la partie en cours.
+  GameAction? _startedWith;
   OnlineCredentials? _credentials;
   var _attempt = 0;
 
@@ -418,6 +423,7 @@ class OnlineSession extends Notifier<OnlineState> {
     // Seulement la partie en ligne : une partie locale n'est pas la nôtre.
     if (_game.isOnline) _game.endOnlineGame();
     ref.read(onlineEmotesProvider.notifier).clear();
+    _startedWith = null;
     state = const OnlineState();
     await closing;
   }
@@ -442,6 +448,7 @@ class OnlineSession extends Notifier<OnlineState> {
     _reconnectTimer?.cancel();
     await _close();
     if (_game.isOnline) _game.endOnlineGame();
+    _startedWith = null;
     state = const OnlineState();
   }
 
@@ -590,7 +597,9 @@ class OnlineSession extends Notifier<OnlineState> {
     // Une nouvelle partie dans le même salon (une revanche, qui ne se joue
     // qu'une fois la précédente finie) : son journal ne commence pas comme
     // celui de la partie à l'écran.
-    final current = _game.isOnline && _game.actions.isNotEmpty ? _game.actions.first : null;
+    // Lu sur ce que la session a elle-même démarré en dernier, pas sur le notifier :
+    // le joueur a pu y ouvrir un rejeu de la partie finie, qui n'est plus « en ligne ».
+    final current = _startedWith;
     final newGame = state.gameStarted &&
         state.phase == RoomPhase.over &&
         current != null &&
@@ -610,6 +619,7 @@ class OnlineSession extends Notifier<OnlineState> {
       myProfileId: ref.read(settingsProvider).myProfileId,
       sendSelection: select,
     );
+    _startedWith = actions.isNotEmpty ? actions.first : null;
     _game.setOnlineBotSeats({for (var i = 0; i < state.seats.length; i++) if (state.seats[i].bot) i});
     final diceOff = replayGame(GameSetup(playerNames: names), 0, actions.sublist(0, diceOffActionCount(actions))).diceOff;
     state = state.copyWith(
