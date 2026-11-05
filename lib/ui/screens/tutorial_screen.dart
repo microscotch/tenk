@@ -105,10 +105,16 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
     ref.read(settingsProvider.notifier).markTutorialSeen();
     ref.read(gameProvider.notifier).endTutorial();
     final next = widget.next;
+    final navigator = Navigator.of(context);
+    // « Passer » peut venir d'une fenêtre (craque, main héritée) posée par-dessus
+    // l'écran du tutoriel : on la ferme d'abord, sinon c'est elle qui sortirait et
+    // l'écran, sans partie, resterait sur son indicateur de chargement.
+    final route = ModalRoute.of(context);
+    if (route != null) navigator.popUntil((r) => r == route || r.isFirst);
     if (next == null) {
-      Navigator.of(context).pop();
+      navigator.pop();
     } else {
-      Navigator.of(context).pushReplacement(
+      navigator.pushReplacement(
         MaterialPageRoute<void>(
           // L'accueil garde son nom de route : c'est par lui qu'on y revient.
           settings: next is SetupScreen ? const RouteSettings(name: SetupScreen.routeName) : null,

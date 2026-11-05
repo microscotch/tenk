@@ -176,6 +176,42 @@ void main() {
     expect(container.read(settingsProvider).tutorialSeen, isTrue);
   });
 
+  /// Joue la leçon à l'écran jusqu'à ce que la bulle d'une fenêtre ([target]) s'affiche.
+  Future<void> playUntilDialog(WidgetTester tester, TutorialTarget target) async {
+    for (var i = 0; i < 200; i++) {
+      final id = shownBeat(tester);
+      if (id != null && beatNamed(tester, id).target == target) return;
+      if (id == null) {
+        await tester.pump(const Duration(milliseconds: 250));
+        continue;
+      }
+      final beat = beatNamed(tester, id);
+      if (beat.needsAck) {
+        await tester.tap(find.byKey(const ValueKey('tutorial-action')).last);
+      } else if (beat.target == TutorialTarget.roll) {
+        await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+      } else if (beat.target == TutorialTarget.stop) {
+        await tester.tap(find.byIcon(Icons.front_hand));
+      }
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    fail('la fenêtre de ${target.name} ne s\'est jamais ouverte');
+  }
+
+  testWidgets('« Passer » depuis la fenêtre de craque quitte le tutoriel, pas seulement la fenêtre', (tester) async {
+    await open(tester, lesson: TutorialLessonId.bust);
+    await playUntilDialog(tester, TutorialTarget.bustOk);
+    expect(find.byType(AlertDialog), findsWidgets, reason: 'la fenêtre de craque est ouverte');
+
+    await tester.tap(find.text('Passer').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TutorialScreen), findsNothing);
+    expect(find.byType(GameScreen), findsNothing);
+    expect(container.read(gameProvider), isNull);
+    expect(container.read(settingsProvider).tutorialSeen, isTrue);
+  });
+
   testWidgets('avec une page suivante, le retour système passe et la remplace', (tester) async {
     await open(tester, next: const Scaffold(body: Text('suite')));
     await tester.binding.handlePopRoute();
