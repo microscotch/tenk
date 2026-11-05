@@ -91,7 +91,9 @@ int defaultKeepCount(TurnState turn, RollAnalysis analysis, {required int curren
   for (var keep = maxKeep; keep >= minKeep; keep--) {
     final hypothetical = applyKeepDecision(
       turn,
-      declineFivesCount: maxKeep - keep,
+      // Le nombre de 5 écartés sur ceux du lancer, pas sur ceux qui restent gardables :
+      // près de 10000, `maxKeep` est sous le nombre de 5 et l'écart ne serait pas le même.
+      declineFivesCount: fives.diceCount - keep,
     );
     if (hypothetical.bankedScore % 100 != 50) return keep;
   }
