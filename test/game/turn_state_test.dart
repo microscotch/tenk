@@ -477,4 +477,22 @@ void main() {
       expect(minKeepableFives(analysis), 1, reason: 'garder 0 est illégal : le tour est perdu');
     });
   });
+
+  group('forcedDeclineFivesCount', () {
+    test('près de 10000, écarte le 5 que garder ferait dépasser, au lieu de tout garder', () {
+      // 9300 acquis, 550 ce tour, 5 valant 100 (extension) : le 1 isolé (100)
+      // porte à 9950, garder aussi le 5 donnerait 10050.
+      const state = TurnState(diceToRoll: 4, bankedScore: 550, extendedValues: {5}, hasRolledThisTurn: true);
+      final analysis = analyzeRoll([1, 5, 2, 3], extendedValues: const {5});
+
+      expect(forcedDeclineFivesCount(state, analysis, currentTotal: 9300), 1);
+    });
+
+    test('sans dépassement, rien n\'est écarté quand on ne peut pas décliner', () {
+      const state = TurnState(diceToRoll: 5, hasRolledThisTurn: true);
+      final analysis = analyzeRoll([5, 5, 5, 2, 3]);
+
+      expect(forcedDeclineFivesCount(state, analysis, currentTotal: 0), 0);
+    });
+  });
 }

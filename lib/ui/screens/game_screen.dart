@@ -1033,7 +1033,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     final currentTotal = engine.currentPlayer.totalScore;
     if (_hasRealChoice(turn, pendingRoll, currentTotal: currentTotal)) return;
-    final afterKeep = applyKeepDecision(turn, declineFivesCount: 0);
+    final afterKeep = applyKeepDecision(turn, declineFivesCount: forcedDeclineFivesCount(turn, pendingRoll, currentTotal: currentTotal));
     final attempt = tryBank(
       afterKeep,
       minimumRequired: engine.minimumForCurrentPlayer,
@@ -1393,7 +1393,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
       }
       _scheduleIfAuto(engine.currentPlayerIndex, () {
         if (ref.read(gameProvider)?.activeTurn?.pendingRoll != analysis) return;
-        ref.read(gameProvider.notifier).applyKeep(declineFivesCount: 0);
+        ref.read(gameProvider.notifier).applyKeep(
+              declineFivesCount: forcedDeclineFivesCount(turn, analysis, currentTotal: engine.currentPlayer.totalScore),
+            );
       }, ref.read(settingsProvider).autoActionDelay);
       return;
     }

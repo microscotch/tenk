@@ -293,6 +293,18 @@ int minKeepableFives(RollAnalysis analysis) {
   return analysis.mandatoryGroups.isEmpty ? 1 : 0;
 }
 
+/// Le nombre de 5 à écarter quand il n'y a plus de vrai choix (au plus un nombre
+/// de 5 gardable légal, une fois retirés ceux qui feraient dépasser 10000) : le
+/// seul légal. Plus de 0 par défaut — près de 10000, garder tous les 5 peut
+/// dépasser alors qu'en écarter un est permis.
+int forcedDeclineFivesCount(TurnState state, RollAnalysis analysis, {required int currentTotal}) {
+  final fives = analysis.declinableFives;
+  if (fives == null) return 0;
+  final min = minKeepableFives(analysis);
+  final max = maxKeepableFives(state, analysis, currentTotal: currentTotal);
+  return fives.diceCount - (max < min ? min : max);
+}
+
 /// Points que ce lancer rapportera au minimum, quoi que le joueur décide :
 /// groupes obligatoires + les 5 qu'il ne peut pas écarter.
 int minimumUnavoidableGain(RollAnalysis analysis) {
