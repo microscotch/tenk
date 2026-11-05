@@ -25,7 +25,8 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   current_sha=$(git rev-parse HEAD)
   # `git push origin HEAD:main` donne `HEAD` comme référence locale : c'est bien la
   # branche checkoutée (`git push origin HEAD` la résout, lui, en refs/heads/main).
-  if { [ "$current_ref" != "$local_ref" ] && [ "$local_ref" != "HEAD" ]; } || [ "$current_sha" != "$local_sha" ]; then
+  # Sur une tête détachée (`current_ref` vide), `HEAD` n'est pas une branche : rien à bumper.
+  if [ -z "$current_ref" ] || { [ "$current_ref" != "$local_ref" ] && [ "$local_ref" != "HEAD" ]; } || [ "$current_sha" != "$local_sha" ]; then
     echo "pre-push: push non standard (branche non checkoutée ou détachée), vérification du build number ignorée." >&2
     continue
   fi
