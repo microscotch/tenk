@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/game/ai/ai_profiles.dart';
+import 'package:le10000/game/ai/ai_strategy.dart';
 import 'package:le10000/game/ai/ai_turn.dart';
 import 'package:le10000/game/combination.dart';
 import 'package:le10000/game/game_engine.dart';
@@ -26,6 +27,26 @@ void main() {
     final move = nextAiMove(engine, prudent);
     expect(move.type, GameActionType.startTurn);
     expect(move.params['useFullHand'], isTrue);
+  });
+
+  test('la perte d\'un craque sur une ligne tiretée se mesure jusqu\'à la dernière ligne NON barrée', () {
+    // Grille [0, 500, 2000 barré, 800 tiret] : un nouveau craque barre 800 et
+    // retombe sur 500 (la ligne 2000 est barrée, on la saute) : 300 perdus.
+    var bot = Player(name: 'Bot', hasEntered: true).applySuccessfulTurn(500).applySuccessfulTurn(1500);
+    bot = bot.applyBust().applyBust(); // 2000 tiretée puis barrée : retour à 500
+    bot = bot.applySuccessfulTurn(300).applyBust(); // 800, tiretée
+    expect(bot.totalScore, 800);
+    expect(bot.hasTiret, isTrue);
+    expect(bot.previousScore, 2000, reason: 'prémisse : la ligne juste avant est la barrée');
+
+    final strategy = _RecordingStrategy();
+    final engine = fresh.copyWith(
+      players: [bot, Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 600, hasRolledThisTurn: true),
+    );
+    aiContinues(engine, engine.activeTurn!, strategy);
+
+    expect(strategy.barLossIfBusted, 300);
   });
 
   test('un craque s\'acquitte', () {
@@ -55,4 +76,32 @@ void main() {
     );
     expect(nextAiMove(atTarget, prudent).type, GameActionType.bank);
   });
+}
+
+/// Une stratégie qui note ce qu'on lui demande de décider.
+class _RecordingStrategy implements AiStrategy {
+  int? barLossIfBusted;
+
+  @override
+  bool decideContinue({
+    required TurnState state,
+    required int minimumRequired,
+    required int currentTotalScore,
+    required int barLossIfBusted,
+  }) {
+    this.barLossIfBusted = barLossIfBusted;
+    return false;
+  }
+
+  @override
+  int decideDeclineFives(RollAnalysis analysis, TurnState state) => 0;
+
+  @override
+  bool decideAcceptInheritedHand({
+    required int diceCount,
+    required Set<int> extendedValues,
+    required int inheritedScore,
+    required int currentTotalScore,
+  }) =>
+      true;
 }

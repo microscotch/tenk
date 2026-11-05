@@ -13,8 +13,8 @@ abstract class AiStrategy {
   ///
   /// [barLossIfBusted] : points déjà acquis (au-delà du score de ce tour,
   /// toujours perdu en cas de craque) que ce craque ferait perdre EN PLUS en
-  /// barrant la ligne courante de la grille — c'est-à-dire `totalScore -
-  /// previousScore` si la ligne courante porte déjà un tiret actif
+  /// barrant la ligne courante de la grille — c'est-à-dire `totalScore` moins le
+  /// score de la dernière ligne non barrée, si la ligne courante porte déjà un tiret actif
   /// ([Player.hasTiret]), 0 sinon (un premier craque se contente d'un tiret,
   /// sans perte de score). Un craque sur une ligne déjà tiretée coûte donc
   /// bien plus qu'un simple tour perdu ; une stratégie sérieuse doit en tenir

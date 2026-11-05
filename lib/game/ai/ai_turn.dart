@@ -83,8 +83,9 @@ bool aiContinues(GameEngine engine, TurnState turn, AiStrategy strategy) {
     minimumRequired: engine.minimumForCurrentPlayer,
     currentTotalScore: player.totalScore,
     // Ligne courante déjà tiretée : un nouveau craque la barrerait, retombant
-    // sur le score précédent plutôt que de juste marquer un second tiret (voir
+    // sur la dernière ligne NON barrée (le repli saute les lignes barrées, voir
+    // Player._bar) plutôt que de juste marquer un second tiret (voir
     // Player.applyBust).
-    barLossIfBusted: player.hasTiret ? player.totalScore - player.previousScore : 0,
+    barLossIfBusted: player.hasTiret ? player.totalScore - (player.lastUnbarredEntry?.value ?? 0) : 0,
   );
 }
