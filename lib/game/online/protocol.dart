@@ -504,6 +504,16 @@ bool isValidOnlineName(String name) {
 bool _isForbiddenInName(int r) =>
     r < 0x20 ||
     (r >= 0x7f && r < 0xa0) ||
+    (r >= 0xd800 && r <= 0xdfff) || // moitié de paire de substitution isolée : pas du texte valide
+    r == 0xad || // trait d'union conditionnel
+    r == 0x34f || // joncteur de graphèmes combinant
+    r == 0x61c || // marque de lettre arabe
+    r == 0x115f || r == 0x1160 || r == 0x3164 || r == 0xffa0 || // remplisseurs hangul
+    r == 0x17b4 || r == 0x17b5 || // voyelles khmères inhérentes
+    (r >= 0x180b && r <= 0x180e) || // sélecteurs et séparateur mongols
+    r == 0x2800 || // motif braille vide
+    (r >= 0xfff9 && r <= 0xfffb) || // ancres d'annotation
+    (r >= 0xe0000 && r <= 0xe0fff) || // étiquettes et sélecteurs de variation étendus
     (r >= 0x200b && r <= 0x200f) || // largeur nulle, marques de sens
     (r >= 0x202a && r <= 0x202e) || // enchâssements et forçage du sens
     (r >= 0x2060 && r <= 0x206f) || // joncteurs, isolats, formes invisibles

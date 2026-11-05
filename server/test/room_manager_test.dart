@@ -78,6 +78,19 @@ void main() {
       expect(players.first.$1.lastRoom.seats.map((s) => s.name), ['J1', 'j1 2']);
     });
 
+    test('le suffixe ne coupe pas un emoji en deux quand le pseudo est tronqué', () {
+      final (code, players) = lobby(1);
+      final long = 'A${'🎲' * 9}'; // 19 unités : la troncature tombe au milieu d'une paire
+      send(open().$2, ClientMessage.join(code: code, name: long));
+      send(open().$2, ClientMessage.join(code: code, name: long));
+
+      final names = players.first.$1.lastRoom.seats.map((s) => s.name).toList();
+      expect(names.last, 'A${'🎲' * 8} 2');
+      for (final name in names) {
+        expect(name.runes.every((r) => r < 0xd800 || r > 0xdfff), isTrue, reason: name);
+      }
+    });
+
     test('un code inconnu est refusé', () {
       final guest = open();
       send(guest.$2, ClientMessage.join(code: 'ZZZZZ', name: 'Bob'));

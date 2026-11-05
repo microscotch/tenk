@@ -257,6 +257,20 @@ void main() {
       expect(serverFeatures, containsAll(clientFeatures));
     });
   });
+
+  group('pseudo : ce que le serveur refuse', () {
+    test('une moitié de paire de substitution isolée est refusée, un emoji entier non', () {
+      expect(isValidOnlineName('A\u{d800}B'), isFalse);
+      expect(isValidOnlineName('Lolo🎲'), isTrue);
+      expect(isValidOnlineName('Lolo❤️'), isTrue, reason: 'le sélecteur FE0F fait partie des emoji courants');
+    });
+
+    test('les caractères invisibles qui font passer un joueur pour un autre sont refusés', () {
+      for (final sneaky in ['An\u00adna', 'An\u034fna', 'An\u061cna', 'Anna\u3164', '\u2800', 'An\u180ena']) {
+        expect(isValidOnlineName(sneaky), isFalse, reason: sneaky.runes.map((r) => r.toRadixString(16)).join(' '));
+      }
+    });
+  });
 }
 
 class JsonName {

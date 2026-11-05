@@ -682,7 +682,11 @@ class Room {
     if (!taken.contains(name.toLowerCase())) return name;
     for (var n = 2;; n++) {
       final suffix = ' $n';
-      final candidate = '${name.substring(0, min(name.length, maxPlayerNameLength - suffix.length))}$suffix';
+      var cut = min(name.length, maxPlayerNameLength - suffix.length);
+      // Jamais au milieu d'une paire de substitution (un emoji) : la moitié restante
+      // n'est pas du texte valide.
+      if (cut > 0 && cut < name.length && name.codeUnitAt(cut - 1) >= 0xd800 && name.codeUnitAt(cut - 1) <= 0xdbff) cut--;
+      final candidate = '${name.substring(0, cut)}$suffix';
       if (!taken.contains(candidate.toLowerCase())) return candidate;
     }
   }
