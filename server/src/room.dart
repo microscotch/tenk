@@ -205,9 +205,8 @@ class Room {
     session.room = null;
     _touch();
     _broadcastRoom();
-    // Un votant déconnecté vaut un refus (voir [_resolveVoteIfComplete]) : le vote
-    // est rejugé tout de suite, sans attendre la fin du délai.
-    if (_phase == RoomPhase.over) _resolveVoteIfComplete();
+    // Pendant un vote de revanche, une coupure n'est pas un refus : le siège garde
+    // son jeton, et le votant peut revenir avant la fin du délai (sinon, c'est un refus).
   }
 
   /// Le joueur part pour de bon.

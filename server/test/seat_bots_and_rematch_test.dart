@@ -248,7 +248,7 @@ void main() {
       expect(room.seatCount, 2);
     });
 
-    test('un votant dont la connexion tombe compte aussitôt comme un refus, sans attendre les 60 s', () {
+    test('un votant dont la connexion tombe ne clôt pas le vote : c\'est la fin du délai qui compte', () {
       final (code, players) = finished(count: 3);
       send(players[0].$2, ClientMessage.rematch(RematchAnswer.propose));
       send(players[1].$2, ClientMessage.rematch(RematchAnswer.accept));
@@ -257,8 +257,21 @@ void main() {
 
       manager.disconnect(players[2].$2);
 
-      expect(room.phase, RoomPhase.playing, reason: 'les deux qui restent ont répondu : la revanche part');
+      expect(room.phase, RoomPhase.over, reason: 'une coupure brève ne doit pas décider du vote');
+      scheduler.elapse(const Duration(seconds: 60));
+      expect(room.phase, RoomPhase.playing, reason: 'sans réponse à l\'échéance, c\'est un refus : la revanche part sans lui');
       expect(room.seatCount, 2);
+    });
+
+    test('un votant seul à répondre, dont l\'adversaire a décroché un instant, n\'annule pas la revanche', () {
+      final (code, players) = finished();
+      send(players[0].$2, ClientMessage.rematch(RematchAnswer.propose));
+      final room = manager.room(code)!;
+
+      manager.disconnect(players[1].$2);
+
+      expect(manager.room(code), isNotNull, reason: 'le salon attend encore le retour de J2');
+      expect(room.phase, RoomPhase.over);
     });
 
     test('quand les derniers humains quittent une partie finie, le salon se ferme', () {
