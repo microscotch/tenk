@@ -160,7 +160,11 @@ seul, puisque c'est toujours la garde maximale légale (`maxKeepableFives`,
 déjà plafonnée pour ne jamais dépasser 10000) : quand il existe, c'est la
 seule prise sensée, imposée par chaque décideur (voir `GameEngine` ci-dessus
 et `lib/state`/`server` plus bas) plutôt que par la fonction elle-même, qui
-reste neutre.
+reste neutre. `forcedDeclineFivesCount` généralise ce cas : le nombre de 5 à
+écarter quand il n'y a plus de vrai choix (le seul gardable légal, une fois
+retirés ceux qui feraient dépasser 10000), 0 sinon ; l'écran de jeu s'en sert
+pour valider seul un choix imposé, que ce soit la victoire ou une garde
+bornée à un seul nombre.
 
 ## Fiches, statistiques et journal (bas du diagramme)
 
@@ -392,7 +396,9 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   au moins, le salon réordonne ses sièges (`rematchSeatOrder` : l'ordre de la partie précédente, à partir du
   meilleur score, sans bots ni refus) et démarre sans tirage : le journal commence par `presetOrder`
   (`DiceOffState.preset`). Sinon chacun rentre et le salon se ferme. L'écran de fin reconnaît la nouvelle partie
-  à `gameSerial` et ouvre un écran de jeu neuf sur l'accueil.
+  à `gameSerial` et ouvre un écran de jeu neuf sur l'accueil. `OnlineSession` repère
+une revanche au premier coup du journal (`_startedWith`, le dernier journal qu'elle a
+elle-même démarré), pas à l'état du `GameNotifier` : le joueur a pu y ouvrir un rejeu.
 - **Limites** : connexions et créations de salon par adresse, essais de code infructueux (un code de salon ne
   se devine pas), débit et taille des messages. Le serveur n'a aucun état persistant : les parties vivent en
   mémoire.

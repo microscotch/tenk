@@ -282,7 +282,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   and `disconnect()` against an older server (the game would wait for the player). `OnlineState` carries the
   server's features (`serverFeatures`, `seatBotsEnabled`, `startSignalEnabled`, `rematchEnabled`,
   `emotes2Enabled`), `begun` (start signal), the pending `rematch` vote and `gameSerial` (bumped when a snapshot
-  starts a new game in the same room — a rematch — only after the previous one was `over`). Rematch
+  starts a new game in the same room — a rematch — only after the previous one was `over`; a rematch is spotted
+  from the first action of the journal against `_startedWith`, what the session itself started last, never from
+  the `GameNotifier`, where the player may have opened a replay). Rematch
   exclusion/cancellation is reported through `onlineNoticeProvider` (the session itself is reset by then). With
   `rematchFeature`, the token is kept in phase `over` (a drop during the 60 s vote must be able to reconnect);
   without it, as before, `over` clears it. `GameNotifier.setOnlineBotSeats` / `isOnlineBot(i)` mark seats a
@@ -584,6 +586,9 @@ them accurate as part of the same batch.
   some legal keep count hits the target, it's the only sensible one and it's mandatory —
   `winningDeclineFivesCount` (`turn_state.dart`) finds it; it's unique when it exists, since the exact
   hit is always the largest legal keep (`maxKeepableFives` already caps there for the same reason).
+  `forcedDeclineFivesCount` is the same idea one step wider: the count to decline when no real choice is
+  left (the only legal keep once overshooting ones are removed), 0 otherwise — the game screen uses it
+  to validate a forced choice on its own.
   `GameEngine.applyKeep` itself stays neutral (it still does whatever `declineFivesCount` it's handed —
   existing tests rely on that), so every *decider* must compute and pass this count itself: the UI
   (`_scheduleAutoAdvanceIfNeeded` in `game_screen.dart`) auto-fires `stopTurn` with no tap, for any
