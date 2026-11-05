@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -109,6 +110,9 @@ class SoundEffects with WidgetsBindingObserver {
     try {
       await _mixAudio();
       final player = AudioPlayer();
+      // `release` libère les ressources natives à la fin du son, pas l'objet Dart ni
+      // ses flux : sans ce `dispose`, chaque effet joué en laisserait un de plus.
+      unawaited(player.onPlayerComplete.first.then((_) => player.dispose()).catchError((Object _) {}));
       await player.setReleaseMode(ReleaseMode.release);
       await player.play(AssetSource(assetPath));
     } catch (_) {
@@ -131,9 +135,16 @@ class SoundEffects with WidgetsBindingObserver {
     try {
       await _mixAudio();
       final player = AudioPlayer();
+      // Connu de [_stopMusic] dès sa création : un arrêt demandé pendant les `await`
+      // qui suivent l'atteint, au lieu de laisser la boucle démarrer ensuite.
+      _musicPlayer = player;
       await player.setReleaseMode(ReleaseMode.loop);
       await player.play(AssetSource(track.asset));
-      _musicPlayer = player;
+      if (!identical(_musicPlayer, player)) {
+        // Arrêtée (ou remplacée) entre-temps : ce lecteur-ci n'a plus lieu d'être.
+        await player.stop();
+        await player.dispose();
+      }
     } catch (_) {
       // Pas de backend audio disponible : la musique reste simplement coupée.
     }
