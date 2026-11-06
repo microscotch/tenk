@@ -1558,6 +1558,22 @@ class _GameScreenState extends ConsumerState<GameScreen>
       }
       if (gainAlreadyLogged) _gainLoggedForRoll = null;
       final newPendingRoll = next.activeTurn?.pendingRoll;
+      final previousRoll = previous?.activeTurn?.pendingRoll;
+      final nextTurn = next.activeTurn;
+      final previousTurn = previous?.activeTurn;
+      // La suite du MÊME tour, garde appliquée : ni un craque (le tour suivant
+      // repart de zéro), ni un saut dans le rejeu ou un instantané en ligne.
+      if (previousTurn != null &&
+          previousRoll != null &&
+          !previousTurn.busted &&
+          newPendingRoll == null &&
+          nextTurn != null &&
+          !nextTurn.busted &&
+          nextTurn.hasRolledThisTurn &&
+          next.currentPlayerIndex == previous!.currentPlayerIndex &&
+          nextTurn.keptDiceThisTurn.length >= previousTurn.keptDiceThisTurn.length) {
+        _leftover = _leftoverAfterKeep(previousTurn, previousRoll, nextTurn);
+      }
       if (previous?.activeTurn?.pendingRoll != newPendingRoll) {
         if (newPendingRoll != null) {
           SoundEffects.instance.playDiceRoll(newPendingRoll.faces.length);
@@ -2492,8 +2508,44 @@ class _GameScreenState extends ConsumerState<GameScreen>
   int _restSeed(int rollIndex, int slot) =>
       Object.hash(_rollSalts.putIfAbsent(rollIndex, () => _saltRandom.nextInt(1 << 30)), slot);
 
+  /// Les dés qui n'ont pas été gardés au dernier lancer, tels qu'ils étaient sur
+  /// la piste (même place, même orientation), et le tour auquel ils appartiennent.
+  /// Entre la garde appliquée et le lancer suivant — long en AutoRoll, où la garde
+  /// s'applique seule après `autoActionDelay` —, ce sont les dés qu'il reste à
+  /// lancer : sans eux, la piste se vidait au moment où la garde rejoignait la main.
+  /// Valable tant que le tour est le même objet ([TurnState] est immuable : un
+  /// lancer, une prise ou un autre joueur en crée un autre).
+  ({TurnState turn, List<_LeftoverDie> dice})? _leftover;
+
+  /// Les dés restés sur la piste une fois [before] décidé : ceux qui ne marquent
+  /// pas, et les 5 déclinés. Rien si la garde a vidé la main (main pleine : cinq
+  /// dés neufs, que rien n'a encore lancés).
+  ({TurnState turn, List<_LeftoverDie> dice})? _leftoverAfterKeep(TurnState before, RollAnalysis roll, TurnState after) {
+    final fives = roll.declinableFives?.diceCount ?? 0;
+    final junk = classifyDiceForDisplay(roll, 0).where((s) => s == DieVisualState.junk).length;
+    final declined = after.diceToRoll - junk;
+    if (declined < 0 || declined > fives) return null;
+    final states = classifyDiceForDisplay(roll, fives - declined);
+    final order = keptDisplayOrder(roll);
+    final rollIndex = _pendingRollIndex(before.keptDiceThisTurn);
+    return (
+      turn: after,
+      dice: [
+        for (var i = 0; i < roll.faces.length; i++)
+          _LeftoverDie(
+            value: roll.faces[i],
+            state: states[i],
+            index: i,
+            shown: states[i] == DieVisualState.junk || states[i] == DieVisualState.declined,
+            restSeed: _restSeed(rollIndex, order.indexOf(i)),
+          ),
+      ],
+    );
+  }
+
   /// Zone bordurée "Piste" : uniquement les dés du lancer en attente de
-  /// décision (ou rien, zone vide, s'il n'y en a aucun) — son score va dans
+  /// décision — ou, la garde appliquée et le lancer suivant pas encore parti, les
+  /// dés qui restent à lancer (voir [_leftover]) —, sinon rien, zone vide. Son score va dans
   /// le libellé lui-même, entre parenthèses, une fois [showScore] (les dés
   /// immobilisés, voir `_rollSettled`). `selectedKeep` ne pèse que sur
   /// l'aperçu visuel (voir `classifyDiceForDisplay`) : 0 pour l'IA/un
@@ -2511,6 +2563,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }) {
     final l10n = AppLocalizations.of(context);
     final analysis = turn.pendingRoll;
+    final leftover = analysis == null && !turn.busted && identical(_leftover?.turn, turn) ? _leftover!.dice : null;
     final label = showScore
         ? l10n.currentRollZoneLabelWithScore(
             _previewPoints(analysis!, selectedKeep),
@@ -2522,7 +2575,21 @@ class _GameScreenState extends ConsumerState<GameScreen>
       padding: _diceZonePadding,
       child: _DiceZoneBody(
         child: analysis == null
-              ? const SizedBox.shrink()
+              ? (leftover == null
+                    ? const SizedBox.shrink()
+                    // Les dés qui restent à lancer, là où ils étaient : ceux de la
+                    // garde, déjà dans la main, gardent leur place vide.
+                    : _fittedDiceRow(leftover.length, key: ObjectKey(leftover), (i, size) {
+                        final d = leftover[i];
+                        final die = DieWidget(
+                          value: d.value,
+                          state: d.state,
+                          bodyColor: _diceColor(d.index),
+                          size: size,
+                          restSeed: d.restSeed,
+                        );
+                        return d.shown ? die : Opacity(opacity: 0, child: die);
+                      }, isAiTurn: isAiTurn))
               // Chaque dé du lancer est TOUJOURS rendu ici (composition
               // fixe) : seule son opacité varie selon previewIndices, pour
               // un fondu propre dans les deux sens (garder <-> redonner —
@@ -3412,6 +3479,27 @@ double _aiFittedDieSize(double availableWidth) {
   final previousAvailable = available - _previousZoneSideInset * 2;
   return ((previousAvailable / _diceRowReferenceCount) - _previousDieMargin * 2)
       .clamp(_minDieSize, _previousDieMaxSize);
+}
+
+/// Un dé du dernier lancer, tel que la piste le montrait (voir
+/// `_GameScreenState._leftover`) : [shown] faux pour ceux que la garde a déjà
+/// posés dans la main, dont la place reste vide.
+class _LeftoverDie {
+  final int value;
+  final DieVisualState state;
+
+  /// Rang du dé dans le lancer (sa place, sa couleur en mode panaché).
+  final int index;
+  final bool shown;
+  final int restSeed;
+
+  const _LeftoverDie({
+    required this.value,
+    required this.state,
+    required this.index,
+    required this.shown,
+    required this.restSeed,
+  });
 }
 
 /// Corps des zones "Piste" et "Main courante" : réserve exactement la hauteur

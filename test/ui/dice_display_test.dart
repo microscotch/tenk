@@ -177,6 +177,105 @@ void main() {
         reason: 'une fois immobilisés, les dés retenus rejoignent la main');
   });
 
+  testWidgets('une fois la garde appliquée, le dé qui reste à lancer demeure sur la piste jusqu\'au lancer suivant',
+      (tester) async {
+    // Régression (AutoRoll, où la garde s'applique seule bien avant le lancer
+    // suivant) : la piste se vidait au moment où les dés gardés rejoignaient la
+    // main, dernier dé compris.
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final base = GameEngine.newGame(['A', 'B']).startTurn();
+    container.read(gameProvider.notifier).debugLoadState(
+          base.copyWith(
+            activeTurn: TurnState(diceToRoll: 5, hasRolledThisTurn: true, pendingRoll: analyzeRoll([1, 1, 1, 1, 2])),
+          ),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final piste = find.byWidgetPredicate((w) => w is BorderedSection && w.label.startsWith('Piste'));
+    // Les dés de la piste qu'on voit : ceux dont aucun ancêtre n'est transparent.
+    List<int> visibles() => find
+        .descendant(of: piste, matching: find.byType(DieWidget))
+        .evaluate()
+        .where((e) {
+          var opaque = true;
+          e.visitAncestorElements((a) {
+            final w = a.widget;
+            if (w is AnimatedOpacity && w.opacity == 0) opaque = false;
+            if (w is Opacity && w.opacity == 0) opaque = false;
+            if (w is BorderedSection) return false;
+            return true;
+          });
+          return opaque;
+        })
+        .map((e) => (e.widget as DieWidget).value)
+        .toList();
+    expect(visibles(), [2], reason: 'les quatre 1 sont partis dans la main, le 2 reste');
+
+    container.read(gameProvider.notifier).applyKeep(declineFivesCount: 0);
+    await tester.pump();
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull);
+    expect(visibles(), [2], reason: 'la garde appliquée ne vide pas la piste : il reste ce dé à lancer');
+
+    container.read(gameProvider.notifier).roll();
+    await tester.pump();
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull);
+    expect(find.descendant(of: piste, matching: find.byType(DieWidget)).evaluate().length, 1,
+        reason: 'le dé relancé remplace l\'ancien, sans doublon');
+  });
+
+  testWidgets('un craque ne laisse pas ses dés sur la piste du joueur suivant', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final base = GameEngine.newGame(['A', 'B']).startTurn();
+    container.read(gameProvider.notifier).debugLoadState(
+          base.copyWith(
+            activeTurn: TurnState(
+              diceToRoll: 5,
+              hasRolledThisTurn: true,
+              busted: true,
+              bustReason: BustReason.noScore,
+              pendingRoll: analyzeRoll([2, 2, 3, 4, 6]),
+            ),
+          ),
+          const GameSetup(playerNames: ['A', 'B']),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: GameScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    container.read(gameProvider.notifier).endBustedTurn();
+    await tester.pump();
+    final engine = container.read(gameProvider)!;
+    expect(engine.currentPlayerIndex, 1);
+    expect(engine.activeTurn!.pendingRoll, isNull);
+
+    final piste = find.byWidgetPredicate((w) => w is BorderedSection && w.label.startsWith('Piste'));
+    expect(find.descendant(of: piste, matching: find.byType(DieWidget)), findsNothing,
+        reason: 'le joueur suivant repart d\'une piste vide');
+  });
+
   testWidgets('la bordure de la zone "Main courante" prend la couleur du score', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
