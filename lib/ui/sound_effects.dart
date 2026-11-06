@@ -144,6 +144,10 @@ class SoundEffects with WidgetsBindingObserver {
   @visibleForTesting
   int effectPlayersAlive = 0;
 
+  /// La musique se croit-elle en cours de lecture ?
+  @visibleForTesting
+  bool get musicPlayingForTest => _musicPlaying;
+
   /// Le lecteur de la musique, s'il y en a un de gardé.
   @visibleForTesting
   Object? get musicPlayerForTest => _musicPlayer;
@@ -167,12 +171,22 @@ class SoundEffects with WidgetsBindingObserver {
         // Arrêtée (ou remplacée) entre-temps : ce lecteur-ci n'a plus lieu d'être.
         await player.stop();
         await player.dispose();
+      } else if (_inBackground) {
+        // Passée en arrière-plan pendant le démarrage : la pause demandée alors n'a
+        // trouvé qu'un lecteur pas encore lancé, elle doit être rejouée maintenant.
+        await player.pause();
       }
     } catch (_) {
       // Pas de backend audio disponible : la musique reste simplement coupée. Le
       // lecteur qui n'a pas démarré n'est pas gardé : [_resumeMusic] reprendrait
       // sinon un lecteur mort au lieu de relancer la musique.
-      if (player != null && identical(_musicPlayer, player)) _musicPlayer = null;
+      if (player != null && identical(_musicPlayer, player)) {
+        _musicPlayer = null;
+        // Rien ne joue : une prochaine demande (réglage, retour au premier plan) doit
+        // pouvoir réessayer, au lieu de croire la musique déjà lancée.
+        _musicPlaying = false;
+        _playingTrack = null;
+      }
       try {
         await player?.dispose();
       } catch (_) {}

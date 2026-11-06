@@ -61,6 +61,7 @@ void main() {
     }
 
     expect(sounds.musicPlayerForTest, isNull, reason: 'le lecteur qui a échoué ne doit pas rester le lecteur courant');
+    expect(sounds.musicPlayingForTest, isFalse, reason: 'rien ne joue : une prochaine demande doit pouvoir réessayer');
     sounds.applySettings(const AppSettings(loaded: true));
   });
 
