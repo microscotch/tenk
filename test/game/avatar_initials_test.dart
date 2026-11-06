@@ -41,4 +41,16 @@ void main() {
     expect(avatarInitialsFor('Lolo🎲'), 'L🎲');
     expect(avatarInitialsFor('🎲 Lolo'), '🎲L');
   });
+
+  test('un caractère garde ce qui s\'y attache : teinte de peau, sélecteur d\'emoji, drapeau, accent combinant', () {
+    expect(avatarInitialsFor('Bob👍🏽'), 'B👍🏽', reason: 'la teinte de peau reste avec son pouce');
+    expect(avatarInitialsFor('Lolo❤️'), 'L❤️', reason: 'le sélecteur d\'emoji reste avec son cœur');
+    expect(avatarInitialsFor('🇫🇷 Lolo'), '🇫🇷L', reason: 'un drapeau, ce sont deux moitiés');
+    expect(avatarInitialsFor('Lolo🇫🇷'), 'L🇫🇷');
+    expect(avatarInitialsFor('e\u0301ric dupont'), 'E\u0301D', reason: 'un accent combinant suit sa lettre');
+  });
+
+  test('une initiale reste une seule lettre : « ß » ne devient pas « SS »', () {
+    expect(avatarInitialsFor('ßa'), 'ßA');
+  });
 }

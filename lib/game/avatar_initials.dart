@@ -13,14 +13,51 @@ String avatarInitialsFor(String name) {
 
   // Par point de code, pas par unité UTF-16 : un emoji en tête ou en queue de nom
   // se coupait en deux moitiés de paire de substitution, et le texte du blason
-  // refusait de s'afficher (« string is not well-formed UTF-16 »).
-  String first(String word) => String.fromCharCode(word.runes.first);
-  String last(String word) => String.fromCharCode(word.runes.last);
+  // refusait de s'afficher (« string is not well-formed UTF-16 »). Et on garde ce qui
+  // se lit avec le caractère : sa teinte de peau, son sélecteur d'emoji, ses accents
+  // combinants, et les deux moitiés d'un drapeau — sans quoi le blason montrerait un
+  // carré de couleur, ou la moitié d'un drapeau.
+  String upper(String initial) {
+    final up = initial.toUpperCase();
+    // « ß » devient « SS » : une initiale reste une seule lettre.
+    return up.runes.length == initial.runes.length ? up : initial;
+  }
+
+  String first(String word) {
+    final r = word.runes.toList();
+    var end = 1;
+    if (_isRegionalIndicator(r[0]) && r.length > 1 && _isRegionalIndicator(r[1])) end = 2;
+    while (end < r.length && _isAttached(r[end])) {
+      end++;
+    }
+    return upper(String.fromCharCodes(r.sublist(0, end)));
+  }
+
+  String last(String word) {
+    final r = word.runes.toList();
+    var start = r.length - 1;
+    while (start > 0 && _isAttached(r[start])) {
+      start--;
+    }
+    if (_isRegionalIndicator(r[start]) && start > 0 && _isRegionalIndicator(r[start - 1])) start--;
+    return upper(String.fromCharCodes(r.sublist(start)));
+  }
 
   if (words.length == 1) {
     final word = words.first;
-    return (first(word) + last(word)).toUpperCase();
+    return first(word) + last(word);
   }
 
-  return (first(words[0]) + first(words[1])).toUpperCase();
+  return first(words[0]) + first(words[1]);
 }
+
+bool _isRegionalIndicator(int r) => r >= 0x1F1E6 && r <= 0x1F1FF;
+
+/// Ce qui s'attache au caractère qui précède et ne se lit pas seul : accents
+/// combinants, sélecteurs de variation, teintes de peau, étiquettes de drapeaux.
+bool _isAttached(int r) =>
+    (r >= 0x300 && r <= 0x36F) ||
+    r == 0xFE0E ||
+    r == 0xFE0F ||
+    (r >= 0x1F3FB && r <= 0x1F3FF) ||
+    (r >= 0xE0020 && r <= 0xE007F);
