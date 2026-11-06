@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import '../theme.dart';
 
 import '../../game/player.dart';
@@ -20,10 +21,13 @@ const int _columnsPerPage = 2;
 /// Chaque colonne occupe la moitié de la largeur : deux grilles au plus par
 /// page, une colonne seule étant centrée. Avec un [reference] et des
 /// adversaires à montrer, il y a une page par adversaire : la grille de
-/// [reference] à gauche, celle de l'adversaire à droite (une seule page pour
-/// la grille individuelle d'un adversaire). Sans [reference], les colonnes
-/// sont réparties par deux sur des pages navigables façon carrousel
-/// (glissement + points de page).
+/// [reference] à gauche, celle de l'adversaire à droite, **sur une même échelle**
+/// (voir [ladderRows]) : une rangée par valeur de score, la plus haute en haut, deux
+/// lignes de même valeur face à face, et la vue ouverte sur la ligne courante de
+/// [reference], au milieu de l'écran quand la liste le permet. Sans [reference],
+/// chaque grille se lit seule, ses tours dans l'ordre, et les colonnes sont
+/// réparties par deux sur des pages navigables façon carrousel (glissement +
+/// points de page).
 ///
 /// Les grilles se lisent depuis [reference] — le joueur dont c'est le tour, ou
 /// le gagnant d'une partie finie : sur chaque ligne d'un autre joueur, l'écart
@@ -205,6 +209,17 @@ class _GridPage extends StatelessWidget {
     // Une grille seule (ouverte depuis la ligne d'un joueur) : son nom en
     // entier, centré sur toute la largeur, au-dessus de la grille.
     final solo = players.length == 1;
+    // Deux grilles lues depuis le joueur de référence : à l'échelle, voir [_ComparisonPage].
+    if (players.length == 2 && reference != null && players.first.name == reference!.name) {
+      return _ComparisonPage(
+        reference: players.first,
+        opponent: players.last,
+        avatarColors: avatarColors,
+        potentialTotal: potentialTotal,
+        displayNames: displayNames,
+        handBankable: handBankable,
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: Column(
@@ -249,6 +264,168 @@ class _GridPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Les deux grilles sur une même échelle : une ligne par valeur de score, la plus
+/// haute en haut, et deux lignes de même valeur (une par joueur) face à face. Une
+/// valeur que l'un des joueurs n'a jamais eue laisse un blanc de son côté. Une même
+/// valeur présente deux fois chez un joueur (une ligne barrée, puis refaite) prend deux
+/// rangées, la plus récente d'abord ; quand les deux joueurs en ont un nombre différent,
+/// la plus récente de l'un fait face à la plus récente de l'autre (aucun autre
+/// appariement ne serait moins arbitraire).
+@visibleForTesting
+List<({ScoreEntry? left, ScoreEntry? right, bool leftCurrent, bool rightCurrent})> ladderRows(Player left, Player right) {
+  // Par valeur décroissante ; à valeur égale, la plus récente d'abord.
+  List<int> order(Player p) => [for (var i = 0; i < p.grid.length; i++) i]
+    ..sort((a, b) {
+      final byValue = p.grid[b].value.compareTo(p.grid[a].value);
+      return byValue != 0 ? byValue : b.compareTo(a);
+    });
+
+  final l = order(left);
+  final r = order(right);
+  final rows = <({ScoreEntry? left, ScoreEntry? right, bool leftCurrent, bool rightCurrent})>[];
+  var i = 0;
+  var j = 0;
+  while (i < l.length || j < r.length) {
+    final lv = i < l.length ? left.grid[l[i]].value : null;
+    final rv = j < r.length ? right.grid[r[j]].value : null;
+    final takeLeft = lv != null && (rv == null || lv >= rv);
+    final takeRight = rv != null && (lv == null || rv >= lv);
+    rows.add((
+      left: takeLeft ? left.grid[l[i]] : null,
+      right: takeRight ? right.grid[r[j]] : null,
+      leftCurrent: takeLeft && l[i] == left.currentIndex,
+      rightCurrent: takeRight && r[j] == right.currentIndex,
+    ));
+    if (takeLeft) i++;
+    if (takeRight) j++;
+  }
+  return rows;
+}
+
+/// La grille en mode comparaison : les noms restent en haut, et dessous, l'échelle
+/// des scores ([ladderRows]) défile, ouverte sur la ligne courante du joueur de
+/// référence, au milieu de l'écran quand la liste le permet — de quoi garder sa
+/// ligne en vue même quand son score est loin de celui de l'adversaire.
+class _ComparisonPage extends StatefulWidget {
+  final Player reference;
+  final Player opponent;
+  final Map<String, Color> avatarColors;
+  final int? potentialTotal;
+  final Map<String, String> displayNames;
+  final bool handBankable;
+
+  const _ComparisonPage({
+    required this.reference,
+    required this.opponent,
+    required this.avatarColors,
+    required this.potentialTotal,
+    required this.displayNames,
+    required this.handBankable,
+  });
+
+  @override
+  State<_ComparisonPage> createState() => _ComparisonPageState();
+}
+
+class _ComparisonPageState extends State<_ComparisonPage> {
+  final _scroll = ScrollController();
+  final _currentKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _centerOnCurrent());
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Amène la ligne courante du joueur de référence au milieu de l'écran, autant que
+  /// la liste le permet : près d'une extrémité, elle reste là où le défilement s'arrête
+  /// (aucun espace n'est ajouté pour forcer le centrage). Quand tout tient à l'écran,
+  /// il n'y a rien à faire défiler.
+  void _centerOnCurrent() {
+    if (!mounted || !_scroll.hasClients) return;
+    final position = _scroll.position;
+    if (position.maxScrollExtent <= 0) return;
+    final context = _currentKey.currentContext;
+    if (context == null) return;
+    final viewport = RenderAbstractViewport.maybeOf(context.findRenderObject());
+    if (viewport == null) return;
+    final target = viewport.getOffsetToReveal(context.findRenderObject()!, 0.5).offset;
+    _scroll.jumpTo(target.clamp(position.minScrollExtent, position.maxScrollExtent));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = ladderRows(widget.reference, widget.opponent);
+    final reference = widget.reference;
+    final gapFrom = widget.potentialTotal ?? reference.totalScore;
+
+    Widget cell(ScoreEntry? entry, {required bool current, required int? gap}) => Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: entry == null
+            ? const SizedBox.shrink()
+            : _ScoreRow(
+                entry: entry,
+                isCurrent: current,
+                avatarColors: widget.avatarColors,
+                gapFrom: gap,
+                handBankable: widget.handBankable,
+              ),
+      ),
+    );
+
+    Widget header(Player p) => Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: _PlayerHeader(
+          name: p.name,
+          displayName: displayNameOf(widget.displayNames, p.name),
+          color: widget.avatarColors[p.name],
+          size: 28,
+          truncate: true,
+        ),
+      ),
+    );
+
+    return Column(
+      children: [
+        Row(children: [header(reference), header(widget.opponent)]),
+        const SizedBox(height: 8),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scroll,
+            child: Column(
+              children: [
+                for (final row in rows)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: IntrinsicHeight(
+                      key: row.leftCurrent ? _currentKey : null,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // L'écart se lit depuis le joueur de référence : sa grille n'en porte pas.
+                          cell(row.left, current: row.leftCurrent, gap: null),
+                          cell(row.right, current: row.rightCurrent, gap: gapFrom),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

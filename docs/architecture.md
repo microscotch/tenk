@@ -101,7 +101,11 @@ une partie rejouable à l'identique.
   `reference` (le joueur courant avec son total potentiel, le gagnant d'une partie finie), en valeur absolue suivie de
   « devant » / « derrière » (sauf sur une ligne barrée) ; chaque grille y prend la moitié de la largeur, sous un
   en-tête blason + nom. Avec une `reference`, il y a une page par adversaire : la grille de `reference` à gauche, celle de
-  l'adversaire à droite (une seule page pour la grille individuelle d'un adversaire) ; sans `reference`, deux grilles par page. `barsAnotherPlayer` dit
+  l'adversaire à droite (une seule page pour la grille individuelle d'un adversaire) ; sans `reference`, deux grilles par page.
+  Les deux grilles d'une page à `reference` partagent **une même échelle** (`ladderRows`) : une rangée par valeur de score,
+  la plus haute en haut, les valeurs égales face à face (un blanc quand l'autre joueur ne l'a jamais eue), les noms fixes
+  au-dessus d'un corps qui défile et s'ouvre sur la ligne courante de `reference`, au milieu de l'écran autant que la liste
+  le permet (aucun espace ajouté pour forcer le centrage). `barsAnotherPlayer` dit
   si s'arrêter sur le potentiel barrerait quelqu'un (le vert du liseré de la main). Fonctions pures, sans état :
   l'écran les recalcule à chaque changement de main.
 - **Le tutoriel** (`lib/game/tutorial.dart`) n'est pas une partie mais sept leçons (`tutorialLessons`), de la

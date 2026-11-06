@@ -225,7 +225,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   set at each build), the winner on the game-over screen: each grid takes **half the width**, and the page is always the
   `reference` player's on the left, one opponent's on the right (one page per opponent — a carousel from 3 players —,
   and the single page of an opponent's individual grid; without a `reference`, the players two by two, a lone column
-  centred). Its header is the crest + `displayNames` name (ellipsised in the full grid; whole
+  centred). **Two grids read from a `reference` share one ladder** (`ladderRows`, `_ComparisonPage`): one row per score
+  value, the highest on top, equal values face to face (a value only one player ever had leaves a blank on the other
+  side; a value twice in one grid takes two rows, newest first, newest paired with newest), the names fixed above the
+  scrolling body, and the view opened on the `reference` player's current line, **centred as far as the list allows**
+  (the scroll just stops at an end: no padding is added to force it, and nothing scrolls when it all fits). Its header
+  is the crest + `displayNames` name (ellipsised in the full grid; whole
   and centred over the full width above a lone grid), a row is score + state (tiret, or struck with the striker's
   crest) left-aligned, and on every non-barred line of the other players the gap to the potential at the right:
   absolute value + "devant" / "derrière" (`gridGapAhead` / `gridGapBehind`; a plain "0" when nil), the score in red
