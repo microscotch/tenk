@@ -225,7 +225,7 @@
   "tutorialCollisionIntro": "På botens rad visar radarn dess poäng som du skulle kunna stryka: att nå samma summa skickar den tillbaka.",
   "tutorialInheritOutro": "Efter en bom börjar man alltid om med 5 nya tärningar. En hand som inte längre skulle kunna bokföras erbjuds aldrig.",
   "tutorialInheritStop": "En etta: handen är värd 1100. Stanna.",
-  "tutorialInheritTake": "Boten stannade på 1000 och lämnade 2 tärningar. Låt ”Övertagen hand” vara på och bekräfta: du börjar från dess 1000 poäng.",
+  "tutorialInheritTake": "Boten stannade på 1000 och lämnade 2 tärningar. Tryck på ✓ för att ta över handen: du börjar från dess 1000 poäng.",
   "tutorialInheritIntro": "När en spelare stannar och lämnar tärningar kvar kan nästa ta över dem, med dennes poäng som grund.",
   "tutorialExtensionOutro": "Utvidgningen gäller hela turen, även för en femma (100 i stället för 50), och försvinner vid heta tärningar.",
   "tutorialExtensionExtended": "En ensam tvåa är inget värd… utom här: efter dina tre tvåor är den värd 100 (i rött). Handen har 300: stanna.",

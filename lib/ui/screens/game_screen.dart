@@ -1927,17 +1927,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return {for (var i = 0; i < engine.players.length; i++) if (notifier.isOnlineBot(i)) i};
   }
 
+  /// Vrai dès qu'une sortie de l'écran est lancée (voir [_exitGame]).
+  var _exiting = false;
+
   /// Quitte l'écran de jeu pour l'accueil. En ligne, c'est quitter le salon :
   /// après confirmation, pour de bon — un bot du serveur reprend ma place (voir
   /// `OnlineSession.leaveGame`). Une partie locale, déjà sauvegardée après
   /// chaque coup, se quitte sans rien demander.
   Future<void> _exitGame() async {
+    // Un second appui sur la flèche, pendant que la confirmation est ouverte ou que la
+    // sortie s'achève, n'empile pas une deuxième confirmation ni un deuxième départ.
+    if (_exiting) return;
     final online = ref.read(gameProvider.notifier).isOnline;
     final over = ref.read(gameProvider)?.gameOver ?? true;
     if (!online || widget.replayMode || over) {
+      _exiting = true;
       popToHome(context);
       return;
     }
+    _exiting = true;
     final l10n = AppLocalizations.of(context);
     final session = ref.read(onlineSessionProvider);
     final leave = await showDialog<bool>(
@@ -1951,7 +1959,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ],
       ),
     );
-    if (leave != true || !mounted) return;
+    if (leave != true || !mounted) {
+      _exiting = false;
+      return;
+    }
     // L'écran part d'abord : la session vide ensuite la partie qu'il montrait.
     popToHome(context);
     await ref.read(onlineSessionProvider.notifier).leaveGame();

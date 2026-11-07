@@ -91,9 +91,14 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
     });
   }
 
+  var _leaving = false;
+
   /// Quitte l'écran de fin : retour à l'accueil. En ligne, c'est aussi quitter
   /// le salon (et donc refuser une revanche en cours).
   void _leave() {
+    // La flèche est tapable partout : deux appuis rapides ne quittent pas deux fois.
+    if (_leaving) return;
+    _leaving = true;
     popToHome(context);
     if (_online) unawaited(ref.read(onlineSessionProvider.notifier).leaveFinishedGame());
   }

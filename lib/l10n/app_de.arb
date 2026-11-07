@@ -225,7 +225,7 @@
   "tutorialCollisionIntro": "Auf der Zeile des Bots zeigt das Radar seine Punktestände, die du streichen könntest: Dieselbe Summe zu erreichen wirft ihn zurück.",
   "tutorialInheritOutro": "Nach einem Fehlwurf beginnt man immer mit 5 neuen Würfeln. Eine Hand, die nicht mehr verbucht werden könnte, wird nie angeboten.",
   "tutorialInheritStop": "Eine 1: Die Hand ist 1.100 wert. Hör auf.",
-  "tutorialInheritTake": "Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Lass „Hand übernommen“ eingeschaltet und bestätige: Du startest mit seinen 1.000 Punkten.",
+  "tutorialInheritTake": "Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Tippe auf ✓, um seine Hand zu übernehmen: Du startest mit seinen 1.000 Punkten.",
   "tutorialInheritIntro": "Wenn ein Spieler aufhört und Würfel übrig lässt, darf der nächste sie übernehmen, mit seinen Punkten als Basis.",
   "tutorialExtensionOutro": "Die Erweiterung gilt den ganzen Zug, sogar für eine 5 (100 statt 50), und verfällt bei heißen Würfeln.",
   "tutorialExtensionExtended": "Eine einzelne 2 zählt nichts… außer hier: Nach deinem Drilling aus 2en ist sie 100 wert (in Rot). Die Hand hat 300: Hör auf.",

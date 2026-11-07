@@ -225,7 +225,7 @@
   "tutorialCollisionIntro": "Botin rivillä tutka näyttää sen tulokset, jotka voisit yliviivata: saman summan saavuttaminen pudottaa sen takaisin.",
   "tutorialInheritOutro": "Epäonnistumisen jälkeen aloitetaan aina 5 uudella nopalla. Kättä, jota ei enää voisi kirjata, ei koskaan tarjota.",
   "tutorialInheritStop": "Ykkönen: käsi on 1100 pisteen arvoinen. Lopeta.",
-  "tutorialInheritTake": "Botti lopetti 1000:een jättäen 2 noppaa. Jätä ”Käsi otettu haltuun” päälle ja vahvista: aloitat sen 1000 pisteestä.",
+  "tutorialInheritTake": "Botti lopetti 1000:een jättäen 2 noppaa. Napauta ✓ ottaaksesi sen käden haltuun: aloitat sen 1000 pisteestä.",
   "tutorialInheritIntro": "Kun pelaaja lopettaa jättäen noppia, seuraava voi ottaa ne, hänen pisteensä pohjana.",
   "tutorialExtensionOutro": "Laajennus kestää koko vuoron, myös viitoselle (100 eikä 50), ja häviää kuumissa nopissa.",
   "tutorialExtensionExtended": "Yksittäinen kakkonen ei ole minkään arvoinen… paitsi tässä: kolmen kakkosesi jälkeen se on 100 pisteen arvoinen (punaisella). Käsi on 300: lopeta.",

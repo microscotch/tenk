@@ -225,7 +225,7 @@
   "tutorialCollisionIntro": "Na linha do bot, o radar mostra as pontuações dele que poderias riscar: atingir o mesmo total fá-lo recuar.",
   "tutorialInheritOutro": "Depois de um rebentamento recomeça-se sempre com 5 dados novos. Nunca se propõe uma mão que já não se poderia registar.",
   "tutorialInheritStop": "Um 1: a mão vale 1100. Para.",
-  "tutorialInheritTake": "O bot parou nos 1000 deixando 2 dados. Deixa «Mão retomada» ativado e confirma: partes dos 1000 pontos dele.",
+  "tutorialInheritTake": "O bot parou nos 1000 deixando 2 dados. Toca em ✓ para retomar a mão dele: partes dos 1000 pontos dele.",
   "tutorialInheritIntro": "Quando um jogador para deixando dados, o seguinte pode retomá-los, com os pontos dele como base.",
   "tutorialExtensionOutro": "A extensão vale para todo o turno, até para um 5 (100 em vez de 50), e apaga-se com os dados quentes.",
   "tutorialExtensionExtended": "Um 2 sozinho não vale nada… exceto aqui: depois do teu trio de 2, vale 100 (a vermelho). A mão soma 300: para.",

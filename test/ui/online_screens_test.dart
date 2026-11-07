@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -444,6 +446,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(transport.current.sent.any((m) => m.type == ClientMessageType.leave), isTrue);
     });
+
+    testWidgets('la flèche quitte le salon aussi, et deux appuis rapides ne dépilent pas l\'écran d\'en dessous', (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.lobby,
+        seats: const [SeatInfo(name: 'Anna', connected: true)],
+        hostSeat: 0,
+      ));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: Text('dessous')),
+        ),
+      ));
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      unawaited(navigator.push(MaterialPageRoute<void>(builder: (_) => const OnlineRoomScreen())));
+      await tester.pumpAndSettle();
+      expect(find.byType(OnlineRoomScreen), findsOneWidget);
+
+      final arrow = find.byType(BackButton);
+      await tester.tap(arrow);
+      await tester.tap(arrow, warnIfMissed: false);
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pumpAndSettle();
+
+      expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isTrue);
+      expect(find.byType(OnlineRoomScreen), findsNothing);
+      expect(find.text('dessous'), findsOneWidget, reason: 'un seul pop : l\'écran d\'en dessous reste');
+    });
   });
 
   group('tirage au sort', () {
@@ -491,6 +527,14 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byType(GameScreen), findsOneWidget);
+    });
+
+    testWidgets('pas de flèche de retour : elle laisserait la place prise dans le salon', (tester) async {
+      await gameStarted(tester, start(journal()));
+      await pump(tester, const OnlineDiceOffScreen());
+      await tester.pump(OnlineDiceOffScreen.firstRollDelay + const Duration(milliseconds: 50));
+
+      expect(find.byType(BackButton), findsNothing);
     });
 
     testWidgets('un tap va droit au résultat', (tester) async {
@@ -989,6 +1033,46 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isTrue);
       expect(container.read(onlineSessionProvider).inRoom, isFalse);
+    });
+
+    testWidgets('deux demandes de sortie rapprochées n\'ouvrent qu\'une confirmation', (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+        begun: true,
+      ));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GameScreen(),
+        ),
+      ));
+      await tester.pump(const Duration(seconds: 1));
+
+      // Deux demandes dans la même image, avant que la confirmation n'ait eu le temps de couvrir
+      // l'écran (la flèche et le retour système appellent la même sortie).
+      final arrow = tester.widget<BackButton>(find.byType(BackButton));
+      arrow.onPressed!();
+      arrow.onPressed!();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(AlertDialog), findsOneWidget, reason: 'une seule confirmation, pas deux empilées');
+
+      await tester.tap(find.text('Annuler'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(AlertDialog), findsNothing);
+
+      // Annulée, la sortie peut être redemandée.
+      await tester.tap(find.byType(BackButton));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(AlertDialog), findsOneWidget);
     });
 
     testWidgets('un joueur remplacé par un bot : icône sur sa ligne, et l\'historique le dit', (tester) async {

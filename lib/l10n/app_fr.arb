@@ -704,7 +704,7 @@
   "@tutorialInheritOutro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
   "tutorialInheritStop": "Un as : la main vaut 1100. Arrêtez-vous.",
   "@tutorialInheritStop": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
-  "tutorialInheritTake": "Le bot s'est arrêté à 1000 en laissant 2 dés. Laissez « Main reprise » activé et validez : vous partez de ses 1000 points.",
+  "tutorialInheritTake": "Le bot s'est arrêté à 1000 en laissant 2 dés. Touchez ✓ pour reprendre sa main : vous partez de ses 1000 points.",
   "@tutorialInheritTake": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},
   "tutorialInheritIntro": "Quand un joueur s'arrête en laissant des dés, le suivant peut les reprendre, avec ses points comme base.",
   "@tutorialInheritIntro": {"description": "Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart)."},

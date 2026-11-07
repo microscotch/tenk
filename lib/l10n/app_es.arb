@@ -225,7 +225,7 @@
   "tutorialCollisionIntro": "En la línea del bot, el radar muestra las puntuaciones que podrías tacharle: alcanzar el mismo total le hace retroceder.",
   "tutorialInheritOutro": "Tras un pase, siempre se empieza con 5 dados nuevos. Nunca se ofrece una mano que ya no se podría anotar.",
   "tutorialInheritStop": "Un 1: la mano vale 1100. Plántate.",
-  "tutorialInheritTake": "El bot se plantó en 1000 dejando 2 dados. Deja «Mano retomada» activado y confirma: partes de sus 1000 puntos.",
+  "tutorialInheritTake": "El bot se plantó en 1000 dejando 2 dados. Toca ✓ para retomar su mano: partes de sus 1000 puntos.",
   "tutorialInheritIntro": "Cuando un jugador se planta dejando dados, el siguiente puede retomarlos, con sus puntos como base.",
   "tutorialExtensionOutro": "La extensión dura todo el turno, incluso para un 5 (100 en vez de 50), y se borra con los dados calientes.",
   "tutorialExtensionExtended": "Un 2 solo no vale nada… salvo aquí: tras tu trío de 2, vale 100 (en rojo). La mano suma 300: plántate.",

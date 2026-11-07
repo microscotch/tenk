@@ -135,7 +135,9 @@ class _OnlineDiceOffScreenState extends ConsumerState<OnlineDiceOffScreen> {
     final waits = session.startSignalEnabled && link != null && link.playOrder.first != link.mySeat;
 
     return Scaffold(
-      appBar: AppTopBar(title: Text(l10n.diceOffTitle)),
+      // Pas de flèche de retour : un pop() nu quitterait l'écran sans quitter le salon (la
+      // place resterait prise), et ce tirage se raconte seul en quelques secondes.
+      appBar: AppTopBar(title: Text(l10n.diceOffTitle), automaticallyImplyLeading: false),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _skip,

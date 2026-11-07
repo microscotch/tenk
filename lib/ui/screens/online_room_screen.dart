@@ -33,21 +33,25 @@ class OnlineRoomScreen extends ConsumerWidget {
       }
     });
 
+    // Quitter le salon d'attente : libérer la place d'abord, puis revenir à l'écran d'entrée.
+    // Le retour système et la flèche font exactement cela. Un second appui rapide ne dépile pas
+    // aussi l'écran d'entrée : une fois le salon quitté, sa route n'est plus la courante.
+    Future<void> leaveRoom() async {
+      final route = ModalRoute.of(context);
+      await session.leave();
+      if (context.mounted && (route?.isCurrent ?? true)) Navigator.of(context).pop();
+    }
+
     final everyoneHere = online.seats.length >= minOnlinePlayers && online.seats.every((s) => s.connected);
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        await session.leave();
-        if (context.mounted) Navigator.of(context).pop();
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) leaveRoom();
       },
       child: Scaffold(
         appBar: AppTopBar(
           title: Text(l10n.onlineTitle),
-          leading: BackButton(onPressed: () async {
-            await session.leave();
-            if (context.mounted) Navigator.of(context).pop();
-          }),
+          leading: BackButton(onPressed: leaveRoom),
         ),
         body: SafeArea(
           child: Padding(
