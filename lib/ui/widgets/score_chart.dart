@@ -22,7 +22,7 @@ class ScoreSeries {
 /// l'on déplace du doigt : une infobulle y donne le score de chacun au tour
 /// visé.
 ///
-/// Peinte à la main, comme le blason ([PlayerAvatarWidget]), les pips des dés
+/// Peinte à la main, comme la pastille ([PlayerAvatarWidget]), les pips des dés
 /// et le tapis : aucune dépendance de graphiques n'entre dans le projet pour
 /// une seule vue.
 class ScoreChart extends StatefulWidget {

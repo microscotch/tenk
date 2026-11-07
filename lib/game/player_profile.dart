@@ -24,11 +24,16 @@ class PlayerProfile {
   /// relu à chaque action : on le change en pleine partie, depuis les réglages.
   final bool autoRoll;
 
-  /// Réservé à un avatar image, toujours `null` pour l'instant : le blason
-  /// dessiné à partir du nom reste le seul rendu (voir `PlayerAvatarWidget`).
-  /// Le champ est écrit dès maintenant pour qu'ajouter l'image plus tard ne
-  /// demande aucune migration des fiches déjà enregistrées.
-  final String? avatarRef;
+  /// La couleur de fond de la pastille choisie par le joueur : un identifiant de
+  /// `avatar_catalog.dart`. `null` : la partie en attribue une (voir
+  /// `assignAvatarColors`). Un identifiant inconnu (fiche venue d'une app plus
+  /// récente) se lit comme `null`.
+  final String? avatarColor;
+
+  /// L'animal choisi pour la pastille, qui remplace la lettre : un identifiant de
+  /// `avatar_catalog.dart`. `null` : la pastille porte la première lettre du nom
+  /// affiché.
+  final String? avatarAnimal;
 
   /// Anciens noms de ce joueur, conservés à chaque renommage.
   ///
@@ -46,7 +51,8 @@ class PlayerProfile {
     this.nickname,
     this.rightHanded = true,
     this.autoRoll = false,
-    this.avatarRef,
+    this.avatarColor,
+    this.avatarAnimal,
     this.formerNames = const [],
     this.stats = PlayerStats.empty,
   });
@@ -59,6 +65,8 @@ class PlayerProfile {
     String? nickname,
     bool rightHanded = true,
     bool autoRoll = false,
+    String? avatarColor,
+    String? avatarAnimal,
   }) {
     final random = Random.secure();
     final suffix = List.generate(4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
@@ -68,6 +76,8 @@ class PlayerProfile {
       nickname: (nickname?.trim().isEmpty ?? true) ? null : nickname!.trim(),
       rightHanded: rightHanded,
       autoRoll: autoRoll,
+      avatarColor: avatarColor,
+      avatarAnimal: avatarAnimal,
     );
   }
 
@@ -97,6 +107,10 @@ class PlayerProfile {
     bool clearNickname = false,
     bool? rightHanded,
     bool? autoRoll,
+    String? avatarColor,
+    bool clearAvatarColor = false,
+    String? avatarAnimal,
+    bool clearAvatarAnimal = false,
     List<String>? formerNames,
     PlayerStats? stats,
   }) {
@@ -106,7 +120,8 @@ class PlayerProfile {
       nickname: clearNickname ? null : (nickname ?? this.nickname),
       rightHanded: rightHanded ?? this.rightHanded,
       autoRoll: autoRoll ?? this.autoRoll,
-      avatarRef: avatarRef,
+      avatarColor: clearAvatarColor ? null : (avatarColor ?? this.avatarColor),
+      avatarAnimal: clearAvatarAnimal ? null : (avatarAnimal ?? this.avatarAnimal),
       formerNames: formerNames ?? this.formerNames,
       stats: stats ?? this.stats,
     );
@@ -118,7 +133,8 @@ class PlayerProfile {
         'nickname': nickname,
         'rightHanded': rightHanded,
         'autoRoll': autoRoll,
-        'avatarRef': avatarRef,
+        'avatarColor': avatarColor,
+        'avatarAnimal': avatarAnimal,
         'formerNames': formerNames,
         'stats': stats.toJson(),
       };
@@ -129,7 +145,8 @@ class PlayerProfile {
         nickname: json['nickname'] as String?,
         rightHanded: json['rightHanded'] as bool? ?? true,
         autoRoll: json['autoRoll'] as bool? ?? false,
-        avatarRef: json['avatarRef'] as String?,
+        avatarColor: json['avatarColor'] as String?,
+        avatarAnimal: json['avatarAnimal'] as String?,
         formerNames: List<String>.from(json['formerNames'] as List? ?? const []),
         stats: PlayerStats.fromJson(json['stats'] as Map<String, dynamic>? ?? const {}),
       );

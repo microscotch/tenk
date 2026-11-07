@@ -56,7 +56,7 @@ class StatisticsScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               ExpansionTile(
                 key: PageStorageKey('stats-${player.id}'),
-                leading: PlayerAvatarWidget(name: player.name, size: 40),
+                leading: PlayerAvatarWidget.profile(player),
                 title: Text(player.displayName),
                 subtitle: Text(l10n.statsPlayerSummary(
                   player.stats.gamesPlayed,

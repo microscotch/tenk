@@ -92,7 +92,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               // l'utilisateur qui les porte, on la modifie comme toute fiche.
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: PlayerAvatarWidget(name: me?.name ?? '?', size: 40),
+                leading: me == null ? const PlayerAvatarWidget(name: '?') : PlayerAvatarWidget.profile(me),
                 title: Text(me?.displayName ?? ''),
                 subtitle: me?.nickname == null ? null : Text(me!.name),
                 trailing: const Icon(Icons.edit),

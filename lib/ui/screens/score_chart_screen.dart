@@ -31,6 +31,7 @@ class ScoreChartScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final displayNames = watchDisplayNames(ref, record);
+    final looks = watchAvatarLooks(ref, record);
 
     final SavedGame? journal;
     final List<Player>? seats;
@@ -46,11 +47,12 @@ class ScoreChartScreen extends ConsumerWidget {
     // (`debugLoadState`), qui ne renseigne ni seed ni actions. Même garde que
     // le journal de partie (`_seedLogFromHistory`), et pour la même raison.
     final series = <ScoreSeries>[];
+    final avatars = AvatarSet.resolve((seats ?? const <Player>[]).map((p) => p.name), looks);
     if (seats != null && journal != null && journal.actions.isNotEmpty) {
       final scores = scoreSeriesByPlayer(journal.setup, journal.seed, journal.actions);
       // `scoreSeriesByPlayer` rend les sièges du MOTEUR, exactement l'ordre de
       // `seats` : noms et couleurs s'alignent sans traduction.
-      final colors = assignAvatarColors(seats.map((p) => p.name));
+      final colors = avatars.colors;
       for (var seat = 0; seat < seats.length && seat < scores.length; seat++) {
         final name = seats[seat].name;
         series.add(ScoreSeries(
@@ -89,10 +91,7 @@ class ScoreChartScreen extends ConsumerWidget {
                             children: [
                               Container(width: 16, height: 3, color: one.color),
                               const SizedBox(width: 6),
-                              // Le blason garde le nom, le libellé suit le
-                              // surnom : l'un est un repère d'identité, l'autre
-                              // la façon dont on appelle le joueur.
-                              PlayerAvatarWidget(name: one.name, size: 24, color: one.color),
+                              avatars.of(one.name, size: 24),
                               const SizedBox(width: 6),
                               Text(displayNameOf(displayNames, one.name)),
                             ],

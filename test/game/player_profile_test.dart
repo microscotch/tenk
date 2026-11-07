@@ -25,7 +25,8 @@ void main() {
       expect(player.name, 'Marie', reason: 'nom rogné');
       expect(player.nickname, isNull, reason: 'un surnom vide vaut pas de surnom');
       expect(player.rightHanded, isTrue, reason: 'droitier par défaut');
-      expect(player.avatarRef, isNull);
+      expect(player.avatarColor, isNull, reason: 'couleur automatique par défaut');
+      expect(player.avatarAnimal, isNull, reason: 'la lettre par défaut');
       expect(player.stats.gamesPlayed, 0);
     });
 
@@ -34,6 +35,33 @@ void main() {
       final b = PlayerProfile.create(name: 'B');
 
       expect(a.id, isNot(b.id));
+    });
+  });
+
+  group('pastille', () {
+    test('la couleur et l\'animal se choisissent, se changent et s\'effacent', () {
+      final base = PlayerProfile.create(name: 'Marie');
+      final chosen = base.copyWith(avatarColor: 'teal', avatarAnimal: 'fox');
+      expect(chosen.avatarColor, 'teal');
+      expect(chosen.avatarAnimal, 'fox');
+
+      expect(chosen.copyWith(name: 'Maria').avatarColor, 'teal', reason: 'un autre champ ne les efface pas');
+      expect(chosen.copyWith(clearAvatarColor: true).avatarColor, isNull);
+      expect(chosen.copyWith(clearAvatarAnimal: true).avatarAnimal, isNull);
+      expect(chosen.copyWith(clearAvatarAnimal: true).avatarColor, 'teal');
+    });
+
+    test('ils survivent à l\'écriture et à la lecture', () {
+      final chosen = PlayerProfile.create(name: 'Marie', avatarColor: 'rose', avatarAnimal: 'owl');
+      final back = PlayerProfile.fromJson(chosen.toJson());
+      expect(back.avatarColor, 'rose');
+      expect(back.avatarAnimal, 'owl');
+    });
+
+    test('une fiche d\'avant les pastilles se lit sans couleur ni animal', () {
+      final old = PlayerProfile.fromJson({'id': 'x', 'name': 'Marie', 'avatarRef': null});
+      expect(old.avatarColor, isNull);
+      expect(old.avatarAnimal, isNull);
     });
   });
 

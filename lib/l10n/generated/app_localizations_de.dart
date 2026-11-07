@@ -86,6 +86,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get playerNicknameLabel => 'Spitzname (optional)';
 
   @override
+  String get avatarSectionTitle => 'Abzeichen';
+
+  @override
+  String get avatarColorLabel => 'Farbe';
+
+  @override
+  String get avatarAnimalLabel => 'Tier';
+
+  @override
+  String get avatarAutomatic => 'Automatisch';
+
+  @override
+  String get avatarLetter => 'Buchstabe';
+
+  @override
   String get playerNameRequiredError => 'Der Name ist erforderlich.';
 
   @override

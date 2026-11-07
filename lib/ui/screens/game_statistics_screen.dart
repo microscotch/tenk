@@ -79,7 +79,7 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final displayNames = watchDisplayNames(ref, widget.record);
-    final colors = assignAvatarColors(widget.players.map((p) => p.name));
+    final avatars = AvatarSet.resolve(widget.players.map((p) => p.name), watchAvatarLooks(ref, widget.record));
     final winnerName = switch (widget.winnerIndex) {
       final index? => widget.players[index].name,
       null => null,
@@ -131,7 +131,7 @@ class _GameStatisticsScreenState extends ConsumerState<GameStatisticsScreen> {
                 final stats = _statsByName[player.name] ?? PlayerStats.empty;
                 return ExpansionTile(
                   key: PageStorageKey('game-stats-${player.name}'),
-                  leading: PlayerAvatarWidget(name: player.name, size: 40, color: colors[player.name]),
+                  leading: avatars.of(player.name),
                   title: Row(
                     children: [
                       Flexible(child: Text(displayNameOf(displayNames, player.name), overflow: TextOverflow.ellipsis)),

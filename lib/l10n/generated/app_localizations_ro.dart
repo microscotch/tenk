@@ -86,6 +86,21 @@ class AppLocalizationsRo extends AppLocalizations {
   String get playerNicknameLabel => 'Poreclă (opțional)';
 
   @override
+  String get avatarSectionTitle => 'Insignă';
+
+  @override
+  String get avatarColorLabel => 'Culoare';
+
+  @override
+  String get avatarAnimalLabel => 'Animal';
+
+  @override
+  String get avatarAutomatic => 'Automat';
+
+  @override
+  String get avatarLetter => 'Literă';
+
+  @override
   String get playerNameRequiredError => 'Numele este obligatoriu.';
 
   @override

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../game/avatar_catalog.dart';
 import '../game/player_profile.dart';
 import 'game_providers.dart';
 import 'game_save_store.dart';
@@ -54,9 +55,8 @@ final currentSeatRightHandedProvider = Provider<bool>((ref) {
 /// archivé, par exemple — et non depuis la partie en cours, qui peut n'exister
 /// pas, ou être une autre.
 ///
-/// Le blason, lui, continue de se dessiner à partir du NOM : c'est un repère
-/// d'identité stable, qui ne doit pas changer le jour où le joueur se choisit
-/// un surnom.
+/// La lettre de la pastille, elle, vient de ce nom affiché (voir
+/// [avatarLooksFor]) : le joueur qui se choisit un surnom voit sa pastille suivre.
 Map<String, String> displayNamesFor(GameSetup setup, Iterable<PlayerProfile>? profiles) {
   if (profiles == null) return const {};
   final byId = {for (final profile in profiles) profile.id: profile};
@@ -91,6 +91,54 @@ final displayNamesProvider = Provider<Map<String, String>>((ref) {
 Map<String, String> watchDisplayNames(WidgetRef ref, SavedGame? record) {
   if (record == null) return ref.watch(displayNamesProvider);
   return displayNamesFor(record.setup, ref.watch(playersProvider).value);
+}
+
+/// L'apparence de la pastille de chaque joueur d'UNE partie, décrite par sa config
+/// [setup] : la lettre vient du nom affiché (le surnom d'abord), la couleur et
+/// l'animal sont ceux de la fiche. Même principe que [displayNamesFor], dont elle
+/// reprend la règle de lien — **l'identifiant de la fiche, jamais le nom** : un
+/// adversaire en ligne, un bot ou une fiche supprimée n'y figurent pas (la pastille
+/// retombe sur la lettre du nom en jeu et une couleur attribuée par la partie), et
+/// deux parties qui ont un joueur du même nom ne se prêtent pas leurs choix.
+///
+/// [remote] : les choix annoncés par les adversaires d'une partie en ligne, par nom
+/// en jeu ; une fiche liée au siège l'emporte.
+Map<String, AvatarLook> avatarLooksFor(
+  GameSetup setup,
+  Iterable<PlayerProfile>? profiles, {
+  Map<String, AvatarLook> remote = const {},
+}) {
+  final looks = <String, AvatarLook>{...remote};
+  if (profiles == null) return looks;
+  final byId = {for (final profile in profiles) profile.id: profile};
+  for (var seat = 0; seat < setup.playerNames.length; seat++) {
+    final profile = byId[setup.playerIdAt(seat)];
+    if (profile == null) continue;
+    final inGame = setup.playerNames[seat];
+    looks[inGame] = AvatarLook(
+      name: profile.displayName != inGame ? profile.displayName : null,
+      color: profile.avatarColor,
+      animal: profile.avatarAnimal,
+    );
+  }
+  return looks;
+}
+
+/// Les pastilles de la partie EN COURS (ou en rejeu) : voir [avatarLooksFor], appliqué
+/// à sa config réordonnée — celle que porte le moteur exposé par [gameProvider].
+final avatarLooksProvider = Provider<Map<String, AvatarLook>>((ref) {
+  final engine = ref.watch(gameProvider);
+  final setup = ref.watch(gameProvider.notifier).orderedSetup;
+  if (engine == null || setup == null) return const {};
+  return avatarLooksFor(setup, ref.watch(playersProvider).value);
+});
+
+/// Les pastilles de la partie que montre un écran : celle de son journal [record]
+/// quand il en a un, sinon la partie en cours (voir [avatarLooksProvider]). À
+/// appeler dans un `build` : l'écran se redessine quand une fiche change.
+Map<String, AvatarLook> watchAvatarLooks(WidgetRef ref, SavedGame? record) {
+  if (record == null) return ref.watch(avatarLooksProvider);
+  return avatarLooksFor(record.setup, ref.watch(playersProvider).value);
 }
 
 /// Le profil de l'utilisateur de l'appareil : sa fiche dans la base des

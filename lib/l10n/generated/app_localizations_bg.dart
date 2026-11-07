@@ -86,6 +86,21 @@ class AppLocalizationsBg extends AppLocalizations {
   String get playerNicknameLabel => 'Прякор (по избор)';
 
   @override
+  String get avatarSectionTitle => 'Значка';
+
+  @override
+  String get avatarColorLabel => 'Цвят';
+
+  @override
+  String get avatarAnimalLabel => 'Животно';
+
+  @override
+  String get avatarAutomatic => 'Автоматично';
+
+  @override
+  String get avatarLetter => 'Буква';
+
+  @override
   String get playerNameRequiredError => 'Името е задължително.';
 
   @override

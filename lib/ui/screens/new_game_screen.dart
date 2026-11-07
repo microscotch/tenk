@@ -240,7 +240,9 @@ class _NewGameScreenState extends ConsumerState<NewGameScreen> {
               child: Icon(Icons.drag_handle, semanticLabel: l10n.reorderPlayerHandleLabel),
             ),
           ),
-          PlayerAvatarWidget(name: seat.name, size: 36),
+          seat is _HumanSeat
+              ? PlayerAvatarWidget.profile(seat.profile, size: 36)
+              : PlayerAvatarWidget(name: seat.name, size: 36),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

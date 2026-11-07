@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
+import '../../game/avatar_catalog.dart';
 import '../../game/player.dart';
 import '../../game/score_radar.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -24,12 +25,12 @@ class ScoreSheet extends StatelessWidget {
   final ValueChanged<Player>? onTapPlayer;
 
   /// Noms à afficher, par nom en jeu (voir `displayNamesProvider`). Un joueur
-  /// absent de la table garde son nom. Le blason, lui, reste dessiné à partir
-  /// du nom quoi qu'il arrive.
+  /// absent de la table garde son nom. La lettre de la pastille vient de ce nom
+  /// affiché (voir [looks]).
   final Map<String, String> displayNames;
 
   /// Les bulles à montrer, par index de joueur : ce qu'il vient d'exprimer en
-  /// ligne (voir `EmoteBar`). Une bulle part du blason du joueur et s'étend à
+  /// ligne (voir `EmoteBar`). Une bulle part de la pastille du joueur et s'étend à
   /// sa droite, sur plusieurs lignes s'il le faut (voir [AvatarWithBubble]).
   final Map<int, String> bubbles;
 
@@ -54,6 +55,9 @@ class ScoreSheet extends StatelessWidget {
   /// un bot du serveur a repris le siège : leur ligne porte une icône de robot.
   final Set<int> botIndices;
 
+  /// Apparence des pastilles, par nom en jeu (voir `avatarLooksProvider`).
+  final Map<String, AvatarLook> looks;
+
   /// Des clés à poser sur certaines lignes (par index de joueur) : là où une
   /// bulle du tutoriel peut pointer.
   final Map<int, Key> rowKeys;
@@ -65,6 +69,7 @@ class ScoreSheet extends StatelessWidget {
     this.referenceIndex,
     this.onTapPlayer,
     this.displayNames = const {},
+    this.looks = const {},
     this.bubbles = const {},
     this.potentialTotal,
     this.currentPotentialTotal,
@@ -75,7 +80,7 @@ class ScoreSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarColors = assignAvatarColors(players.map((p) => p.name));
+    final avatars = AvatarSet.resolve(players.map((p) => p.name), looks);
     final ranks = podiumRanks(players);
     final reference = referenceIndex ?? currentPlayerIndex;
     final potential = potentialTotal ?? players[reference].totalScore;
@@ -109,7 +114,7 @@ class ScoreSheet extends StatelessWidget {
                   : (i == currentPlayerIndex ? currentPotentialTotal : null),
               handRevealed: handRevealed,
               onTap: onTapPlayer == null ? null : () => onTapPlayer!(players[i]),
-              avatarColor: avatarColors[players[i].name],
+              avatar: avatars.of(players[i].name, size: 32),
               podiumRank: ranks[i],
               bubble: bubbles[i],
               isBot: botIndices.contains(i),
@@ -196,7 +201,7 @@ class _PlayerRow extends StatelessWidget {
   final bool isReference;
   final _ScoreGaps gaps;
   final VoidCallback? onTap;
-  final Color? avatarColor;
+  final Widget avatar;
 
   /// 1/2/3 pour or/argent/bronze, null si le joueur n'est pas sur le podium
   /// (voir [podiumRanks]).
@@ -236,7 +241,7 @@ class _PlayerRow extends StatelessWidget {
     required this.isReference,
     required this.gaps,
     required this.onTap,
-    required this.avatarColor,
+    required this.avatar,
     required this.podiumRank,
   });
 
@@ -261,7 +266,7 @@ class _PlayerRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             // La hauteur de la ligne est celle d'avant les deux lignes de texte : un
-            // texte invisible (de la hauteur de l'ancien blason, ou un score) la donne, et le blason avec
+            // texte invisible (de la hauteur de l'ancien blason de 24, ou un score) la donne, et la pastille avec
             // ses deux lignes, centrés dessus, débordent dans la marge de 10.
             child: SizedBox(
               width: double.infinity,
@@ -287,7 +292,7 @@ class _PlayerRow extends StatelessWidget {
                             padding: const EdgeInsets.only(right: 10),
                             child: AvatarWithBubble(
                               bubble: bubble,
-                              child: PlayerAvatarWidget(name: player.name, size: 32, color: avatarColor),
+                              child: avatar,
                             ),
                           ),
                           // Deux lignes : le nom, la médaille et le robot, avec le score
@@ -510,10 +515,10 @@ class _PlayerRow extends StatelessWidget {
   }
 }
 
-/// Le blason d'un joueur, et la bulle de ce qu'il vient d'exprimer, quand il y
-/// en a une : pointe sur le bord droit du blason, centrée sur lui.
+/// La pastille d'un joueur, et la bulle de ce qu'il vient d'exprimer, quand il y
+/// en a une : pointe sur le bord droit de la pastille, centrée sur lui.
 ///
-/// La bulle est dessinée dans l'overlay de la page, accrochée au blason (un
+/// La bulle est dessinée dans l'overlay de la page, accrochée à la pastille (un
 /// [CompositedTransformFollower] suit son [CompositedTransformTarget]) : elle
 /// peut ainsi dépasser la hauteur de la ligne, sans être rognée par la zone qui
 /// défile, tout en suivant la ligne quand elle défile.
@@ -564,7 +569,7 @@ class AvatarWithBubbleState extends State<AvatarWithBubble> {
       child: OverlayPortal(
         controller: _portal,
         // Un `Positioned` sans taille : le suiveur prend celle de la bulle, que
-        // `followerAnchor` peut alors centrer sur le blason (sans lui, il
+        // `followerAnchor` peut alors centrer sur la pastille (sans lui, il
         // prendrait tout l'overlay).
         overlayChildBuilder: (_) => Positioned(
           left: 0,

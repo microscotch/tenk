@@ -42,10 +42,11 @@ void main() {
   });
 
   testWidgets('la grille d\'un seul joueur garde la couleur de blason de la partie', (tester) async {
-    // 'Random Dent' et 'Lolo' réclament la même couleur naturelle : dans une
-    // partie, le premier la garde et le second est décalé. Affichée seule, la
-    // grille du second lui rendait cette couleur — celle du premier joueur.
-    final ia = Player(name: 'Random Dent');
+    // 'Olol' et 'Lolo' (mêmes lettres, donc même somme) réclament la même couleur
+    // naturelle : dans une partie, le premier la garde et le second est décalé.
+    // Affichée seule, la grille du second lui rendait cette couleur — celle du
+    // premier joueur.
+    final ia = Player(name: 'Olol');
     final moi = Player(name: 'Lolo');
     final couleurDeLaPartie = assignAvatarColors([ia.name, moi.name])[moi.name];
 

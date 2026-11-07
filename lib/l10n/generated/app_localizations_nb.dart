@@ -86,6 +86,21 @@ class AppLocalizationsNb extends AppLocalizations {
   String get playerNicknameLabel => 'Kallenavn (valgfritt)';
 
   @override
+  String get avatarSectionTitle => 'Brikke';
+
+  @override
+  String get avatarColorLabel => 'Farge';
+
+  @override
+  String get avatarAnimalLabel => 'Dyr';
+
+  @override
+  String get avatarAutomatic => 'Automatisk';
+
+  @override
+  String get avatarLetter => 'Bokstav';
+
+  @override
   String get playerNameRequiredError => 'Navn er påkrevd.';
 
   @override

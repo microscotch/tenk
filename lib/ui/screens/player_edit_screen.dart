@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../game/avatar_catalog.dart';
 import '../../game/online/protocol.dart' show isValidOnlineName;
 import '../../game/player_profile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_store.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/avatar_picker.dart';
 import '../widgets/player_avatar.dart';
 
 /// Création ou édition d'une fiche joueur.
@@ -40,6 +42,8 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
   late final TextEditingController _name;
   late final TextEditingController _nickname;
   late bool _rightHanded;
+  String? _avatarColor;
+  String? _avatarAnimal;
   String? _error;
   bool _saving = false;
 
@@ -49,6 +53,8 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
     _name = TextEditingController(text: widget.existing?.name ?? widget.initialName ?? '');
     _nickname = TextEditingController(text: widget.existing?.nickname ?? '');
     _rightHanded = widget.existing?.rightHanded ?? widget.initialRightHanded ?? true;
+    _avatarColor = widget.existing?.avatarColor;
+    _avatarAnimal = widget.existing?.avatarAnimal;
   }
 
   @override
@@ -93,12 +99,24 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
     // parties archivées ne contiennent que des noms, et c'est par eux qu'elles
     // se rattachent à une fiche.
     final saved = existing == null
-        ? PlayerProfile.create(name: name, nickname: nickname, rightHanded: _rightHanded)
-        : existing.renamedTo(name).copyWith(
-              nickname: nickname.isEmpty ? null : nickname,
-              clearNickname: nickname.isEmpty,
-              rightHanded: _rightHanded,
-            );
+        ? PlayerProfile.create(
+            name: name,
+            nickname: nickname,
+            rightHanded: _rightHanded,
+            avatarColor: _avatarColor,
+            avatarAnimal: _avatarAnimal,
+          )
+        : existing
+              .renamedTo(name)
+              .copyWith(
+                nickname: nickname.isEmpty ? null : nickname,
+                clearNickname: nickname.isEmpty,
+                rightHanded: _rightHanded,
+                avatarColor: _avatarColor,
+                clearAvatarColor: _avatarColor == null,
+                avatarAnimal: _avatarAnimal,
+                clearAvatarAnimal: _avatarAnimal == null,
+              );
 
     await store.write(saved);
     ref.invalidate(playersProvider);
@@ -110,59 +128,89 @@ class _PlayerEditScreenState extends ConsumerState<PlayerEditScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final name = _name.text.trim();
+    // La pastille montre la lettre du nom affiché, le surnom d'abord.
+    final nickname = _nickname.text.trim();
+    final shownName = nickname.isNotEmpty ? nickname : name;
     return Scaffold(
       appBar: AppTopBar(
-        title: Text(widget.isMyProfile
-            ? l10n.myProfileTitle
-            : (widget.existing == null ? l10n.newPlayerTitle : l10n.editPlayerTitle)),
+        title: Text(
+          widget.isMyProfile
+              ? l10n.myProfileTitle
+              : (widget.existing == null ? l10n.newPlayerTitle : l10n.editPlayerTitle),
+        ),
       ),
+      // « Valider » reste en bas de l'écran, hors de ce qui défile : avec le choix de
+      // la pastille la fiche est plus haute qu'un petit téléphone, et le bouton ne
+      // doit pas se trouver au bout d'un défilement.
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                // Le blason se dessine à partir du nom : il se met à jour en
-                // direct pendant la frappe, ce qui montre à quoi le joueur
-                // ressemblera à table.
-                child: PlayerAvatarWidget(name: name.isEmpty ? '?' : name, size: 72),
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _name,
-                autofocus: widget.existing == null,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  labelText: l10n.playerNameLabel,
-                  errorText: _error,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      // La pastille se met à jour en direct pendant la frappe et les
+                      // choix ci-dessous : elle montre à quoi le joueur ressemblera à table.
+                      child: PlayerAvatarWidget(
+                        name: shownName.isEmpty ? '?' : shownName,
+                        size: 72,
+                        color: avatarColorById(_avatarColor) == null
+                            ? null
+                            : Color(avatarColorById(_avatarColor)!.argb),
+                        animal: _avatarAnimal,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _name,
+                      autofocus: widget.existing == null,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(labelText: l10n.playerNameLabel, errorText: _error),
+                      onChanged: (_) => setState(() => _error = null),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _nickname,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(labelText: l10n.playerNicknameLabel),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(l10n.avatarSectionTitle, style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 12),
+                    AvatarPicker(
+                      name: shownName.isEmpty ? '?' : shownName,
+                      color: _avatarColor,
+                      animal: _avatarAnimal,
+                      onColor: (id) => setState(() => _avatarColor = id),
+                      onAnimal: (id) => setState(() => _avatarAnimal = id),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(l10n.settingsHandednessLabel, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    SegmentedButton<bool>(
+                      segments: [
+                        ButtonSegment(value: true, label: Text(l10n.settingsHandednessRight)),
+                        ButtonSegment(value: false, label: Text(l10n.settingsHandednessLeft)),
+                      ],
+                      selected: {_rightHanded},
+                      onSelectionChanged: (s) => setState(() => _rightHanded = s.first),
+                    ),
+                  ],
                 ),
-                onChanged: (_) => setState(() => _error = null),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _nickname,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(labelText: l10n.playerNicknameLabel),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(onPressed: _saving ? null : _save, child: Text(l10n.validateButton)),
               ),
-              const SizedBox(height: 24),
-              Text(l10n.settingsHandednessLabel, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: true, label: Text(l10n.settingsHandednessRight)),
-                  ButtonSegment(value: false, label: Text(l10n.settingsHandednessLeft)),
-                ],
-                selected: {_rightHanded},
-                onSelectionChanged: (s) => setState(() => _rightHanded = s.first),
-              ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _saving ? null : _save,
-                child: Text(l10n.validateButton),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

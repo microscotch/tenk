@@ -84,7 +84,7 @@ class MyProfileSetupScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 for (final player in ordered)
                   ListTile(
-                    leading: PlayerAvatarWidget(name: player.name, size: 40),
+                    leading: PlayerAvatarWidget.profile(player),
                     title: Text(player.displayName),
                     subtitle: player.nickname == null ? null : Text(player.name),
                     onTap: () => _choose(context, ref, player),

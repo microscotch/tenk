@@ -96,6 +96,12 @@
   "editPlayerTitle": "Modifica giocatore",
   "playerNameLabel": "Nome",
   "playerNicknameLabel": "Soprannome (facoltativo)",
+
+  "avatarSectionTitle": "Distintivo",
+  "avatarColorLabel": "Colore",
+  "avatarAnimalLabel": "Animale",
+  "avatarAutomatic": "Automatico",
+  "avatarLetter": "Lettera",
   "playerNameRequiredError": "Il nome è obbligatorio.",
   "playerNameTakenError": "Questo nome è già usato da un altro giocatore.",
   "deletePlayerConfirmTitle": "Eliminare questo giocatore?",

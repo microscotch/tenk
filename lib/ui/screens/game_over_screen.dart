@@ -129,6 +129,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
     // Un siège non rattaché à une fiche — un bot, une partie antérieure à la
     // base — garde le nom sous lequel la partie l'a enregistré.
     final displayNames = watchDisplayNames(ref, record);
+    final looks = watchAvatarLooks(ref, record);
+    final avatars = AvatarSet.resolve(players.map((p) => p.name), looks);
     final sorted = [...players]
       ..sort((a, b) => b.totalScore.compareTo(a.totalScore));
     final journal = record;
@@ -192,12 +194,12 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // En ligne, le blason porte la bulle de ce que le
+                          // En ligne, la pastille porte la bulle de ce que le
                           // joueur exprime (voir la barre d'émotions plus bas).
                           if (_online) ...[
                             AvatarWithBubble(
                               bubble: _bubbles[p.name],
-                              child: PlayerAvatarWidget(name: p.name, size: 24),
+                              child: avatars.of(p.name, size: 24),
                             ),
                             const SizedBox(width: 8),
                           ],
@@ -226,7 +228,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => ScoreGridScreen(players: players, reference: players[winnerIndex], displayNames: displayNames),
+                        builder: (_) => ScoreGridScreen(players: players, reference: players[winnerIndex], displayNames: displayNames, looks: looks),
                       ),
                     ),
                     icon: const Icon(Icons.grid_on),

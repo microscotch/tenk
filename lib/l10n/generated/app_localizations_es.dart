@@ -86,6 +86,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get playerNicknameLabel => 'Apodo (opcional)';
 
   @override
+  String get avatarSectionTitle => 'Insignia';
+
+  @override
+  String get avatarColorLabel => 'Color';
+
+  @override
+  String get avatarAnimalLabel => 'Animal';
+
+  @override
+  String get avatarAutomatic => 'Automático';
+
+  @override
+  String get avatarLetter => 'Letra';
+
+  @override
   String get playerNameRequiredError => 'El nombre es obligatorio.';
 
   @override

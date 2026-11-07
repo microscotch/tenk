@@ -243,7 +243,7 @@ void main() {
       // tuile de l'autre.
       expect(
         find.descendant(
-          of: find.widgetWithText(ExpansionTile, name),
+          of: find.widgetWithText(ExpansionTile, name).first,
           matching: find.text(summary(s.turnsTotal, s.bestBankedTurn, s.bustsTotal)),
         ),
         findsOneWidget,
@@ -361,7 +361,7 @@ void main() {
 
     for (final name in saved.setup.playerNames) {
       final own = stats.bySeat[saved.setup.playerNames.indexOf(name)];
-      final tile = find.widgetWithText(ExpansionTile, name);
+      final tile = find.widgetWithText(ExpansionTile, name).first;
       await tester.tap(tile);
       await tester.pumpAndSettle();
       expect(value(tile, 'Tours joués', '${own.turnsTotal}'), findsOneWidget, reason: 'tours de $name');

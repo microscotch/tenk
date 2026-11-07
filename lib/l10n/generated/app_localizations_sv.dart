@@ -86,6 +86,21 @@ class AppLocalizationsSv extends AppLocalizations {
   String get playerNicknameLabel => 'Smeknamn (valfritt)';
 
   @override
+  String get avatarSectionTitle => 'Bricka';
+
+  @override
+  String get avatarColorLabel => 'Färg';
+
+  @override
+  String get avatarAnimalLabel => 'Djur';
+
+  @override
+  String get avatarAutomatic => 'Automatisk';
+
+  @override
+  String get avatarLetter => 'Bokstav';
+
+  @override
   String get playerNameRequiredError => 'Namn krävs.';
 
   @override

@@ -1,8 +1,11 @@
+import '../test_helpers/names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
+import 'package:le10000/game/avatar_catalog.dart';
 import 'package:le10000/game/player.dart';
+import 'package:le10000/ui/widgets/player_avatar.dart';
 import 'package:le10000/ui/widgets/score_sheet.dart';
 
 /// La ligne (le [Container]) affichant le nom [playerName], pour vérifier
@@ -11,6 +14,30 @@ import 'package:le10000/ui/widgets/score_sheet.dart';
 Finder _rowOf(String playerName) => find.ancestor(of: find.text(playerName), matching: find.byType(Container)).first;
 
 void main() {
+  testWidgets('la pastille d\'un joueur porte son animal, ou la lettre de son nom affiché', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ScoreSheet(
+          players: [Player(name: 'Marie'), Player(name: 'Paul'), Player(name: 'Zoé')],
+          currentPlayerIndex: 0,
+          displayNames: const {'Paul': 'Polo'},
+          looks: const {
+            'Marie': AvatarLook(color: 'teal', animal: 'fox'),
+            'Paul': AvatarLook(name: 'Polo'),
+          },
+        ),
+      ),
+    );
+
+    final avatars = tester.widgetList<PlayerAvatarWidget>(find.byType(PlayerAvatarWidget)).toList();
+    expect(avatars.map((a) => a.animal), ['fox', null, null]);
+    expect(avatars.map((a) => a.name), ['Marie', 'Polo', 'Zoé'], reason: 'la lettre vient du nom affiché');
+    expect(avatars[0].color, const Color(0xFF2E8B8B), reason: 'la couleur choisie');
+    expect(avatars.map((a) => a.color).toSet().length, 3, reason: 'jamais deux fois la même couleur');
+  });
+
   testWidgets('en ligne, chaque écran lit le radar depuis son siège (J1 joue, 200 de main)', (tester) async {
     Player grid(String name, List<int> lines) {
       var player = Player(name: name, totalScore: lines.first, hasEntered: true);
@@ -270,7 +297,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('B'));
+    await tester.tap(nameText('B'));
     await tester.pump();
 
     expect(tapped?.name, 'B');
@@ -360,7 +387,7 @@ void main() {
       ),
     );
 
-    double topOf(WidgetTester tester, String name) => tester.getTopLeft(find.text(name)).dy;
+    double topOf(WidgetTester tester, String name) => tester.getTopLeft(nameText(name)).dy;
 
     testWidgets('l\'ordre ne change pas quand le tour passe', (tester) async {
       final players = [Player(name: 'A'), Player(name: 'B'), Player(name: 'C')];
@@ -371,8 +398,8 @@ void main() {
 
     testWidgets('seul le nom du joueur courant est en gras', (tester) async {
       await pumpSheet(tester, [Player(name: 'A'), Player(name: 'B')], current: 1);
-      expect(tester.widget<Text>(find.text('A')).style?.fontWeight, FontWeight.normal);
-      expect(tester.widget<Text>(find.text('B')).style?.fontWeight, FontWeight.bold);
+      expect(tester.widget<Text>(nameText('A')).style?.fontWeight, FontWeight.normal);
+      expect(tester.widget<Text>(nameText('B')).style?.fontWeight, FontWeight.bold);
     });
 
     testWidgets('le joueur courant montre son total potentiel puis son score précédent', (tester) async {

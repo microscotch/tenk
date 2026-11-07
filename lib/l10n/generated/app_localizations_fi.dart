@@ -86,6 +86,21 @@ class AppLocalizationsFi extends AppLocalizations {
   String get playerNicknameLabel => 'Lempinimi (valinnainen)';
 
   @override
+  String get avatarSectionTitle => 'Pelimerkki';
+
+  @override
+  String get avatarColorLabel => 'Väri';
+
+  @override
+  String get avatarAnimalLabel => 'Eläin';
+
+  @override
+  String get avatarAutomatic => 'Automaattinen';
+
+  @override
+  String get avatarLetter => 'Kirjain';
+
+  @override
   String get playerNameRequiredError => 'Nimi on pakollinen.';
 
   @override

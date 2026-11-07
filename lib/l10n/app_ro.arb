@@ -96,6 +96,12 @@
   "editPlayerTitle": "Editează jucătorul",
   "playerNameLabel": "Nume",
   "playerNicknameLabel": "Poreclă (opțional)",
+
+  "avatarSectionTitle": "Insignă",
+  "avatarColorLabel": "Culoare",
+  "avatarAnimalLabel": "Animal",
+  "avatarAutomatic": "Automat",
+  "avatarLetter": "Literă",
   "playerNameRequiredError": "Numele este obligatoriu.",
   "playerNameTakenError": "Acest nume este deja folosit de alt jucător.",
   "deletePlayerConfirmTitle": "Ștergi acest jucător?",

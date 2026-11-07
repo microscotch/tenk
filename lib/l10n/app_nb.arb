@@ -96,6 +96,12 @@
   "editPlayerTitle": "Rediger spiller",
   "playerNameLabel": "Navn",
   "playerNicknameLabel": "Kallenavn (valgfritt)",
+
+  "avatarSectionTitle": "Brikke",
+  "avatarColorLabel": "Farge",
+  "avatarAnimalLabel": "Dyr",
+  "avatarAutomatic": "Automatisk",
+  "avatarLetter": "Bokstav",
   "playerNameRequiredError": "Navn er påkrevd.",
   "playerNameTakenError": "Dette navnet brukes allerede av en annen spiller.",
   "deletePlayerConfirmTitle": "Slette denne spilleren?",

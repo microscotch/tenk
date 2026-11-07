@@ -254,6 +254,36 @@ abstract class AppLocalizations {
   /// **'Surnom (facultatif)'**
   String get playerNicknameLabel;
 
+  /// Titre de la section du profil où l'on choisit la pastille du joueur (couleur et animal).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pastille'**
+  String get avatarSectionTitle;
+
+  /// Libellé de la rangée de couleurs de la pastille d'un joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Couleur'**
+  String get avatarColorLabel;
+
+  /// Libellé de la grille d'animaux de la pastille d'un joueur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal'**
+  String get avatarAnimalLabel;
+
+  /// Choix « couleur attribuée par la partie » dans la rangée de couleurs de la pastille.
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatique'**
+  String get avatarAutomatic;
+
+  /// Choix « la première lettre du nom » (pas d'animal) dans la grille d'animaux de la pastille.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lettre'**
+  String get avatarLetter;
+
   /// Erreur affichée quand le champ de nom d'une fiche joueur est vide.
   ///
   /// In fr, this message translates to:

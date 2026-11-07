@@ -96,6 +96,12 @@
   "editPlayerTitle": "Redigera spelare",
   "playerNameLabel": "Namn",
   "playerNicknameLabel": "Smeknamn (valfritt)",
+
+  "avatarSectionTitle": "Bricka",
+  "avatarColorLabel": "Färg",
+  "avatarAnimalLabel": "Djur",
+  "avatarAutomatic": "Automatisk",
+  "avatarLetter": "Bokstav",
   "playerNameRequiredError": "Namn krävs.",
   "playerNameTakenError": "Det här namnet används redan av en annan spelare.",
   "deletePlayerConfirmTitle": "Radera den här spelaren?",

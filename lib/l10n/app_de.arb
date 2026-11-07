@@ -96,6 +96,12 @@
   "editPlayerTitle": "Spieler bearbeiten",
   "playerNameLabel": "Name",
   "playerNicknameLabel": "Spitzname (optional)",
+
+  "avatarSectionTitle": "Abzeichen",
+  "avatarColorLabel": "Farbe",
+  "avatarAnimalLabel": "Tier",
+  "avatarAutomatic": "Automatisch",
+  "avatarLetter": "Buchstabe",
   "playerNameRequiredError": "Der Name ist erforderlich.",
   "playerNameTakenError": "Dieser Name wird bereits von einem anderen Spieler verwendet.",
   "deletePlayerConfirmTitle": "Diesen Spieler löschen?",

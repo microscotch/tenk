@@ -74,7 +74,7 @@ class _PlayerPickerScreenState extends ConsumerState<PlayerPickerScreen> {
                                   _selected.remove(player.id);
                                 }
                               }),
-                      secondary: PlayerAvatarWidget(name: player.name, size: 40),
+                      secondary: PlayerAvatarWidget.profile(player),
                       title: Text(player.displayName),
                     ),
                 ],

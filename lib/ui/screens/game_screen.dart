@@ -204,13 +204,13 @@ String _describeKeptDice(RollAnalysis analysis, int roundPoints) {
 }
 
 /// Une entrée horodatée du journal de partie (voir [_GameScreenState._log]),
-/// rattachée au joueur concerné (pour son blason, voir [PlayerAvatarWidget]).
+/// rattachée au joueur concerné (pour sa pastille, voir [PlayerAvatarWidget]).
 ///
 /// [barredScore] n'est renseigné que pour les entrées qui barrent une ligne
 /// de grille — collision de score, ou craque qui barre la ligne courante :
 /// ce score s'affiche alors biffé au milieu du message (voir
 /// [_GameScreenState._buildLogWhatCell]), encadré par [text] devant et, selon
-/// le cas, le blason du joueur barré ([barredPlayerName]) ou le repli de
+/// le cas, la pastille du joueur barré ([barredPlayerName]) ou le repli de
 /// score ([textAfterBarredScore]) derrière.
 class _LogEntry {
   final DateTime timestamp;
@@ -957,7 +957,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   /// L'historique de la partie, en panneau déroulé depuis la barre du bas (voir
   /// [_historyBar]) : le journal, tenu à jour tant qu'il est ouvert.
-  void _openHistory(Map<String, Color> avatarColors) {
+  void _openHistory(AvatarSet avatars) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -968,7 +968,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: ValueListenableBuilder<int>(
             valueListenable: _logRevision,
-            builder: (_, _, _) => _buildGameLog(avatarColors),
+            builder: (_, _, _) => _buildGameLog(avatars),
           ),
         ),
       ),
@@ -1772,7 +1772,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _historyBar(assignAvatarColors(engine.players.map((p) => p.name))),
+              _historyBar(AvatarSet.resolve(engine.players.map((p) => p.name), ref.watch(avatarLooksProvider))),
               if (widget.replayMode) ReplayControls(onSeek: _seekReplay),
             ],
           ),
@@ -1803,6 +1803,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       referenceIndex: referenceIndex,
                       onTapPlayer: _openPlayerGrid,
                       displayNames: ref.watch(displayNamesProvider),
+                      looks: ref.watch(avatarLooksProvider),
                       bubbles: _bubbles,
                       botIndices: _botIndices(engine),
                       // Les écarts des autres joueurs suivent la main en direct,
@@ -1974,7 +1975,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// L'historique replié, en bas de l'écran : rien qu'une petite encoche
   /// centrée, qui dit qu'il y a là quelque chose à déployer. Un tap, ou un
   /// glissement vers le haut, déroule tout le journal (voir [_openHistory]).
-  Widget _historyBar(Map<String, Color> avatarColors) {
+  Widget _historyBar(AvatarSet avatars) {
     final l10n = AppLocalizations.of(context);
     return Semantics(
       button: true,
@@ -1982,9 +1983,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
       child: GestureDetector(
         key: const ValueKey('history-bar'),
         behavior: HitTestBehavior.opaque,
-        onTap: () => _openHistory(avatarColors),
+        onTap: () => _openHistory(avatars),
         onVerticalDragEnd: (details) {
-          if ((details.primaryVelocity ?? 0) < 0) _openHistory(avatarColors);
+          if ((details.primaryVelocity ?? 0) < 0) _openHistory(avatars);
         },
         child: SizedBox(
           height: 28,
@@ -2120,7 +2121,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   /// La grille de score de [players], lue depuis [_referenceIndex] et son total
   /// potentiel. Même seul à l'écran, un joueur garde sa couleur
-  /// de blason de la table entière (voir [ScoreGridScreen.roster]).
+  /// de pastille de la table entière (voir [ScoreGridScreen.roster]).
   ScoreGridScreen _gridScreen(List<Player> players) {
     final engine = ref.read(gameProvider);
     return ScoreGridScreen(
@@ -2129,6 +2130,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       reference: engine == null ? null : engine.players[_referenceIndex(engine)],
       potentialTotal: _gridPotential,
       displayNames: ref.read(displayNamesProvider),
+      looks: ref.read(avatarLooksProvider),
       handBankable: _gridBankable,
     );
   }
@@ -2265,6 +2267,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     players: engine.players,
                     currentPlayerIndex: engine.currentPlayerIndex,
                     displayNames: ref.read(displayNamesProvider),
+                    looks: ref.read(avatarLooksProvider),
                     botIndices: _botIndices(engine),
                     potentialTotal: engine.currentPlayer.totalScore + (resumed ? engine.inheritedScore : 0),
                   ),
@@ -2854,18 +2857,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// plus ancien — pas besoin de gérer le défilement, une nouvelle entrée
   /// apparaît directement en haut, déjà dans la zone visible.
   /// Colonnes "qui / quand / quoi" (voir [_buildGameLog]) : largeurs fixes
-  /// pour "qui" (blason) et "quand" (heure), le reste à "quoi" (message, qui
+  /// pour "qui" (pastille) et "quand" (heure), le reste à "quoi" (message, qui
   /// enchaîne sur plusieurs lignes si besoin plutôt que d'être tronqué).
   static const _logWhoColumnWidth = 26.0;
   static const _logWhenColumnWidth = 52.0;
 
   /// Cellule "quoi" d'une ligne de journal : texte simple, sauf pour une
   /// entrée de collision de score ([_LogEntry.scoreBarred]), qui affiche en
-  /// plus le score barré (barré visuellement) suivi du blason du joueur
+  /// plus le score barré (barré visuellement) suivi de la pastille du joueur
   /// concerné.
   /// [oneLine] : sur une seule ligne, coupée au besoin (l'aperçu de la barre
   /// d'historique, voir [_historyBar]).
-  Widget _buildLogWhatCell(_LogEntry entry, Map<String, Color> avatarColors, {bool oneLine = false}) {
+  Widget _buildLogWhatCell(_LogEntry entry, AvatarSet avatars, {bool oneLine = false}) {
     final maxLines = oneLine ? 1 : null;
     final overflow = oneLine ? TextOverflow.ellipsis : null;
     if (entry.barredScore == null) {
@@ -2886,11 +2889,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             const WidgetSpan(child: SizedBox(width: 4)),
             WidgetSpan(
               alignment: PlaceholderAlignment.middle,
-              child: PlayerAvatarWidget(
-                name: entry.barredPlayerName!,
-                size: 16,
-                color: avatarColors[entry.barredPlayerName!],
-              ),
+              child: avatars.of(entry.barredPlayerName!, size: 16),
             ),
           ],
           if (entry.textAfterBarredScore != null)
@@ -2900,7 +2899,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  Widget _buildGameLog(Map<String, Color> avatarColors) {
+  Widget _buildGameLog(AvatarSet avatars) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(8),
@@ -2934,11 +2933,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: PlayerAvatarWidget(
-                              name: _log[i].playerName,
-                              size: 18,
-                              color: avatarColors[_log[i].playerName],
-                            ),
+                            child: avatars.of(_log[i].playerName, size: 18),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
@@ -2952,7 +2947,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: _buildLogWhatCell(_log[i], avatarColors),
+                            child: _buildLogWhatCell(_log[i], avatars),
                           ),
                         ],
                       ),

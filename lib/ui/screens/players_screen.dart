@@ -98,7 +98,7 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
                         // Le profil de l'utilisateur ne se supprime pas : il porte
                         // son pseudo en ligne et ses statistiques.
                         ListTile(
-                          leading: PlayerAvatarWidget(name: player.name, size: 40),
+                          leading: PlayerAvatarWidget.profile(player),
                           title: Text(player.displayName),
                           subtitle: Text(l10n.playerGamesSummary(player.stats.gamesPlayed)),
                           trailing: Chip(label: Text(l10n.myProfileBadge)),
@@ -117,7 +117,7 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
                         confirmDismiss: (_) => _confirmDelete(player),
                         onDismissed: (_) => _delete(player),
                         child: ListTile(
-                          leading: PlayerAvatarWidget(name: player.name, size: 40),
+                          leading: PlayerAvatarWidget.profile(player),
                           title: Text(player.displayName),
                           subtitle: Text(l10n.playerGamesSummary(player.stats.gamesPlayed)),
                           onTap: () => _openEditor(player),

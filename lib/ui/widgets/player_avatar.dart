@@ -1,46 +1,51 @@
 import 'package:flutter/material.dart';
 
+import '../../game/avatar_catalog.dart';
 import '../../game/avatar_initials.dart';
+import '../../game/player_profile.dart';
 
-/// Palette de fonds de blason : des teintes assez saturées/sombres pour que
-/// les initiales blanches en police gothique restent lisibles sur toutes.
-const List<Color> kAvatarColorPalette = [
-  Color(0xFFB5443B), // brique
-  Color(0xFF3B6EA5), // bleu profond
-  Color(0xFF4A8B5C), // vert forêt
-  Color(0xFFB08A2E), // ambre
-  Color(0xFF7A4FA0), // violet
-  Color(0xFF4E5D6C), // ardoise
-];
+/// Les couleurs de fond de pastille que la partie peut attribuer d'office : celles
+/// du catalogue (voir [avatarColorChoices]).
+final List<Color> kAvatarColorPalette = [for (final c in avatarColorChoices) Color(c.argb)];
 
 int _paletteIndexFor(String name) {
   final hash = name.codeUnits.fold<int>(0, (acc, c) => acc + c);
   return hash % kAvatarColorPalette.length;
 }
 
-/// Couleur de fond du blason d'un joueur : déterministe à partir de son nom
-/// (même joueur = même couleur d'un affichage à l'autre, sans état à gérer).
-/// Ne garantit PAS l'absence de collision entre plusieurs joueurs d'une même
-/// partie (voir [assignAvatarColors]) — à réserver aux affichages hors
+/// Couleur de fond de la pastille d'un joueur qui n'en a pas choisi : déterministe
+/// à partir de son nom (même joueur = même couleur d'un affichage à l'autre, sans
+/// état à gérer). Ne garantit PAS l'absence de collision entre plusieurs joueurs
+/// d'une même partie (voir [assignAvatarColors]) — à réserver aux affichages hors
 /// contexte de partie (ex. l'aperçu du nom dans l'écran de configuration).
 Color avatarColorFor(String name) => kAvatarColorPalette[_paletteIndexFor(name)];
 
-/// Attribue une couleur de blason à chaque nom de [names], sans jamais
-/// répéter une couleur tant que la palette n'est pas épuisée : chaque nom
-/// se voit d'abord proposer sa couleur "naturelle" ([avatarColorFor]), et en
-/// cas de collision avec un nom déjà traité, la première couleur libre
-/// suivante dans la palette (en balayant circulairement) lui est assignée à
-/// la place. Déterministe pour un ordre de [names] donné (celui des joueurs
-/// dans la partie), donc stable d'un affichage à l'autre tant que la liste
-/// de joueurs ne change pas. Palette et effectif max de joueurs valent tous
-/// deux 6 (voir `new_game_screen.dart`), donc une collision irrésolvable
-/// (plus de joueurs que de couleurs) ne devrait jamais se produire ; le cas
-/// échéant, les couleurs recommencent à se répéter au-delà de la 6e entrée
-/// plutôt que de boucler indéfiniment.
-Map<String, Color> assignAvatarColors(Iterable<String> names) {
+/// Attribue une couleur de pastille à chaque nom de [names] : d'abord celle que le
+/// joueur a CHOISIE dans son profil ([looks], indexé par nom en jeu), dans l'ordre
+/// des joueurs — une couleur déjà prise par un joueur précédent n'est pas donnée une
+/// seconde fois : le suivant retombe sur une couleur attribuée, comme s'il n'avait
+/// rien choisi (deux pastilles identiques, et deux courbes indiscernables) —, puis,
+/// pour les autres, une couleur attribuée sans jamais en répéter une tant que la
+/// palette n'est pas épuisée : chaque nom se voit d'abord proposer sa couleur
+/// "naturelle" ([avatarColorFor]), et en cas de collision la première couleur libre
+/// suivante dans la palette (en balayant circulairement). Déterministe pour un ordre
+/// de [names] donné (celui des joueurs dans la partie), donc stable d'un affichage à
+/// l'autre tant que la liste de joueurs et leurs choix ne changent pas. La palette
+/// compte plus de couleurs que la partie de joueurs (6 au plus, voir
+/// `new_game_screen.dart`) : une collision irrésolvable ne devrait pas se produire ;
+/// le cas échéant, les couleurs recommencent à se répéter plutôt que de boucler.
+Map<String, Color> assignAvatarColors(Iterable<String> names, {Map<String, AvatarLook> looks = const {}}) {
   final colors = <String, Color>{};
   final used = <int>{};
-  for (final name in names) {
+  final list = names.toList();
+  for (final name in list) {
+    if (colors.containsKey(name)) continue;
+    final chosen = avatarColorById(looks[name]?.color);
+    if (chosen == null) continue;
+    final index = avatarColorChoices.indexOf(chosen);
+    if (used.add(index)) colors[name] = kAvatarColorPalette[index];
+  }
+  for (final name in list) {
     if (colors.containsKey(name)) continue;
     var index = _paletteIndexFor(name);
     var attempts = 0;
@@ -54,82 +59,113 @@ Map<String, Color> assignAvatarColors(Iterable<String> names) {
   return colors;
 }
 
-/// Avatar d'un joueur : un blason (écusson) portant ses 2 initiales en
-/// police gothique, sur un fond de couleur propre à son nom. [color] permet
-/// d'imposer une couleur résolue au niveau de la partie entière (voir
+/// Les polices d'emoji du système, par plateforme : sur mobile le texte retombe de
+/// toute façon dessus, mais une machine de bureau ne l'a pas toujours en secours.
+const kEmojiFontFallback = ['Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI Emoji'];
+
+/// Pastille d'un joueur : un disque de couleur portant la première lettre de son
+/// nom — ou, s'il en a choisi un dans son profil, un animal (un emoji, désigné par
+/// son identifiant [animal], voir `avatar_catalog.dart`) qui remplace la lettre.
+///
+/// [color] impose une couleur résolue au niveau de la partie entière (voir
 /// [assignAvatarColors], à préférer dès que la liste des autres joueurs est
-/// connue) ; par défaut, retombe sur [avatarColorFor] (déterministe mais
-/// sans garantie anti-collision, pour les affichages isolés).
+/// connue) ; par défaut, retombe sur [avatarColorFor] (déterministe mais sans
+/// garantie anti-collision, pour les affichages isolés).
 class PlayerAvatarWidget extends StatelessWidget {
   final String name;
   final double size;
   final Color? color;
 
-  const PlayerAvatarWidget({super.key, required this.name, this.size = 40, this.color});
+  /// Identifiant de l'animal choisi, `null` pour la lettre. Un identifiant
+  /// inconnu se lit comme `null`.
+  final String? animal;
+
+  const PlayerAvatarWidget({super.key, required this.name, this.size = 40, this.color, this.animal});
+
+  /// La pastille d'un joueur d'une fiche : la lettre de son nom affiché (le surnom
+  /// d'abord), sa couleur et son animal choisis. Sans couleur choisie, celle que la
+  /// partie lui donnerait d'office (déterminée par son NOM en jeu, pas par son surnom).
+  PlayerAvatarWidget.profile(PlayerProfile profile, {Key? key, double size = 40})
+      : this(
+          key: key,
+          name: profile.displayName,
+          size: size,
+          color: avatarColorById(profile.avatarColor) == null
+              ? avatarColorFor(profile.name)
+              : Color(avatarColorById(profile.avatarColor)!.argb),
+          animal: profile.avatarAnimal,
+        );
+
+  /// La pastille du siège [seat] (son nom en jeu) d'une partie dont les apparences
+  /// sont [looks] : sa lettre vient du nom affiché, son animal du profil. [color] est
+  /// la couleur déjà résolue pour toute la partie (voir [assignAvatarColors], qui y a
+  /// mis la couleur choisie).
+  PlayerAvatarWidget.seat(String seat, {Key? key, required Map<String, AvatarLook> looks, Color? color, double size = 40})
+      : this(key: key, name: looks[seat]?.name ?? seat, size: size, color: color, animal: looks[seat]?.animal);
 
   @override
   Widget build(BuildContext context) {
-    final initials = avatarInitialsFor(name);
+    final emoji = avatarAnimalById(animal)?.emoji;
     final resolvedColor = color ?? avatarColorFor(name);
     return SizedBox(
       width: size,
-      height: size * 1.15,
-      child: CustomPaint(
-        painter: _ShieldPainter(resolvedColor),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: size * 0.12),
-          child: Center(
-            child: Text(
-              initials,
-              style: TextStyle(
-                fontFamily: 'UnifrakturMaguntia',
-                fontSize: size * 0.52,
-                color: Colors.white,
-                height: 1,
-              ),
-            ),
-          ),
+      height: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: resolvedColor,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.black.withValues(alpha: 0.35), width: size * 0.035),
+        ),
+        child: Center(
+          child: emoji != null
+              // Un emoji est dessiné par la police du système : sa hauteur de ligne
+              // n'est pas celle d'une lettre, d'où le FittedBox qui le garde dans le disque.
+              ? FittedBox(
+                  child: Padding(
+                    padding: EdgeInsets.all(size * 0.14),
+                    child: Text(
+                      emoji,
+                      style: TextStyle(fontSize: size * 0.56, height: 1, fontFamilyFallback: kEmojiFontFallback),
+                    ),
+                  ),
+                )
+              : Text(
+                  avatarLetterFor(name),
+                  style: TextStyle(
+                    fontSize: size * 0.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    height: 1,
+                  ),
+                ),
         ),
       ),
     );
   }
 }
 
-class _ShieldPainter extends CustomPainter {
-  final Color fill;
-  const _ShieldPainter(this.fill);
+/// Les pastilles de tous les joueurs d'UNE partie, résolues ensemble : la couleur de
+/// chacun ([assignAvatarColors], choix des profils d'abord, sans doublon) et son
+/// apparence ([AvatarLook] : lettre du nom affiché, animal). Se construit depuis
+/// l'ordre des joueurs de la partie, et se passe d'un écran à ses sous-widgets à la
+/// place de deux tables.
+class AvatarSet {
+  /// La couleur de chaque nom en jeu.
+  final Map<String, Color> colors;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = _shieldPath(size);
-    canvas.drawPath(path, Paint()..color = fill);
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.35)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = size.width * 0.035,
-    );
-  }
+  /// L'apparence de chaque nom en jeu (`avatarLooksFor`).
+  final Map<String, AvatarLook> looks;
 
-  @override
-  bool shouldRepaint(covariant _ShieldPainter oldDelegate) => oldDelegate.fill != fill;
-}
+  const AvatarSet(this.colors, this.looks);
 
-/// Silhouette d'écusson héraldique : sommet plat à coins arrondis, côtés qui
-/// se resserrent en une pointe basse centrée.
-Path _shieldPath(Size size) {
-  final w = size.width;
-  final h = size.height;
-  final inset = w * 0.04;
-  final r = w * 0.14;
+  /// Les pastilles de [seats] (les noms en jeu, dans l'ordre des joueurs) selon [looks].
+  factory AvatarSet.resolve(Iterable<String> seats, Map<String, AvatarLook> looks) =>
+      AvatarSet(assignAvatarColors(seats, looks: looks), looks);
 
-  return Path()
-    ..moveTo(inset + r, 0)
-    ..lineTo(w - inset - r, 0)
-    ..quadraticBezierTo(w - inset, 0, w - inset, r)
-    ..cubicTo(w - inset, h * 0.55, w * 0.82, h * 0.85, w * 0.5, h)
-    ..cubicTo(w * 0.18, h * 0.85, inset, h * 0.55, inset, r)
-    ..quadraticBezierTo(inset, 0, inset + r, 0)
-    ..close();
+  /// La pastille du siège [seat].
+  PlayerAvatarWidget of(String seat, {double size = 40, Key? key}) =>
+      PlayerAvatarWidget.seat(seat, key: key, looks: looks, color: colors[seat], size: size);
+
+  /// La couleur du siège [seat], `null` s'il n'est pas de la partie.
+  Color? color(String seat) => colors[seat];
 }

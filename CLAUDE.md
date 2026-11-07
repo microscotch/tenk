@@ -215,11 +215,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `radarDifference`; a plain "0" when nil with no barrable score to show): their score minus the potential when the potential is above it, otherwise
   `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
   whether stopping on the potential would strike someone out (the hand label's green).
-  A player's row is the crest followed by **two lines**: the name with the score opposite (`_PlayerRow._nameLine`, the 200-point
+  A player's row is the pastille (badge, see below) followed by **two lines**: the name with the score opposite (`_PlayerRow._nameLine`, the 200-point
   alert and strike icons just left of the score), and under it (`_radarLine`) the robot icon, the podium medal and "not
   entered" on the left, the radar value on the right (the gap, or the reference player's previous score and its strike).
-  This is done **without changing the row's height**: a ghost (an invisible crest and score text) gives the old height, and
-  the crest with its two lines, centred on it, overflow into the row's 10-point margin.
+  This is done **without changing the row's height**: a ghost (an invisible box of the old crest's height and a score text) gives the old height, and
+  the pastille with its two lines, centred on it, overflow into the row's 10-point margin.
   The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
   player with `potentialTotal` and `handBankable` (`GameScreen._gridScreen`, fed by `_gridPotential` / `_gridBankable`,
   set at each build), the winner on the game-over screen: each grid takes **half the width**, and the page is always the
@@ -230,9 +230,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   side; a value twice in one grid takes two rows, newest first, newest paired with newest), the names fixed above the
   scrolling body, and the view opened on the `reference` player's current line, **centred as far as the list allows**
   (the scroll just stops at an end: no padding is added to force it, and nothing scrolls when it all fits). Its header
-  is the crest + `displayNames` name (ellipsised in the full grid; whole
+  is the pastille + `displayNames` name (ellipsised in the full grid; whole
   and centred over the full width above a lone grid), a row is score + state (tiret, or struck with the striker's
-  crest) left-aligned, and on every non-barred line of the other players the gap to the potential at the right:
+  pastille) left-aligned, and on every non-barred line of the other players the gap to the potential at the right:
   absolute value + "devant" / "derrière" (`gridGapAhead` / `gridGapBehind`; a plain "0" when nil), the score in red
   when the gap is nil and the hand can be banked. In the player list, the right-hand radar zone has a **fixed width** (a column as wide as the
   widest of `10000` and "10000 derrière" in the device's language, plus the strike slot; never a `Flexible`; a nil gap shows the barrable score in red instead): the name takes the rest of the first line.
@@ -243,6 +243,14 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   nickname if any, else the name — the display rule everywhere); `autoRoll` is a record setting like handedness: a human seat linked to a record auto-validates according to the record (`GameScreen._isAutoSeat`, read at every action), so the Settings switch ("My profile" section, reachable from the game's ☰) works mid-game, and the new-game chip reads and writes the record and its cumulated counters.
   Statistics are never migrated: they are recomputed from the archived games (see
   `syncPlayerStatistics` below).
+- `game/avatar_catalog.dart`, `game/avatar_initials.dart` — **the pastille** (the badge that replaced the crest): a
+  disc of a colour carrying the first letter of the **display name** (`avatarLetterFor`: nickname first, "?" when empty,
+  code points kept whole — emoji, skin tones, flags), or an **animal** (an emoji) the player picked, which replaces the
+  letter. Both choices live on the profile (`PlayerProfile.avatarColor` / `avatarAnimal`, `null` = automatic / letter) and
+  are **stable string ids** of the catalog (`avatarColorChoices` 12, `avatarAnimalChoices` 24), never indexes: a removed
+  id goes to `retiredAvatar…Ids`, and an unknown id (a profile from a newer app) reads as "no choice". The catalog is pure
+  Dart because the server validates against it (`isKnownAvatarColorId` / `…AnimalId`). `AvatarLook` is what a game seat
+  shows (display name for the letter, colour id, animal id).
 - `game/ai/` — `AiStrategy` interface plus three difficulty profiles (`ai_profiles.dart`) built on a
   shared `bustProbability()` calculation. `ai_turn.dart` is the pure turn logic on top of a strategy:
   `nextAiMove(engine, strategy)` returns the next single `GameAction` (start turn / end bust / keep / bank /
@@ -297,8 +305,16 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
 - `player_store.dart`, `player_providers.dart`, `player_statistics.dart` — the player database (one
   file per profile), the nickname resolution (`displayNamesFor(setup, profiles)` works from the
   config of the game **being shown**, linking by profile id, never by name — so an archived game
-  shows nicknames with no game in progress), and `syncPlayerStatistics`, which recomputes every
-  profile's statistics from the archived journals.
+  shows nicknames with no game in progress), the same for pastilles (`avatarLooksFor(setup, profiles, remote:)`,
+  `avatarLooksProvider`, `watchAvatarLooks(ref, record)`: the letter from the display name, the profile's colour and
+  animal; a seat not linked to a profile — a bot, an online opponent, a deleted fiche — never borrows a local
+  profile by name; online opponents' choices come in through `remote`), and `syncPlayerStatistics`, which recomputes
+  every profile's statistics from the archived journals. In the UI, `AvatarSet.resolve(seats, looks)` bundles the colours
+  (`assignAvatarColors(names, looks:)`: the **chosen** colours first, in game order, a colour already taken by an earlier
+  player falls back to an automatic one so two pastilles — and two chart curves — are never alike; then the automatic ones,
+  hash of the in-game name, no repeat) and the looks, and is what screens and sub-widgets pass around
+  (`AvatarSet.of(seat)`). `PlayerAvatarWidget.profile(p)` is for lists of profiles, and the profile editor
+  (`AvatarPicker`) shows a live preview.
 - `update_check.dart` — the update offer at launch: `availableUpdateProvider` compares the installed build
   number with the server's `/latest-build` (`latestBuildUrlFor`: next to `/ws`), which relays — `LatestBuildRelay`,
   re-read every 10 min, `TENK_LATEST_BUILDS_URL` — `latest.json` on the **`store-builds` branch**, which
@@ -496,7 +512,17 @@ which advances the test clock), never a bare `Timer`.
   the server ships first and may announce what an installed app can't handle yet; each side only sends what the
   other announced. **Never add a value to an enum carried by an existing message** (`RoomPhase`, `ErrorCode`,
   `GameActionType` in `action`/`snapshot`): an older client fails to parse it and resyncs in a loop. A new field in
-  an existing message is safe (`SeatInfo.bot`, `room.begun`); a new message type is ignored by older clients.
+  an existing message is safe (`SeatInfo.bot`, `room.begun`, `SeatInfo.color`/`animal`, `create`/`join` `avatar`); a new message type is ignored by older clients.
+- **The pastille travels** (colour and animal ids, never the letter — each device draws it from the display name):
+  `create`/`join` carry an optional `avatar: {color, animal}` (`ClientMessage.avatar`, from `OnlineSession._myAvatar`, i.e.
+  my profile), `Room` keeps them on the `_Seat` and relays them as optional `SeatInfo.color` / `animal` fields (written only
+  when set) — **a new field in an existing message, no feature negotiation**: an older server ignores the extra keys of
+  `create`/`join` (it reads only its own), an older client ignores the extra keys of a seat. Every id is validated against
+  `avatar_catalog.dart` and an unknown or malformed one is **dropped, never refused** (a newer app with a new animal must
+  still be able to play). A server bot taking a seat clears them (it never poses as the player who left); a rematch and
+  `reorder` move them with the seat. The app reads opponents' through `remoteAvatarLooksProvider` → `avatarLooksProvider`
+  (the seat linked to my profile wins). An archived online game keeps no trace of them: the letter and an automatic colour.
+  The privacy policy lists them as sent. A server fix only takes effect after a redeploy.
 - **Emotes (a controlled chat)**: 6 emotions × a few short phrases (`lib/game/online/emotes.dart`), sent by **stable
   string ids**, never free text nor indexes; each device shows the phrase in its own language. The second series
   (Fâché `angry`, Soulagé `relieved`, and the phrases added or moved with them) is `emotes2Feature`: the room sends it

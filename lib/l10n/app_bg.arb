@@ -96,6 +96,12 @@
   "editPlayerTitle": "Редактиране на играч",
   "playerNameLabel": "Име",
   "playerNicknameLabel": "Прякор (по избор)",
+
+  "avatarSectionTitle": "Значка",
+  "avatarColorLabel": "Цвят",
+  "avatarAnimalLabel": "Животно",
+  "avatarAutomatic": "Автоматично",
+  "avatarLetter": "Буква",
   "playerNameRequiredError": "Името е задължително.",
   "playerNameTakenError": "Това име вече се използва от друг играч.",
   "deletePlayerConfirmTitle": "Изтриване на този играч?",

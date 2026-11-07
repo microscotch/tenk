@@ -65,8 +65,8 @@ une partie rejouable à l'identique.
   (les avoir dédoublés a déjà produit un bug d'affichage). Chaque `ScoreEntry`
   barrée retient aussi `barredBy`, le nom de l'auteur du barrage — soi-même
   pour un second craque consécutif, l'adversaire dont le tour vient de
-  provoquer une collision de score sinon — pour que la grille affiche le bon
-  blason (`applyBust`/`applyScoreCollisionBarAt` le renseignent ; côté moteur,
+  provoquer une collision de score sinon — pour que la grille affiche la bonne
+  pastille (`applyBust`/`applyScoreCollisionBarAt` le renseignent ; côté moteur,
   c'est toujours le joueur courant au moment de l'action, self ou non).
 - **`TurnState`** modélise un tour sur plusieurs lancers : dés à lancer, score
   en cours, valeurs étendues, dés gardés, main pleine, craque et sa raison.
@@ -94,13 +94,13 @@ une partie rejouable à l'identique.
   dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; la ligne l'écrit comme la grille de scores, sous le score : « N devant » / « N derrière »
   (`gridGapAhead` / `gridGapBehind`, selon le signe). Quand
   cet écart est nul, la ligne affiche à sa place ce score barrable, en rouge. La zone de droite de la ligne a une largeur
-  fixe pour le score, et la ligne **ne change pas de hauteur** : le blason est suivi de deux lignes — le nom avec le score
+  fixe pour le score, et la ligne **ne change pas de hauteur** : la pastille est suivie de deux lignes — le nom avec le score
   en face (`_nameLine`), puis, dessous (`_radarLine`), le robot, la médaille et « pas encore entré » à gauche, la valeur du
   radar à droite — qui débordent dans la marge de la ligne, un texte invisible donnant la hauteur d'origine.
   La grille de scores complète (`ScoreGridScreen`) reprend le même écart sur chaque ligne des autres joueurs, lu depuis
   `reference` (le joueur courant avec son total potentiel, le gagnant d'une partie finie), en valeur absolue suivie de
   « devant » / « derrière » (sauf sur une ligne barrée) ; chaque grille y prend la moitié de la largeur, sous un
-  en-tête blason + nom. Avec une `reference`, il y a une page par adversaire : la grille de `reference` à gauche, celle de
+  en-tête pastille + nom. Avec une `reference`, il y a une page par adversaire : la grille de `reference` à gauche, celle de
   l'adversaire à droite (une seule page pour la grille individuelle d'un adversaire) ; sans `reference`, deux grilles par page.
   Les deux grilles d'une page à `reference` partagent **une même échelle** (`ladderRows`) : une rangée par valeur de score,
   la plus haute en haut, les valeurs égales face à face (un blanc quand l'autre joueur ne l'a jamais eue), les noms fixes
@@ -191,8 +191,16 @@ son rejeu — **se dérive du journal**, rien de plus n'est stocké :
   (`operator +`). Il est immuable et tolérant à la lecture : un champ absent d'un
   fichier ancien vaut zéro.
 - **`PlayerProfile`** est la fiche d'un joueur (nom, surnom, latéralité,
-  « AutoRoll », anciens noms, statistiques). `displayName` est le surnom quand il y en a un, le
-  nom sinon : c'est la règle d'affichage partout dans le jeu.
+  « AutoRoll », couleur et animal de la pastille, anciens noms, statistiques). `displayName` est
+  le surnom quand il y en a un, le nom sinon : c'est la règle d'affichage partout dans le jeu.
+- **La pastille** (`PlayerAvatarWidget`) remplace le blason : un disque de couleur portant la
+  première lettre du nom affiché (`avatarLetterFor`), ou l'animal (un emoji) choisi dans la fiche
+  (`avatarColor` / `avatarAnimal`, des **identifiants** du catalogue `avatar_catalog.dart`, jamais
+  des rangs : le catalogue peut grandir ou se réordonner). `avatarLooksFor(setup, profiles)` décrit,
+  pour une partie, ce que montre chaque siège — lié à sa fiche par **identifiant**, comme les noms
+  affichés ; un adversaire en ligne, un bot ou une fiche supprimée n'empruntent jamais une fiche
+  locale par leur nom. `AvatarSet` regroupe couleurs (`assignAvatarColors` : les couleurs choisies
+  d'abord, sans doublon, puis les couleurs attribuées) et apparences pour les écrans.
 
 Conséquence de conception : les statistiques des fiches ne se **migrent** pas, elles
 se **recalculent** en entier depuis les parties archivées
@@ -342,13 +350,20 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
   `checkSelection` ne vérifie que les bornes légales, jamais l'obligation de prendre une garde gagnante sur
   10000 (voir plus haut) : c'est un aperçu, pas un coup, et le curseur reste libre d'explorer — seul le VRAI
   coup (`applyKeep`, dans `_apply`) l'impose, et le refuse sinon.
+- **La pastille voyage** : `create`/`join` portent un `avatar` facultatif (la couleur et l'animal de ma fiche, des
+  identifiants du catalogue ; la lettre, elle, se dessine sur chaque téléphone depuis le nom affiché). `Room` les garde
+  sur le siège et les relaie dans `SeatInfo.color` / `animal`. C'est un **champ de plus dans un message existant** :
+  aucune négociation (un ancien serveur ignore les clés en trop, un ancien client aussi). Le serveur écarte, sans
+  jamais refuser le joueur, un identifiant inconnu ou mal formé ; un bot qui prend un siège les efface. Côté app,
+  `remoteAvatarLooksProvider` alimente `avatarLooksProvider` (le siège lié à ma fiche l'emporte). Une partie en ligne
+  archivée n'en garde pas trace : lettre et couleur attribuée.
 - **Les émotions** (un chat contrôlé) : six émotions (`Emote`, `lib/game/online/emotes.dart`), chacune avec
   quelques phrases courtes, toutes désignées par des noms stables — jamais de texte libre, rien à modérer, et chaque
   appareil affiche la phrase dans sa langue. `OnlineSession.sendEmote` envoie `ClientMessage.emote` ; le salon (`Room`)
   l'ignore sans réponse avant le départ ou à moins de `emoteCooldown` (3 s) de la précédente du même siège, et la
   relaie (`ServerMessage.emote`, avec le siège) à tous ceux qui ont annoncé `emotesFeature`, l'envoyeur compris. **Hors
   du journal** : ni `seq`, ni action, rien d'archivé ni de rejoué. Côté app, `onlineEmotesProvider` garde les dernières
-  reçues ; l'écran de jeu en fait une bulle partant du blason du joueur (siège → index par l'ordre de jeu), dessinée dans l'overlay de la page pour pouvoir s'étendre sur plusieurs lignes sans être rognée par la zone qui défile, et une ligne de
+  reçues ; l'écran de jeu en fait une bulle partant de la pastille du joueur (siège → index par l'ordre de jeu), dessinée dans l'overlay de la page pour pouvoir s'étendre sur plusieurs lignes sans être rognée par la zone qui défile, et une ligne de
   l'historique — la barre du bas de l'écran de jeu, qui le déroule en panneau (en partie locale aussi). Une émotion illisible (version plus
   récente) est ignorée, pas resynchronisée. Fâché et Soulagé, et les phrases ajoutées ou déplacées avec elles,
   forment une seconde série (`emotes2Feature`) : le salon la relaie telle quelle à qui l'a annoncée, et une version

@@ -235,7 +235,7 @@ class _OnlineEntryScreenState extends ConsumerState<OnlineEntryScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(children: [
-          PlayerAvatarWidget(name: me?.name ?? '?', size: 40),
+          me == null ? const PlayerAvatarWidget(name: '?') : PlayerAvatarWidget.profile(me),
           const SizedBox(width: 12),
           Expanded(
             child: name != null

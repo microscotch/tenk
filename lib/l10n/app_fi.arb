@@ -96,6 +96,12 @@
   "editPlayerTitle": "Muokkaa pelaajaa",
   "playerNameLabel": "Nimi",
   "playerNicknameLabel": "Lempinimi (valinnainen)",
+
+  "avatarSectionTitle": "Pelimerkki",
+  "avatarColorLabel": "Väri",
+  "avatarAnimalLabel": "Eläin",
+  "avatarAutomatic": "Automaattinen",
+  "avatarLetter": "Kirjain",
   "playerNameRequiredError": "Nimi on pakollinen.",
   "playerNameTakenError": "Toinen pelaaja käyttää jo tätä nimeä.",
   "deletePlayerConfirmTitle": "Poistetaanko tämä pelaaja?",

@@ -7,6 +7,7 @@ import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/player_edit_screen.dart';
 import 'package:le10000/ui/screens/players_screen.dart';
+import 'package:le10000/ui/widgets/player_avatar.dart';
 
 import '../test_helpers/fake_player_store.dart';
 
@@ -75,6 +76,54 @@ void main() {
     expect(players.single.name, 'Chloé');
     expect(players.single.rightHanded, isTrue, reason: 'droitier par défaut');
     expect(find.text('Chloé'), findsOneWidget, reason: 'la liste doit s\'être rafraîchie');
+  });
+
+  testWidgets('la pastille se choisit dans la fiche : couleur et animal sont enregistrés', (tester) async {
+    await pump(tester);
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Nom'), 'Chloé');
+    await tester.pump();
+
+    // Sans choix : la lettre du nom, sur une couleur attribuée.
+    final preview = find.descendant(of: find.byType(PlayerEditScreen), matching: find.byType(PlayerAvatarWidget)).first;
+    expect(tester.widget<PlayerAvatarWidget>(preview).animal, isNull);
+    expect(find.text('C'), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('avatar-color-teal')));
+    await tester.tap(find.byKey(const ValueKey('avatar-animal-fox')));
+    await tester.pump();
+
+    final chosen = tester.widget<PlayerAvatarWidget>(preview);
+    expect(chosen.animal, 'fox');
+    expect(chosen.color, const Color(0xFF2E8B8B));
+
+    await tester.tap(find.text('Valider'));
+    await tester.pumpAndSettle();
+
+    final saved = (await store.list()).single;
+    expect(saved.avatarColor, 'teal');
+    expect(saved.avatarAnimal, 'fox');
+  });
+
+  testWidgets('« Automatique » et « Lettre » reviennent aux choix par défaut', (tester) async {
+    final marie = PlayerProfile.create(name: 'Marie', avatarColor: 'rose', avatarAnimal: 'owl');
+    await store.write(marie);
+    await pump(tester);
+
+    await tester.tap(find.text('Marie'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('avatar-color-auto')));
+    await tester.tap(find.byKey(const ValueKey('avatar-animal-none')));
+    await tester.pump();
+    await tester.tap(find.text('Valider'));
+    await tester.pumpAndSettle();
+
+    final saved = (await store.list()).single;
+    expect(saved.avatarColor, isNull);
+    expect(saved.avatarAnimal, isNull);
+    expect(saved.id, marie.id);
   });
 
   testWidgets('un nom déjà pris est refusé, aux accents et à la casse près', (tester) async {

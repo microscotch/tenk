@@ -96,6 +96,12 @@
   "editPlayerTitle": "Edit player",
   "playerNameLabel": "Name",
   "playerNicknameLabel": "Nickname (optional)",
+
+  "avatarSectionTitle": "Badge",
+  "avatarColorLabel": "Colour",
+  "avatarAnimalLabel": "Animal",
+  "avatarAutomatic": "Automatic",
+  "avatarLetter": "Letter",
   "playerNameRequiredError": "A name is required.",
   "playerNameTakenError": "This name is already used by another player.",
   "deletePlayerConfirmTitle": "Delete this player?",

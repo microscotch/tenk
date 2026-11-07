@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import '../theme.dart';
 
+import '../../game/avatar_catalog.dart';
 import '../../game/player.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/player_providers.dart';
@@ -11,7 +12,7 @@ import '../widgets/player_avatar.dart';
 /// Nombre de grilles par page : chacune occupe la moitié de la largeur.
 const int _columnsPerPage = 2;
 
-/// Grille de score complète : une colonne par joueur (son blason en entête,
+/// Grille de score complète : une colonne par joueur (sa pastille en entête,
 /// couleurs désambiguïsées entre joueurs de la même partie — voir
 /// [assignAvatarColors] — au lieu d'un texte d'initiales ; voir l'écran de
 /// jeu, qui ouvre cette même grille filtrée sur un joueur en cliquant sur sa
@@ -35,7 +36,7 @@ const int _columnsPerPage = 2;
 /// valeur absolue suivie de « devant » ou « derrière » (jamais sur une ligne
 /// barrée).
 ///
-/// En tête de chaque colonne : le blason et le nom (le surnom d'abord),
+/// En tête de chaque colonne : la pastille et le nom (le surnom d'abord),
 /// tronqué à la largeur de la colonne ; une grille seule le montre en entier,
 /// centré sur toute la largeur de l'écran, au-dessus d'elle.
 class ScoreGridScreen extends StatefulWidget {
@@ -44,12 +45,12 @@ class ScoreGridScreen extends StatefulWidget {
   final List<Player> players;
 
   /// Tous les joueurs de la partie, dans l'ordre de jeu : c'est sur eux que
-  /// les couleurs de blason se décident (voir [assignAvatarColors]), même
+  /// les couleurs de pastille se décident (voir [assignAvatarColors]), même
   /// quand [players] n'en montre qu'un.
   ///
   /// Deux noms de même couleur naturelle sont départagés dans cet ordre. Les
   /// recalculer sur une liste réduite rendait au second la couleur que le
-  /// premier lui avait prise : sa grille individuelle portait alors le blason
+  /// premier lui avait prise : sa grille individuelle portait alors la pastille
   /// d'une autre couleur que partout ailleurs dans le jeu.
   ///
   /// Par défaut [players], ce qui convient dès que la grille les montre tous.
@@ -65,6 +66,11 @@ class ScoreGridScreen extends StatefulWidget {
   /// s'il y en a un. Un joueur absent de la table garde son nom.
   final Map<String, String> displayNames;
 
+  /// Apparence des pastilles, par nom en jeu (voir `avatarLooksProvider`) : la lettre
+  /// du nom affiché, l'animal et la couleur choisis dans les profils. Un joueur absent
+  /// de la table a la lettre de son nom et une couleur attribuée.
+  final Map<String, AvatarLook> looks;
+
   /// Vrai quand la main du joueur de référence peut être encaissée : une ligne
   /// d'un autre joueur égale à son total potentiel passe alors en rouge — s'il
   /// s'arrête, elle est barrée.
@@ -77,6 +83,7 @@ class ScoreGridScreen extends StatefulWidget {
     this.reference,
     this.potentialTotal,
     this.displayNames = const {},
+    this.looks = const {},
     this.handBankable = false,
   });
 
@@ -116,7 +123,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final avatarColors = assignAvatarColors((widget.roster ?? widget.players).map((p) => p.name));
+    final avatars = AvatarSet.resolve((widget.roster ?? widget.players).map((p) => p.name), widget.looks);
     return Scaffold(
       appBar: AppTopBar(title: Text(AppLocalizations.of(context).scoreGridLabel)),
       body: SafeArea(
@@ -130,7 +137,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
               if (pageCount <= 1) {
                 return _GridPage(
                   players: pages.isEmpty ? const [] : pages.first,
-                  avatarColors: avatarColors,
+                  avatars: avatars,
                   reference: widget.reference,
                   potentialTotal: widget.potentialTotal,
                   displayNames: widget.displayNames,
@@ -148,7 +155,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
                       itemBuilder: (context, pageIndex) {
                         return _GridPage(
                           players: pages[pageIndex],
-                          avatarColors: avatarColors,
+                          avatars: avatars,
                           reference: widget.reference,
                           potentialTotal: widget.potentialTotal,
                           displayNames: widget.displayNames,
@@ -189,7 +196,7 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
 /// milieu).
 class _GridPage extends StatelessWidget {
   final List<Player> players;
-  final Map<String, Color> avatarColors;
+  final AvatarSet avatars;
   final Player? reference;
   final int? potentialTotal;
   final Map<String, String> displayNames;
@@ -197,7 +204,7 @@ class _GridPage extends StatelessWidget {
 
   const _GridPage({
     required this.players,
-    required this.avatarColors,
+    required this.avatars,
     required this.reference,
     required this.potentialTotal,
     required this.displayNames,
@@ -214,7 +221,7 @@ class _GridPage extends StatelessWidget {
       return _ComparisonPage(
         reference: players.first,
         opponent: players.last,
-        avatarColors: avatarColors,
+        avatars: avatars,
         potentialTotal: potentialTotal,
         displayNames: displayNames,
         handBankable: handBankable,
@@ -229,9 +236,8 @@ class _GridPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _PlayerHeader(
-                  name: players.first.name,
+                  avatar: avatars.of(players.first.name, size: 36),
                   displayName: displayNameOf(displayNames, players.first.name),
-                  color: avatarColors[players.first.name],
                   size: 36,
                   truncate: false,
                 ),
@@ -248,7 +254,7 @@ class _GridPage extends StatelessWidget {
                       child: _PlayerColumn(
                         player: players[i],
                         displayName: displayNameOf(displayNames, players[i].name),
-                        avatarColors: avatarColors,
+                        avatars: avatars,
                         showHeader: !solo,
                         handBankable: handBankable,
                         // L'écart se lit depuis le joueur de référence : sa
@@ -313,7 +319,7 @@ List<({ScoreEntry? left, ScoreEntry? right, bool leftCurrent, bool rightCurrent}
 class _ComparisonPage extends StatefulWidget {
   final Player reference;
   final Player opponent;
-  final Map<String, Color> avatarColors;
+  final AvatarSet avatars;
   final int? potentialTotal;
   final Map<String, String> displayNames;
   final bool handBankable;
@@ -321,7 +327,7 @@ class _ComparisonPage extends StatefulWidget {
   const _ComparisonPage({
     required this.reference,
     required this.opponent,
-    required this.avatarColors,
+    required this.avatars,
     required this.potentialTotal,
     required this.displayNames,
     required this.handBankable,
@@ -377,7 +383,7 @@ class _ComparisonPageState extends State<_ComparisonPage> {
             : _ScoreRow(
                 entry: entry,
                 isCurrent: current,
-                avatarColors: widget.avatarColors,
+                avatars: widget.avatars,
                 gapFrom: gap,
                 handBankable: widget.handBankable,
               ),
@@ -388,9 +394,8 @@ class _ComparisonPageState extends State<_ComparisonPage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: _PlayerHeader(
-          name: p.name,
+          avatar: widget.avatars.of(p.name, size: 28),
           displayName: displayNameOf(widget.displayNames, p.name),
-          color: widget.avatarColors[p.name],
           size: 28,
           truncate: true,
         ),
@@ -430,19 +435,17 @@ class _ComparisonPageState extends State<_ComparisonPage> {
   }
 }
 
-/// Le blason d'un joueur suivi de son nom, centrés : tronqué (points de
+/// La pastille d'un joueur suivie de son nom, centrés : tronqué (points de
 /// suspension) à la largeur disponible si [truncate], entier sinon.
 class _PlayerHeader extends StatelessWidget {
-  final String name;
+  final Widget avatar;
   final String displayName;
-  final Color? color;
   final double size;
   final bool truncate;
 
   const _PlayerHeader({
-    required this.name,
+    required this.avatar,
     required this.displayName,
-    required this.color,
     required this.size,
     required this.truncate,
   });
@@ -459,7 +462,7 @@ class _PlayerHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        PlayerAvatarWidget(name: name, size: size, color: color),
+        avatar,
         const SizedBox(width: 8),
         Flexible(child: label),
       ],
@@ -470,7 +473,7 @@ class _PlayerHeader extends StatelessWidget {
 class _PlayerColumn extends StatelessWidget {
   final Player player;
   final String displayName;
-  final Map<String, Color> avatarColors;
+  final AvatarSet avatars;
   final bool showHeader;
   final bool handBankable;
 
@@ -481,7 +484,7 @@ class _PlayerColumn extends StatelessWidget {
   const _PlayerColumn({
     required this.player,
     required this.displayName,
-    required this.avatarColors,
+    required this.avatars,
     required this.showHeader,
     required this.handBankable,
     required this.gapFrom,
@@ -494,9 +497,8 @@ class _PlayerColumn extends StatelessWidget {
       children: [
         if (showHeader) ...[
           _PlayerHeader(
-            name: player.name,
+            avatar: avatars.of(player.name, size: 28),
             displayName: displayName,
-            color: avatarColors[player.name],
             size: 28,
             truncate: true,
           ),
@@ -508,7 +510,7 @@ class _PlayerColumn extends StatelessWidget {
             child: _ScoreRow(
               entry: player.grid[i],
               isCurrent: i == player.currentIndex,
-              avatarColors: avatarColors,
+              avatars: avatars,
               gapFrom: gapFrom,
               handBankable: handBankable,
             ),
@@ -521,14 +523,14 @@ class _PlayerColumn extends StatelessWidget {
 class _ScoreRow extends StatelessWidget {
   final ScoreEntry entry;
   final bool isCurrent;
-  final Map<String, Color> avatarColors;
+  final AvatarSet avatars;
   final int? gapFrom;
   final bool handBankable;
 
   const _ScoreRow({
     required this.entry,
     required this.isCurrent,
-    required this.avatarColors,
+    required this.avatars,
     required this.gapFrom,
     required this.handBankable,
   });
@@ -571,7 +573,7 @@ class _ScoreRow extends StatelessWidget {
               color: strikable ? TableColors.of(context).negative : textColor,
             ),
           ),
-          // Le blason de l'AUTEUR du barrage (pas forcément le propriétaire
+          // La pastille de l'AUTEUR du barrage (pas forcément le propriétaire
           // de cette colonne) rejoint le libellé du score barré : soi-même en
           // cas de second craque consécutif, ou l'adversaire dont le tour
           // vient de provoquer la collision (voir [ScoreEntry.barredBy] et
@@ -579,7 +581,7 @@ class _ScoreRow extends StatelessWidget {
           // convention — voir _buildLogWhatCell dans game_screen.dart).
           if (entry.isBarred && entry.barredBy != null) ...[
             const SizedBox(width: 6),
-            PlayerAvatarWidget(name: entry.barredBy!, size: 16, color: avatarColors[entry.barredBy]),
+            avatars.of(entry.barredBy!, size: 16),
           ],
           // Le tiret est un avertissement : "un craque de plus et cette ligne
           // est barrée". Une fois la ligne barrée il a fait son office et

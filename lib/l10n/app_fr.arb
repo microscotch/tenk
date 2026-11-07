@@ -78,6 +78,22 @@
   "playerNicknameLabel": "Surnom (facultatif)",
   "@playerNicknameLabel": {"description": "Libellé du champ de surnom d'une fiche joueur."},
 
+  "avatarSectionTitle": "Pastille",
+  "@avatarSectionTitle": {"description": "Titre de la section du profil où l'on choisit la pastille du joueur (couleur et animal)."},
+
+  "avatarColorLabel": "Couleur",
+  "@avatarColorLabel": {"description": "Libellé de la rangée de couleurs de la pastille d'un joueur."},
+
+  "avatarAnimalLabel": "Animal",
+  "@avatarAnimalLabel": {"description": "Libellé de la grille d'animaux de la pastille d'un joueur."},
+
+  "avatarAutomatic": "Automatique",
+  "@avatarAutomatic": {"description": "Choix « couleur attribuée par la partie » dans la rangée de couleurs de la pastille."},
+
+  "avatarLetter": "Lettre",
+  "@avatarLetter": {"description": "Choix « la première lettre du nom » (pas d'animal) dans la grille d'animaux de la pastille."},
+
+
   "playerNameRequiredError": "Le nom est obligatoire.",
   "@playerNameRequiredError": {"description": "Erreur affichée quand le champ de nom d'une fiche joueur est vide."},
 

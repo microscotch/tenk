@@ -162,7 +162,7 @@ class _EmoteBarState extends State<EmoteBar> {
   }
 }
 
-/// Une bulle de bande dessinée, sa pointe à gauche vers le blason du joueur
+/// Une bulle de bande dessinée, sa pointe à gauche vers la pastille du joueur
 /// qui parle. Le texte passe à la ligne plutôt que d'être tronqué ; corps et
 /// pointe forment un seul contour, sans raccord visible.
 class SpeechBubble extends StatelessWidget {
@@ -208,11 +208,11 @@ class _BubblePainter extends CustomPainter {
     final body = Path()
       ..addRRect(RRect.fromRectAndRadius(Rect.fromLTRB(tail, 0, size.width, size.height), const Radius.circular(radius)));
     // La pointe part du milieu du bord gauche, assez large à la base pour se
-    // fondre dans le corps, et se termine en pointe vers le blason.
+    // fondre dans le corps, et se termine en pointe vers la pastille.
     final middle = size.height / 2;
     final halfBase = (size.height / 2 - 3).clamp(6.0, 11.0);
     // Deux courbes creusées vers l'intérieur, qui se rejoignent en une pointe
-    // nette juste à côté du blason : la pointe d'une bulle de bande dessinée.
+    // nette juste à côté de la pastille : la pointe d'une bulle de bande dessinée.
     final pointer = Path()
       ..moveTo(tail + radius, middle - halfBase)
       ..quadraticBezierTo(tail * 0.55, middle - halfBase * 0.25, 0, middle + 3)
