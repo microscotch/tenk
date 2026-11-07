@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/avatar_catalog.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/online/protocol.dart';
 import 'package:le10000/state/game_providers.dart';
@@ -616,6 +617,73 @@ void main() {
       // Ancien réglage d'appareil : droitier. Mon profil : gaucher. L'adversaire
       // n'a pas de fiche : il retombe sur le réglage par défaut, qui est le mien.
       expect(container.read(currentSeatRightHandedProvider), isFalse, reason: mine ? 'mon tour' : 'repli sur mon profil');
+    });
+  });
+
+  group('pastille en ligne', () {
+    late PlayerProfile me;
+
+    Future<void> withMyProfile({String? color = 'teal', String? animal = 'fox'}) async {
+      me = PlayerProfile.create(name: 'Bob', avatarColor: color, avatarAnimal: animal);
+      await seedMyProfile(players, me);
+      container = newContainer();
+      expect(await isMyProfileMissing(container), isFalse);
+      await container.read(playersProvider.future);
+    }
+
+    test('créer ou rejoindre annonce la couleur et l\'animal de mon profil', () async {
+      await withMyProfile();
+
+      await session().create('Bob');
+      expect(transport.current.lastSent!.avatar, const AvatarLook(color: 'teal', animal: 'fox'));
+
+      await session().leave();
+      await session().join('abcde', 'Bob');
+      expect(transport.current.lastSent!.type, ClientMessageType.join);
+      expect(transport.current.lastSent!.avatar, const AvatarLook(color: 'teal', animal: 'fox'));
+    });
+
+    test('sans choix dans mon profil, rien n\'est annoncé', () async {
+      await withMyProfile(color: null, animal: null);
+
+      await session().create('Bob');
+
+      expect(transport.current.lastSent!.avatar, isNull);
+      expect(transport.current.lastSent!.params.containsKey('avatar'), isFalse);
+    });
+
+    test('en partie, les adversaires montrent ce qu\'ils ont annoncé, et moi ce que ma fiche dit', () async {
+      await withMyProfile();
+      await joinedAndStarted(1, serverJournal());
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [
+          SeatInfo(name: 'Anna', connected: true, color: 'rose', animal: 'owl'),
+          SeatInfo(name: 'Bob', connected: true, color: 'brick', animal: 'dog'),
+        ],
+        hostSeat: 0,
+      ));
+      await settle();
+
+      final looks = container.read(avatarLooksProvider);
+      expect(looks['Anna'], const AvatarLook(color: 'rose', animal: 'owl'));
+      expect(looks['Bob']?.animal, 'fox', reason: 'mon siège est lié à ma fiche, qui l\'emporte sur ce que le salon dit');
+      expect(looks['Bob']?.color, 'teal');
+    });
+
+    test('un adversaire qui n\'a rien annoncé garde la lettre de son pseudo', () async {
+      await withMyProfile();
+      await joinedAndStarted(1, serverJournal());
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await settle();
+
+      expect(container.read(avatarLooksProvider).containsKey('Anna'), isFalse);
     });
   });
 

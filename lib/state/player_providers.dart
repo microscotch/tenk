@@ -6,6 +6,7 @@ import '../game/avatar_catalog.dart';
 import '../game/player_profile.dart';
 import 'game_providers.dart';
 import 'game_save_store.dart';
+import 'online_providers.dart';
 import 'player_store.dart';
 import 'settings_providers.dart';
 
@@ -124,21 +125,41 @@ Map<String, AvatarLook> avatarLooksFor(
   return looks;
 }
 
+/// Ce que les adversaires d'une partie en ligne ont annoncé de leur pastille, par nom en
+/// jeu (le pseudo du siège) : vide hors partie en ligne. Un siège de bot, ou qui n'a rien
+/// choisi, n'y figure pas.
+final remoteAvatarLooksProvider = Provider<Map<String, AvatarLook>>((ref) {
+  if (!ref.watch(gameProvider.notifier).isOnline) return const {};
+  final seats = ref.watch(onlineSessionProvider.select((s) => s.seats));
+  return {for (final seat in seats) seat.name: ?seat.avatar};
+});
+
 /// Les pastilles de la partie EN COURS (ou en rejeu) : voir [avatarLooksFor], appliqué
-/// à sa config réordonnée — celle que porte le moteur exposé par [gameProvider].
+/// à sa config réordonnée — celle que porte le moteur exposé par [gameProvider] — et,
+/// en ligne, aux choix annoncés par les adversaires ([remoteAvatarLooksProvider]).
 final avatarLooksProvider = Provider<Map<String, AvatarLook>>((ref) {
   final engine = ref.watch(gameProvider);
   final setup = ref.watch(gameProvider.notifier).orderedSetup;
   if (engine == null || setup == null) return const {};
-  return avatarLooksFor(setup, ref.watch(playersProvider).value);
+  return avatarLooksFor(setup, ref.watch(playersProvider).value, remote: ref.watch(remoteAvatarLooksProvider));
 });
 
 /// Les pastilles de la partie que montre un écran : celle de son journal [record]
 /// quand il en a un, sinon la partie en cours (voir [avatarLooksProvider]). À
 /// appeler dans un `build` : l'écran se redessine quand une fiche change.
+///
+/// Le journal de la partie en ligne qui vient de se terminer (celui que le notifier
+/// porte encore) garde les pastilles annoncées par les adversaires ; un autre journal,
+/// archivé, n'en a plus aucune trace : la lettre du nom en jeu et une couleur attribuée.
 Map<String, AvatarLook> watchAvatarLooks(WidgetRef ref, SavedGame? record) {
   if (record == null) return ref.watch(avatarLooksProvider);
-  return avatarLooksFor(record.setup, ref.watch(playersProvider).value);
+  final notifier = ref.watch(gameProvider.notifier);
+  final live = notifier.isOnline && notifier.gameRecord?.seed == record.seed;
+  return avatarLooksFor(
+    record.setup,
+    ref.watch(playersProvider).value,
+    remote: live ? ref.watch(remoteAvatarLooksProvider) : const {},
+  );
 }
 
 /// Le profil de l'utilisateur de l'appareil : sa fiche dans la base des

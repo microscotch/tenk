@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../../lib/game/ai/ai_profiles.dart';
+import '../../lib/game/avatar_catalog.dart';
 import '../../lib/game/ai/ai_turn.dart';
 import '../../lib/game/game_recording.dart';
 import '../../lib/game/online/protocol.dart';
@@ -59,6 +60,12 @@ class _Seat {
 
   /// Un humain tient encore ce siège (connecté ou non).
   bool get human => !bot && !left;
+
+  /// La couleur et l'animal de la pastille du joueur, déjà filtrés par le protocole
+  /// (seuls des identifiants du catalogue arrivent ici) ; `null` : pas de choix.
+  /// Effacés quand un bot prend le siège : il ne se fait pas passer pour le joueur parti.
+  String? color;
+  String? animal;
 }
 
 /// Un vote de revanche en cours : qui l'a proposée, qui a répondu quoi, et la
@@ -156,12 +163,15 @@ class Room {
 
   int _seatOfSession(Session session) => _seats.indexWhere((s) => s.session == session);
 
-  /// Ajoute un joueur. Lève [RoomFull] ou [GameAlreadyStarted].
-  ({int seat, String token}) join(String name, Session session) {
+  /// Ajoute un joueur. [avatar] : la pastille qu'il annonce, relayée aux autres joueurs.
+  /// Lève [RoomFull] ou [GameAlreadyStarted].
+  ({int seat, String token}) join(String name, Session session, {AvatarLook? avatar}) {
     if (_phase != RoomPhase.lobby) throw const RoomRejected(ErrorCode.gameStarted);
     if (_seats.length >= maxOnlinePlayers) throw const RoomRejected(ErrorCode.roomFull);
     final token = _newToken();
-    final seat = _Seat(_uniqueName(name), token, session);
+    final seat = _Seat(_uniqueName(name), token, session)
+      ..color = avatar?.color
+      ..animal = avatar?.animal;
     _seats.add(seat);
     _host ??= seat;
     session.room = this;
@@ -252,6 +262,8 @@ class Room {
     _detach(seat, left: false);
     entry
       ..bot = true
+      ..color = null
+      ..animal = null
       ..disconnectedAt = null;
     if (_authority?.currentSeat == seat) _selection = null;
     // Le joueur qui devait lancer la partie s'en va : elle part sans lui.
@@ -671,7 +683,10 @@ class Room {
         phase: _phase,
         // Un siège de bot est « connecté » : un client d'avant, qui ignore `bot`,
         // ne le montre pas comme absent.
-        seats: [for (final s in _seats) SeatInfo(name: s.name, connected: s.connected || s.bot, bot: s.bot)],
+        seats: [
+          for (final s in _seats)
+            SeatInfo(name: s.name, connected: s.connected || s.bot, bot: s.bot, color: s.color, animal: s.animal),
+        ],
         hostSeat: hostSeat,
         begun: _begun,
       ));

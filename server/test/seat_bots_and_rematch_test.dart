@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:test/test.dart';
 
+import '../../lib/game/avatar_catalog.dart';
 import '../../lib/game/game_recording.dart';
 import '../../lib/game/game_setup.dart';
 import '../../lib/game/online/protocol.dart';
@@ -314,6 +315,78 @@ void main() {
       send(players[0].$2, ClientMessage.emote(Emote.relieved, phrase: 'phew'));
       expect(players[0].$1.of(ServerMessageType.emote).last.emote, (Emote.relieved, 'phew'));
       expect(players[1].$1.of(ServerMessageType.emote), hasLength(1), reason: 'Soulagé lui est inconnu');
+    });
+  });
+
+  group('pastille', () {
+    test('la couleur et l\'animal annoncés à l\'entrée sont relayés à tout le salon', () {
+      final host = open();
+      send(host.$2, ClientMessage.create(name: 'J1', avatar: const AvatarLook(color: 'teal', animal: 'fox')));
+      final code = host.$1.of(ServerMessageType.joined).last.roomCode;
+      final guest = open();
+      send(guest.$2, ClientMessage.join(code: code, name: 'J2', avatar: const AvatarLook(animal: 'owl')));
+      final plain = open();
+      send(plain.$2, ClientMessage.join(code: code, name: 'J3'));
+
+      for (final p in [host, guest, plain]) {
+        final seats = p.$1.lastRoom.seats;
+        expect((seats[0].color, seats[0].animal), ('teal', 'fox'));
+        expect((seats[1].color, seats[1].animal), (null, 'owl'));
+        expect((seats[2].color, seats[2].animal), (null, null));
+      }
+    });
+
+    test('un identifiant inconnu ou mal formé est écarté sans refuser le joueur', () {
+      final host = open();
+      manager.onMessage(
+        host.$2,
+        jsonEncode({
+          'v': onlineProtocolVersion,
+          'type': 'create',
+          'params': {
+            'name': 'J1',
+            'features': serverFeatures,
+            'avatar': {'color': 'mauve-fluo', 'animal': List.filled(40, 'x').join()},
+          },
+        }),
+      );
+      expect(host.$1.of(ServerMessageType.error), isEmpty, reason: 'le salon est bien créé');
+      final seat = host.$1.lastRoom.seats.single;
+      expect((seat.color, seat.animal), (null, null));
+    });
+
+    test('un siège sans choix ne porte aucun champ en plus (un client d\'avant lit la même chose)', () {
+      expect(const SeatInfo(name: 'J1', connected: true).toJson().keys, ['name', 'connected']);
+      expect(const SeatInfo(name: 'J1', connected: true, color: 'rose').toJson()['color'], 'rose');
+    });
+
+    test('quitter une partie en cours : le bot qui reprend le siège n\'emprunte pas la pastille du joueur parti', () {
+      final host = open();
+      send(host.$2, ClientMessage.create(name: 'J1', avatar: const AvatarLook(color: 'rose', animal: 'cat')));
+      final code = host.$1.of(ServerMessageType.joined).last.roomCode;
+      final guest = open();
+      send(guest.$2, ClientMessage.join(code: code, name: 'J2', avatar: const AvatarLook(color: 'blue', animal: 'dog')));
+      send(host.$2, ClientMessage.start());
+
+      send(guest.$2, ClientMessage.leave());
+
+      final seats = host.$1.lastRoom.seats;
+      expect(seats[1].bot, isTrue);
+      expect((seats[1].color, seats[1].animal), (null, null));
+      expect((seats[0].color, seats[0].animal), ('rose', 'cat'), reason: 'celle des humains reste');
+    });
+
+    test('réordonner le salon garde la pastille de chacun, à sa nouvelle place', () {
+      final host = open();
+      send(host.$2, ClientMessage.create(name: 'J1', avatar: const AvatarLook(animal: 'cat')));
+      final code = host.$1.of(ServerMessageType.joined).last.roomCode;
+      final guest = open();
+      send(guest.$2, ClientMessage.join(code: code, name: 'J2', avatar: const AvatarLook(animal: 'dog')));
+      send(host.$2, ClientMessage.reorder([1, 0]));
+
+      final seats = host.$1.lastRoom.seats;
+      expect(seats.map((s) => s.name), ['J2', 'J1']);
+      expect(seats.map((s) => s.animal), ['dog', 'cat'], reason: 'la pastille suit le joueur, pas le numéro de siège');
     });
   });
 }

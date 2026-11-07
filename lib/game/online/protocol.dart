@@ -1,3 +1,4 @@
+import '../avatar_catalog.dart';
 import '../game_recording.dart';
 import 'emotes.dart';
 
@@ -119,12 +120,25 @@ class ClientMessage {
 
   const ClientMessage._(this.type, [this.params = const {}]);
 
-  /// [features] : ce que ce client sait gérer (voir [clientFeatures]).
-  factory ClientMessage.create({required String name, List<String> features = clientFeatures}) =>
-      ClientMessage._(ClientMessageType.create, {'name': name, 'features': features});
+  /// [features] : ce que ce client sait gérer (voir [clientFeatures]). [avatar] : la
+  /// couleur et l'animal de ma pastille (voir [AvatarLook], seuls `color` et `animal`
+  /// voyagent), les autres joueurs les voient : champ facultatif, qu'un serveur
+  /// d'avant ignore comme tout ce qu'il ne connaît pas.
+  factory ClientMessage.create({
+    required String name,
+    List<String> features = clientFeatures,
+    AvatarLook? avatar,
+  }) => ClientMessage._(ClientMessageType.create, {'name': name, 'features': features, ..._avatarEntry(avatar)});
 
-  factory ClientMessage.join({required String code, required String name, List<String> features = clientFeatures}) =>
-      ClientMessage._(ClientMessageType.join, {'code': code, 'name': name, 'features': features});
+  factory ClientMessage.join({
+    required String code,
+    required String name,
+    List<String> features = clientFeatures,
+    AvatarLook? avatar,
+  }) => ClientMessage._(
+    ClientMessageType.join,
+    {'code': code, 'name': name, 'features': features, ..._avatarEntry(avatar)},
+  );
 
   factory ClientMessage.rejoin({required String token, List<String> features = clientFeatures}) =>
       ClientMessage._(ClientMessageType.rejoin, {'token': token, 'features': features});
@@ -161,6 +175,10 @@ class ClientMessage {
   factory ClientMessage.rematch(RematchAnswer answer) =>
       ClientMessage._(ClientMessageType.rematch, {'answer': answer.name});
 
+  /// La pastille annoncée par `create`/`join` : la couleur et l'animal, `null` si le
+  /// client n'en annonce aucune (ou aucune que ce code connaisse).
+  AvatarLook? get avatar => _avatar(params['avatar']);
+
   /// La réponse d'un message `rematch`.
   RematchAnswer get rematchAnswer => RematchAnswer.values.byName(params['answer'] as String);
 
@@ -181,9 +199,14 @@ class ClientMessage {
     final raw = _map(map['params'] ?? const <String, dynamic>{}, 'params');
     switch (type) {
       case ClientMessageType.create:
-        return ClientMessage.create(name: _name(raw), features: _features(raw));
+        return ClientMessage.create(name: _name(raw), features: _features(raw), avatar: _avatar(raw['avatar']));
       case ClientMessageType.join:
-        return ClientMessage.join(code: _code(raw), name: _name(raw), features: _features(raw));
+        return ClientMessage.join(
+          code: _code(raw),
+          name: _name(raw),
+          features: _features(raw),
+          avatar: _avatar(raw['avatar']),
+        );
       case ClientMessageType.rejoin:
         final token = _string(raw, 'token', min: 16, max: 128);
         return ClientMessage.rejoin(token: token, features: _features(raw));
@@ -224,31 +247,57 @@ class SeatInfo {
   final String name;
   final bool connected;
 
-  /// Vrai quand le joueur est parti pour de bon et qu'un bot du serveur joue à
-  /// sa place (voir [seatBotsFeature]). Un siège de bot est aussi annoncé
+  /// Vrai quand le joueur est parti pour de bon et qu'un bot du serveur joue à sa
+  /// place (voir [seatBotsFeature]). Un siège de bot est aussi annoncé
   /// [connected] : un client d'avant, qui ignore ce champ, ne le montre donc pas
   /// comme absent.
   final bool bot;
 
-  const SeatInfo({required this.name, required this.connected, this.bot = false});
+  /// La couleur et l'animal de la pastille du joueur (identifiants de
+  /// `avatar_catalog.dart`), `null` quand il n'en a pas choisi — ou que le serveur
+  /// ne connaît pas l'identifiant. Champs facultatifs : un client d'avant les ignore.
+  final String? color;
+  final String? animal;
 
-  Map<String, dynamic> toJson() => {'name': name, 'connected': connected, if (bot) 'bot': true};
+  const SeatInfo({required this.name, required this.connected, this.bot = false, this.color, this.animal});
 
+  /// Ce que ce siège montre de sa pastille (sans nom : la lettre vient du nom affiché).
+  AvatarLook? get avatar => color == null && animal == null ? null : AvatarLook(color: color, animal: animal);
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'connected': connected,
+    if (bot) 'bot': true,
+    'color': ?color,
+    'animal': ?animal,
+  };
+
+  /// Lecture indulgente de la pastille : un identifiant absent, d'un autre type ou
+  /// inconnu vaut « pas de choix », jamais une erreur — un client plus ancien face à
+  /// un animal plus récent doit pouvoir lire le salon.
   factory SeatInfo.fromJson(Object? json) {
     final map = _map(json, 'seat');
+    final avatar = _avatar(map);
     return SeatInfo(
       name: _string(map, 'name', min: 1, max: maxPlayerNameLength),
       connected: _bool(map, 'connected'),
       bot: map['bot'] == true,
+      color: avatar?.color,
+      animal: avatar?.animal,
     );
   }
 
   @override
   bool operator ==(Object other) =>
-      other is SeatInfo && other.name == name && other.connected == connected && other.bot == bot;
+      other is SeatInfo &&
+      other.name == name &&
+      other.connected == connected &&
+      other.bot == bot &&
+      other.color == color &&
+      other.animal == animal;
 
   @override
-  int get hashCode => Object.hash(name, connected, bot);
+  int get hashCode => Object.hash(name, connected, bot, color, animal);
 }
 
 /// Ce que le serveur envoie aux clients.
@@ -480,6 +529,33 @@ bool _bool(Map<String, dynamic> map, String key) {
   if (value is! bool) throw FormatException('$key: booléen attendu');
   return value;
 }
+
+/// L'entrée `avatar` des paramètres d'un message client : la couleur et l'animal,
+/// rien quand il n'y a rien à dire.
+Map<String, dynamic> _avatarEntry(AvatarLook? avatar) {
+  if (avatar == null || (avatar.color == null && avatar.animal == null)) return const {};
+  return {
+    'avatar': {'color': ?avatar.color, 'animal': ?avatar.animal},
+  };
+}
+
+/// Lit une pastille dans [fields] (un siège, ou l'objet `avatar` d'un message client) :
+/// seuls les identifiants que le catalogue connaît sont gardés, les autres sont écartés
+/// sans erreur — un client plus récent peut avoir un animal que ce code ne connaît pas
+/// encore ; l'en refuser ne l'empêcherait pas de jouer, juste de s'inscrire. `null`
+/// quand il n'y a rien de reconnu.
+AvatarLook? _avatar(Object? fields) {
+  if (fields is! Map) return null;
+  final color = fields['color'];
+  final animal = fields['animal'];
+  final knownColor = color is String && color.length <= _maxAvatarIdLength && isKnownAvatarColorId(color) ? color : null;
+  final knownAnimal =
+      animal is String && animal.length <= _maxAvatarIdLength && isKnownAvatarAnimalId(animal) ? animal : null;
+  if (knownColor == null && knownAnimal == null) return null;
+  return AvatarLook(color: knownColor, animal: knownAnimal);
+}
+
+const int _maxAvatarIdLength = 24;
 
 /// Un pseudo : ni vide ni fait d'espaces, sans caractère de contrôle (il
 /// s'affiche chez les autres joueurs), rogné.

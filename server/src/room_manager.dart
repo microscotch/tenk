@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import '../../lib/game/avatar_catalog.dart';
 import '../../lib/game/online/protocol.dart';
 import 'limits.dart';
 import 'room.dart';
@@ -111,9 +112,9 @@ class RoomManager {
     }
     switch (message.type) {
       case ClientMessageType.create:
-        _create(session, message.params['name'] as String);
+        _create(session, message.params['name'] as String, message.avatar);
       case ClientMessageType.join:
-        _join(session, message.params['code'] as String, message.params['name'] as String);
+        _join(session, message.params['code'] as String, message.params['name'] as String, message.avatar);
       case ClientMessageType.rejoin:
         _rejoin(session, message.params['token'] as String);
       case ClientMessageType.reorder:
@@ -128,7 +129,7 @@ class RoomManager {
     }
   }
 
-  void _create(Session session, String name) {
+  void _create(Session session, String name, AvatarLook? avatar) {
     final creates = _createsByIp.putIfAbsent(
       session.ip,
       () => TokenBucket(ratePerSecond: config.roomsCreatedPerMinute / 60, burst: config.roomsCreatedPerMinute, now: now),
@@ -147,14 +148,14 @@ class RoomManager {
       onClose: _forget,
     );
     _rooms[room.code] = room;
-    _register(room, room.join(name, session).token);
+    _register(room, room.join(name, session, avatar: avatar).token);
   }
 
-  void _join(Session session, String code, String name) {
+  void _join(Session session, String code, String name, AvatarLook? avatar) {
     final room = _rooms[code];
     if (room == null) return _failed(session, ErrorCode.roomNotFound);
     try {
-      _register(room, room.join(name, session).token);
+      _register(room, room.join(name, session, avatar: avatar).token);
     } on RoomRejected catch (e) {
       session.connection.send(ServerMessage.error(e.code));
     }

@@ -5,11 +5,13 @@ import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/widgets.dart' show AppLifecycleListener, AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../game/avatar_catalog.dart';
 import '../game/dice_off.dart';
 import '../game/game_recording.dart';
 import '../game/online/protocol.dart';
 import 'game_providers.dart';
 import 'online_transport.dart';
+import 'player_providers.dart';
 import 'settings_providers.dart';
 
 export '../game/online/protocol.dart' show ErrorCode, RoomPhase, SeatInfo, Emote, emoteCooldown, emotesFor;
@@ -311,10 +313,19 @@ class OnlineSession extends Notifier<OnlineState> {
 
   GameNotifier get _game => ref.read(gameProvider.notifier);
 
+  /// La pastille que j'annonce en entrant dans un salon : la couleur et l'animal de
+  /// mon profil. `null` quand je n'en ai pas choisi (les autres me voient alors avec
+  /// la lettre de mon pseudo et une couleur attribuée par la partie).
+  AvatarLook? get _myAvatar {
+    final me = ref.read(myProfileProvider);
+    if (me == null || (me.avatarColor == null && me.avatarAnimal == null)) return null;
+    return AvatarLook(color: me.avatarColor, animal: me.avatarAnimal);
+  }
+
   /// Crée un salon et y entre.
   Future<void> create(String name) {
     _joinIfBadToken = null;
-    return _open(ClientMessage.create(name: name));
+    return _open(ClientMessage.create(name: name, avatar: _myAvatar));
   }
 
   /// Entre dans le salon [code]. Si j'y ai déjà une place (app tuée puis
@@ -333,7 +344,7 @@ class OnlineSession extends Notifier<OnlineState> {
       return _open(ClientMessage.rejoin(token: saved.token), url: saved.url);
     }
     _joinIfBadToken = null;
-    return _open(ClientMessage.join(code: normalized, name: name));
+    return _open(ClientMessage.join(code: normalized, name: name, avatar: _myAvatar));
   }
 
   /// Un « rejoindre » tenté avec mon jeton gardé (voir [join]) : de quoi entrer
@@ -716,7 +727,7 @@ class OnlineSession extends Notifier<OnlineState> {
       final join = _joinIfBadToken;
       if (join != null) {
         _joinIfBadToken = null;
-        unawaited(_open(ClientMessage.join(code: join.code, name: join.name)));
+        unawaited(_open(ClientMessage.join(code: join.code, name: join.name, avatar: _myAvatar)));
         return;
       }
     }

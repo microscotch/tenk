@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/avatar_catalog.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/online/protocol.dart';
 
@@ -98,6 +99,54 @@ void main() {
       expect(() => ClientMessage.fromJson({'v': onlineProtocolVersion}), throwsFormatException);
       expect(() => ClientMessage.fromJson({'v': onlineProtocolVersion, 'type': 'hack'}), throwsFormatException);
       expect(() => ClientMessage.fromJson({'v': 99, 'type': 'start'}), throwsA(isA<UnsupportedVersion>()));
+    });
+  });
+
+  group('pastille', () {
+    test('create et join portent la couleur et l\'animal, et les gardent à l\'aller-retour', () {
+      const look = AvatarLook(color: 'teal', animal: 'fox');
+      final create = roundTrip(ClientMessage.create(name: 'Anna', avatar: look));
+      expect(create.avatar, look);
+      expect(create.params['avatar'], {'color': 'teal', 'animal': 'fox'});
+      expect(roundTrip(ClientMessage.join(code: 'AB3CD', name: 'Bob', avatar: look)).avatar, look);
+      expect(roundTrip(ClientMessage.create(name: 'Anna', avatar: const AvatarLook(animal: 'owl'))).avatar,
+          const AvatarLook(animal: 'owl'));
+    });
+
+    test('sans pastille, le message est celui d\'avant (aucun champ en plus)', () {
+      expect(ClientMessage.create(name: 'Anna').params.containsKey('avatar'), isFalse);
+      expect(ClientMessage.create(name: 'Anna', avatar: const AvatarLook()).params.containsKey('avatar'), isFalse);
+      expect(roundTrip(ClientMessage.create(name: 'Anna')).avatar, isNull);
+    });
+
+    test('un identifiant inconnu, trop long ou d\'un autre type est écarté, jamais refusé', () {
+      ClientMessage create(Object? avatar) => ClientMessage.fromJson({
+            'v': onlineProtocolVersion,
+            'type': 'create',
+            'params': {'name': 'Anna', 'avatar': avatar},
+          });
+
+      expect(create({'color': 'mauve-fluo', 'animal': 'fox'}).avatar, const AvatarLook(animal: 'fox'));
+      expect(create({'color': 'x' * 40, 'animal': 7}).avatar, isNull);
+      expect(create('rouge').avatar, isNull);
+      expect(create([1, 2]).avatar, isNull);
+      expect(create(null).avatar, isNull);
+    });
+
+    test('un siège porte sa pastille ; sans choix, il s\'écrit comme avant', () {
+      const withLook = SeatInfo(name: 'Anna', connected: true, color: 'rose', animal: 'cat');
+      expect(SeatInfo.fromJson(withLook.toJson()), withLook);
+      expect(withLook.avatar, const AvatarLook(color: 'rose', animal: 'cat'));
+
+      const plain = SeatInfo(name: 'Anna', connected: true);
+      expect(plain.toJson().keys, ['name', 'connected']);
+      expect(plain.avatar, isNull);
+      expect(plain == withLook, isFalse, reason: 'la pastille compte dans l\'égalité : un changement redessine');
+    });
+
+    test('un salon lu avec un animal que ce code ne connaît pas reste lisible', () {
+      final seat = SeatInfo.fromJson({'name': 'Anna', 'connected': true, 'color': 'brick', 'animal': 'dragon'});
+      expect((seat.color, seat.animal), ('brick', null));
     });
   });
 
