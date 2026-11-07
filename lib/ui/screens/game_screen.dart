@@ -2195,9 +2195,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
             _ => null,
           }
         : null;
-    // La valeur du sélecteur de reprise : c'est elle qui fait la réponse, que le
-    // bouton de validation transmet en fermant la popup. Reprendre par défaut quand
-    // c'est possible ; en rejeu, le choix que le joueur avait fait.
+    // La valeur du sélecteur de reprise : purement informative, elle ne règle que le radar
+    // des scores (lu avec ou sans la reprise) — ce sont les deux boutons qui répondent.
+    // Reprise montrée par défaut quand elle est possible ; en rejeu, le choix que le
+    // joueur avait fait.
     final resume = ValueNotifier<bool>(replayResumes ?? canResume);
     showDialog<void>(
       context: context,
@@ -2330,19 +2331,24 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Le choix de main héritée : un sélecteur de reprise (activé : on reprend la main
-  /// laissée par le joueur précédent ; désactivé : on repart à 5 dés neufs) au-dessus d'un
-  /// unique bouton de validation, qui ferme la popup en transmettant la valeur du sélecteur.
-  /// Valider ne lance PAS les dés : le joueur les lance lui-même, sauf en mode AutoRoll
+  /// Le choix de main héritée : deux icônes qui tranchent — **valider** reprend la main
+  /// laissée par le joueur précédent, **annuler** la refuse et repart à 5 dés neufs — au
+  /// pied d'un sélecteur qui, lui, ne décide de rien : il ne sert qu'à lire le radar des
+  /// scores avec ou sans la reprise (voir [_showInheritedHandDialog]), et son libellé dit
+  /// ce qu'il montre, « Main reprise » ou « Nouvelle main ». Quel que soit son état, le
+  /// bouton pressé fait la réponse.
+  ///
+  /// Aucune des deux ne lance les dés : le joueur les lance lui-même, sauf en mode AutoRoll
   /// (voir [_isAutoSeat]), où l'auto-avancement s'en charge dès que le tour est ouvert.
   /// La consultation (grille, courbe, bilan), elle, a sa propre ligne, plus haut : elle ne
   /// tranche rien et ne dépile pas la popup (voir [_popupConsultRow]).
   ///
-  /// Sous le bouton, la probabilité de marquer au tout premier lancer de l'option choisie
+  /// Sous chaque icône, la probabilité de marquer au tout premier lancer de cette option
   /// (voir [_percentCaption]), si l'affichage des probabilités est activé.
   ///
-  /// [canResume] faux : le sélecteur est éteint et grisé (la reprise est impossible).
-  /// En rejeu, où tout est inerte, le sélecteur montre le choix que le joueur avait fait.
+  /// [canResume] faux : le sélecteur est éteint et grisé, et valider est inerte (la reprise
+  /// est impossible) ; annuler reste possible. En rejeu, où tout est inerte, le sélecteur
+  /// et l'icône du choix que le joueur avait fait sont mis en évidence.
   Widget _inheritedHandActions(
     BuildContext dialogContext,
     GameEngine engine, {
@@ -2354,6 +2360,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final notifier = ref.read(gameProvider.notifier);
     final scheme = Theme.of(dialogContext).colorScheme;
 
+    // Ces popups surgissent sous le doigt du joueur : un tap déjà parti ne doit pas les
+    // valider au vol (voir _lockControlsBriefly). Contrôle à l'exécution ici, la popup
+    // étant une route à part que nos setState ne redessinent pas.
+    VoidCallback decide({required bool fullHand}) => () {
+          if (_controlsLocked) return;
+          Navigator.of(dialogContext).pop();
+          notifier.startTurn(useFullHand: fullHand);
+        };
+
     return ValueListenableBuilder<bool>(
       valueListenable: resume,
       builder: (_, resumed, _) => Column(
@@ -2363,34 +2378,47 @@ class _GameScreenState extends ConsumerState<GameScreen>
             key: const ValueKey('inherited-hand-resume'),
             contentPadding: EdgeInsets.zero,
             dense: true,
-            // Pas de titre : le libellé dit la valeur, « Garder la main » ou « Nouvelle main ».
+            // Pas de titre : le libellé dit la valeur, « Main reprise » ou « Nouvelle main ».
             title: Text(resumed ? l10n.inheritedHandKeep : l10n.inheritedHandFresh),
             value: resumed,
             onChanged: canResume && !inert ? (value) => resume.value = value : null,
           ),
           const SizedBox(height: 8),
-          _popupDecisionIcon(
-            dialogContext,
-            key: widget.tutorial?.keyFor(TutorialTarget.inheritTake),
-            icon: Icons.check,
-            onPressed: inert
-                ? null
-                : () {
-                    // Ces popups surgissent sous le doigt du joueur : un tap déjà parti ne
-                    // doit pas les valider au vol (voir _lockControlsBriefly). Contrôle à
-                    // l'exécution ici, la popup étant une route à part que nos setState ne
-                    // redessinent pas.
-                    if (_controlsLocked) return;
-                    Navigator.of(dialogContext).pop();
-                    notifier.startTurn(useFullHand: !resume.value);
-                  },
-            background: scheme.primary,
-            foreground: scheme.onPrimary,
-            chosen: inert,
-            percent: resumed
-                ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues)
-                : _percentCaption(5, const {}),
-            tooltip: l10n.validateButton,
+          // Deux colonnes égales, moitiés de la popup, chacune centrant son icône.
+          // Valider à gauche, annuler à droite.
+          SizedBox(
+            width: double.infinity,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final decision in [
+                  _popupDecisionIcon(
+                    dialogContext,
+                    key: widget.tutorial?.keyFor(TutorialTarget.inheritTake),
+                    icon: Icons.check,
+                    // Reprise impossible : l'icône reste visible mais inerte, plutôt que de
+                    // disparaître en recentrant l'autre.
+                    onPressed: canResume && !inert ? decide(fullHand: false) : null,
+                    background: scheme.primary,
+                    foreground: scheme.onPrimary,
+                    chosen: inert && resumed,
+                    percent: canResume ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues) : '',
+                    tooltip: l10n.validateButton,
+                  ),
+                  _popupDecisionIcon(
+                    dialogContext,
+                    icon: Icons.close,
+                    onPressed: inert ? null : decide(fullHand: true),
+                    background: scheme.secondary,
+                    foreground: scheme.onSecondary,
+                    chosen: inert && !resumed,
+                    percent: _percentCaption(5, const {}),
+                    tooltip: l10n.newHandButton,
+                  ),
+                ])
+                  Expanded(child: Center(child: decision)),
+              ],
+            ),
           ),
         ],
       ),

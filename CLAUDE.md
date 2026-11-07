@@ -412,13 +412,17 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `assets/credits.md` as Markdown (`flutter_markdown_plus`), in English whatever the app language). To credit something, edit that file, not the code.
   It has one `###` paragraph per direct dependency of `pubspec.yaml` (`test/ui/credits_test.dart` fails when a new
   dependency has none), plus the music ("Next to You" by Joth, CC0, OpenGameArt) and the font.
-  - **The inherited-hand dialog** (`_showInheritedHandDialog`) is one decision made of a value and a confirmation: below
-    the dice, the score and the grid / chart / stats buttons come the **score radar** (a `ScoreSheet`, read from the player's
-    score plus the inherited points when the choice is on, from the score alone otherwise), then a **resume
-    switch** (no title: its label says "Garder la main" / "Nouvelle main") and a single ✓ button, which only closes the dialog and sends the switch's
-    value to `startTurn(useFullHand: !value)`. It **does not roll**: the dice leave on their own only in AutoRoll mode
-    (`_isAutoSeat`, through `_scheduleAutoAdvanceIfNeeded`). The tutorial's inherited-hand lesson therefore has a `roll` beat
-    after `take`. Tests close the dialog with `dismissInheritedHand(tester, resume:)`.
+  - **The inherited-hand dialog** (`_showInheritedHandDialog`) is a decision made of **two buttons** and an **informative
+    switch**: below the dice, the score and the grid / chart / stats buttons come the **score radar** (a `ScoreSheet`, read
+    from the player's score plus the inherited points when the switch is on, from the score alone otherwise), then the
+    **switch** (no title: its label says "Main reprise" when on, "Nouvelle main" when off), then ✓ "Valider"
+    (`startTurn(useFullHand: false)`: take the hand over) on the left and ✗ "Nouvelle main" (`useFullHand: true`: refuse,
+    five fresh dice) on the right. **The pressed button decides, whatever the switch says** — the switch only lets the player
+    read the radar with or without the take-over, and changes nothing else. ✓ is inert when the hand can't be taken
+    (`inheritedHandCannotBank`: the switch is then off and greyed). Neither button rolls: the dice leave on their own only in
+    AutoRoll mode (`_isAutoSeat`, through `_scheduleAutoAdvanceIfNeeded`). The tutorial's inherited-hand lesson therefore has
+    a `roll` beat after `take` (✓ is its target). Tests close the dialog with `dismissInheritedHand(tester, resume:)`, which
+    presses ✓ or ✗.
 
 ### Online games (`server/`)
 

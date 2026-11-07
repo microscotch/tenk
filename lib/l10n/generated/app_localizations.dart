@@ -908,13 +908,13 @@ abstract class AppLocalizations {
   /// **'Nouvelle main'**
   String get newHandButton;
 
-  /// Valeur de l'interrupteur de la popup de reprise de main quand il est activé : le joueur garde (reprend) la main laissée par le précédent.
+  /// Valeur de l'interrupteur informatif de la popup de reprise de main quand il est activé : le radar des scores se lit comme si le joueur reprenait la main laissée par le précédent. Il ne décide de rien : ce sont les boutons valider (reprendre) et annuler (nouvelle main) qui tranchent.
   ///
   /// In fr, this message translates to:
-  /// **'Garder la main'**
+  /// **'Main reprise'**
   String get inheritedHandKeep;
 
-  /// Valeur de l'interrupteur de la popup de reprise de main quand il est désactivé : le joueur repart d'une main neuve de 5 dés.
+  /// Valeur de l'interrupteur informatif de la popup de reprise de main quand il est désactivé : le radar des scores se lit comme si le joueur repartait d'une main neuve.
   ///
   /// In fr, this message translates to:
   /// **'Nouvelle main'**

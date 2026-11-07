@@ -191,7 +191,7 @@
   "inheritedHandDialogMessage": "{score}, {count, plural, one{{count} dado} other{{count} dadi}}",
   "resumeHandButton": "Riprendi la mano",
   "newHandButton": "Nuova mano",
-  "inheritedHandKeep": "Tenere la mano",
+  "inheritedHandKeep": "Mano ripresa",
   "inheritedHandFresh": "Nuova mano",
   "settingsHandednessLabel": "Disposizione dei pulsanti",
   "settingsHandednessRight": "Destrorso",

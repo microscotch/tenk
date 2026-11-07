@@ -191,7 +191,7 @@
   "inheritedHandDialogMessage": "{score}, {count, plural, one{{count} зар} other{{count} зара}}",
   "resumeHandButton": "Поеми ръката",
   "newHandButton": "Нова ръка",
-  "inheritedHandKeep": "Запази ръката",
+  "inheritedHandKeep": "Ръката е поета",
   "inheritedHandFresh": "Нова ръка",
   "settingsHandednessLabel": "Разположение на бутоните",
   "settingsHandednessRight": "Десняк",

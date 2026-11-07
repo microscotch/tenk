@@ -505,7 +505,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get newHandButton => 'Uusi käsi';
 
   @override
-  String get inheritedHandKeep => 'Pidä käsi';
+  String get inheritedHandKeep => 'Käsi otettu haltuun';
 
   @override
   String get inheritedHandFresh => 'Uusi käsi';

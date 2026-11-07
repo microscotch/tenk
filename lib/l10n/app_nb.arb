@@ -191,7 +191,7 @@
   "inheritedHandDialogMessage": "{score}, {count, plural, one{{count} terning} other{{count} terninger}}",
   "resumeHandButton": "Overta hånden",
   "newHandButton": "Ny hånd",
-  "inheritedHandKeep": "Behold hånden",
+  "inheritedHandKeep": "Hånd overtatt",
   "inheritedHandFresh": "Ny hånd",
   "settingsHandednessLabel": "Plassering av knapper",
   "settingsHandednessRight": "Høyrehendt",

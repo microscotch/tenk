@@ -481,10 +481,10 @@
 
   "newHandButton": "Nouvelle main",
   "@newHandButton": {"description": "Infobulle de l'icône \"refuser\" de la popup de main héritée, qui repart avec 5 dés neufs."},
-  "inheritedHandKeep": "Garder la main",
-  "@inheritedHandKeep": {"description": "Valeur de l'interrupteur de la popup de reprise de main quand il est activé : le joueur garde (reprend) la main laissée par le précédent."},
+  "inheritedHandKeep": "Main reprise",
+  "@inheritedHandKeep": {"description": "Valeur de l'interrupteur informatif de la popup de reprise de main quand il est activé : le radar des scores se lit comme si le joueur reprenait la main laissée par le précédent. Il ne décide de rien : ce sont les boutons valider (reprendre) et annuler (nouvelle main) qui tranchent."},
   "inheritedHandFresh": "Nouvelle main",
-  "@inheritedHandFresh": {"description": "Valeur de l'interrupteur de la popup de reprise de main quand il est désactivé : le joueur repart d'une main neuve de 5 dés."},
+  "@inheritedHandFresh": {"description": "Valeur de l'interrupteur informatif de la popup de reprise de main quand il est désactivé : le radar des scores se lit comme si le joueur repartait d'une main neuve."},
 
   "failureBelowMinimum": "Score insuffisant pour s'arrêter.",
   "@failureBelowMinimum": {"description": "Raison pour laquelle le joueur ne peut pas encore s'arrêter : score sous le minimum requis."},

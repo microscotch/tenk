@@ -504,7 +504,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get newHandButton => 'Нова ръка';
 
   @override
-  String get inheritedHandKeep => 'Запази ръката';
+  String get inheritedHandKeep => 'Ръката е поета';
 
   @override
   String get inheritedHandFresh => 'Нова ръка';

@@ -505,7 +505,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newHandButton => 'Nouvelle main';
 
   @override
-  String get inheritedHandKeep => 'Garder la main';
+  String get inheritedHandKeep => 'Main reprise';
 
   @override
   String get inheritedHandFresh => 'Nouvelle main';

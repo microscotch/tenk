@@ -191,7 +191,7 @@
   "inheritedHandDialogMessage": "{score}, {count, plural, one{{count} die} other{{count} dice}}",
   "resumeHandButton": "Take over the hand",
   "newHandButton": "New hand",
-  "inheritedHandKeep": "Keep the hand",
+  "inheritedHandKeep": "Hand taken over",
   "inheritedHandFresh": "New hand",
   "settingsHandednessLabel": "Button layout",
   "settingsHandednessRight": "Right-handed",

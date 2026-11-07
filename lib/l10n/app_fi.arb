@@ -191,7 +191,7 @@
   "inheritedHandDialogMessage": "{score}, {count, plural, one{{count} noppa} other{{count} noppaa}}",
   "resumeHandButton": "Ota käsi haltuun",
   "newHandButton": "Uusi käsi",
-  "inheritedHandKeep": "Pidä käsi",
+  "inheritedHandKeep": "Käsi otettu haltuun",
   "inheritedHandFresh": "Uusi käsi",
   "settingsHandednessLabel": "Painikkeiden asettelu",
   "settingsHandednessRight": "Oikeakätinen",

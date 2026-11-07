@@ -200,6 +200,7 @@ void main() {
       expect(find.text('Reprendre ?'), findsOneWidget);
 
       expect(iconWithTooltip(tester, 'Valider').onPressed, isNull);
+      expect(iconWithTooltip(tester, 'Nouvelle main').onPressed, isNull, reason: 'annuler est inerte aussi');
       expect(selector(tester).onChanged, isNull, reason: 'le spectateur ne change pas le choix du joueur');
       expect(find.byTooltip('Grille des scores'), findsNothing,
           reason: 'la grille s\'ouvrirait par-dessus une popup qui se referme seule');
@@ -232,7 +233,7 @@ void main() {
       await pumpUntil(tester, () => handPopup.evaluate().isNotEmpty);
 
       expect(selector(tester).value, isTrue, reason: 'le joueur a repris la main laissée');
-      expect(find.text('Garder la main'), findsOneWidget);
+      expect(find.text('Main reprise'), findsOneWidget);
     });
 
     testWidgets('le début du rejeu n\'ouvre pas de popup : aucune main n\'est encore engagée',

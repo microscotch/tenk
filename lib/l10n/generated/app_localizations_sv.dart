@@ -505,7 +505,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get newHandButton => 'Ny hand';
 
   @override
-  String get inheritedHandKeep => 'Behåll handen';
+  String get inheritedHandKeep => 'Hand övertagen';
 
   @override
   String get inheritedHandFresh => 'Ny hand';

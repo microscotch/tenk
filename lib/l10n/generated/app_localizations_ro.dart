@@ -512,7 +512,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get newHandButton => 'Mână nouă';
 
   @override
-  String get inheritedHandKeep => 'Păstrează mâna';
+  String get inheritedHandKeep => 'Mână reluată';
 
   @override
   String get inheritedHandFresh => 'Mână nouă';
