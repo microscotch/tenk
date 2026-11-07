@@ -344,8 +344,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
 ### UI layer (`lib/ui/`)
 
 - **Every screen's top bar is `AppTopBar` (`lib/ui/widgets/app_top_bar.dart`), never a raw `AppBar`.**
-  It drops the automatic back arrow on Android, where the system back button/gesture does the job,
-  and keeps it where there is no system back (iOS, desktop). This applies to every new screen;
+  It shows Flutter's automatic back arrow **on every platform, Android included** (the app is full screen there, with no
+  navigation bar: the arrow is the visible way back; the system back gesture still works). A screen that sets
+  `automaticallyImplyLeading: false` stays without it everywhere (the profile and theme set-up screens). A game in progress
+  and the game-over screen carry their own `BackButton` (`_exitGame` / `_leave`: back to the home, after a confirmation
+  online — never the bare `pop()` their `PopScope` refuses), the online room's one leaves the room first. This applies to every new screen;
   `test/ui/app_top_bar_test.dart` fails on any `AppBar(` written elsewhere in `lib/ui`. The home
   screen (`SetupScreen`) has no top bar at all: its menu is a 3×3 rack of dice seen
   three-quarter (`MenuDie`, `lib/ui/widgets/menu_die.dart`, drawn in perspective by a `CustomPainter` rendered once into a

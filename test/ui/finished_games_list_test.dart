@@ -118,32 +118,25 @@ void main() {
     expect(find.text('Partie 13'), findsOneWidget, reason: 'la liste est bien là, intacte');
   });
 
-  testWidgets('sur Android, l\'écran de fin d\'un run n\'a pas de flèche : le retour système suffit',
-      (tester) async {
-    await archive.write(finishedGame(14, 'Partie 14'));
-    await pumpList(tester, platform: TargetPlatform.android);
-    await tester.tap(find.text('Partie 14'));
-    await tester.pumpAndSettle();
+  // La flèche est là sur toutes les plateformes : iOS n'a pas de retour système, et Android est
+  // en plein écran, sans barre de navigation.
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    testWidgets('$platform : la flèche de retour de l\'écran de fin d\'un run ramène à la liste', (tester) async {
+      await archive.write(finishedGame(14, 'Partie 14'));
+      await pumpList(tester, platform: platform);
+      await tester.tap(find.text('Partie 14'));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(GameOverScreen), findsOneWidget);
-    expect(find.byType(BackButton), findsNothing);
-  });
+      // La flèche elle-même : `pageBack()` la cherche par son infobulle anglaise
+      // « Back », qui s'appelle « Retour » sous la locale française.
+      expect(find.byType(BackButton), findsOneWidget, reason: 'la flèche automatique est là');
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
 
-  testWidgets('iOS : la flèche de retour de l\'écran de fin d\'un run ramène aussi à la liste', (tester) async {
-    await archive.write(finishedGame(14, 'Partie 14'));
-    await pumpList(tester, platform: TargetPlatform.iOS);
-    await tester.tap(find.text('Partie 14'));
-    await tester.pumpAndSettle();
-
-    // La flèche elle-même : `pageBack()` la cherche par son infobulle anglaise
-    // « Back », qui s'appelle « Retour » sous la locale française.
-    expect(find.byType(BackButton), findsOneWidget, reason: 'la flèche automatique est là');
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(FinishedGamesScreen), findsOneWidget);
-    expect(find.byType(GameOverScreen), findsNothing);
-  });
+      expect(find.byType(FinishedGamesScreen), findsOneWidget);
+      expect(find.byType(GameOverScreen), findsNothing);
+    });
+  }
 
   testWidgets('une partie qui ne va pas à son terme est rejouée directement', (tester) async {
     // Pas de classement final à montrer : le journal s'arrête avant la victoire.

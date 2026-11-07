@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/ui/widgets/app_top_bar.dart';
 
-/// La barre du haut commune : pas de flèche de retour sur Android, où le retour
-/// système s'en charge ; la flèche reste là où il n'y en a pas (iOS, bureau).
+/// La barre du haut commune : la flèche de retour est là sur toutes les plateformes,
+/// Android compris — l'application y est en plein écran, sans barre de navigation.
 void main() {
   /// Un écran d'accueil qui empile, dès le premier frame, un écran doté de la
   /// barre commune.
@@ -44,16 +44,21 @@ void main() {
     expect(find.text('Écran empilé'), findsOneWidget);
   }
 
-  testWidgets('Android : pas de flèche, le retour système ramène à l\'écran d\'avant', (tester) async {
+  testWidgets('Android : la flèche est là (plein écran, pas de barre de navigation), et le retour système marche aussi',
+      (tester) async {
     await pumpPushedScreen(tester, platform: TargetPlatform.android);
 
-    expect(find.byType(BackButton), findsNothing);
-    expect(find.byIcon(Icons.arrow_back), findsNothing);
-
-    await tester.binding.handlePopRoute();
+    expect(find.byType(BackButton), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text('Écran empilé'), findsNothing);
     expect(find.text('ACCUEIL'), findsOneWidget);
+
+    await tester.tap(find.text('ACCUEIL'));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Écran empilé'), findsNothing);
   });
 
   testWidgets('iOS : la flèche est là, faute de retour système', (tester) async {
@@ -70,10 +75,12 @@ void main() {
     expect(find.byType(BackButton), findsOneWidget);
   });
 
-  testWidgets('un écran qui écarte la flèche l\'écarte partout, iOS compris', (tester) async {
-    await pumpPushedScreen(tester, platform: TargetPlatform.iOS, automaticallyImplyLeading: false);
-    expect(find.byType(BackButton), findsNothing);
-  });
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    testWidgets('un écran qui écarte la flèche l\'écarte partout : $platform', (tester) async {
+      await pumpPushedScreen(tester, platform: platform, automaticallyImplyLeading: false);
+      expect(find.byType(BackButton), findsNothing);
+    });
+  }
 
   testWidgets('la barre prend la hauteur du thème, comme un AppBar', (tester) async {
     await pumpPushedScreen(
@@ -85,8 +92,8 @@ void main() {
   });
 
   test('aucun écran n\'utilise AppBar directement : tous passent par AppTopBar', () {
-    // Garde-fou pour les écrans à venir : un `AppBar(` direct afficherait de
-    // nouveau la flèche de retour sur Android.
+    // Garde-fou pour les écrans à venir : un `AppBar(` direct contournerait la barre
+    // commune (flèche de retour, hauteur du thème).
     final offenders = <String>[];
     for (final file in Directory('lib/ui').listSync(recursive: true).whereType<File>()) {
       if (!file.path.endsWith('.dart') || file.path.endsWith('app_top_bar.dart')) continue;

@@ -90,7 +90,7 @@ void main() {
   testWidgets('la grille des scores n\'a plus d\'icône dans la barre : le bouton du corps suffit', (tester) async {
     await pump(tester, const GameSetup(playerNames: ['Bob', 'Bruno']));
 
-    expect(find.descendant(of: find.byType(AppBar), matching: find.byType(IconButton)), findsNothing,
+    expect(find.descendant(of: find.byType(AppBar), matching: find.byIcon(Icons.grid_on)), findsNothing,
         reason: 'un doublon du bouton « Grille des scores » ci-dessous');
     expect(find.widgetWithText(OutlinedButton, 'Grille des scores'), findsOneWidget);
   });

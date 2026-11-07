@@ -44,12 +44,10 @@ class OnlineRoomScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppTopBar(
           title: Text(l10n.onlineTitle),
-          leading: Theme.of(context).platform == TargetPlatform.android
-              ? null
-              : BackButton(onPressed: () async {
-                  await session.leave();
-                  if (context.mounted) Navigator.of(context).pop();
-                }),
+          leading: BackButton(onPressed: () async {
+            await session.leave();
+            if (context.mounted) Navigator.of(context).pop();
+          }),
         ),
         body: SafeArea(
           child: Padding(

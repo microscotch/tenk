@@ -152,23 +152,18 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen> {
       child: Scaffold(
         appBar: AppTopBar(
           title: Text(l10n.gameOverTitle),
-          // Aucune sortie dans la barre — et surtout pas la flèche de retour
-          // automatique de Flutter, qui ferait précisément le pop() nu que le
-          // PopScope ci-dessus existe pour éviter.
+          // Partie finie : la flèche de retour ramène à l'accueil (voir [_leave]), comme le
+          // retour système — pas la flèche automatique de Flutter, qui ferait précisément
+          // le pop() nu que le PopScope ci-dessus existe pour éviter. Sur toutes les
+          // plateformes : iOS n'a pas de retour système et son glissement depuis le bord est
+          // neutralisé par ce PopScope (`ModalRoute.popGestureEnabled` est faux dès que la
+          // route refuse de se dépiler) ; Android est en plein écran, sans barre de
+          // navigation (voir `applyFullScreen`).
           //
-          // iOS fait exception : pas de bouton retour système, et le
-          // glissement depuis le bord est neutralisé par ce même PopScope
-          // (`ModalRoute.popGestureEnabled` est faux dès que la route refuse
-          // de se dépiler). Sans cette flèche, cet écran serait sans issue.
-          // Elle ramène à l'accueil, comme le retour système ailleurs.
-          //
-          // Archivé, c'est l'inverse : la flèche automatique de Flutter fait
-          // exactement le retour voulu, là où [AppTopBar] la garde (hors
-          // Android, où le retour système suffit).
+          // Archivé, c'est l'inverse : la flèche automatique de Flutter fait exactement le
+          // retour voulu.
           automaticallyImplyLeading: archived,
-          leading: !archived && Theme.of(context).platform == TargetPlatform.iOS
-              ? BackButton(onPressed: _leave)
-              : null,
+          leading: archived ? null : BackButton(onPressed: _leave),
         ),
         body: SafeArea(
           child: Center(

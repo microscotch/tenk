@@ -1742,24 +1742,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   tutorialLessonTitle(AppLocalizations.of(context), widget.tutorial!.lesson.id),
                 ),
               ),
-        // Aucune sortie dans la barre pendant une partie : ni flèche de
-        // retour, ni "quitter" — c'est le retour système qui ramène à
-        // l'accueil (voir le PopScope en fin de méthode). En rejeu, la sortie
-        // du mode spectateur est le retour standard : le retour système, et
-        // la flèche automatique là où [AppTopBar] la garde (hors Android).
-        //
-        // iOS fait exception : pas de bouton retour système, et le glissement
-        // depuis le bord de l'écran est justement neutralisé par ce PopScope
-        // (`ModalRoute.popGestureEnabled` est faux dès que la route refuse de
-        // se dépiler). Sans cette flèche, une partie en cours n'aurait donc
-        // plus AUCUNE sortie. Elle fait la même chose que le retour système
-        // ailleurs : ramener à l'accueil, pas dépiler.
+        // Une partie en cours a pour sortie la flèche de retour, qui ramène à l'accueil
+        // comme le retour système (voir le PopScope en fin de méthode) — après
+        // confirmation en ligne (voir [_exitGame]) : elle ne dépile pas la route, que ce
+        // PopScope refuse de quitter. Elle est là sur toutes les plateformes : iOS n'a pas de
+        // retour système et son glissement depuis le bord est neutralisé par ce PopScope
+        // (`ModalRoute.popGestureEnabled` est faux dès que la route refuse de se dépiler) ;
+        // Android est en plein écran, sans barre de navigation (voir `applyFullScreen`).
+        // En rejeu, la sortie du mode spectateur est le retour standard : la flèche
+        // automatique de [AppTopBar]. Le tutoriel n'en a pas : il a son « passer ».
         automaticallyImplyLeading: widget.replayMode,
-        leading: (!widget.replayMode &&
-                widget.tutorial == null &&
-                Theme.of(context).platform == TargetPlatform.iOS)
-            ? BackButton(onPressed: _exitGame)
-            : null,
+        leading: (!widget.replayMode && widget.tutorial == null) ? BackButton(onPressed: _exitGame) : null,
         actions: widget.tutorial != null ? const [] : _scoreGridAction(engine.players),
       ),
       // En bas de l'écran : la barre d'historique, qui déroule le journal de

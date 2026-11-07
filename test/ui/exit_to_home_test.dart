@@ -15,8 +15,8 @@ import 'package:le10000/ui/screens/setup_screen.dart';
 import '../test_helpers/fake_game_save_store.dart';
 
 /// Sortie vers l'écran d'accueil depuis l'écran de jeu et depuis l'écran de
-/// fin de partie. Ni l'un ni l'autre n'offre plus de bouton pour ça : c'est le
-/// retour système qui ramène à l'accueil, et il doit le faire depuis n'importe
+/// fin de partie. Leur barre porte la flèche de retour, et le retour système la double : l'un comme
+/// l'autre ramène à l'accueil, et doit le faire depuis n'importe
 /// quelle profondeur sans laisser la pile vide (écran gris signalé en jeu
 /// réel). D'où la pile de routes réelle reproduite ici — `SetupScreen` en
 /// racine (poussée par le splash via `pushReplacement`), puis les écrans de
@@ -112,12 +112,11 @@ void main() {
         reason: 'on doit revenir sur l\'accueil, pas sur un écran vide');
   });
 
-  testWidgets('écran de jeu : aucun bouton de sortie dans la barre', (tester) async {
+  testWidgets('écran de jeu : la flèche de retour est dans la barre, sans bouton « quitter »', (tester) async {
     await pumpGameScreen(tester);
 
-    expect(find.byType(BackButton), findsNothing, reason: 'plus de flèche de retour');
-    expect(find.byIcon(Icons.arrow_back), findsNothing);
-    expect(find.byIcon(Icons.exit_to_app), findsNothing, reason: 'plus de bouton "quitter"');
+    expect(find.byType(BackButton), findsOneWidget, reason: 'la sortie visible, Android compris (plein écran)');
+    expect(find.byIcon(Icons.exit_to_app), findsNothing, reason: 'pas de bouton "quitter"');
     expect(find.byIcon(Icons.menu), findsOneWidget,
         reason: 'le menu (grille, courbe, bilan, paramètres), lui, reste accessible');
   });
@@ -140,39 +139,40 @@ void main() {
         reason: 'on doit revenir sur l\'accueil, pas sur un écran figé avec un spinner');
   });
 
-  testWidgets('fin de partie : aucun bouton de retour à l\'accueil', (tester) async {
+  testWidgets('fin de partie : la flèche de retour est dans la barre, sans bouton « OK »', (tester) async {
     await pumpEndOfGame(tester);
 
-    expect(find.byType(BackButton), findsNothing);
-    expect(find.byIcon(Icons.arrow_back), findsNothing);
+    expect(find.byType(BackButton), findsOneWidget);
     expect(find.text('OK'), findsNothing);
   });
 
-  // iOS n'a pas de bouton retour système, et le glissement bord-écran est
-  // neutralisé par le PopScope des deux écrans (`popGestureEnabled` est faux
-  // dès que la route refuse de se dépiler) : sans la flèche conditionnelle,
-  // les deux écrans seraient sans issue sur cette plateforme.
-  testWidgets('iOS, écran de jeu : la flèche est là et ramène à l\'accueil', (tester) async {
-    await pumpGameScreen(tester, platform: TargetPlatform.iOS);
+  // Sur toutes les plateformes la flèche ramène à l'accueil : iOS n'a pas de bouton retour
+  // système et son glissement bord-écran est neutralisé par le PopScope des deux écrans
+  // (`popGestureEnabled` est faux dès que la route refuse de se dépiler) ; Android est en
+  // plein écran, sans barre de navigation.
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    testWidgets('$platform, écran de jeu : la flèche est là et ramène à l\'accueil', (tester) async {
+      await pumpGameScreen(tester, platform: platform);
 
-    expect(find.byType(BackButton), findsOneWidget);
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
+      expect(find.byType(BackButton), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(GameScreen), findsNothing);
-    expect(find.byType(SetupScreen), findsOneWidget);
-  });
+      expect(find.byType(GameScreen), findsNothing);
+      expect(find.byType(SetupScreen), findsOneWidget);
+    });
 
-  testWidgets('iOS, fin de partie : la flèche est là et ramène à l\'accueil', (tester) async {
-    await pumpEndOfGame(tester, platform: TargetPlatform.iOS);
+    testWidgets('$platform, fin de partie : la flèche est là et ramène à l\'accueil', (tester) async {
+      await pumpEndOfGame(tester, platform: platform);
 
-    expect(find.byType(BackButton), findsOneWidget);
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
+      expect(find.byType(BackButton), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(GameOverScreen), findsNothing);
-    expect(find.byType(GameScreen), findsNothing,
-        reason: 'la flèche ramène à l\'accueil, pas sur le GameScreen mort');
-    expect(find.byType(SetupScreen), findsOneWidget);
-  });
+      expect(find.byType(GameOverScreen), findsNothing);
+      expect(find.byType(GameScreen), findsNothing,
+          reason: 'la flèche ramène à l\'accueil, pas sur le GameScreen mort');
+      expect(find.byType(SetupScreen), findsOneWidget);
+    });
+  }
 }
