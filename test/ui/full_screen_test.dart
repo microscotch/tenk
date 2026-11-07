@@ -25,15 +25,17 @@ void main() {
     );
   });
 
-  test('sur Android, le plein écran est immersif et « collant » : les barres se recachent seules', () async {
-    await applyFullScreen(platform: TargetPlatform.android);
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    test('sur $platform, le plein écran est immersif et « collant » : les barres se recachent seules', () async {
+      await applyFullScreen(platform: platform);
 
-    final call = calls.singleWhere((c) => c.method == 'SystemChrome.setEnabledSystemUIMode');
-    expect(call.arguments, 'SystemUiMode.immersiveSticky');
-  });
+      final call = calls.singleWhere((c) => c.method == 'SystemChrome.setEnabledSystemUIMode');
+      expect(call.arguments, 'SystemUiMode.immersiveSticky');
+    });
+  }
 
-  test('ailleurs qu\'Android, rien ne change : iOS garde sa barre d\'état', () async {
-    for (final platform in [TargetPlatform.iOS, TargetPlatform.linux, TargetPlatform.macOS, TargetPlatform.windows]) {
+  test('sur un ordinateur, rien ne change : la fenêtre est celle du système', () async {
+    for (final platform in [TargetPlatform.linux, TargetPlatform.macOS, TargetPlatform.windows]) {
       await applyFullScreen(platform: platform);
     }
 

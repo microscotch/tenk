@@ -22,7 +22,7 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  // Plein écran sur Android (voir [applyFullScreen]), à chaque retour au premier plan
+  // Plein écran sur Android et iOS (voir [applyFullScreen]), à chaque retour au premier plan
   // aussi : Android peut avoir rendu les barres pendant l'absence. Écouteur gardé pour
   // toute la durée de l'application.
   applyFullScreen();

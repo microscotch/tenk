@@ -358,9 +358,10 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   included; tests find a die by its `label` (`MenuDie.label`), and the icon painted on it is `MenuDie.icon`. The same
   painter, opaque, draws the app icon (`tool/render_app_icon_test.dart`, then `dart run flutter_launcher_icons`, then check that `project.pbxproj` was left alone). Neither is seen from the symmetric 45° corner (`_cornerYaw`, the painter's default `yaw`): the home dice are turned to 33° (`_menuYaw`, 12° to the left), so their right face is the wide one; the icon to 53° (`_iconYaw`, 8° to the right), so its left face — the "10" — is the wide one and the "K" the narrow one.
 
-- **Android runs full screen** (`applyFullScreen`, `lib/ui/full_screen.dart`): immersive sticky — no status or navigation
-  bar, a swipe from the edge shows them for a moment — applied at launch and on every resume (`AppLifecycleListener` in
-  `main`), a no-op on iOS and desktop. `res/values-v28` and `values-night-v28` set `windowLayoutInDisplayCutoutMode`
+- **Android and iOS run full screen** (`applyFullScreen`, `lib/ui/full_screen.dart`): immersive sticky — no status or navigation
+  bar on Android, no status bar on iOS (its home indicator can't be removed from Flutter, and the notch stays out of the
+  drawing area), a swipe from the edge shows them for a moment — applied at launch and on every resume (`AppLifecycleListener` in
+  `main`), a no-op on desktop. Never seen on an iPhone from here: only TestFlight shows it. `res/values-v28` and `values-night-v28` set `windowLayoutInDisplayCutoutMode`
   to `shortEdges`, so the game draws behind a notch instead of leaving a black band: every screen therefore keeps its
   `SafeArea` / `AppTopBar` (they read the cutout from `MediaQuery`). Android resources can't be built here, only in CI.
 - `game_screen.dart` (also the spectator replay, `replayMode`, with its controls pinned in a bottom bar
