@@ -2795,9 +2795,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = isAiTurn
-            ? _aiFittedDieSize(constraints.maxWidth)
-            : _fittedDieSize(constraints.maxWidth);
+        // Même taille pour tous les dés, qu'ils soient les miens ou ceux d'un adversaire.
+        final size = _fittedDieSize(constraints.maxWidth);
         // Rang du dé dans la rangée entière, pour que le mode panaché garde
         // une couleur différente par dé d'un bout à l'autre de la main.
         var position = 0;
@@ -3500,28 +3499,6 @@ double _fittedDieSize(double availableWidth) {
       .clamp(_minDieSize, DieWidget.defaultSize);
 }
 
-/// Un tour d'IA garde les dés à leur taille d'avant leur élargissement,
-/// plus petits que ceux d'un tour joué à la main. Les trois écarts d'alors
-/// sont reproduits ici : la rangée disposait de [_previousZoneSideInset] de
-/// moins de chaque côté, chaque dé portait [_previousDieMargin] de marge de
-/// chaque côté, et ne dépassait jamais [_previousDieMaxSize].
-///
-/// Seuls les dés rétrécissent : la hauteur des zones reste calée sur la
-/// taille d'un tour humain (voir [_DiceZoneBody]), sinon les zones
-/// changeraient de hauteur à chaque passage de main.
-const double _previousZoneSideInset = 8.0;
-const double _previousDieMargin = 4.0;
-const double _previousDieMaxSize = 76.0;
-
-double _aiFittedDieSize(double availableWidth) {
-  final available = availableWidth.isFinite
-      ? availableWidth
-      : _previousDieMaxSize * _diceRowReferenceCount;
-  final previousAvailable = available - _previousZoneSideInset * 2;
-  return ((previousAvailable / _diceRowReferenceCount) - _previousDieMargin * 2)
-      .clamp(_minDieSize, _previousDieMaxSize);
-}
-
 /// Un dé du dernier lancer, tel que la piste le montrait (voir
 /// `_GameScreenState._leftover`) : [shown] faux pour ceux que la garde a déjà
 /// posés dans la main, dont la place reste vide.
@@ -3724,9 +3701,8 @@ Widget _fittedDiceRow(
   return LayoutBuilder(
     key: key,
     builder: (context, constraints) {
-      final size = isAiTurn
-          ? _aiFittedDieSize(constraints.maxWidth)
-          : _fittedDieSize(constraints.maxWidth);
+      // Même taille pour tous les dés, qu'ils soient les miens ou ceux d'un adversaire.
+      final size = _fittedDieSize(constraints.maxWidth);
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,

@@ -2621,7 +2621,7 @@ void main() {
     expect(find.textContaining('(<200)', findRichText: true), findsWidgets, reason: 'sans aucun 5, la main (100) reste sous le minimum');
   });
 
-  testWidgets('les dés d\'un tour d\'IA restent à leur taille d\'avant l\'élargissement', (tester) async {
+  testWidgets('les dés d\'un tour d\'IA ont la même taille que ceux d\'un tour joué à la main', (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(400, 900));
 
@@ -2666,8 +2666,7 @@ void main() {
     final human = await dieSize(ai: false);
     final ai = await dieSize(ai: true);
 
-    expect(ai, lessThan(human),
-        reason: 'un tour d\'IA garde les dés plus petits qu\'un tour joué à la main');
+    expect(ai, human, reason: 'les dés d\'un tour d\'IA (ou d\'un adversaire) ont la taille de ceux d\'un tour joué à la main');
   });
 
   testWidgets('le choix de main héritée n\'est pas affiché pour l\'IA', (tester) async {
