@@ -6,6 +6,7 @@ import 'l10n/generated/app_localizations.dart';
 import 'state/online_providers.dart';
 import 'state/room_link_providers.dart';
 import 'state/settings_providers.dart';
+import 'ui/full_screen.dart';
 import 'ui/route_observer.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/sound_effects.dart';
@@ -21,8 +22,16 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  // Plein écran sur Android (voir [applyFullScreen]), à chaque retour au premier plan
+  // aussi : Android peut avoir rendu les barres pendant l'absence. Écouteur gardé pour
+  // toute la durée de l'application.
+  applyFullScreen();
+  _fullScreenOnResume = AppLifecycleListener(onResume: applyFullScreen);
   runApp(const ProviderScope(child: Le10000App()));
 }
+
+// ignore: unused_element
+AppLifecycleListener? _fullScreenOnResume;
 
 class Le10000App extends ConsumerWidget {
   const Le10000App({super.key});
