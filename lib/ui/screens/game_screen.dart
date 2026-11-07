@@ -2263,6 +2263,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   ),
                 ],
                 const SizedBox(height: 12),
+                // Le sélecteur, au-dessus du radar qu'il commande.
+                _inheritedHandSwitch(engine, canResume: canResume, resume: resume),
                 // Le radar des scores tel que la réponse le ferait : l'écart se mesure
                 // depuis la main reprise (le score du joueur plus les points hérités) quand
                 // le sélecteur est activé, depuis son score seul sinon.
@@ -2335,6 +2337,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Le sélecteur informatif de la popup de main héritée, au-dessus du radar des scores :
+  /// son libellé dit ce que le radar montre, « Main reprise » ou « Nouvelle main ».
+  Widget _inheritedHandSwitch(
+    GameEngine engine, {
+    required bool canResume,
+    required ValueNotifier<bool> resume,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    return ValueListenableBuilder<bool>(
+      valueListenable: resume,
+      builder: (_, resumed, _) => SwitchListTile(
+        key: const ValueKey('inherited-hand-resume'),
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+        // Pas de titre : le libellé dit la valeur, « Main reprise » ou « Nouvelle main ».
+        title: Text(resumed ? l10n.inheritedHandKeep : l10n.inheritedHandFresh),
+        value: resumed,
+        onChanged: canResume && !widget.replayMode ? (value) => resume.value = value : null,
+      ),
+    );
+  }
+
   /// Le choix de main héritée : deux icônes qui tranchent — **valider** reprend la main
   /// laissée par le joueur précédent, **annuler** la refuse et repart à 5 dés neufs — au
   /// pied d'un sélecteur qui, lui, ne décide de rien : il ne sert qu'à lire le radar des
@@ -2378,24 +2402,24 @@ class _GameScreenState extends ConsumerState<GameScreen>
       builder: (_, resumed, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SwitchListTile(
-            key: const ValueKey('inherited-hand-resume'),
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            // Pas de titre : le libellé dit la valeur, « Main reprise » ou « Nouvelle main ».
-            title: Text(resumed ? l10n.inheritedHandKeep : l10n.inheritedHandFresh),
-            value: resumed,
-            onChanged: canResume && !inert ? (value) => resume.value = value : null,
-          ),
-          const SizedBox(height: 8),
           // Deux colonnes égales, moitiés de la popup, chacune centrant son icône.
-          // Valider à gauche, annuler à droite.
+          // Annuler (nouvelle main) à gauche, valider (reprendre) à droite.
           SizedBox(
             width: double.infinity,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final decision in [
+                  _popupDecisionIcon(
+                    dialogContext,
+                    icon: Icons.close,
+                    onPressed: inert ? null : decide(fullHand: true),
+                    background: scheme.secondary,
+                    foreground: scheme.onSecondary,
+                    chosen: inert && !resumed,
+                    percent: _percentCaption(5, const {}),
+                    tooltip: l10n.newHandButton,
+                  ),
                   _popupDecisionIcon(
                     dialogContext,
                     key: widget.tutorial?.keyFor(TutorialTarget.inheritTake),
@@ -2408,16 +2432,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     chosen: inert && resumed,
                     percent: canResume ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues) : '',
                     tooltip: l10n.validateButton,
-                  ),
-                  _popupDecisionIcon(
-                    dialogContext,
-                    icon: Icons.close,
-                    onPressed: inert ? null : decide(fullHand: true),
-                    background: scheme.secondary,
-                    foreground: scheme.onSecondary,
-                    chosen: inert && !resumed,
-                    percent: _percentCaption(5, const {}),
-                    tooltip: l10n.newHandButton,
                   ),
                 ])
                   Expanded(child: Center(child: decision)),

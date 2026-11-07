@@ -471,17 +471,17 @@ void main() {
     ));
     expect(score.bottom, lessThanOrEqualTo(grid.top), reason: 'la grille est sous la ligne du score');
     expect(grid.bottom, lessThanOrEqualTo(selector.top), reason: 'et au-dessus du sélecteur');
-    // Entre les deux : le radar des scores, une ligne par joueur.
+    // Sous le sélecteur : le radar des scores, une ligne par joueur, puis les boutons.
     final radar = tester.getRect(find.descendant(of: find.byType(AlertDialog), matching: find.byType(ScoreSheet)));
-    expect(grid.bottom, lessThanOrEqualTo(radar.top), reason: 'le radar sous la ligne des boutons de consultation');
-    expect(radar.bottom, lessThanOrEqualTo(selector.top), reason: 'le radar au-dessus du sélecteur');
+    expect(selector.bottom, lessThanOrEqualTo(radar.top), reason: 'le radar sous le sélecteur qu\'il suit');
+    expect(radar.bottom, lessThanOrEqualTo(validate.top), reason: 'et au-dessus des boutons');
     expect(find.descendant(of: find.byType(AlertDialog), matching: find.byIcon(Icons.grid_on)), findsOneWidget);
 
-    // Le score est centré ; valider (à gauche) et annuler (à droite) se partagent la largeur
+    // Le score est centré ; annuler (à gauche) et valider (à droite) se partagent la largeur
     // en deux moitiés égales, de part et d'autre du centre de la popup.
     expect((score.center.dx - dialogRect.center.dx).abs(), lessThan(1.0),
         reason: 'le score doit être centré dans la popup');
-    expect(validate.right, lessThanOrEqualTo(cancel.left), reason: 'valider à gauche, annuler à droite');
+    expect(cancel.right, lessThanOrEqualTo(validate.left), reason: 'annuler à gauche, valider à droite');
     expect(validate.top, cancel.top, reason: 'sur une même ligne');
     expect((((validate.center.dx + cancel.center.dx) / 2) - dialogRect.center.dx).abs(), lessThan(1.0),
         reason: 'les deux boutons sont répartis de part et d\'autre du centre de la popup');
@@ -558,11 +558,13 @@ void main() {
     final title = tester.getRect(inDialog(find.text('Reprendre ?')));
     expect(grid.top, greaterThan(title.bottom));
 
-    // Sous les icônes de consultation : le radar, le sélecteur, puis la validation.
+    // Sous les icônes de consultation : le sélecteur, le radar, puis la validation.
     final selector = tester.getRect(find.byKey(const ValueKey('inherited-hand-resume')));
     final validate = tester.getRect(inDialog(find.byTooltip('Valider')));
     expect(chart.bottom, lessThanOrEqualTo(selector.top), reason: 'le sélecteur sous les icônes de consultation');
-    expect(selector.bottom, lessThanOrEqualTo(validate.top), reason: 'la validation sous le sélecteur');
+    final radar = tester.getRect(inDialog(find.byType(ScoreSheet)));
+    expect(selector.bottom, lessThanOrEqualTo(radar.top), reason: 'le radar sous le sélecteur');
+    expect(radar.bottom, lessThanOrEqualTo(validate.top), reason: 'la validation sous le radar');
   });
 
   testWidgets('pour un gaucher, les trois icônes de consultation passent dans l\'ordre inverse', (tester) async {
@@ -579,7 +581,7 @@ void main() {
     // Valider et annuler gardent leur place, quelle que soit la main.
     final validate = tester.getRect(inDialog(find.byTooltip('Valider')));
     final cancel = tester.getRect(inDialog(find.byTooltip('Nouvelle main')));
-    expect(validate.right, lessThanOrEqualTo(cancel.left), reason: 'valider à gauche, annuler à droite');
+    expect(cancel.right, lessThanOrEqualTo(validate.left), reason: 'annuler à gauche, valider à droite');
     expect(((validate.center.dx + cancel.center.dx) / 2), closeTo(tester.getRect(find.byType(AlertDialog)).center.dx, 1.0));
   });
 
