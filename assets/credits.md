@@ -104,9 +104,3 @@ The game's default background music, "Next to You" by Joth, published on OpenGam
 on 4 June 2016 (tags: loop, emotional). Released under the CC0 licence (public domain
 dedication): no attribution is required, it is given here out of gratitude.
 <https://opengameart.org/content/next-to-you> · Author: <https://opengameart.org/users/joth>
-
-## Font
-
-### UnifrakturMaguntia
-The blackletter typeface of the game's title, designed by j. "mach" wust (2010) from
-the work of Peter Wiegel (2009). SIL Open Font Licence 1.1.
