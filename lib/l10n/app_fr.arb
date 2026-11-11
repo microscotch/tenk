@@ -560,6 +560,10 @@
   "@settingsControlsTitle": {"description": "Titre de la section réglages consacrée aux contrôles de jeu (au-delà des boutons à l'écran)."},
 
   "settingsShakeToRollLabel": "Secouer pour lancer les dés",
+  "settingsInheritedHandTwoButtonsLabel": "Popup de reprise : deux boutons",
+  "settingsInheritedHandTwoButtonsSubtitle": "Désactivé : un seul bouton de validation, le sélecteur décide de la reprise. Activé : un bouton pour reprendre, un pour refuser.",
+  "@settingsInheritedHandTwoButtonsLabel": {"description": "Interrupteur des réglages (Contrôles) : la popup de reprise de main a deux boutons."},
+  "@settingsInheritedHandTwoButtonsSubtitle": {"description": "Explication de ce réglage."},
   "@settingsShakeToRollLabel": {"description": "Interrupteur activant/désactivant le lancer de dés en secouant le téléphone, en plus du bouton Lancer."},
 
   "settingsPausedGamesTitle": "Parties en pause",

@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Left-handed",
   "settingsControlsTitle": "Controls",
   "settingsShakeToRollLabel": "Shake to roll the dice",
+  "settingsInheritedHandTwoButtonsLabel": "Inherited-hand popup: two buttons",
+  "settingsInheritedHandTwoButtonsSubtitle": "Off: a single validate button, the switch decides whether to take the hand over. On: one button to take it, one to refuse.",
   "rankFirstTooltip": "In the lead",
   "rankSecondTooltip": "2nd on score",
   "rankThirdTooltip": "3rd on score",

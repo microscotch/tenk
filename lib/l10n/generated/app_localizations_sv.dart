@@ -606,6 +606,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Skaka för att kasta tärningarna';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Dialogen för övertagande: två knappar';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Av: en enda bekräftelseknapp, reglaget avgör övertagandet. På: en knapp för att ta över och en för att avstå.';
+
+  @override
   String get settingsPausedGamesTitle => 'Pausade spel';
 
   @override
@@ -795,7 +803,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Boten stannade på 1000 och lämnade 2 tärningar. Låt ”Övertagen hand” vara på och bekräfta: du börjar från dess 1000 poäng.';
+      'Boten stannade på 1000 och lämnade 2 tärningar. Tryck på ✓ för att ta över handen: du börjar från dess 1000 poäng.';
 
   @override
   String get tutorialInheritIntro =>

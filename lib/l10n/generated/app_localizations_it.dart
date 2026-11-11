@@ -607,6 +607,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Scuoti per lanciare i dadi';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Popup di ripresa: due pulsanti';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Disattivato: un solo pulsante di conferma, l\'interruttore decide la ripresa. Attivato: un pulsante per riprendere e uno per rifiutare.';
+
+  @override
   String get settingsPausedGamesTitle => 'Partite in pausa';
 
   @override
@@ -800,7 +808,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Il bot si è fermato a 1.000 lasciando 2 dadi. Lascia attivo «Mano ripresa» e conferma: parti dai suoi 1.000 punti.';
+      'Il bot si è fermato a 1.000 lasciando 2 dadi. Tocca ✓ per riprendere la sua mano: parti dai suoi 1.000 punti.';
 
   @override
   String get tutorialInheritIntro =>

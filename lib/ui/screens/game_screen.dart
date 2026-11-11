@@ -2204,6 +2204,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // Reprise montrée par défaut quand elle est possible ; en rejeu, le choix que le
     // joueur avait fait.
     final resume = ValueNotifier<bool>(replayResumes ?? canResume);
+    // Réglage lu à l'ouverture : un seul bouton (le sélecteur décide) ou deux (voir
+    // [AppSettings.inheritedHandTwoButtons]).
+    final twoButtons = ref.read(settingsProvider).inheritedHandTwoButtons;
     showDialog<void>(
       context: context,
       barrierDismissible: widget.replayMode,
@@ -2285,6 +2288,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   engine,
                   canResume: canResume,
                   resume: resume,
+                  twoButtons: twoButtons,
                 ),
               ],
             ),
@@ -2359,7 +2363,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Le choix de main héritée : deux icônes qui tranchent — **valider** reprend la main
+  /// Le choix de main héritée, selon [AppSettings.inheritedHandTwoButtons]. Par défaut
+  /// ([twoButtons] faux) : **une seule icône ✓** et c'est le sélecteur qui décide — activé,
+  /// ✓ reprend la main, éteint, elle repart à 5 dés neufs (même quand la reprise est
+  /// impossible : le sélecteur est alors éteint et grisé, ✓ lance une main neuve) ; la
+  /// probabilité sous ✓ suit le sélecteur. Avec [twoButtons] : voir ci-dessous.
+  ///
+  /// Deux icônes qui tranchent — **valider** reprend la main
   /// laissée par le joueur précédent, **annuler** la refuse et repart à 5 dés neufs — au
   /// pied d'un sélecteur qui, lui, ne décide de rien : il ne sert qu'à lire le radar des
   /// scores avec ou sans la reprise (voir [_showInheritedHandDialog]), et son libellé dit
@@ -2382,6 +2392,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     GameEngine engine, {
     required bool canResume,
     required ValueNotifier<bool> resume,
+    required bool twoButtons,
   }) {
     final inert = widget.replayMode;
     final l10n = AppLocalizations.of(context);
@@ -2396,6 +2407,26 @@ class _GameScreenState extends ConsumerState<GameScreen>
           Navigator.of(dialogContext).pop();
           notifier.startTurn(useFullHand: fullHand);
         };
+
+    if (!twoButtons) {
+      // Un seul bouton : le sélecteur décide, ✓ transmet sa valeur.
+      return ValueListenableBuilder<bool>(
+        valueListenable: resume,
+        builder: (_, resumed, _) => _popupDecisionIcon(
+          dialogContext,
+          key: widget.tutorial?.keyFor(TutorialTarget.inheritTake),
+          icon: Icons.check,
+          onPressed: inert ? null : () => decide(fullHand: !resume.value)(),
+          background: scheme.primary,
+          foreground: scheme.onPrimary,
+          chosen: inert,
+          percent: resumed
+              ? _percentCaption(engine.nextTurnDice, engine.inheritedExtendedValues)
+              : _percentCaption(5, const {}),
+          tooltip: l10n.validateButton,
+        ),
+      );
+    }
 
     return ValueListenableBuilder<bool>(
       valueListenable: resume,

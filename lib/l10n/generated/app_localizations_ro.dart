@@ -613,6 +613,14 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Scutură pentru a arunca zarurile';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Fereastra de preluare: două butoane';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Dezactivat: un singur buton de validare, comutatorul decide preluarea. Activat: un buton pentru a prelua și unul pentru a refuza.';
+
+  @override
   String get settingsPausedGamesTitle => 'Jocuri în pauză';
 
   @override
@@ -803,7 +811,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Botul s-a oprit la 1.000 lăsând 2 zaruri. Lasă „Mână reluată” activat și confirmă: pornești de la cele 1.000 de puncte ale lui.';
+      'Botul s-a oprit la 1.000 lăsând 2 zaruri. Atinge ✓ ca să preiei mâna lui: pornești de la cele 1.000 de puncte ale lui.';
 
   @override
   String get tutorialInheritIntro =>

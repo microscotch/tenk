@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Mancino",
   "settingsControlsTitle": "Controlli",
   "settingsShakeToRollLabel": "Scuoti per lanciare i dadi",
+  "settingsInheritedHandTwoButtonsLabel": "Popup di ripresa: due pulsanti",
+  "settingsInheritedHandTwoButtonsSubtitle": "Disattivato: un solo pulsante di conferma, l'interruttore decide la ripresa. Attivato: un pulsante per riprendere e uno per rifiutare.",
   "rankFirstTooltip": "In testa",
   "rankSecondTooltip": "2° per punteggio",
   "rankThirdTooltip": "3° per punteggio",

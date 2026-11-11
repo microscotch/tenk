@@ -605,6 +605,14 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Rist for å kaste terningene';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Overtakelsesdialog: to knapper';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Av: én bekreftelsesknapp, bryteren avgjør overtakelsen. På: én knapp for å overta og én for å avslå.';
+
+  @override
   String get settingsPausedGamesTitle => 'Pausede spill';
 
   @override
@@ -795,7 +803,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Boten stoppet på 1000 og etterlot 2 terninger. La «Hånd overtatt» stå på og bekreft: du starter fra dens 1000 poeng.';
+      'Boten stoppet på 1000 og etterlot 2 terninger. Trykk på ✓ for å overta hånden: du starter fra dens 1000 poeng.';
 
   @override
   String get tutorialInheritIntro =>

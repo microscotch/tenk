@@ -46,6 +46,17 @@ void main() {
     expect(selector(tester).selected, {DiceSoundMode.synthetic});
   });
 
+  testWidgets('popup de reprise : un seul bouton par défaut, l\'interrupteur des réglages en donne deux', (tester) async {
+    await pumpSettings(tester, {});
+    expect(container.read(settingsProvider).inheritedHandTwoButtons, isFalse);
+
+    await tester.ensureVisible(find.text('Popup de reprise : deux boutons'));
+    await tester.tap(find.text('Popup de reprise : deux boutons'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(settingsProvider).inheritedHandTwoButtons, isTrue);
+  });
+
   testWidgets('sans effets sonores, le choix est grisé', (tester) async {
     await pumpSettings(tester, {'settings.soundEffectsEnabled': false});
     expect(selector(tester).onSelectionChanged, isNull);

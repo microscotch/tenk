@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Stângaci",
   "settingsControlsTitle": "Comenzi",
   "settingsShakeToRollLabel": "Scutură pentru a arunca zarurile",
+  "settingsInheritedHandTwoButtonsLabel": "Fereastra de preluare: două butoane",
+  "settingsInheritedHandTwoButtonsSubtitle": "Dezactivat: un singur buton de validare, comutatorul decide preluarea. Activat: un buton pentru a prelua și unul pentru a refuza.",
   "rankFirstTooltip": "În frunte",
   "rankSecondTooltip": "Al 2-lea la scor",
   "rankThirdTooltip": "Al 3-lea la scor",

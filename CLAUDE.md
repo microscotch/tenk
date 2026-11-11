@@ -416,7 +416,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   `assets/credits.md` as Markdown (`flutter_markdown_plus`), in English whatever the app language). To credit something, edit that file, not the code.
   It has one `###` paragraph per direct dependency of `pubspec.yaml` (`test/ui/credits_test.dart` fails when a new
   dependency has none), plus the music ("Next to You" by Joth, CC0, OpenGameArt) and the font.
-  - **The inherited-hand dialog** (`_showInheritedHandDialog`) is a decision made of **two buttons** and an **informative
+  - **The inherited-hand dialog** (`_showInheritedHandDialog`) has two modes, picked in the settings' Controls section
+    (`AppSettings.inheritedHandTwoButtons`, read when the popup opens). **Default (off): a single ✓ button and the
+    switch decides** — on, ✓ takes the hand over; off, ✓ starts five fresh dice (also when taking over is impossible:
+    the switch is then off and greyed, ✓ stays active); the percentage under ✓ follows the switch. **On: a decision made
+    of two buttons** and an **informative
     switch**: below the dice, the score and the grid / chart / stats buttons come the **switch** (no title: its label says
     "Main reprise" when on, "Nouvelle main" when off), then the **score radar** it drives (a `ScoreSheet`, read
     from the player's score plus the inherited points when the switch is on, from the score alone otherwise), then

@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Venstrehendt",
   "settingsControlsTitle": "Kontroller",
   "settingsShakeToRollLabel": "Rist for å kaste terningene",
+  "settingsInheritedHandTwoButtonsLabel": "Overtakelsesdialog: to knapper",
+  "settingsInheritedHandTwoButtonsSubtitle": "Av: én bekreftelsesknapp, bryteren avgjør overtakelsen. På: én knapp for å overta og én for å avslå.",
   "rankFirstTooltip": "I ledelsen",
   "rankSecondTooltip": "Nr. 2 på poeng",
   "rankThirdTooltip": "Nr. 3 på poeng",

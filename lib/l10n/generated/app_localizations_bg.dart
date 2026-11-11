@@ -605,6 +605,14 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Разклатете, за да хвърлите заровете';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Прозорец за поемане на ръката: два бутона';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Изключено: един бутон за потвърждение, превключвателят решава поемането. Включено: един бутон за поемане и един за отказ.';
+
+  @override
   String get settingsPausedGamesTitle => 'Игри на пауза';
 
   @override
@@ -796,7 +804,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Ботът спря на 1000 и остави 2 зара. Оставете „Поета ръка“ включено и потвърдете: започвате от неговите 1000 точки.';
+      'Ботът спря на 1000 и остави 2 зара. Докоснете ✓, за да поемете ръката му: започвате от неговите 1000 точки.';
 
   @override
   String get tutorialInheritIntro =>

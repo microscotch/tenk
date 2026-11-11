@@ -7,6 +7,7 @@ import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/state/game_save_store.dart';
+import 'package:le10000/state/settings_providers.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
@@ -193,6 +194,7 @@ void main() {
 
   group('popup de reprise de main', () {
     testWidgets('elle s\'affiche dans le rejeu, inerte, et le rejeu la referme', (tester) async {
+      container.read(settingsProvider.notifier).setInheritedHandTwoButtons(true);
       await pumpReplay(tester, humans, scenario(humans, inheritedChoice));
 
       await pumpUntil(tester, () => handPopup.evaluate().isNotEmpty);

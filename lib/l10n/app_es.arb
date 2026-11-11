@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Zurdo",
   "settingsControlsTitle": "Controles",
   "settingsShakeToRollLabel": "Agitar para tirar los dados",
+  "settingsInheritedHandTwoButtonsLabel": "Ventana de reanudación: dos botones",
+  "settingsInheritedHandTwoButtonsSubtitle": "Desactivado: un solo botón de validar, el interruptor decide la reanudación. Activado: un botón para reanudar y otro para rechazar.",
   "rankFirstTooltip": "En cabeza",
   "rankSecondTooltip": "2.º en puntuación",
   "rankThirdTooltip": "3.º en puntuación",

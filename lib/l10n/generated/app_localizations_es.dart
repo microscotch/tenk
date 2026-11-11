@@ -606,6 +606,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Agitar para tirar los dados';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Ventana de reanudación: dos botones';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Desactivado: un solo botón de validar, el interruptor decide la reanudación. Activado: un botón para reanudar y otro para rechazar.';
+
+  @override
   String get settingsPausedGamesTitle => 'Partidas en pausa';
 
   @override
@@ -798,7 +806,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'El bot se plantó en 1000 dejando 2 dados. Deja «Mano retomada» activado y confirma: partes de sus 1000 puntos.';
+      'El bot se plantó en 1000 dejando 2 dados. Toca ✓ para retomar su mano: partes de sus 1000 puntos.';
 
   @override
   String get tutorialInheritIntro =>

@@ -605,6 +605,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Shake to roll the dice';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Inherited-hand popup: two buttons';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Off: a single validate button, the switch decides whether to take the hand over. On: one button to take it, one to refuse.';
+
+  @override
   String get settingsPausedGamesTitle => 'Paused games';
 
   @override
@@ -794,7 +802,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'The bot stopped at 1,000 leaving 2 dice. Leave “Hand taken over” on and confirm: you start from its 1,000 points.';
+      'The bot stopped at 1,000 leaving 2 dice. Tap ✓ to take its hand over: you start from its 1,000 points.';
 
   @override
   String get tutorialInheritIntro =>

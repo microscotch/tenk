@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Canhoto",
   "settingsControlsTitle": "Controlos",
   "settingsShakeToRollLabel": "Agitar para lançar os dados",
+  "settingsInheritedHandTwoButtonsLabel": "Janela de retoma: dois botões",
+  "settingsInheritedHandTwoButtonsSubtitle": "Desligado: um único botão de validar, o interruptor decide a retoma. Ligado: um botão para retomar e outro para recusar.",
   "rankFirstTooltip": "Na liderança",
   "rankSecondTooltip": "2.º em pontuação",
   "rankThirdTooltip": "3.º em pontuação",

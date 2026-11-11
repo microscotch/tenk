@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Vasenkätinen",
   "settingsControlsTitle": "Ohjaimet",
   "settingsShakeToRollLabel": "Heitä nopat ravistamalla",
+  "settingsInheritedHandTwoButtonsLabel": "Käden jatkamisen ikkuna: kaksi painiketta",
+  "settingsInheritedHandTwoButtonsSubtitle": "Pois: yksi vahvistuspainike, kytkin ratkaisee jatkamisen. Päällä: yksi painike jatkamiseen ja toinen hylkäämiseen.",
   "rankFirstTooltip": "Johdossa",
   "rankSecondTooltip": "2. pisteissä",
   "rankThirdTooltip": "3. pisteissä",

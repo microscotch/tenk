@@ -606,6 +606,14 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Heitä nopat ravistamalla';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Käden jatkamisen ikkuna: kaksi painiketta';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Pois: yksi vahvistuspainike, kytkin ratkaisee jatkamisen. Päällä: yksi painike jatkamiseen ja toinen hylkäämiseen.';
+
+  @override
   String get settingsPausedGamesTitle => 'Tauolla olevat pelit';
 
   @override
@@ -797,7 +805,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Botti lopetti 1000:een jättäen 2 noppaa. Jätä ”Käsi otettu haltuun” päälle ja vahvista: aloitat sen 1000 pisteestä.';
+      'Botti lopetti 1000:een jättäen 2 noppaa. Napauta ✓ ottaaksesi sen käden haltuun: aloitat sen 1000 pisteestä.';
 
   @override
   String get tutorialInheritIntro =>

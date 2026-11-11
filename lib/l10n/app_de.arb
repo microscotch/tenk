@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Linkshänder",
   "settingsControlsTitle": "Steuerung",
   "settingsShakeToRollLabel": "Schütteln zum Würfeln",
+  "settingsInheritedHandTwoButtonsLabel": "Übernahme-Dialog: zwei Schaltflächen",
+  "settingsInheritedHandTwoButtonsSubtitle": "Aus: nur eine Bestätigungsschaltfläche, der Schalter entscheidet über die Übernahme. An: eine Schaltfläche zum Übernehmen, eine zum Ablehnen.",
   "rankFirstTooltip": "In Führung",
   "rankSecondTooltip": "2. nach Punkten",
   "rankThirdTooltip": "3. nach Punkten",

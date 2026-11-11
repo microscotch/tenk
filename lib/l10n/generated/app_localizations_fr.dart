@@ -606,6 +606,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Secouer pour lancer les dés';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Popup de reprise : deux boutons';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Désactivé : un seul bouton de validation, le sélecteur décide de la reprise. Activé : un bouton pour reprendre, un pour refuser.';
+
+  @override
   String get settingsPausedGamesTitle => 'Parties en pause';
 
   @override
@@ -798,7 +806,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Le bot s\'est arrêté à 1000 en laissant 2 dés. Laissez « Main reprise » activé et validez : vous partez de ses 1000 points.';
+      'Le bot s\'est arrêté à 1000 en laissant 2 dés. Touchez ✓ pour reprendre sa main : vous partez de ses 1000 points.';
 
   @override
   String get tutorialInheritIntro =>

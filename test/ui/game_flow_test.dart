@@ -372,6 +372,7 @@ void main() {
       (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
+    container.read(settingsProvider.notifier).setInheritedHandTwoButtons(true);
 
     // Le joueur précédent a mis de côté un as, relancé, puis gardé deux cinq
     // (300 points en tout) et laissé 2 dés : la popup doit montrer ces 3 dés
@@ -502,11 +503,16 @@ void main() {
         ],
       );
 
-  Future<ProviderContainer> pumpInheritedHandPopup(WidgetTester tester, {required bool rightHanded}) async {
+  Future<ProviderContainer> pumpInheritedHandPopup(
+    WidgetTester tester, {
+    required bool rightHanded,
+    bool twoButtons = true,
+  }) async {
     final container = ProviderContainer(
       overrides: [currentSeatRightHandedProvider.overrideWithValue(rightHanded)],
     );
     addTearDown(container.dispose);
+    container.read(settingsProvider.notifier).setInheritedHandTwoButtons(twoButtons);
     container.read(gameProvider.notifier).debugLoadState(
           inheritedHandEngine(),
           const GameSetup(playerNames: ['A', 'B']),
@@ -641,6 +647,43 @@ void main() {
       await tester.pump();
       expect(find.text('Main reprise'), findsOneWidget);
       expect(potentialOf(tester), 2700);
+    });
+  });
+
+  group('popup de reprise par défaut : un seul bouton, le sélecteur décide', () {
+    Finder validate() => inDialog(find.byTooltip('Valider'));
+    SwitchListTile selector(WidgetTester tester) =>
+        tester.widget<SwitchListTile>(find.byKey(const ValueKey('inherited-hand-resume')));
+
+    testWidgets('pas de bouton « Nouvelle main » ; valider reprend la main, sélecteur activé', (tester) async {
+      final container = await pumpInheritedHandPopup(tester, rightHanded: true, twoButtons: false);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(inDialog(find.byTooltip('Nouvelle main')), findsNothing);
+      expect(validate(), findsOneWidget);
+      expect(selector(tester).value, isTrue);
+
+      await tester.tap(validate());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 2);
+      expect(container.read(gameProvider)!.activeTurn!.bankedScore, 300);
+    });
+
+    testWidgets('sélecteur éteint, valider repart sur une main neuve de 5 dés', (tester) async {
+      final container = await pumpInheritedHandPopup(tester, rightHanded: true, twoButtons: false);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.byKey(const ValueKey('inherited-hand-resume')));
+      await tester.pump();
+      expect(find.byType(AlertDialog), findsOneWidget, reason: 'le sélecteur seul ne ferme rien');
+
+      await tester.tap(validate());
+      await tester.pumpAndSettle();
+
+      expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
+      expect(container.read(gameProvider)!.activeTurn!.bankedScore, 0);
     });
   });
 
@@ -1146,6 +1189,7 @@ void main() {
   testWidgets('popup de main héritée sans issue : l\'icône de reprise reste visible mais inerte', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
+    container.read(settingsProvider.notifier).setInheritedHandTwoButtons(true);
 
     // Une partie en cours ne s'arrête plus jamais sur ce choix (voir le test
     // "une main héritée sans issue ne pose aucune question") : la popup n'a
@@ -1713,6 +1757,7 @@ void main() {
   testWidgets('le choix de main héritée ouvre une popup dédiée qui relance directement', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
+    container.read(settingsProvider.notifier).setInheritedHandTwoButtons(true);
 
     var engine = GameEngine.newGame(['A', 'B']);
     engine = engine.copyWith(nextTurnDice: 3); // A hérite de 3 dés d'un tour précédent
@@ -2911,12 +2956,22 @@ void main() {
 /// transition : on retouche tant que la fenêtre est là.
 Future<void> dismissInheritedHand(WidgetTester tester, {bool resume = false}) async {
   final selector = find.byKey(const ValueKey('inherited-hand-resume'));
+  final twoButtons = find.descendant(of: find.byType(AlertDialog), matching: find.byTooltip('Nouvelle main'));
+  // Un seul bouton (réglage par défaut) : ✓ transmet le sélecteur, qu'on règle d'abord.
+  final single = twoButtons.evaluate().isEmpty;
   final button = find.descendant(
     of: find.byType(AlertDialog),
-    matching: find.byTooltip(resume ? 'Valider' : 'Nouvelle main'),
+    matching: find.byTooltip(resume || single ? 'Valider' : 'Nouvelle main'),
   );
   for (var i = 0; i < 5 && selector.evaluate().isNotEmpty; i++) {
     await tester.pump(const Duration(milliseconds: 400));
+    if (single && selector.evaluate().isNotEmpty) {
+      final switchTile = tester.widget<SwitchListTile>(selector);
+      if (switchTile.onChanged != null && switchTile.value != resume) {
+        await tester.tap(selector, warnIfMissed: false);
+        await tester.pump();
+      }
+    }
     await tester.tap(button, warnIfMissed: false);
     await tester.pumpAndSettle();
   }

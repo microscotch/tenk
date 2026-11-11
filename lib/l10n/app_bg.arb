@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Левичар",
   "settingsControlsTitle": "Управление",
   "settingsShakeToRollLabel": "Разклатете, за да хвърлите заровете",
+  "settingsInheritedHandTwoButtonsLabel": "Прозорец за поемане на ръката: два бутона",
+  "settingsInheritedHandTwoButtonsSubtitle": "Изключено: един бутон за потвърждение, превключвателят решава поемането. Включено: един бутон за поемане и един за отказ.",
   "rankFirstTooltip": "Води",
   "rankSecondTooltip": "2-ри по точки",
   "rankThirdTooltip": "3-ти по точки",

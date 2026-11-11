@@ -1094,6 +1094,18 @@ abstract class AppLocalizations {
   /// **'Secouer pour lancer les dés'**
   String get settingsShakeToRollLabel;
 
+  /// Interrupteur des réglages (Contrôles) : la popup de reprise de main a deux boutons.
+  ///
+  /// In fr, this message translates to:
+  /// **'Popup de reprise : deux boutons'**
+  String get settingsInheritedHandTwoButtonsLabel;
+
+  /// Explication de ce réglage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivé : un seul bouton de validation, le sélecteur décide de la reprise. Activé : un bouton pour reprendre, un pour refuser.'**
+  String get settingsInheritedHandTwoButtonsSubtitle;
+
   /// Titre de la section réglages consacrée aux parties en pause.
   ///
   /// In fr, this message translates to:
@@ -1403,7 +1415,7 @@ abstract class AppLocalizations {
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le bot s\'est arrêté à 1000 en laissant 2 dés. Laissez « Main reprise » activé et validez : vous partez de ses 1000 points.'**
+  /// **'Le bot s\'est arrêté à 1000 en laissant 2 dés. Touchez ✓ pour reprendre sa main : vous partez de ses 1000 points.'**
   String get tutorialInheritTake;
 
   /// Leçon du tutoriel : titre ou texte d'une bulle (voir lib/game/tutorial.dart).

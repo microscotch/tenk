@@ -198,6 +198,8 @@
   "settingsHandednessLeft": "Vänsterhänt",
   "settingsControlsTitle": "Kontroller",
   "settingsShakeToRollLabel": "Skaka för att kasta tärningarna",
+  "settingsInheritedHandTwoButtonsLabel": "Dialogen för övertagande: två knappar",
+  "settingsInheritedHandTwoButtonsSubtitle": "Av: en enda bekräftelseknapp, reglaget avgör övertagandet. På: en knapp för att ta över och en för att avstå.",
   "rankFirstTooltip": "I ledningen",
   "rankSecondTooltip": "2:a på poäng",
   "rankThirdTooltip": "3:e på poäng",

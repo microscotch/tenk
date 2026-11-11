@@ -608,6 +608,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsShakeToRollLabel => 'Schütteln zum Würfeln';
 
   @override
+  String get settingsInheritedHandTwoButtonsLabel =>
+      'Übernahme-Dialog: zwei Schaltflächen';
+
+  @override
+  String get settingsInheritedHandTwoButtonsSubtitle =>
+      'Aus: nur eine Bestätigungsschaltfläche, der Schalter entscheidet über die Übernahme. An: eine Schaltfläche zum Übernehmen, eine zum Ablehnen.';
+
+  @override
   String get settingsPausedGamesTitle => 'Pausierte Spiele';
 
   @override
@@ -801,7 +809,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialInheritTake =>
-      'Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Lass „Hand übernommen“ eingeschaltet und bestätige: Du startest mit seinen 1.000 Punkten.';
+      'Der Bot hat bei 1.000 aufgehört und 2 Würfel übrig gelassen. Tippe auf ✓, um seine Hand zu übernehmen: Du startest mit seinen 1.000 Punkten.';
 
   @override
   String get tutorialInheritIntro =>

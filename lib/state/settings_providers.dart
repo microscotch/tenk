@@ -65,6 +65,11 @@ class AppSettings {
   /// développeur d'Android, et on l'éteint depuis les options avancées.
   final bool advancedMode;
 
+  /// La popup de reprise de main héritée : faux (par défaut), un seul bouton de validation
+  /// et c'est le sélecteur « Main reprise » qui décide ; vrai, deux boutons (✗ nouvelle
+  /// main, ✓ reprendre) qui décident chacun, le sélecteur ne réglant plus que le radar.
+  final bool inheritedHandTwoButtons;
+
   /// Le thème choisi ; nul tant qu'il n'a jamais été choisi — l'app le propose
   /// alors au lancement (voir `launchScreenFor`) et reste sombre en attendant.
   final ThemeChoice? themeChoice;
@@ -118,6 +123,7 @@ class AppSettings {
     this.musicTrack = MusicTrack.nextToYou,
     this.soundEffectsEnabled = true,
     this.advancedMode = false,
+    this.inheritedHandTwoButtons = false,
     this.themeChoice,
     this.confirmBeforeDeleteGame = true,
     this.shakeToRollEnabled = false,
@@ -142,6 +148,7 @@ class AppSettings {
     MusicTrack? musicTrack,
     bool? soundEffectsEnabled,
     bool? advancedMode,
+    bool? inheritedHandTwoButtons,
     ThemeChoice? themeChoice,
     bool? confirmBeforeDeleteGame,
     bool? shakeToRollEnabled,
@@ -162,6 +169,7 @@ class AppSettings {
       musicTrack: musicTrack ?? this.musicTrack,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       advancedMode: advancedMode ?? this.advancedMode,
+      inheritedHandTwoButtons: inheritedHandTwoButtons ?? this.inheritedHandTwoButtons,
       themeChoice: themeChoice ?? this.themeChoice,
       confirmBeforeDeleteGame: confirmBeforeDeleteGame ?? this.confirmBeforeDeleteGame,
       shakeToRollEnabled: shakeToRollEnabled ?? this.shakeToRollEnabled,
@@ -189,6 +197,7 @@ const _keyMusicEnabled = 'settings.musicEnabled';
 const _keyMusicTrack = 'settings.musicTrack';
 const _keySoundEffectsEnabled = 'settings.soundEffectsEnabled';
 const _keyAdvancedMode = 'settings.advancedMode';
+const _keyInheritedHandTwoButtons = 'settings.inheritedHandTwoButtons';
 const _keyThemeChoice = 'settings.themeChoice';
 const _keyConfirmBeforeDeleteGame = 'settings.confirmBeforeDeleteGame';
 // `settings.aiDifficulty` n'est plus lue : tous les bots jouent au niveau
@@ -229,6 +238,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
             MusicTrack.nextToYou,
         soundEffectsEnabled: prefs.getBool(_keySoundEffectsEnabled) ?? true,
         advancedMode: prefs.getBool(_keyAdvancedMode) ?? false,
+        inheritedHandTwoButtons: prefs.getBool(_keyInheritedHandTwoButtons) ?? false,
         themeChoice: ThemeChoice.values.where((t) => t.name == prefs.getString(_keyThemeChoice)).firstOrNull,
         confirmBeforeDeleteGame: prefs.getBool(_keyConfirmBeforeDeleteGame) ?? true,
         shakeToRollEnabled: prefs.getBool(_keyShakeToRollEnabled) ?? false,
@@ -308,6 +318,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   void setThemeChoice(ThemeChoice choice) {
     state = state.copyWith(themeChoice: choice);
     _save(_keyThemeChoice, choice.name);
+  }
+
+  void setInheritedHandTwoButtons(bool enabled) {
+    state = state.copyWith(inheritedHandTwoButtons: enabled);
+    _save(_keyInheritedHandTwoButtons, enabled);
   }
 
   void setAdvancedMode(bool enabled) {
