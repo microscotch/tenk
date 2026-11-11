@@ -129,8 +129,13 @@ Map<String, AvatarLook> avatarLooksFor(
 /// jeu (le pseudo du siège) : vide hors partie en ligne. Un siège de bot, ou qui n'a rien
 /// choisi, n'y figure pas.
 final remoteAvatarLooksProvider = Provider<Map<String, AvatarLook>>((ref) {
-  if (!ref.watch(gameProvider.notifier).isOnline) return const {};
+  // Les deux dépendances d'abord : `isOnline` n'est pas réactif, et un provider construit
+  // une fois la partie posée mais avant que le lien en ligne le soit resterait vide à jamais
+  // (un invité ne voyait alors que sa propre pastille). Chaque changement d'état de partie
+  // ou de salon le relit.
+  ref.watch(gameProvider);
   final seats = ref.watch(onlineSessionProvider.select((s) => s.seats));
+  if (!ref.read(gameProvider.notifier).isOnline) return const {};
   return {for (final seat in seats) seat.name: ?seat.avatar};
 });
 

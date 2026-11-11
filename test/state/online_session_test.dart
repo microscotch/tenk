@@ -672,6 +672,25 @@ void main() {
       expect(looks['Bob']?.color, 'teal');
     });
 
+    test('un provider lu avant la partie en ligne (salon, invité) montre quand même les adversaires', () async {
+      await withMyProfile();
+      // Lu hors partie en ligne : il ne doit pas rester figé à vide ensuite.
+      expect(container.read(remoteAvatarLooksProvider), isEmpty);
+      await joinedAndStarted(1, serverJournal());
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [
+          SeatInfo(name: 'Anna', connected: true, color: 'rose', animal: 'owl'),
+          SeatInfo(name: 'Bob', connected: true),
+        ],
+        hostSeat: 0,
+      ));
+      await settle();
+
+      expect(container.read(remoteAvatarLooksProvider)['Anna'], const AvatarLook(color: 'rose', animal: 'owl'));
+    });
+
     test('un adversaire qui n\'a rien annoncé garde la lettre de son pseudo', () async {
       await withMyProfile();
       await joinedAndStarted(1, serverJournal());
