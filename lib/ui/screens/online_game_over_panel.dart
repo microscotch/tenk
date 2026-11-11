@@ -70,7 +70,10 @@ class _OnlineGameOverPanelState extends ConsumerState<OnlineGameOverPanel> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     ref.listen<int>(onlineSessionProvider.select((s) => s.gameSerial), (previous, next) {
-      if (previous != null && next != previous) _openRematch();
+      // Une HAUSSE seulement : quitter le salon remet la session à zéro (le numéro retombe à 0),
+      // et cet écran, encore monté le temps de sa transition de sortie, rouvrirait sinon une
+      // partie vide par-dessus l'accueil (visible dès la seconde partie d'une revanche).
+      if (previous != null && next > previous) _openRematch();
     });
     ref.listen(onlineNoticeProvider, (previous, next) {
       if (next == null || next.serial == previous?.serial) return;

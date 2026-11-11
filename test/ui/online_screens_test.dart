@@ -19,6 +19,7 @@ import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/screens/online_dice_off_screen.dart';
 import 'package:le10000/ui/screens/online_entry_screen.dart';
 import 'package:le10000/ui/screens/online_room_screen.dart';
+import 'package:le10000/ui/screens/setup_screen.dart';
 import 'package:le10000/ui/share.dart';
 import 'package:le10000/ui/widgets/emotes.dart';
 import 'package:le10000/ui/widgets/player_avatar.dart';
@@ -970,6 +971,63 @@ void main() {
       expect(find.byType(GameScreen), findsOneWidget);
       expect(find.byType(GameOverScreen), findsNothing);
       expect(container.read(gameProvider)!.gameOver, isFalse);
+    });
+
+    testWidgets('après une revanche, la fin de la seconde partie ramène à l\'accueil, pas à une page vide', (tester) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      room(RoomPhase.playing);
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: _startedJournal()));
+      await tester.pump(const Duration(milliseconds: 20));
+      await pump(
+        tester,
+        Navigator(
+          onGenerateRoute: (_) => MaterialPageRoute<void>(
+            settings: const RouteSettings(name: SetupScreen.routeName),
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const GameScreen())),
+                child: const Text('accueil'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('accueil'));
+      await tester.pumpAndSettle();
+
+      final full = journalWithFaces(setup, 5, playScriptedGame(setup, 5).actions);
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: full));
+      room(RoomPhase.over);
+      await tester.pumpAndSettle();
+      expect(find.byType(GameOverScreen), findsOneWidget);
+
+      transport.current.serverSends(ServerMessage.rematch(status: RematchStatus.pending, proposerSeat: 1, remainingMs: 45000, answers: const {1: true}));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.ensureVisible(find.text('Accepter'));
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 1));
+      transport.current.serverSends(ServerMessage.snapshot(
+        names: const ['Bob', 'Anna'],
+        actions: [GameAction.presetOrder(const [0, 1]), GameAction.startTurn(useFullHand: false)],
+      ));
+      room(RoomPhase.playing);
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(GameScreen), findsOneWidget);
+
+      // La seconde partie se termine à son tour, puis on quitte l'écran de fin.
+      transport.current.serverSends(ServerMessage.snapshot(names: names, actions: full));
+      room(RoomPhase.over);
+      await tester.pumpAndSettle();
+      expect(find.byType(GameOverScreen), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('accueil'), findsOneWidget, reason: 'un seul retour suffit pour revenir à l\'accueil');
+      expect(find.byType(GameScreen), findsNothing);
     });
 
     testWidgets('refuser la revanche ramène à l\'accueil, hors du salon', (tester) async {
