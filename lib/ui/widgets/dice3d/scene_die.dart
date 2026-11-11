@@ -56,6 +56,9 @@ class Scene3DDie extends StatefulWidget {
   final DieVisualState state;
   final VoidCallback? onTap;
   final Object? rollToken;
+
+  /// Appelé quand le lancer déclenché par [rollToken] se termine : le dé est immobile.
+  final VoidCallback? onRollEnd;
   final Color? bodyColor;
   final double size;
   final int? restSeed;
@@ -66,6 +69,7 @@ class Scene3DDie extends StatefulWidget {
     required this.state,
     this.onTap,
     this.rollToken,
+    this.onRollEnd,
     this.bodyColor,
     required this.size,
     this.restSeed,
@@ -113,6 +117,7 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _scene.add(_dieNode);
+    _controller.addStatusListener(_reportRollEnd);
     if (widget.rollToken != null) _startRoll();
     // Un dé neuf dont les textures sont déjà en cache (c'est le cas d'un dé qui
     // passe de la piste à la main courante) se construit tout de suite : sinon
@@ -140,9 +145,18 @@ class _Scene3DDieState extends State<Scene3DDie> with SingleTickerProviderStateM
   void _startRoll() {
     _lastRollToken = widget.rollToken;
     _motion = DieRollMotion.random(_random, restSeed: widget.restSeed);
+    _rolling = true;
     _controller
       ..duration = _motion.duration
       ..forward(from: 0);
+  }
+
+  bool _rolling = false;
+
+  void _reportRollEnd(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !_rolling) return;
+    _rolling = false;
+    widget.onRollEnd?.call();
   }
 
   @override

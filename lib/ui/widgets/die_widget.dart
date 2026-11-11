@@ -28,6 +28,9 @@ class DieWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final Object? rollToken;
 
+  /// Appelé quand le lancer déclenché par [rollToken] se termine : le dé est immobile.
+  final VoidCallback? onRollEnd;
+
   /// Couleur de corps du dé ; null pour la couleur ivoire par défaut (mode
   /// "uniforme" des préférences). Voir `dice_colors.dart` pour le mode
   /// "panaché", qui attribue une couleur différente par dé de la rangée.
@@ -69,6 +72,7 @@ class DieWidget extends StatelessWidget {
     required this.state,
     this.onTap,
     this.rollToken,
+    this.onRollEnd,
     this.bodyColor,
     this.size = defaultSize,
     this.restSeed,
@@ -77,10 +81,10 @@ class DieWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (Scene3DDie.isSupported) {
-      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size, restSeed: restSeed);
+      return Scene3DDie(value: value, state: state, onTap: onTap, rollToken: rollToken, onRollEnd: onRollEnd, bodyColor: bodyColor, size: size, restSeed: restSeed);
     }
     return _TransformCubeDie(
-        value: value, state: state, onTap: onTap, rollToken: rollToken, bodyColor: bodyColor, size: size, restSeed: restSeed);
+        value: value, state: state, onTap: onTap, rollToken: rollToken, onRollEnd: onRollEnd, bodyColor: bodyColor, size: size, restSeed: restSeed);
   }
 }
 
@@ -276,6 +280,7 @@ class _TransformCubeDie extends StatefulWidget {
   final DieVisualState state;
   final VoidCallback? onTap;
   final Object? rollToken;
+  final VoidCallback? onRollEnd;
   final Color? bodyColor;
   final double size;
   final int? restSeed;
@@ -285,6 +290,7 @@ class _TransformCubeDie extends StatefulWidget {
     required this.state,
     this.onTap,
     this.rollToken,
+    this.onRollEnd,
     this.bodyColor,
     required this.size,
     this.restSeed,
@@ -361,7 +367,8 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
     super.initState();
     _lastRollToken = widget.rollToken;
     _controller = AnimationController(vsync: this, duration: _motion.duration)
-      ..addListener(() => setState(() {}));
+      ..addListener(() => setState(() {}))
+      ..addStatusListener(_reportRollEnd);
     if (widget.rollToken != null) {
       _startRoll();
     } else {
@@ -380,9 +387,18 @@ class _TransformCubeDieState extends State<_TransformCubeDie> with SingleTickerP
 
   void _startRoll() {
     _motion = DieRollMotion.random(_random, restSeed: widget.restSeed);
+    _rolling = true;
     _controller
       ..duration = _motion.duration
       ..forward(from: 0);
+  }
+
+  bool _rolling = false;
+
+  void _reportRollEnd(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !_rolling) return;
+    _rolling = false;
+    widget.onRollEnd?.call();
   }
 
   @override

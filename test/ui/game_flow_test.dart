@@ -1158,7 +1158,7 @@ void main() {
     // Au-delà de la brève inertie qui suit une transition (300 ms), les dés roulent encore.
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
-        reason: 'les dés roulent encore : on ne relance pas');
+        reason: 'les dés roulent encore : on ne relance pas (125 ms après le dernier dé immobile, pas avant)');
 
     await tester.pump(DieWidget.maxRollDuration);
     await tester.pump(const Duration(milliseconds: 400));

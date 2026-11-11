@@ -540,6 +540,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
   bool _rollSettled = true;
   Timer? _rollSettleTimer;
 
+  /// Le bouton « Lancer » ne redevient actif que [_rollButtonDelay] après l'immobilisation
+  /// du DERNIER dé du lancer, signalée par les dés eux-mêmes (`DieWidget.onRollEnd`) — et non
+  /// à un délai fixe, que l'animation réelle (image de départ, charge de la scène 3D)
+  /// pouvait dépasser. Vrai au repos ; faux dès qu'un lancer arrive.
+  bool _rollButtonReady = true;
+  int _diceStopped = 0;
+  Timer? _rollButtonTimer;
+  static const Duration _rollButtonDelay = Duration(milliseconds: 125);
+
   /// Une fois le lancer immobilisé, encore un délai avant que les dés
   /// retenus par défaut (groupes obligatoires + nombre de 5 par défaut, voir
   /// [_defaultKeepCount]) ne migrent en fondu de la zone "Piste" vers la zone
@@ -754,6 +763,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     _bustRevealTimer?.cancel();
     _rollSettleTimer?.cancel();
+    _rollButtonTimer?.cancel();
+    _rollButtonReady = true;
     _previewMoveTimer?.cancel();
     _previewFrameTimer?.cancel();
     _bustKeyBeingRevealed = null;
@@ -821,6 +832,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _pendingTimer?.cancel();
     _bustRevealTimer?.cancel();
     _rollSettleTimer?.cancel();
+    _rollButtonTimer?.cancel();
     _previewMoveTimer?.cancel();
     _previewFrameTimer?.cancel();
     for (final timer in _bubbleTimers.values) {
@@ -975,6 +987,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// Un dé du lancer [roll] vient de s'immobiliser : quand ils le sont tous, le bouton
+  /// « Lancer » se réactive après [_rollButtonDelay].
+  void _onDieStopped(RollAnalysis roll) {
+    if (!mounted || ref.read(gameProvider)?.activeTurn?.pendingRoll != roll) return;
+    if (++_diceStopped < roll.faces.length) return;
+    _rollButtonTimer?.cancel();
+    _rollButtonTimer = Timer(_rollButtonDelay, () {
+      if (mounted) setState(() => _rollButtonReady = true);
+    });
+  }
+
   /// Programme, pour un [pendingRoll] fraîchement apparu (null = décision
   /// déjà appliquée, rien à programmer), la révélation du score dans les
   /// libellés une fois les dés immobilisés, puis — encore un peu plus tard —
@@ -985,15 +1008,24 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _rollSettleTimer?.cancel();
     _previewMoveTimer?.cancel();
     _previewFrameTimer?.cancel();
+    _rollButtonTimer?.cancel();
+    _diceStopped = 0;
     if (pendingRoll == null) {
+      _rollButtonReady = true;
       _rollSettled = true;
       _previewMoveRevealed = true;
       _previewFrameShown = true;
       return;
     }
     _rollSettled = false;
+    _rollButtonReady = false;
     _previewMoveRevealed = false;
     _previewFrameShown = false;
+    // Garde-fou : si les dés ne signalaient jamais leur arrêt (non affichés), le bouton ne
+    // restera pas inerte pour autant.
+    _rollButtonTimer = Timer(DieWidget.maxRollDuration * 2 + _rollButtonDelay, () {
+      if (mounted) setState(() => _rollButtonReady = true);
+    });
     _rollSettleTimer = Timer(DieWidget.maxRollDuration, () {
       if (!mounted) return;
       setState(() => _rollSettled = true);
@@ -2704,6 +2736,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     value: analysis.faces[i],
                     state: states[i],
                     rollToken: analysis,
+                    onRollEnd: () => _onDieStopped(analysis),
                     bodyColor: _diceColor(i),
                     size: size,
                     restSeed: _restSeed(_pendingRollIndex(turn.keptDiceThisTurn), keptDisplayOrder(analysis).indexOf(i)),
@@ -3167,7 +3200,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final turn = engine.activeTurn!;
     if (turn.busted) return;
     // Comme le bouton : pas de nouveau lancer tant que les dés roulent.
-    if (!_rollSettled) return;
+    if (!_rollSettled || !_rollButtonReady) return;
     _rollForHumanTurn(engine, turn);
   }
 
@@ -3286,7 +3319,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               // Inerte tant que les dés roulent (`_rollSettled`) : l'inertie brève d'après une
               // transition (`_guarded`, 300 ms) ne couvre pas toute l'animation du lancer, et le
               // bouton se réactivait avant que le résultat soit effectif.
-              onPressed: !forcedWin && _rollSettled && _tutorialAllows(engine, TutorialTarget.roll)
+              onPressed: !forcedWin && _rollSettled && _rollButtonReady && _tutorialAllows(engine, TutorialTarget.roll)
                   ? _guarded(onRoll)
                   : null,
               label: rollLabel,
