@@ -417,7 +417,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   It has one `###` paragraph per direct dependency of `pubspec.yaml` (`test/ui/credits_test.dart` fails when a new
   dependency has none), plus the music ("Next to You" by Joth, CC0, OpenGameArt) and the font.
   - **The bust popup's ✓ is a timer button** (`_showBustDialog`, `_TimerRing`): its border fills over
-    `AppSettings.bustPopupTimerSeconds` (20 s by default, an advanced option, 0 = no timer), then the popup closes by
+    `AppSettings.bustPopupTimerSeconds` (7 s by default, an advanced option, 0 = no timer), then the popup closes by
     itself exactly like a validation (`endBustedTurn`). The timer pauses while another route (grid, chart, stats) is on top
     of the popup, so it never pops that screen, and there is none in a tutorial lesson. In tests `pumpAndSettle` would run
     the ring to its end and close the popup, so `test/flutter_test_config.dart` sets `debugBustPopupTimerSeconds = 0`; the
