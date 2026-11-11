@@ -1048,6 +1048,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get onlineWaitingForHost => 'Väntar på att värden ska starta…';
 
   @override
+  String get onlineResumeDialogTitle => 'Återuppta onlinespelet?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Ett onlinespel pågår. Vill du gå med igen?';
+
+  @override
+  String get onlinePauseButton => 'Pausa';
+
+  @override
   String get onlineLeaveButton => 'Lämna';
 
   @override

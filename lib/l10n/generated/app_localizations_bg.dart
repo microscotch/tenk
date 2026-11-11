@@ -1050,6 +1050,16 @@ class AppLocalizationsBg extends AppLocalizations {
   String get onlineWaitingForHost => 'Изчакване домакинът да започне…';
 
   @override
+  String get onlineResumeDialogTitle => 'Продължаване на онлайн играта?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Има онлайн игра в ход. Искате ли да се върнете в нея?';
+
+  @override
+  String get onlinePauseButton => 'Пауза';
+
+  @override
   String get onlineLeaveButton => 'Напускане';
 
   @override

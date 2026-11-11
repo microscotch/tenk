@@ -1056,6 +1056,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onlineWaitingForHost => 'Warten, bis der Gastgeber startet …';
 
   @override
+  String get onlineResumeDialogTitle => 'Online-Spiel fortsetzen?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Ein Online-Spiel läuft. Möchtest du ihm wieder beitreten?';
+
+  @override
+  String get onlinePauseButton => 'Pausieren';
+
+  @override
   String get onlineLeaveButton => 'Verlassen';
 
   @override

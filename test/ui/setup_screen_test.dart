@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:le10000/l10n/generated/app_localizations.dart';
 import 'package:le10000/state/game_save_store.dart';
+import 'package:le10000/game/online/protocol.dart';
+import 'package:le10000/state/online_providers.dart';
+import 'package:le10000/state/online_transport.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/finished_games_screen.dart';
 import 'package:le10000/ui/screens/new_game_screen.dart';
@@ -17,6 +21,7 @@ import 'package:le10000/ui/widgets/app_title.dart';
 import 'package:le10000/ui/widgets/menu_die.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
+import '../test_helpers/fake_online.dart';
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
 
@@ -31,12 +36,15 @@ void main() {
     archived = FakeGameSaveStore();
   });
 
-  Future<ProviderContainer> pumpHome(WidgetTester tester) async {
+  Future<ProviderContainer> pumpHome(WidgetTester tester, {List<Override> extra = const [], FakeCredentialsStore? credentials}) async {
     final container = ProviderContainer(
       overrides: [
         gameSaveStoreProvider.overrideWithValue(paused),
         archivedGameSaveStoreProvider.overrideWithValue(archived),
         playerStoreProvider.overrideWithValue(FakePlayerStore()),
+        // Sans place gardée par défaut : le vrai magasin (SharedPreferences) n'existe pas ici.
+        onlineCredentialsStoreProvider.overrideWithValue(credentials ?? FakeCredentialsStore()),
+        ...extra,
       ],
     );
     addTearDown(container.dispose);
@@ -125,6 +133,61 @@ void main() {
     expect(find.byType(AlertDialog), findsOneWidget,
         reason: 'la refonte de l\'accueil ne doit pas avoir supprimé cette proposition');
     expect(find.textContaining('Facétieux Croupier'), findsOneWidget);
+  });
+
+  group('reprise proposée à l\'ouverture', () {
+    const saved = OnlineCredentials(url: 'ws://test/ws', code: 'ABCDE', token: 'abcdef0123456789abcdef0123456789');
+
+    List<Override> online(FakeTransport transport) => [
+          onlineTransportProvider.overrideWithValue(transport),
+          onlineServerUrlProvider.overrideWithValue('ws://test/ws'),
+        ];
+
+    testWidgets('une partie en ligne gardée passe avant les parties locales', (tester) async {
+      await paused.write(
+        buildResumableSavedGame(seed: 7, alias: 'Facétieux Croupier', playerNames: const ['Marie', 'Bob']),
+      );
+      await pumpHome(tester, extra: online(FakeTransport()), credentials: FakeCredentialsStore()..saved = saved);
+
+      expect(find.text('Reprendre la partie en ligne ?'), findsOneWidget);
+      expect(find.textContaining('Facétieux Croupier'), findsNothing);
+      expect(find.text('Annuler'), findsOneWidget);
+      expect(find.text('Valider'), findsOneWidget);
+    });
+
+    testWidgets('annuler laisse l\'accueil, sans ouvrir l\'entrée en ligne', (tester) async {
+      final transport = FakeTransport();
+      await pumpHome(tester, extra: online(transport), credentials: FakeCredentialsStore()..saved = saved);
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnlineEntryScreen), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(transport.channels, isEmpty);
+    });
+
+    testWidgets('valider rejoint la partie en ligne avec le jeton gardé', (tester) async {
+      final transport = FakeTransport();
+      await pumpHome(tester, extra: online(transport), credentials: FakeCredentialsStore()..saved = saved);
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(OnlineEntryScreen), findsOneWidget);
+      expect(transport.current.sent.last.type, ClientMessageType.rejoin);
+    });
+
+    testWidgets('sans partie en ligne gardée, la reprise locale s\'offre avec Annuler et Valider', (tester) async {
+      await paused.write(
+        buildResumableSavedGame(seed: 7, alias: 'Facétieux Croupier', playerNames: const ['Marie', 'Bob']),
+      );
+      await pumpHome(tester, extra: online(FakeTransport()));
+
+      expect(find.text('Reprendre la partie ?'), findsOneWidget);
+      expect(find.text('Annuler'), findsOneWidget);
+      expect(find.text('Valider'), findsOneWidget);
+      expect(find.text('Reprendre'), findsNothing);
+    });
   });
 
   testWidgets('chaque bouton actif ouvre son écran', (tester) async {

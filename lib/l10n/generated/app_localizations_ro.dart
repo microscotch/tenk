@@ -1058,6 +1058,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get onlineWaitingForHost => 'Se așteaptă ca gazda să înceapă…';
 
   @override
+  String get onlineResumeDialogTitle => 'Reiei jocul online?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Un joc online este în desfășurare. Vrei să te alături din nou?';
+
+  @override
+  String get onlinePauseButton => 'Pauză';
+
+  @override
   String get onlineLeaveButton => 'Ieși';
 
   @override

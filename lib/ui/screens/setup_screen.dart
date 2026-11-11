@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/game_save_store.dart';
+import '../../state/online_providers.dart';
+import '../../state/online_transport.dart';
 import '../../state/room_link_providers.dart';
 import '../navigation.dart';
 import '../route_observer.dart';
@@ -81,6 +84,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
 
   Future<void> _maybeOfferResume() async {
     if (!mounted) return;
+    // Une place gardée dans une partie en ligne passe avant toute partie locale.
+    // Un jeton illisible ne doit pas priver de la reprise locale.
+    final online = await ref.read(onlineSavedGameProvider.future).then<OnlineCredentials?>((c) => c, onError: (_) => null);
+    if (!mounted) return;
+    if (online != null && !ref.read(onlineSessionProvider).inRoom) {
+      await _offerOnlineResume();
+      return;
+    }
     final games = await ref.read(pausedGamesProvider.future);
     if (!mounted || games.isEmpty) return;
     // Un lien arrivé pendant le chargement de la liste passe avant la reprise.
@@ -94,7 +105,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
         content: Text(l10n.resumeLastGameDialogMessage(mostRecent.alias)),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancelButton)),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.resumeGameButton)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.validateButton)),
         ],
       ),
     );
@@ -102,6 +113,31 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with RouteAware {
       resumeSavedGame(context, ref, mostRecent);
     } else {
       // Un lien reçu pendant que la fenêtre était ouverte attendait sa fermeture.
+      _openPendingRoomCode();
+    }
+  }
+
+  /// Propose de rejoindre la partie en ligne dont la place est gardée : l'écran
+  /// d'entrée en ligne s'ouvre, et la reprise s'y fait comme par son bouton
+  /// « Reprendre la partie en ligne ».
+  Future<void> _offerOnlineResume() async {
+    if (_openPendingRoomCode()) return;
+    final l10n = AppLocalizations.of(context);
+    final resume = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.onlineResumeDialogTitle),
+        content: Text(l10n.onlineResumeDialogMessage),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancelButton)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.validateButton)),
+        ],
+      ),
+    );
+    if (resume == true && mounted) {
+      _open(const OnlineEntryScreen());
+      unawaited(ref.read(onlineSessionProvider.notifier).tryResume());
+    } else {
       _openPendingRoomCode();
     }
   }

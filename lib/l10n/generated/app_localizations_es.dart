@@ -1053,6 +1053,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onlineWaitingForHost => 'Esperando a que el anfitrión empiece…';
 
   @override
+  String get onlineResumeDialogTitle => '¿Reanudar la partida en línea?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Hay una partida en línea en curso. ¿Quieres volver a unirte?';
+
+  @override
+  String get onlinePauseButton => 'Pausar';
+
+  @override
   String get onlineLeaveButton => 'Salir';
 
   @override

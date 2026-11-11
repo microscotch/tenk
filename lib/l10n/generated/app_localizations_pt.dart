@@ -1053,6 +1053,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get onlineWaitingForHost => 'A aguardar que o anfitrião comece…';
 
   @override
+  String get onlineResumeDialogTitle => 'Retomar o jogo online?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Há um jogo online em curso. Quer voltar a ele?';
+
+  @override
+  String get onlinePauseButton => 'Pausa';
+
+  @override
   String get onlineLeaveButton => 'Sair';
 
   @override

@@ -1050,6 +1050,16 @@ class AppLocalizationsNb extends AppLocalizations {
   String get onlineWaitingForHost => 'Venter på at verten starter…';
 
   @override
+  String get onlineResumeDialogTitle => 'Gjenoppta nettspillet?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Et nettspill pågår. Vil du bli med igjen?';
+
+  @override
+  String get onlinePauseButton => 'Sett på pause';
+
+  @override
   String get onlineLeaveButton => 'Forlat';
 
   @override

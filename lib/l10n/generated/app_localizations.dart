@@ -1832,6 +1832,24 @@ abstract class AppLocalizations {
   /// **'En attente du lancement par l\'hôte…'**
   String get onlineWaitingForHost;
 
+  /// Titre de la popup d'accueil qui propose de rejoindre la partie en ligne en cours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la partie en ligne ?'**
+  String get onlineResumeDialogTitle;
+
+  /// Texte de la popup d'accueil qui propose de rejoindre la partie en ligne en cours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une partie en ligne est en cours. Voulez-vous la rejoindre ?'**
+  String get onlineResumeDialogMessage;
+
+  /// Troisième choix de la confirmation de sortie d'une partie en ligne : garder sa place et y revenir plus tard.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre en pause'**
+  String get onlinePauseButton;
+
   /// Bouton qui quitte le salon ou la partie en ligne.
   ///
   /// In fr, this message translates to:

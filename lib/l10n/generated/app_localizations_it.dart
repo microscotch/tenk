@@ -1056,6 +1056,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'In attesa che l\'ospitante avvii la partita…';
 
   @override
+  String get onlineResumeDialogTitle => 'Riprendere la partita online?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'C\'è una partita online in corso. Vuoi rientrarvi?';
+
+  @override
+  String get onlinePauseButton => 'Metti in pausa';
+
+  @override
   String get onlineLeaveButton => 'Esci';
 
   @override

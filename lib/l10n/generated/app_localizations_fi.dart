@@ -1052,6 +1052,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get onlineWaitingForHost => 'Odotetaan, että isäntä aloittaa…';
 
   @override
+  String get onlineResumeDialogTitle => 'Jatketaanko verkkopeliä?';
+
+  @override
+  String get onlineResumeDialogMessage =>
+      'Verkkopeli on käynnissä. Haluatko palata siihen?';
+
+  @override
+  String get onlinePauseButton => 'Tauko';
+
+  @override
   String get onlineLeaveButton => 'Poistu';
 
   @override
