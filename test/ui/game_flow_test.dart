@@ -1126,6 +1126,47 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('le bouton Lancer reste inerte tant que les dés roulent, et ne se réactive qu\'à leur arrêt',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['A', 'B']).startTurn();
+    engine = engine.copyWith(
+      players: [Player(name: 'A', hasEntered: true), Player(name: 'B')],
+      activeTurn: const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
+    );
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['A', 'B']),
+          // Un lancer qui marque (un as, un cinq) : ni craque ni choix de 5 qui change la forme.
+          random: ScriptedRandom([1, 2, 3]),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
+    await tester.tap(rollButton);
+    await tester.pump();
+    expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull, reason: 'le lancer est parti');
+
+    // Au-delà de la brève inertie qui suit une transition (300 ms), les dés roulent encore.
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
+        reason: 'les dés roulent encore : on ne relance pas');
+
+    await tester.pump(DieWidget.maxRollDuration);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.widget<FilledButton>(rollButton).onPressed, isNotNull,
+        reason: 'le résultat est effectif : le bouton redevient actif');
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('les commandes restent inertes juste après une transition, puis redeviennent actives',
       (tester) async {
     final container = ProviderContainer();

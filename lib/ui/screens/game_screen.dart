@@ -3166,6 +3166,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (ref.read(gameProvider.notifier).isObservedTurn(engine.currentPlayerIndex)) return;
     final turn = engine.activeTurn!;
     if (turn.busted) return;
+    // Comme le bouton : pas de nouveau lancer tant que les dés roulent.
+    if (!_rollSettled) return;
     _rollForHumanTurn(engine, turn);
   }
 
@@ -3281,7 +3283,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
           primary: KeyedSubtree(
             key: widget.tutorial?.keyFor(TutorialTarget.roll),
             child: _rollButton(
-              onPressed: !forcedWin && _tutorialAllows(engine, TutorialTarget.roll) ? _guarded(onRoll) : null,
+              // Inerte tant que les dés roulent (`_rollSettled`) : l'inertie brève d'après une
+              // transition (`_guarded`, 300 ms) ne couvre pas toute l'animation du lancer, et le
+              // bouton se réactivait avant que le résultat soit effectif.
+              onPressed: !forcedWin && _rollSettled && _tutorialAllows(engine, TutorialTarget.roll)
+                  ? _guarded(onRoll)
+                  : null,
               label: rollLabel,
             ),
           ),
