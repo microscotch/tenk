@@ -546,6 +546,10 @@ class AppLocalizationsBg extends AppLocalizations {
       'Автоматични действия на човешкия играч (мс)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Таймер на прозореца за провал (с, 0 = няма)';
+
+  @override
   String get settingsDiceTitle => 'Зарове';
 
   @override

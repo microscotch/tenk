@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Delay before an automatic action triggers on its own. 0 to disable.",
   "settingsAiDelayLabel": "AI messages (ms)",
   "settingsAutoActionDelayLabel": "Human player automatic actions (ms)",
+  "settingsBustPopupTimerLabel": "Bust popup timer (s, 0 = none)",
   "settingsDiceTitle": "Dice",
   "settingsDiceUniform": "Uniform",
   "settingsDiceVaried": "Mixed",

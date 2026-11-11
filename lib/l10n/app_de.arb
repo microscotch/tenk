@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Verzögerung, bevor eine automatische Aktion von selbst ausgelöst wird. 0 zum Deaktivieren.",
   "settingsAiDelayLabel": "KI-Nachrichten (ms)",
   "settingsAutoActionDelayLabel": "Automatische Aktionen des menschlichen Spielers (ms)",
+  "settingsBustPopupTimerLabel": "Timer des Patzer-Dialogs (s, 0 = keiner)",
   "settingsDiceTitle": "Würfel",
   "settingsDiceUniform": "Einheitlich",
   "settingsDiceVaried": "Bunt gemischt",

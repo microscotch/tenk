@@ -546,6 +546,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Human player automatic actions (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel => 'Bust popup timer (s, 0 = none)';
+
+  @override
   String get settingsDiceTitle => 'Dice';
 
   @override

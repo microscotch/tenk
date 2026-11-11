@@ -548,6 +548,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Azioni automatiche del giocatore umano (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Timer del popup di sfumata (s, 0 = nessuno)';
+
+  @override
   String get settingsDiceTitle => 'Dadi';
 
   @override

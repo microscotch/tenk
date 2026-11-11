@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Forsinkelse før en automatisk handling utløses av seg selv. 0 for å deaktivere.",
   "settingsAiDelayLabel": "KI-meldinger (ms)",
   "settingsAutoActionDelayLabel": "Automatiske handlinger for den menneskelige spilleren (ms)",
+  "settingsBustPopupTimerLabel": "Tidtaker for bust-dialogen (s, 0 = ingen)",
   "settingsDiceTitle": "Terninger",
   "settingsDiceUniform": "Ensfarget",
   "settingsDiceVaried": "Blandet",

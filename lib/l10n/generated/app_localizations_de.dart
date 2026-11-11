@@ -549,6 +549,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Automatische Aktionen des menschlichen Spielers (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Timer des Patzer-Dialogs (s, 0 = keiner)';
+
+  @override
   String get settingsDiceTitle => 'Würfel';
 
   @override

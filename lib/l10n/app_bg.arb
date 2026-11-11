@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Забавяне, преди автоматично действие да се задейства само. 0 за изключване.",
   "settingsAiDelayLabel": "Съобщения на ИИ (мс)",
   "settingsAutoActionDelayLabel": "Автоматични действия на човешкия играч (мс)",
+  "settingsBustPopupTimerLabel": "Таймер на прозореца за провал (с, 0 = няма)",
   "settingsDiceTitle": "Зарове",
   "settingsDiceUniform": "Еднакви",
   "settingsDiceVaried": "Разноцветни",

@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Fördröjning innan en automatisk åtgärd utlöses av sig själv. 0 för att inaktivera.",
   "settingsAiDelayLabel": "AI-meddelanden (ms)",
   "settingsAutoActionDelayLabel": "Automatiska åtgärder för den mänskliga spelaren (ms)",
+  "settingsBustPopupTimerLabel": "Timer för bust-dialogen (s, 0 = ingen)",
   "settingsDiceTitle": "Tärningar",
   "settingsDiceUniform": "Enfärgad",
   "settingsDiceVaried": "Blandad",

@@ -514,6 +514,8 @@
   "@settingsAiDelayLabel": {"description": "Libellé du champ réglant le délai d'auto-validation des actions IA."},
 
   "settingsAutoActionDelayLabel": "Actions automatiques du joueur humain (ms)",
+  "settingsBustPopupTimerLabel": "Minuteur de la popup de craque (s, 0 = aucun)",
+  "@settingsBustPopupTimerLabel": {"description": "Champ des options avancées : durée en secondes du minuteur de la popup de craque, qui la ferme toute seule (0 : pas de minuteur)."},
   "@settingsAutoActionDelayLabel": {"description": "Libellé du champ réglant le délai d'auto-validation des actions du joueur humain."},
 
   "settingsDiceTitle": "Dés",

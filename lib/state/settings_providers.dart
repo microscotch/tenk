@@ -47,6 +47,10 @@ class AppSettings {
   /// créé — l'app le demande alors au lancement.
   final String? myProfileId;
   final int aiMessageDelayMs;
+
+  /// Durée, en secondes, du bouton minuteur de la popup de craque : à son terme la popup
+  /// se ferme toute seule, comme si le joueur avait validé. 0 : pas de minuteur.
+  final int bustPopupTimerSeconds;
   final int autoActionDelayMs;
   final DiceColorMode diceColorMode;
   final DiceSoundMode diceSoundMode;
@@ -116,6 +120,7 @@ class AppSettings {
     this.playerName = '',
     this.myProfileId,
     this.aiMessageDelayMs = 1000,
+    this.bustPopupTimerSeconds = 20,
     this.autoActionDelayMs = 2000,
     this.diceColorMode = DiceColorMode.uniform,
     this.diceSoundMode = DiceSoundMode.realistic,
@@ -141,6 +146,7 @@ class AppSettings {
     String? playerName,
     String? myProfileId,
     int? aiMessageDelayMs,
+    int? bustPopupTimerSeconds,
     int? autoActionDelayMs,
     DiceColorMode? diceColorMode,
     DiceSoundMode? diceSoundMode,
@@ -162,6 +168,7 @@ class AppSettings {
       playerName: playerName ?? this.playerName,
       myProfileId: myProfileId ?? this.myProfileId,
       aiMessageDelayMs: aiMessageDelayMs ?? this.aiMessageDelayMs,
+      bustPopupTimerSeconds: bustPopupTimerSeconds ?? this.bustPopupTimerSeconds,
       autoActionDelayMs: autoActionDelayMs ?? this.autoActionDelayMs,
       diceColorMode: diceColorMode ?? this.diceColorMode,
       diceSoundMode: diceSoundMode ?? this.diceSoundMode,
@@ -190,6 +197,7 @@ const Object _unset = Object();
 const _keyPlayerName = 'settings.playerName';
 const _keyMyProfileId = 'settings.myProfileId';
 const _keyAiMessageDelayMs = 'settings.aiMessageDelayMs';
+const _keyBustPopupTimerSeconds = 'settings.bustPopupTimerSeconds';
 const _keyAutoActionDelayMs = 'settings.autoActionDelayMs';
 const _keyDiceColorMode = 'settings.diceColorMode';
 const _keyDiceSoundMode = 'settings.diceSoundMode';
@@ -230,6 +238,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
         playerName: prefs.getString(_keyPlayerName) ?? '',
         myProfileId: prefs.getString(_keyMyProfileId),
         aiMessageDelayMs: prefs.getInt(_keyAiMessageDelayMs) ?? 1000,
+        bustPopupTimerSeconds: prefs.getInt(_keyBustPopupTimerSeconds) ?? 20,
         autoActionDelayMs: prefs.getInt(_keyAutoActionDelayMs) ?? 2000,
         diceColorMode: prefs.getString(_keyDiceColorMode) == 'varied' ? DiceColorMode.varied : DiceColorMode.uniform,
         diceSoundMode: prefs.getString(_keyDiceSoundMode) == 'synthetic' ? DiceSoundMode.synthetic : DiceSoundMode.realistic,
@@ -287,6 +296,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final clamped = ms < 0 ? 0 : ms;
     state = state.copyWith(aiMessageDelayMs: clamped);
     _save(_keyAiMessageDelayMs, clamped);
+  }
+
+  void setBustPopupTimerSeconds(int seconds) {
+    final clamped = seconds < 0 ? 0 : seconds;
+    state = state.copyWith(bustPopupTimerSeconds: clamped);
+    _save(_keyBustPopupTimerSeconds, clamped);
   }
 
   void setAutoActionDelayMs(int ms) {

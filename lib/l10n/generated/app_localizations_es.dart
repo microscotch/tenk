@@ -547,6 +547,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Acciones automáticas del jugador humano (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Temporizador de la ventana de fallo (s, 0 = ninguno)';
+
+  @override
   String get settingsDiceTitle => 'Dados';
 
   @override

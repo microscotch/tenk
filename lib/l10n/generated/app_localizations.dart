@@ -980,6 +980,12 @@ abstract class AppLocalizations {
   /// **'Actions automatiques du joueur humain (ms)'**
   String get settingsAutoActionDelayLabel;
 
+  /// Champ des options avancées : durée en secondes du minuteur de la popup de craque, qui la ferme toute seule (0 : pas de minuteur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Minuteur de la popup de craque (s, 0 = aucun)'**
+  String get settingsBustPopupTimerLabel;
+
   /// Titre de la section réglages consacrée à l'apparence des dés.
   ///
   /// In fr, this message translates to:

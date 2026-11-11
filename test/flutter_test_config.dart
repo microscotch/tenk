@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/sound_effects.dart';
 
 /// Désactive les effets sonores pour toute la suite de tests : `audioplayers`
@@ -15,6 +16,8 @@ import 'package:le10000/ui/sound_effects.dart';
 /// pour que `AppLocalizations.of(context)` résolve quoi que ce soit.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   debugDisableSoundEffects();
+  // Pas de minuteur sur la popup de craque, sauf dans les tests qui le vérifient.
+  debugBustPopupTimerSeconds = 0;
   final dispatcher = TestWidgetsFlutterBinding.ensureInitialized().platformDispatcher;
   // Les deux : `locale` est le signal legacy encore lu par endroits, mais la
   // résolution de MaterialApp (`basicLocaleListResolution`) part de la liste

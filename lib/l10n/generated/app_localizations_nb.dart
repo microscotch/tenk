@@ -546,6 +546,10 @@ class AppLocalizationsNb extends AppLocalizations {
       'Automatiske handlinger for den menneskelige spilleren (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Tidtaker for bust-dialogen (s, 0 = ingen)';
+
+  @override
   String get settingsDiceTitle => 'Terninger';
 
   @override

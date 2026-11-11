@@ -547,6 +547,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Automatiska åtgärder för den mänskliga spelaren (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Timer för bust-dialogen (s, 0 = ingen)';
+
+  @override
   String get settingsDiceTitle => 'Tärningar';
 
   @override

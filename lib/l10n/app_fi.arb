@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Viive ennen kuin automaattinen toiminto laukeaa itsestään. 0 poistaa käytöstä.",
   "settingsAiDelayLabel": "Tekoälyn viestit (ms)",
   "settingsAutoActionDelayLabel": "Ihmispelaajan automaattiset toiminnot (ms)",
+  "settingsBustPopupTimerLabel": "Pieleen menneen ikkunan ajastin (s, 0 = ei mitään)",
   "settingsDiceTitle": "Nopat",
   "settingsDiceUniform": "Yhtenäinen",
   "settingsDiceVaried": "Kirjava",

@@ -1172,19 +1172,34 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 // Rien à valider pour le spectateur d'un rejeu : la popup se
                 // referme d'elle-même.
                 if (!widget.replayMode) ...[
-                  const SizedBox(height: 20),
-                  _popupDecisionIcon(
-                    dialogContext,
-                    key: widget.tutorial?.keyFor(TutorialTarget.bustOk),
-                    icon: Icons.check,
-                    onPressed: () {
-                      if (_controlsLocked) return;
+                  const SizedBox(height: 14),
+                  // Bouton minuteur : sa bordure se remplit pendant la durée réglée (options
+                  // avancées), puis la popup se ferme toute seule, comme une validation. Pas
+                  // de minuteur dans une leçon : la bulle du tutoriel attend le joueur.
+                  _TimerRing(
+                    duration: widget.tutorial == null
+                        ? Duration(seconds: debugBustPopupTimerSeconds ?? ref.read(settingsProvider).bustPopupTimerSeconds)
+                        : Duration.zero,
+                    color: Theme.of(dialogContext).colorScheme.primary,
+                    trackColor: Theme.of(dialogContext).colorScheme.outlineVariant,
+                    onElapsed: () {
+                      if (!dialogContext.mounted) return;
                       Navigator.of(dialogContext).pop();
                       ref.read(gameProvider.notifier).endBustedTurn();
                     },
-                    background: Theme.of(dialogContext).colorScheme.primary,
-                    foreground: Theme.of(dialogContext).colorScheme.onPrimary,
-                    tooltip: l10n.bustContinueButton,
+                    child: _popupDecisionIcon(
+                      dialogContext,
+                      key: widget.tutorial?.keyFor(TutorialTarget.bustOk),
+                      icon: Icons.check,
+                      onPressed: () {
+                        if (_controlsLocked) return;
+                        Navigator.of(dialogContext).pop();
+                        ref.read(gameProvider.notifier).endBustedTurn();
+                      },
+                      background: Theme.of(dialogContext).colorScheme.primary,
+                      foreground: Theme.of(dialogContext).colorScheme.onPrimary,
+                      tooltip: l10n.bustContinueButton,
+                    ),
                   ),
                 ],
               ],
@@ -3742,3 +3757,117 @@ Widget _fittedDiceRow(
     },
   );
 }
+
+
+/// Le minuteur d'un bouton de popup : une bordure qui se remplit, tour complet à la fin de
+/// [duration], puis [onElapsed] (la popup se ferme toute seule). Une durée nulle : pas de
+/// minuteur, [child] seul.
+///
+/// Le minuteur s'arrête tant que la popup n'est plus la route du dessus (la grille ou la
+/// courbe consultées par-dessus) : il ne doit ni se terminer ni dépiler l'écran consulté à
+/// sa place, et reprend où il en était au retour.
+class _TimerRing extends StatefulWidget {
+  final Duration duration;
+  final VoidCallback onElapsed;
+  final Color color;
+  final Color trackColor;
+  final Widget child;
+
+  const _TimerRing({
+    required this.duration,
+    required this.onElapsed,
+    required this.color,
+    required this.trackColor,
+    required this.child,
+  });
+
+  @override
+  State<_TimerRing> createState() => _TimerRingState();
+}
+
+class _TimerRingState extends State<_TimerRing> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  Timer? _watch;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    if (widget.duration <= Duration.zero) return;
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) widget.onElapsed();
+    });
+    _controller.forward();
+    _watch = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (!mounted) return;
+      final onTop = ModalRoute.of(context)?.isCurrent ?? true;
+      if (!onTop && _controller.isAnimating) {
+        _controller.stop();
+      } else if (onTop && !_controller.isAnimating && !_controller.isCompleted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _watch?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.duration <= Duration.zero) return widget.child;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (_, child) => CustomPaint(
+        foregroundPainter: _RingPainter(
+          progress: _controller.value,
+          color: widget.color,
+          trackColor: widget.trackColor,
+        ),
+        child: Padding(padding: const EdgeInsets.all(7), child: child),
+      ),
+      child: widget.child,
+    );
+  }
+}
+
+/// L'anneau de [_TimerRing] : un cercle de fond, et l'arc rempli depuis le haut dans le
+/// sens des aiguilles d'une montre.
+class _RingPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color trackColor;
+
+  const _RingPainter({required this.progress, required this.color, required this.trackColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const width = 4.0;
+    final rect = Rect.fromCircle(center: size.center(Offset.zero), radius: size.shortestSide / 2 - width / 2 - 1);
+    final base = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width
+      ..color = trackColor;
+    canvas.drawArc(rect, 0, 2 * math.pi, false, base);
+    final arc = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = width
+      ..color = color;
+    canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * progress, false, arc);
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress || old.color != color || old.trackColor != trackColor;
+}
+
+/// Pour les tests seulement : impose la durée du minuteur de la popup de craque à la place du
+/// réglage. `pumpAndSettle` laisse courir l'anneau jusqu'au bout, et la popup se refermerait
+/// seule au milieu d'un test qui l'inspecte : la suite le coupe (voir `flutter_test_config.dart`),
+/// les tests du minuteur le rallument.
+@visibleForTesting
+int? debugBustPopupTimerSeconds;

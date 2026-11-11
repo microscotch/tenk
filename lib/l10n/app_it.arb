@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Ritardo prima che un'azione automatica si attivi da sola. 0 per disattivare.",
   "settingsAiDelayLabel": "Messaggi IA (ms)",
   "settingsAutoActionDelayLabel": "Azioni automatiche del giocatore umano (ms)",
+  "settingsBustPopupTimerLabel": "Timer del popup di sfumata (s, 0 = nessuno)",
   "settingsDiceTitle": "Dadi",
   "settingsDiceUniform": "Uniforme",
   "settingsDiceVaried": "Variopinto",

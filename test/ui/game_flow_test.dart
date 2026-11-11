@@ -65,6 +65,78 @@ Future<void> revealBust(WidgetTester tester) async {
 }
 
 void main() {
+  group('popup de craque : le bouton minuteur', () {
+    tearDown(() => debugBustPopupTimerSeconds = 0);
+
+    Future<ProviderContainer> pumpBustPopup(WidgetTester tester, int seconds) async {
+      debugBustPopupTimerSeconds = seconds;
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      var engine = GameEngine.newGame(['A', 'B']).startTurn();
+      engine = engine.copyWith(
+        players: [Player(name: 'A', totalScore: 700, hasEntered: true), Player(name: 'B')],
+        activeTurn: TurnState(diceToRoll: 3, pendingRoll: analyzeRoll([2, 3, 4]), busted: true),
+      );
+      container.read(gameProvider.notifier).debugLoadState(engine, const GameSetup(playerNames: ['A', 'B']));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: GameScreen(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(GameScreen.bustRevealDelay);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(AlertDialog), findsOneWidget);
+      return container;
+    }
+
+    testWidgets('au terme du minuteur la popup se ferme toute seule et passe la main', (tester) async {
+      final container = await pumpBustPopup(tester, 4);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.byType(AlertDialog), findsOneWidget, reason: 'à mi-parcours, la popup est toujours là');
+      expect(container.read(gameProvider)!.currentPlayer.name, 'A');
+
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(container.read(gameProvider)!.currentPlayer.name, 'B', reason: 'comme une validation : la main passe');
+    });
+
+    testWidgets('le minuteur attend le retour de la grille consultée par-dessus, sans la dépiler', (tester) async {
+      final container = await pumpBustPopup(tester, 4);
+
+      await tester.tap(find.byTooltip('Grille des scores'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 10));
+      expect(find.byType(ScoreGridScreen), findsOneWidget, reason: 'la grille consultée n\'est pas dépilée');
+      expect(container.read(gameProvider)!.currentPlayer.name, 'A');
+
+      await tester.binding.handlePopRoute();
+      // Pas de pumpAndSettle : il laisserait l'anneau courir jusqu'au bout.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(AlertDialog), findsOneWidget, reason: 'la popup est toujours là, son minuteur a attendu');
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(container.read(gameProvider)!.currentPlayer.name, 'B');
+    });
+
+    testWidgets('durée nulle : pas de minuteur, la popup attend la validation', (tester) async {
+      final container = await pumpBustPopup(tester, 0);
+
+      await tester.pump(const Duration(minutes: 2));
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(container.read(gameProvider)!.currentPlayer.name, 'A');
+    });
+  });
+
   testWidgets('le bouton retour ne referme pas la popup de craque', (tester) async {
     // Ces popups portent la seule action qui débloque le tour : les fermer
     // avec le bouton retour laissait la partie dans un état injouable.

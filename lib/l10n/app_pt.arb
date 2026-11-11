@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Atraso antes de uma ação automática se ativar sozinha. 0 para desativar.",
   "settingsAiDelayLabel": "Mensagens da IA (ms)",
   "settingsAutoActionDelayLabel": "Ações automáticas do jogador humano (ms)",
+  "settingsBustPopupTimerLabel": "Temporizador da janela de falha (s, 0 = nenhum)",
   "settingsDiceTitle": "Dados",
   "settingsDiceUniform": "Uniforme",
   "settingsDiceVaried": "Variado",

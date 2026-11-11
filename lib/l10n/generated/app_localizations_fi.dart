@@ -547,6 +547,10 @@ class AppLocalizationsFi extends AppLocalizations {
       'Ihmispelaajan automaattiset toiminnot (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Pieleen menneen ikkunan ajastin (s, 0 = ei mitään)';
+
+  @override
   String get settingsDiceTitle => 'Nopat';
 
   @override

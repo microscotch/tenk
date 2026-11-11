@@ -547,6 +547,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Actions automatiques du joueur humain (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Minuteur de la popup de craque (s, 0 = aucun)';
+
+  @override
   String get settingsDiceTitle => 'Dés';
 
   @override

@@ -554,6 +554,10 @@ class AppLocalizationsRo extends AppLocalizations {
       'Acțiuni automate ale jucătorului uman (ms)';
 
   @override
+  String get settingsBustPopupTimerLabel =>
+      'Temporizatorul ferestrei de ratare (s, 0 = niciunul)';
+
+  @override
   String get settingsDiceTitle => 'Zaruri';
 
   @override

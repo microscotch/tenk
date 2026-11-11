@@ -42,6 +42,7 @@
   "settingsDelaysDescription": "Întârziere înainte ca o acțiune automată să se declanșeze singură. 0 pentru a dezactiva.",
   "settingsAiDelayLabel": "Mesaje IA (ms)",
   "settingsAutoActionDelayLabel": "Acțiuni automate ale jucătorului uman (ms)",
+  "settingsBustPopupTimerLabel": "Temporizatorul ferestrei de ratare (s, 0 = niciunul)",
   "settingsDiceTitle": "Zaruri",
   "settingsDiceUniform": "Uniformă",
   "settingsDiceVaried": "Variată",

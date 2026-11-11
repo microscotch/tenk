@@ -43,6 +43,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _aiDelayController;
   late final TextEditingController _autoActionDelayController;
+  late final TextEditingController _bustTimerController;
 
   @override
   void initState() {
@@ -50,12 +51,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settings = ref.read(settingsProvider);
     _aiDelayController = TextEditingController(text: settings.aiMessageDelayMs.toString());
     _autoActionDelayController = TextEditingController(text: settings.autoActionDelayMs.toString());
+    _bustTimerController = TextEditingController(text: settings.bustPopupTimerSeconds.toString());
   }
 
   @override
   void dispose() {
     _aiDelayController.dispose();
     _autoActionDelayController.dispose();
+    _bustTimerController.dispose();
     super.dispose();
   }
 
@@ -233,6 +236,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   label: l10n.settingsAutoActionDelayLabel,
                   controller: _autoActionDelayController,
                   onChanged: (ms) => notifier.setAutoActionDelayMs(ms),
+                ),
+                const SizedBox(height: 12),
+                _DelayField(
+                  label: l10n.settingsBustPopupTimerLabel,
+                  controller: _bustTimerController,
+                  onChanged: (seconds) => notifier.setBustPopupTimerSeconds(seconds),
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
