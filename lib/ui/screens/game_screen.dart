@@ -1995,24 +1995,36 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _exiting = true;
     final l10n = AppLocalizations.of(context);
     final session = ref.read(onlineSessionProvider);
-    final leave = await showDialog<bool>(
+    // Trois issues : annuler, mettre en pause (garder sa place et y revenir plus tard),
+    // ou quitter pour de bon.
+    final choice = await showDialog<_OnlineExit>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.onlineLeaveConfirmTitle),
         content: Text(session.seatBotsEnabled ? l10n.onlineLeaveGameBody : l10n.onlineLeaveConfirmBody),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancelButton)),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.onlineLeaveButton)),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: Text(l10n.cancelButton)),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(_OnlineExit.pause),
+            child: Text(l10n.onlinePauseButton),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(_OnlineExit.leave),
+            child: Text(l10n.onlineLeaveButton),
+          ),
         ],
       ),
     );
-    if (leave != true || !mounted) {
+    if (choice == null || !mounted) {
       _exiting = false;
       return;
     }
     // L'écran part d'abord : la session vide ensuite la partie qu'il montrait.
     popToHome(context);
-    await ref.read(onlineSessionProvider.notifier).leaveGame();
+    final notifier = ref.read(onlineSessionProvider.notifier);
+    // En pause, la place est gardée (le jeton reste) : la partie attend le retour du joueur,
+    // qui la retrouve depuis l'accueil ou l'écran des parties en ligne.
+    await (choice == _OnlineExit.pause ? notifier.disconnect() : notifier.leaveGame());
   }
 
   /// Vrai quand l'écran montre les boutons d'émotion et la barre Historique :
@@ -3911,3 +3923,6 @@ class _RingPainter extends CustomPainter {
 /// les tests du minuteur le rallument.
 @visibleForTesting
 int? debugBustPopupTimerSeconds;
+
+/// Ce que le joueur choisit en quittant une partie en ligne (annuler = pas de choix).
+enum _OnlineExit { pause, leave }

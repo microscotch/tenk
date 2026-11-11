@@ -1093,6 +1093,54 @@ void main() {
       expect(container.read(onlineSessionProvider).inRoom, isFalse);
     });
 
+    testWidgets('la confirmation propose de mettre en pause : on garde sa place et on rentre à l\'accueil', (tester) async {
+      await container.read(onlineSessionProvider.notifier).create('Anna');
+      transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));
+      transport.current.serverSends(ServerMessage.snapshot(names: const ['Anna', 'Bob'], actions: _startedJournal()));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.playing,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+        begun: true,
+      ));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const GameScreen())),
+              child: const Text('accueil'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('accueil'));
+      await tester.pump(const Duration(seconds: 1));
+
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Annuler'), findsOneWidget);
+      expect(find.text('Mettre en pause'), findsOneWidget);
+      expect(find.text('Quitter'), findsOneWidget);
+
+      await tester.tap(find.text('Mettre en pause'));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      // La fenêtre se referme, puis l'écran de jeu se dépile.
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(GameScreen), findsNothing);
+      expect(find.text('accueil'), findsOneWidget);
+      expect(transport.channels.first.sent.any((m) => m.type == ClientMessageType.leave), isFalse,
+          reason: 'la place n\'est pas libérée');
+      expect(credentials.saved, isNotNull, reason: 'le jeton reste : la partie peut être reprise');
+      expect(container.read(onlineSessionProvider).inRoom, isFalse);
+    });
+
     testWidgets('deux demandes de sortie rapprochées n\'ouvrent qu\'une confirmation', (tester) async {
       await container.read(onlineSessionProvider.notifier).create('Anna');
       transport.current.serverSends(ServerMessage.joined(code: 'ABCDE', token: _token, seat: 0));

@@ -292,7 +292,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   the lobby. `leave()` frees the seat and forgets the token; `disconnect()` keeps the token and the seat.
   "Quitter" in a started game (`leaveGame()`, after a confirmation dialog on the game screen and the entry
   screen) is `leave()` when the server announces `seatBotsFeature` — the seat goes to a server bot for good —
-  and `disconnect()` against an older server (the game would wait for the player). `OnlineState` carries the
+  and `disconnect()` against an older server (the game would wait for the player). The confirmation dialog has a third choice, **Pause** (`disconnect()` whatever the server: the seat and token are kept, the game waits), which the home's launch popup then offers to resume: **an online game with a kept seat (`onlineSavedGameProvider`) is offered before any local paused game** (`SetupScreen._maybeOfferResume`; both resume popups are Cancel / Validate). `OnlineState` carries the
   server's features (`serverFeatures`, `seatBotsEnabled`, `startSignalEnabled`, `rematchEnabled`,
   `emotes2Enabled`), `begun` (start signal), the pending `rematch` vote and `gameSerial` (bumped when a snapshot
   starts a new game in the same room — a rematch — only after the previous one was `over`; a rematch is spotted
