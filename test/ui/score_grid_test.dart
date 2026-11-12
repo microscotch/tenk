@@ -213,6 +213,44 @@ void main() {
     expect(tester.getCenter(_avatarFor('Alice')).dx, lessThan(tester.getCenter(_avatarFor('Bob')).dx));
   });
 
+  testWidgets('un clic sur un adversaire ouvre le carrousel complet, posé sur la page de cet adversaire',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    var engine = GameEngine.newGame(['Alice', 'Bob', 'Carl']).startTurn();
+    engine = engine.copyWith(activeTurn: const TurnState(diceToRoll: 5, bankedScore: 0));
+    container.read(gameProvider.notifier).debugLoadState(
+          engine,
+          const GameSetup(playerNames: ['Alice', 'Bob', 'Carl']),
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Carl'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScoreGridScreen), findsOneWidget);
+    expect(find.byType(PageView), findsOneWidget, reason: 'le carrousel complet, pas la grille d\'un seul joueur');
+    expect(_avatarFor('Alice'), findsOneWidget, reason: 'le joueur courant reste à gauche');
+    expect(_avatarFor('Carl'), findsOneWidget, reason: 'posé sur la page de Carl');
+    expect(_avatarFor('Bob'), findsNothing);
+
+    // Les autres pages sont à portée de doigt : Bob est de l'autre côté.
+    await tester.drag(find.byType(PageView), const Offset(400, 0));
+    await tester.pumpAndSettle();
+    expect(_avatarFor('Bob'), findsOneWidget);
+    expect(_avatarFor('Carl'), findsNothing);
+  });
+
   testWidgets('bascule en carrousel paginé quand toutes les colonnes ne tiennent pas sur une page',
       (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));

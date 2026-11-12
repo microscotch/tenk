@@ -223,9 +223,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   The full score grid (`ScoreGridScreen`) reads from a `reference` player — the current
   player with `potentialTotal` and `handBankable` (`GameScreen._gridScreen`, fed by `_gridPotential` / `_gridBankable`,
   set at each build), the winner on the game-over screen: each grid takes **half the width**, and the page is always the
-  `reference` player's on the left, one opponent's on the right (one page per opponent — a carousel from 3 players —,
-  and the single page of an opponent's individual grid; without a `reference`, the players two by two, a lone column
-  centred). **Two grids read from a `reference` share one ladder** (`ladderRows`, `_ComparisonPage`): one row per score
+  `reference` player's on the left, one opponent's on the right (one page per opponent — a **circular** carousel from 3 players:
+  the last page leads back to the first —, opened on the page of the opponent whose row was tapped, `initialPlayer`; without a
+  `reference`, the players two by two, a lone column centred). **Two grids read from a `reference` share one ladder** (`ladderRows`, `_ComparisonPage`): one row per score
   value, the highest on top, equal values face to face (a value only one player ever had leaves a blank on the other
   side; a value twice in one grid takes two rows, newest first, newest paired with newest), the names fixed above the
   scrolling body, and the view opened on the `reference` player's current line, **centred as far as the list allows**

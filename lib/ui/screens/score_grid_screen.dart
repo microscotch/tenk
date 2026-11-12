@@ -40,8 +40,9 @@ const int _columnsPerPage = 2;
 /// tronqué à la largeur de la colonne ; une grille seule le montre en entier,
 /// centré sur toute la largeur de l'écran, au-dessus d'elle.
 class ScoreGridScreen extends StatefulWidget {
-  /// Les joueurs dont la grille est affichée — tous, ou un seul quand on
-  /// ouvre la grille depuis la ligne d'un joueur.
+  /// Les joueurs dont la grille est affichée — en général tous ; depuis la ligne d'un
+  /// joueur, c'est tout de même le carrousel complet, ouvert sur sa page
+  /// ([initialPlayer]).
   final List<Player> players;
 
   /// Tous les joueurs de la partie, dans l'ordre de jeu : c'est sur eux que
@@ -76,6 +77,10 @@ class ScoreGridScreen extends StatefulWidget {
   /// s'arrête, elle est barrée.
   final bool handBankable;
 
+  /// Le joueur sur la page duquel le carrousel s'ouvre : avec un [reference], la page de
+  /// cet adversaire (la première si ce joueur est le [reference] lui-même ou n'est pas
+  /// montré). Nul : la première page.
+  final Player? initialPlayer;
 
   const ScoreGridScreen({
     super.key,
@@ -86,6 +91,7 @@ class ScoreGridScreen extends StatefulWidget {
     this.displayNames = const {},
     this.looks = const {},
     this.handBankable = false,
+    this.initialPlayer,
   });
 
   @override
@@ -99,8 +105,17 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
   /// bord. Le numéro de page réellement montré est ce numéro modulo le nombre de pages.
   static const _loops = 1000;
 
-  late final PageController _pageController = PageController(initialPage: _loops * _pages().length);
-  int _page = 0;
+  late final int _firstPage = _initialPageIndex();
+  late final PageController _pageController = PageController(initialPage: _loops * _pages().length + _firstPage);
+  late int _page = _firstPage;
+
+  /// L'index (dans [_pageList]) de la page de [ScoreGridScreen.initialPlayer].
+  int _initialPageIndex() {
+    final wanted = widget.initialPlayer;
+    if (wanted == null || widget.reference?.name == wanted.name) return 0;
+    final index = _pages().indexWhere((page) => page.any((p) => p.name == wanted.name));
+    return index < 0 ? 0 : index;
+  }
 
   @override
   void dispose() {

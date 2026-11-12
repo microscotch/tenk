@@ -2162,13 +2162,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
-  /// Ouvre la grille de score filtrée sur un seul joueur (clic sur sa ligne
-  /// dans le [ScoreSheet]) : son nom complet sert alors de libellé de
-  /// colonne plutôt que des initiales.
+  /// Ouvre la grille de score complète (le carrousel de tous les adversaires), posée sur la
+  /// page du joueur dont on a touché la ligne dans le [ScoreSheet].
   void _openPlayerGrid(Player player) {
+    final engine = ref.read(gameProvider);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _gridScreen([player]),
+        builder: (_) => _gridScreen(engine?.players ?? [player], initialPlayer: player),
       ),
     );
   }
@@ -2185,7 +2185,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// La grille de score de [players], lue depuis [_referenceIndex] et son total
   /// potentiel. Même seul à l'écran, un joueur garde sa couleur
   /// de pastille de la table entière (voir [ScoreGridScreen.roster]).
-  ScoreGridScreen _gridScreen(List<Player> players) {
+  ScoreGridScreen _gridScreen(List<Player> players, {Player? initialPlayer}) {
     final engine = ref.read(gameProvider);
     return ScoreGridScreen(
       players: players,
@@ -2195,6 +2195,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       displayNames: ref.read(displayNamesProvider),
       looks: ref.read(avatarLooksProvider),
       handBankable: _gridBankable,
+      initialPlayer: initialPlayer,
     );
   }
 
