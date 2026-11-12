@@ -237,6 +237,36 @@ void main() {
     expect(_avatarFor('J0'), findsNothing, reason: 'la première page a défilé hors champ');
   });
 
+  testWidgets('le carrousel est circulaire : après la dernière page vient la première, et avant la première la dernière',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    final players = [for (var i = 0; i < 6; i++) Player(name: 'J$i')]; // 3 pages : J0-J1, J2-J3, J4-J5
+
+    await tester.pumpWidget(MaterialApp(home: ScoreGridScreen(players: players), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales));
+    await tester.pumpAndSettle();
+    expect(_avatarFor('J0'), findsOneWidget);
+
+    // Vers l'arrière depuis la première page : la dernière.
+    await tester.drag(find.byType(PageView), const Offset(400, 0));
+    await tester.pumpAndSettle();
+    expect(_avatarFor('J4'), findsOneWidget);
+    expect(_avatarFor('J5'), findsOneWidget);
+
+    // Vers l'avant depuis la dernière : la première.
+    await tester.drag(find.byType(PageView), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(_avatarFor('J0'), findsOneWidget);
+    expect(_avatarFor('J4'), findsNothing);
+
+    // Un tour complet vers l'avant ramène au point de départ.
+    for (var i = 0; i < 3; i++) {
+      await tester.drag(find.byType(PageView), const Offset(-400, 0));
+      await tester.pumpAndSettle();
+    }
+    expect(_avatarFor('J0'), findsOneWidget);
+  });
+
   testWidgets('la grille complète : une page par adversaire, le joueur de référence à gauche', (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(400, 800));

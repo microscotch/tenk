@@ -27,8 +27,8 @@ const int _columnsPerPage = 2;
 /// lignes de même valeur face à face, et la vue ouverte sur la ligne courante de
 /// [reference], au milieu de l'écran quand la liste le permet. Sans [reference],
 /// chaque grille se lit seule, ses tours dans l'ordre, et les colonnes sont
-/// réparties par deux sur des pages navigables façon carrousel (glissement +
-/// points de page).
+/// réparties par deux sur des pages navigables façon carrousel **circulaire** (glissement +
+/// points de page : après la dernière page vient la première, et inversement).
 ///
 /// Les grilles se lisent depuis [reference] — le joueur dont c'est le tour, ou
 /// le gagnant d'une partie finie : sur chaque ligne d'un autre joueur, l'écart
@@ -76,6 +76,7 @@ class ScoreGridScreen extends StatefulWidget {
   /// s'arrête, elle est barrée.
   final bool handBankable;
 
+
   const ScoreGridScreen({
     super.key,
     required this.players,
@@ -92,7 +93,13 @@ class ScoreGridScreen extends StatefulWidget {
 }
 
 class _ScoreGridScreenState extends State<ScoreGridScreen> {
-  final _pageController = PageController();
+  /// Le carrousel est circulaire : le contrôleur part loin du début de la liste infinie
+  /// (la page 0 d'un `PageView` sans fin n'a rien avant elle), sur un multiple du nombre
+  /// de pages, pour qu'un balayage vers l'arrière comme vers l'avant ne trouve jamais de
+  /// bord. Le numéro de page réellement montré est ce numéro modulo le nombre de pages.
+  static const _loops = 1000;
+
+  late final PageController _pageController = PageController(initialPage: _loops * _pages().length);
   int _page = 0;
 
   @override
@@ -150,11 +157,11 @@ class _ScoreGridScreenState extends State<ScoreGridScreen> {
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
-                      itemCount: pageCount,
-                      onPageChanged: (p) => setState(() => _page = p),
+                      // Sans fin : la dernière page est suivie de la première, et inversement.
+                      onPageChanged: (p) => setState(() => _page = p % pageCount),
                       itemBuilder: (context, pageIndex) {
                         return _GridPage(
-                          players: pages[pageIndex],
+                          players: pages[pageIndex % pageCount],
                           avatars: avatars,
                           reference: widget.reference,
                           potentialTotal: widget.potentialTotal,
