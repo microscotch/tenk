@@ -556,12 +556,15 @@ which advances the test clock), never a bare `Timer`.
   in a comic speech bubble anchored on the button (`_PhraseBubbleRoute`), not a popup menu. They are **outside the
   game journal** (no seq, never archived/replayed). The room relays them to every session that announced
   `emotesFeature` (sender included), silently drops one within `emoteCooldown` (3 s) of the same seat's previous one,
-  and ignores them before the start. Adding or rewording a phrase is safe (an installed app silently ignores a phrase id it doesn't know); a phrase
+  and ignores them before the start — except in the lobby, for sessions that announced `lobbyEmotesFeature`: the room then
+  relays them (nothing to anyone who didn't), so the lobby offers just the 🤗 *câlin* (`Emote.joyful`, `EmoteBar(emotes:)`) to
+  say hello; its `lobbyEmotesFeature` is announced by the server only once redeployed, so the button stays hidden until then.
+  Adding or rewording a phrase is safe (an installed app silently ignores a phrase id it doesn't know); a phrase
   taken out of a menu moves to `Emote.retired` instead of being deleted (an older app may still send it, and the server
   would refuse an unknown one). Removing or renaming an *emotion* means a new feature name (`emotes2`), not editing `emotes`.
   New phrases need the server redeployed before the app ships: the running server refuses ids it doesn't know.
-  Online only: the game screen and the game-over screen show the emote buttons and bubbles (the history is the
-  bottom bar, as in every mode).
+  Online only: the game screen, the game-over screen and the lobby show the emote buttons and bubbles (the history is the
+  bottom bar, as in every mode); the lobby's player list also shows each player's pastille before their name.
 - Not supported: mixed local players in an online game; bots chosen at setup (only server bots replacing a player
   who left).
 

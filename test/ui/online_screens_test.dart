@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le10000/game/avatar_catalog.dart';
 import 'package:le10000/game/game_recording.dart';
 import 'package:le10000/game/online/protocol.dart';
 import 'package:le10000/game/player_profile.dart';
@@ -343,6 +344,76 @@ void main() {
       await pump(tester, const OnlineRoomScreen());
       await serverOpensRoom(tester, seat: seat, names: names);
     }
+
+    testWidgets('la liste des joueurs montre la pastille de chacun devant son nom', (tester) async {
+      final animal = avatarAnimalChoices.first;
+      final color = avatarColorChoices.first;
+      await inRoom(tester, seat: 0, names: ['Anna']);
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.lobby,
+        seats: [
+          const SeatInfo(name: 'Anna', connected: true),
+          SeatInfo(name: 'Bob', connected: true, color: color.id, animal: animal.id),
+        ],
+        hostSeat: 0,
+      ));
+      await tester.pumpAndSettle();
+
+      final anna = find.byWidgetPredicate((w) => w is PlayerAvatarWidget && w.name == 'Anna');
+      final bob = find.byWidgetPredicate((w) => w is PlayerAvatarWidget && w.name == 'Bob');
+      expect(anna, findsOneWidget, reason: 'sans choix : la lettre de son pseudo');
+      expect(bob, findsOneWidget);
+      expect(tester.widget<PlayerAvatarWidget>(bob).animal, animal.id, reason: 'la pastille annoncée par Bob');
+      expect(tester.widget<PlayerAvatarWidget>(bob).color, Color(color.argb));
+      expect(tester.getCenter(bob).dx, lessThan(tester.getCenter(find.text('Bob')).dx), reason: 'devant le nom');
+    });
+
+    testWidgets('le bouton câlin est là quand le serveur relaie les émotions du salon ; il envoie et montre les saluts',
+        (tester) async {
+      await inRoom(tester, seat: 0, names: ['Anna']);
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.lobby,
+        seats: const [SeatInfo(name: 'Anna', connected: true), SeatInfo(name: 'Bob', connected: true)],
+        hostSeat: 0,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('Câlin'), findsOneWidget);
+      expect(find.bySemanticsLabel('Fâché'), findsNothing, reason: 'une seule émotion dans le salon : se saluer');
+
+      await tester.tap(find.bySemanticsLabel('Câlin'));
+      await tester.pump();
+      final sent = transport.current.sent.last;
+      expect((sent.type, sent.params['emote']), (ClientMessageType.emote, 'joyful'));
+
+      // Le salut de Bob arrive : sa bulle apparaît à sa pastille.
+      transport.current.serverSends(ServerMessage.emote(seat: 1, emote: Emote.joyful, phrase: 'hello'));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pump();
+      expect(find.byType(SpeechBubble), findsOneWidget);
+    });
+
+    testWidgets('face à un serveur qui ne relaie pas les émotions du salon, pas de bouton câlin', (tester) async {
+      await container.read(onlineSessionProvider.notifier).join('abcde', 'Anna');
+      await pump(tester, const OnlineRoomScreen());
+      transport.current.serverSends(ServerMessage.joined(
+        code: 'ABCDE',
+        token: _token,
+        seat: 0,
+        features: const [emotesFeature, emotes2Feature],
+      ));
+      transport.current.serverSends(ServerMessage.room(
+        code: 'ABCDE',
+        phase: RoomPhase.lobby,
+        seats: const [SeatInfo(name: 'Anna', connected: true)],
+        hostSeat: 0,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('Câlin'), findsNothing);
+    });
 
     testWidgets('l\'hôte ne peut lancer qu\'à deux joueurs connectés', (tester) async {
       await inRoom(tester, seat: 0, names: ['Anna']);

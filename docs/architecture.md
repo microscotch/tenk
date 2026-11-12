@@ -360,7 +360,7 @@ dépend du SDK Flutter, il ne peut pas être une dépendance d'un serveur Dart s
 - **Les émotions** (un chat contrôlé) : six émotions (`Emote`, `lib/game/online/emotes.dart`), chacune avec
   quelques phrases courtes, toutes désignées par des noms stables — jamais de texte libre, rien à modérer, et chaque
   appareil affiche la phrase dans sa langue. `OnlineSession.sendEmote` envoie `ClientMessage.emote` ; le salon (`Room`)
-  l'ignore sans réponse avant le départ ou à moins de `emoteCooldown` (3 s) de la précédente du même siège, et la
+  l'ignore sans réponse avant le départ (sauf dans le salon, pour qui a annoncé `lobbyEmotesFeature` : `OnlineState.lobbyEmotesEnabled`, le bouton « câlin » du salon) ou à moins de `emoteCooldown` (3 s) de la précédente du même siège, et la
   relaie (`ServerMessage.emote`, avec le siège) à tous ceux qui ont annoncé `emotesFeature`, l'envoyeur compris. **Hors
   du journal** : ni `seq`, ni action, rien d'archivé ni de rejoué. Côté app, `onlineEmotesProvider` garde les dernières
   reçues ; l'écran de jeu en fait une bulle partant de la pastille du joueur (siège → index par l'ordre de jeu), dessinée dans l'overlay de la page pour pouvoir s'étendre sur plusieurs lignes sans être rognée par la zone qui défile, et une ligne de

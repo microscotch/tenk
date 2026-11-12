@@ -119,6 +119,10 @@ class OnlineState {
   bool get isHost => mySeat != null && mySeat == hostSeat;
 
   bool get emotes2Enabled => serverFeatures.contains(emotes2Feature);
+
+  /// Vrai quand le serveur relaie aussi les émotions dans le salon, avant le départ (voir
+  /// `lobbyEmotesFeature`) : le salon offre alors le bouton « câlin » pour se saluer.
+  bool get lobbyEmotesEnabled => emotesEnabled && serverFeatures.contains(lobbyEmotesFeature);
   bool get seatBotsEnabled => serverFeatures.contains(seatBotsFeature);
   bool get startSignalEnabled => serverFeatures.contains(startSignalFeature);
   bool get rematchEnabled => serverFeatures.contains(rematchFeature);
@@ -383,6 +387,8 @@ class OnlineSession extends Notifier<OnlineState> {
   /// pas les émotions.
   void sendEmote(Emote emote, {String? phrase}) {
     if (!state.emotesEnabled) return;
+    // Dans le salon : seulement si le serveur le relaie (un serveur d'avant l'ignorerait en silence).
+    if (!state.gameStarted && !state.lobbyEmotesEnabled) return;
     _send(ClientMessage.emote(emote, phrase: phrase));
   }
 
@@ -671,7 +677,9 @@ class OnlineSession extends Notifier<OnlineState> {
   /// (émotion ou phrase d'une version plus récente) : ignorée — une bulle ratée
   /// ne vaut pas de redemander tout le journal.
   void _onEmote(ServerMessage message) {
-    if (!state.gameStarted || !_game.isOnline) return;
+    // Dans la partie en ligne de l'écran, ou dans le salon avant le départ (les saluts).
+    final inLobby = !state.gameStarted && state.phase == RoomPhase.lobby && state.lobbyEmotesEnabled;
+    if (!inLobby && (!state.gameStarted || !_game.isOnline)) return;
     final int seat;
     final Emote emote;
     final String? phrase;

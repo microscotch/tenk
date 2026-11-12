@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,18 +11,69 @@ import '../../state/online_providers.dart';
 import '../online_messages.dart';
 import '../share.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/emotes.dart';
+import '../widgets/player_avatar.dart';
+import '../widgets/score_sheet.dart' show AvatarWithBubble;
+import 'game_screen.dart' show GameScreen;
 import 'online_dice_off_screen.dart';
 
 /// Le salon d'attente d'une partie en ligne : le code à donner, les joueurs
 /// présents, et pour l'hôte l'ordre des sièges et le lancement.
-class OnlineRoomScreen extends ConsumerWidget {
+class OnlineRoomScreen extends ConsumerStatefulWidget {
   const OnlineRoomScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OnlineRoomScreen> createState() => _OnlineRoomScreenState();
+}
+
+class _OnlineRoomScreenState extends ConsumerState<OnlineRoomScreen> {
+  /// La bulle de ce que chaque joueur (par pseudo) vient d'exprimer, et la minuterie qui la retire.
+  final Map<String, String> _bubbles = {};
+  final Map<String, Timer> _bubbleTimers = {};
+
+  /// La dernière émotion déjà montrée : celles d'avant l'ouverture du salon ne refont pas de bulle.
+  int _lastEmoteId = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    final emotes = ref.read(onlineEmotesProvider);
+    if (emotes.isNotEmpty) _lastEmoteId = emotes.last.id;
+  }
+
+  @override
+  void dispose() {
+    for (final timer in _bubbleTimers.values) {
+      timer.cancel();
+    }
+    super.dispose();
+  }
+
+  void _showEmote(EmoteEvent event) {
+    final seats = ref.read(onlineSessionProvider).seats;
+    if (event.seat >= seats.length) return;
+    final name = seats[event.seat].name;
+    final text = emoteText(AppLocalizations.of(context), event.emote, event.phrase);
+    setState(() => _bubbles[name] = text);
+    _bubbleTimers[name]?.cancel();
+    _bubbleTimers[name] = Timer(GameScreen.bubbleDuration, () {
+      if (mounted) setState(() => _bubbles.remove(name));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final online = ref.watch(onlineSessionProvider);
     final session = ref.read(onlineSessionProvider.notifier);
+
+    ref.listen<List<EmoteEvent>>(onlineEmotesProvider, (previous, next) {
+      for (final event in next) {
+        if (event.id <= _lastEmoteId) continue;
+        _lastEmoteId = event.id;
+        _showEmote(event);
+      }
+    });
 
     ref.listen<OnlineState>(onlineSessionProvider, (previous, next) {
       if (next.errorSerial != (previous?.errorSerial ?? 0) && next.error != null) {
@@ -91,7 +143,7 @@ class OnlineRoomScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(l10n.onlineShareHint, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
                 const SizedBox(height: 8),
-                Center(child: _shareButton(context, ref, l10n, online.roomCode ?? '')),
+                Center(child: _shareButton(context, l10n, online.roomCode ?? '')),
                 const SizedBox(height: 16),
                 Text(
                   l10n.onlinePlayersHeader(online.seats.length, maxOnlinePlayers),
@@ -99,6 +151,15 @@ class OnlineRoomScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Expanded(child: _players(context, l10n, online, session)),
+                // De quoi se saluer avant le départ : le « câlin » et ses phrases (hello, bonne chance...).
+                if (online.lobbyEmotesEnabled) ...[
+                  EmoteBar(
+                    emotes: const [Emote.joyful],
+                    v2: online.emotes2Enabled,
+                    onSend: (emote, phrase) => session.sendEmote(emote, phrase: phrase),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (online.isHost) ...[
                   if (!everyoneHere)
                     Padding(
@@ -121,7 +182,7 @@ class OnlineRoomScreen extends ConsumerWidget {
 
   /// Envoie le code par une application du téléphone. Sans feuille de partage
   /// disponible (bureau), le message est copié : le code reste transmissible.
-  Widget _shareButton(BuildContext context, WidgetRef ref, AppLocalizations l10n, String code) {
+  Widget _shareButton(BuildContext context, AppLocalizations l10n, String code) {
     return Builder(
       builder: (buttonContext) => OutlinedButton.icon(
         icon: const Icon(Icons.share),
@@ -143,11 +204,19 @@ class OnlineRoomScreen extends ConsumerWidget {
   }
 
   Widget _players(BuildContext context, AppLocalizations l10n, OnlineState online, OnlineSession session) {
+    // Les pastilles des joueurs présents : celles qu'ils ont annoncées, sinon la lettre de leur pseudo.
+    final avatars = AvatarSet.resolve(
+      [for (final seat in online.seats) seat.name],
+      {for (final seat in online.seats) seat.name: ?seat.avatar},
+    );
     Widget tile(int index, {Widget? trailing}) {
       final seat = online.seats[index];
       return ListTile(
         key: ValueKey('seat-$index-${seat.name}'),
-        leading: Icon(index == online.hostSeat ? Icons.star : Icons.person, color: seat.connected ? null : TableColors.of(context).muted),
+        leading: Opacity(
+          opacity: seat.connected ? 1 : 0.4,
+          child: AvatarWithBubble(bubble: _bubbles[seat.name], child: avatars.of(seat.name, size: 40)),
+        ),
         title: Text(seat.name + (index == online.mySeat ? '  •' : '')),
         subtitle: index == online.hostSeat
             ? Text(l10n.onlineHostBadge)

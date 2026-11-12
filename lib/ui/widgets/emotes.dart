@@ -76,7 +76,11 @@ class EmoteBar extends StatefulWidget {
   /// d'alors sont proposées — un serveur d'avant refuserait le reste.
   final bool v2;
 
-  const EmoteBar({super.key, required this.onSend, this.v2 = false});
+  /// Les émotions proposées : toutes celles que le serveur connaît par défaut ; dans le
+  /// salon, le seul « câlin » (voir `Emote.joyful`), de quoi se saluer avant le départ.
+  final List<Emote>? emotes;
+
+  const EmoteBar({super.key, required this.onSend, this.v2 = false, this.emotes});
 
   @override
   State<EmoteBar> createState() => _EmoteBarState();
@@ -127,7 +131,7 @@ class _EmoteBarState extends State<EmoteBar> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        for (final emote in emotesFor(v2: widget.v2))
+        for (final emote in widget.emotes ?? emotesFor(v2: widget.v2))
           Builder(
             builder: (buttonContext) => Semantics(
               button: true,

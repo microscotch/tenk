@@ -17,6 +17,12 @@ library;
 /// recevoir des émotions.
 const String emotesFeature = 'emotes';
 
+/// Fonction facultative du protocole, en plus de [emotesFeature] : les émotions sont aussi relayées
+/// dans le salon, avant le départ de la partie (pour se saluer). Un serveur qui ne l'annonce pas
+/// les ignore tant que la partie n'a pas commencé : l'app n'offre alors pas le bouton du salon ;
+/// et il ne relaie rien dans le salon à un client qui ne l'a pas annoncée.
+const String lobbyEmotesFeature = 'lobbyEmotes';
+
 /// Délai minimal entre deux émotions d'un même joueur : le serveur ignore ce qui
 /// arrive plus tôt, l'app grise ses boutons le temps qu'il passe.
 const Duration emoteCooldown = Duration(seconds: 3);

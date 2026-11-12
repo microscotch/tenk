@@ -374,13 +374,32 @@ void main() {
       expect(players[2].$1.of(ServerMessageType.emote), isEmpty, reason: 'un client d\'avant prendrait ce type inconnu pour un journal abîmé');
     });
 
-    test('ignorée, sans erreur, avant le départ de la partie', () {
+    test('dans le salon, relayée à ceux qui ont annoncé lobbyEmotes, l\'envoyeur compris', () {
       final (_, players) = threeWithLegacy();
-      send(players[0].$2, ClientMessage.emote(Emote.joyful));
+      send(players[1].$2, ClientMessage.emote(Emote.joyful, phrase: 'hello'));
 
-      expect(players[0].$1.of(ServerMessageType.emote), isEmpty);
-      expect(players[1].$1.of(ServerMessageType.emote), isEmpty);
-      expect(players[0].$1.lastError, isNull);
+      for (final i in [0, 1]) {
+        final message = players[i].$1.of(ServerMessageType.emote).single;
+        expect(message.seat, 1);
+        expect(message.emote, (Emote.joyful, 'hello'));
+      }
+      expect(players[2].$1.of(ServerMessageType.emote), isEmpty, reason: 'un client d\'avant ne sait pas l\'afficher');
+      expect(players[1].$1.lastError, isNull);
+    });
+
+    test('dans le salon, ignorée sans erreur par un client qui n\'a pas annoncé lobbyEmotes', () {
+      final host = open();
+      send(host.$2, ClientMessage.create(name: 'J1', features: const [emotesFeature, emotes2Feature]));
+      final code = host.$1.of(ServerMessageType.joined).last.roomCode;
+      final other = open();
+      send(other.$2, ClientMessage.join(code: code, name: 'J2'));
+
+      send(other.$2, ClientMessage.emote(Emote.joyful));
+      send(host.$2, ClientMessage.emote(Emote.joyful));
+
+      expect(host.$1.of(ServerMessageType.emote), isEmpty, reason: 'il ne l\'a pas annoncée : il ne reçoit rien dans le salon');
+      expect(other.$1.of(ServerMessageType.emote), hasLength(2), reason: 'lui l\'a annoncée : la sienne et celle de l\'hôte');
+      expect(host.$1.lastError, isNull);
     });
 
     test('une seule toutes les 3 secondes par joueur ; la suivante, trop tôt, est ignorée sans erreur', () {

@@ -33,6 +33,7 @@ class Session {
   bool get wantsKeepSelection => features.contains(keepSelectionFeature);
   bool get wantsEmotes => features.contains(emotesFeature);
   bool get wantsEmotes2 => features.contains(emotes2Feature);
+  bool get wantsLobbyEmotes => features.contains(lobbyEmotesFeature);
   bool get wantsRematch => features.contains(rematchFeature);
 }
 
@@ -579,15 +580,17 @@ class Room {
   /// qui savent l'afficher, lui compris (sa bulle apparaît au même moment que
   /// chez les autres). Rien n'est joué, rien n'entre au journal.
   ///
-  /// Ignorée sans réponse avant le départ, ou si la précédente de ce siège date
-  /// de moins de [emoteCooldown] : une erreur s'afficherait chez le joueur pour
+  /// Avant le départ (le salon), elle n'est relayée qu'à ceux qui ont annoncé
+  /// [lobbyEmotesFeature] : une app d'avant ne saurait pas l'afficher. Ignorée sans réponse
+  /// si la précédente de ce siège date de moins de [emoteCooldown] : une erreur s'afficherait chez le joueur pour
   /// un simple bouton tapé trop vite.
   ///
   /// Un joueur dont l'app ne connaît que la première série (sans
   /// [emotes2Feature]) reçoit une version rétrogradée (voir [downgradeForV1]),
   /// ou rien pour une émotion qu'il ne saurait pas lire.
   void _emote(int seat, Emote emote, String? phrase) {
-    if (_authority == null) return;
+    final inLobby = _authority == null;
+    if (inLobby && _phase != RoomPhase.lobby) return;
     final t = now();
     final last = _lastEmoteAt[seat];
     if (last != null && t.difference(last) < emoteCooldown) return;
@@ -598,6 +601,7 @@ class Room {
     for (final s in _seats) {
       final session = s.session;
       if (session == null || !session.wantsEmotes) continue;
+      if (inLobby && !session.wantsLobbyEmotes) continue;
       final forHim = session.wantsEmotes2 ? message : v1Message;
       if (forHim != null) _send(session, forHim);
     }
