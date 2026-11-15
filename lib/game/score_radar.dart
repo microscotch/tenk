@@ -25,22 +25,53 @@ int? nextBarrableScore(Player other, int potentialTotal) {
   return best;
 }
 
-/// L'écart signé que la ligne d'un adversaire affiche : son score moins
-/// [potentialTotal] quand le total potentiel du joueur courant le dépasse (donc
-/// négatif), sinon la distance de [potentialTotal] à son premier score barrable
-/// (voir [nextBarrableScore]). Nul quand il n'a plus rien à barrer.
+/// Ce que la ligne d'un adversaire affiche sous son score : [near], l'écart
+/// signé à la ligne de sa grille que vise le total potentiel, et [far], l'écart
+/// à la ligne voisine, un cran plus loin (nul quand sa grille n'en a pas).
+///
+/// Devant (positifs) : [near] vers son premier score barrable N, [far] vers sa
+/// ligne non barrée suivante N+1 — écrit « N+1, N devant ». Derrière
+/// (négatifs) : [near] vers son score N, [far] vers sa ligne non barrée
+/// précédente N-1 — écrit « N, N-1 derrière ».
+typedef RadarGap = ({int near, int? far});
+
+/// L'écart que la ligne d'un adversaire affiche (voir [RadarGap]). [RadarGap.near]
+/// est son score moins [potentialTotal] quand le total potentiel du joueur
+/// courant le dépasse (donc négatif), sinon la distance de [potentialTotal] à
+/// son premier score barrable (voir [nextBarrableScore]) ; [RadarGap.far] fait
+/// de même avec la ligne non barrée voisine, de valeur juste inférieure
+/// (derrière) ou juste supérieure (devant). Nul quand il n'a plus rien à barrer.
 ///
 /// [score] remplace le score de [other] quand sa ligne montre un total potentiel
 /// (le joueur dont c'est le tour, vu depuis un autre siège) : l'écart est alors
-/// simplement [score] moins [potentialTotal], signé, et suit sa main lancer après lancer.
-int? radarDifference(Player other, int potentialTotal, {int? score}) {
+/// simplement [score] moins [potentialTotal], signé, et suit sa main lancer après
+/// lancer, sans ligne voisine.
+RadarGap? radarDifference(Player other, int potentialTotal, {int? score}) {
   // Une ligne en direct n'a pas de « premier score barrable » à viser : seul
   // compte son avance (ou son retard) sur [potentialTotal], qui bouge à chaque lancer.
-  if (score != null) return score - potentialTotal;
+  if (score != null) return (near: score - potentialTotal, far: null);
   final shown = other.totalScore;
-  if (potentialTotal > shown) return shown - potentialTotal;
+  if (potentialTotal > shown) {
+    final previous = _neighbourLine(other, shown, above: false);
+    return (near: shown - potentialTotal, far: previous == null ? null : previous - potentialTotal);
+  }
   final next = nextBarrableScore(other, potentialTotal);
-  return next == null ? null : next - potentialTotal;
+  if (next == null) return null;
+  final following = _neighbourLine(other, next, above: true);
+  return (near: next - potentialTotal, far: following == null ? null : following - potentialTotal);
+}
+
+/// La ligne non barrée de [player], de valeur strictement positive, la plus
+/// proche de [value] au-dessus ([above]) ou en dessous. Une ligne à 0 n'est
+/// jamais barrable (on ne s'arrête jamais sur 0) : elle ne compte pas.
+int? _neighbourLine(Player player, int value, {required bool above}) {
+  int? best;
+  for (final entry in player.grid) {
+    if (entry.isBarred || entry.value <= 0) continue;
+    if (above ? entry.value <= value : entry.value >= value) continue;
+    if (best == null || (above ? entry.value < best : entry.value > best)) best = entry.value;
+  }
+  return best;
 }
 
 /// Vrai si s'arrêter sur [potentialTotal] barrerait un autre joueur que

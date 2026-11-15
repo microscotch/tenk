@@ -80,12 +80,12 @@ void main() {
     expect(shows('J1', '1900') && shows('J1', '900 devant'), isTrue, reason: 'l\'écart suit la main à chaque lancer');
     await seenFrom(1, j1Potential: 1700);
     expect(shows('J2', '1000') && shows('J2', '700'), isTrue);
-    expect(shows('J3', '2000') && shows('J3', '900 devant'), isTrue);
+    expect(shows('J3', '2000') && shows('J3', '1000, 900 devant'), isTrue);
 
     // J3 : J1 est à 1700, soit 300 sous mon 2000 ; J2 à 1000 de moins.
     await seenFrom(2, j1Potential: 1700);
     expect(shows('J1', '1700') && shows('J1', '300 derrière'), isTrue);
-    expect(shows('J2', '1000') && shows('J2', '1000 derrière'), isTrue);
+    expect(shows('J2', '1000') && shows('J2', '1000, 1300 derrière'), isTrue);
     expect(shows('J3', '2000') && shows('J3', '1900'), isTrue);
 
     // J1 : ma ligne, 1700 puis mon dernier score non barré sous lui (1500).

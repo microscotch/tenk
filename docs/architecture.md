@@ -90,8 +90,11 @@ une partie rejouable à l'identique.
   à chaque lancer (`ScoreSheet.currentPotentialTotal`), sur tous les écrans, à la place de son score, suivi de l'écart
   avec *mon* potentiel (`radarDifference(..., score:)`) : l'écart de son potentiel au mien, qui suit sa main à chaque lancer. Sur la ligne de ce joueur, `firstEntryBelow` donne le premier score non barré de sa grille, en
   remontant, strictement sous son total potentiel (son score + sa main en cours), affiché en petit **sous** le total.
-  Sur celle d'un adversaire, `radarDifference` donne l'écart signé : son score moins le potentiel quand celui-ci le
-  dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) ; la ligne l'écrit comme la grille de scores, sous le score : « N devant » / « N derrière »
+  Sur celle d'un adversaire, `radarDifference` donne un `RadarGap` : `near`, l'écart signé — son score moins le potentiel quand celui-ci le
+  dépasse, sinon la distance au premier score barrable de sa grille (`nextBarrableScore`) — et `far`, le même écart vers
+  la ligne non barrée voisine (strictement positive : une ligne à 0 ne compte pas), juste au-dessus de ce score barrable
+  devant, juste en dessous de son score derrière (nul s'il n'y en a pas, et toujours nul en direct) ; la ligne l'écrit
+  sous le score : « N+1, N devant » / « N, N-1 derrière », ou « N devant » / « N derrière » sans voisine
   (`gridGapAhead` / `gridGapBehind`, selon le signe). Quand
   cet écart est nul, la ligne affiche à sa place ce score barrable, en rouge. La zone de droite de la ligne a une largeur
   fixe pour le score, et la ligne **ne change pas de hauteur** : la pastille est suivie de deux lignes — le nom avec le score

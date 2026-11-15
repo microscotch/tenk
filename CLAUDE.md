@@ -211,9 +211,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   the reference player's row reads the potential total with, **under it**, `firstEntryBelow` in small (the latest non-barred grid
   line below the potential); another player's row shows their score (red and bold when stopping on the potential would equal it,
   only once the hand's dice are shown — `ScoreSheet.handRevealed` — so the colour never spoils the roll), and under it
-  the gap, written as in the score grid — "<N> devant" / "<N> derrière" (`gridGapAhead` / `gridGapBehind`, by the sign of
-  `radarDifference`; a plain "0" when nil with no barrable score to show): their score minus the potential when the potential is above it, otherwise
-  `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential. `barsAnotherPlayer` says
+  the gap, written as in the score grid preceded by the gap to the neighbouring line — "<N+1>, <N> devant" / "<N>, <N-1> derrière"
+  (`gridGapAhead` / `gridGapBehind`, by the sign of `radarDifference`'s `RadarGap.near`; only "<N> devant" / "<N> derrière" when
+  `far` is null; a plain "0" when nil with no barrable score to show): `near` is their score minus the potential when the potential is above it, otherwise
+  `nextBarrableScore` (their lowest non-barred line ≥ the potential) minus the potential; `far` is the same gap to their next
+  non-barred line above that barrable score (ahead) or below their score (behind), lines at 0 excluded, always null on a live line. `barsAnotherPlayer` says
   whether stopping on the potential would strike someone out (the hand label's green).
   A player's row is the pastille (badge, see below) followed by **two lines**: the name with the score opposite (`_PlayerRow._nameLine`, the 200-point
   alert and strike icons just left of the score), and under it (`_radarLine`) the robot icon, the podium medal and "not

@@ -28,15 +28,25 @@ void main() {
       expect(nextBarrableScore(alice.applyBust().applyBust(), 3100), isNull, reason: '3100 est barrée');
     });
 
-    test('au-dessus de son score : son score moins le potentiel, négatif', () {
+    test('au-dessus de son score : son score moins le potentiel, négatif, puis sa ligne précédente', () {
       final bob = Player(name: 'Bob').applySuccessfulTurn(1800);
-      expect(radarDifference(bob, 2750), -950);
+      expect(radarDifference(bob, 2750), (near: -950, far: null), reason: 'sa ligne 0 ne compte pas');
+      expect(radarDifference(alice, 3500), (near: -400, far: -500), reason: '3100 puis 3000');
     });
 
-    test('sinon : la distance au premier score barrable, positive ou nulle', () {
-      expect(radarDifference(alice, 2000), 800);
-      expect(radarDifference(alice, 3100), 0);
+    test('derrière : la ligne précédente saute les lignes barrées', () {
+      final barred = alice.applyBust().applyBust(); // 3100 barrée, retour sur 3000
+      expect(radarDifference(barred, 3500), (near: -500, far: -700), reason: '3000 puis 2800');
+    });
+
+    test('sinon : la distance au premier score barrable, puis à la ligne suivante', () {
+      expect(radarDifference(alice, 2000), (near: 800, far: 1000), reason: '2800 puis 3000');
+      expect(radarDifference(alice, 3100), (near: 0, far: null), reason: 'pas de ligne au-dessus de 3100');
       expect(radarDifference(Player(name: 'Carl'), 0), isNull);
+    });
+
+    test('en direct : un seul écart, sans ligne voisine', () {
+      expect(radarDifference(alice, 2000, score: 2300), (near: 300, far: null));
     });
   });
 

@@ -444,14 +444,15 @@ class _PlayerRow extends StatelessWidget {
 
   /// Ce qu'une ligne d'adversaire montre : son score — en rouge et en gras quand
   /// s'arrêter sur le total potentiel du joueur courant le barrerait, une fois la
-  /// main visible — et l'écart, écrit comme dans la grille de scores :
-  /// « 300 devant » / « 300 derrière » (voir [radarDifference]).
+  /// main visible — et l'écart, écrit comme dans la grille de scores, précédé de
+  /// celui de la ligne voisine quand sa grille en a une : « N+1, N devant » /
+  /// « N, N-1 derrière » (voir [radarDifference]).
   _RowParts _radarParts(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // Celui qui joue, vu depuis un autre siège : son total potentiel en direct à
     // la place de son score, et son écart avec moi.
     final shownScore = ownPotentialTotal ?? player.totalScore;
-    final difference = radarDifference(player, potentialTotal, score: ownPotentialTotal);
+    final gap = radarDifference(player, potentialTotal, score: ownPotentialTotal);
     final barred = handRevealed && potentialTotal > 0 && potentialTotal == player.totalScore;
     final muted = _mutedStyle(context);
     return _RowParts(
@@ -462,26 +463,29 @@ class _PlayerRow extends StatelessWidget {
           color: barred ? TableColors.of(context).negative : null,
         ),
       ),
-      second: difference == null
+      second: gap == null
           ? null
           : Tooltip(
               message: l10n.radarGapTooltip,
-              child: difference == 0 && ownPotentialTotal == null
+              child: gap.near == 0 && ownPotentialTotal == null
                   // Écart nul : à la place, le score barrable lui-même, en rouge.
                   ? Text(
                       '${nextBarrableScore(player, potentialTotal)}',
                       style: muted.copyWith(color: TableColors.of(context).negative),
                     )
-                  : Text(
-                      difference == 0
-                          ? '0'
-                          : difference > 0
-                          ? l10n.gridGapAhead(difference)
-                          : l10n.gridGapBehind(-difference),
-                      style: muted,
-                    ),
+                  : Text(_gapText(l10n, gap), style: muted),
             ),
     );
+  }
+
+  /// « N+1, N devant » / « N, N-1 derrière » : le plus loin d'abord devant, le
+  /// plus proche d'abord derrière ; un seul écart quand il n'y a pas de voisine.
+  static String _gapText(AppLocalizations l10n, RadarGap gap) {
+    final near = gap.near;
+    final far = gap.far;
+    if (near == 0) return '0';
+    if (near > 0) return far == null ? l10n.gridGapAhead(near) : '$far, ${l10n.gridGapAhead(near)}';
+    return far == null ? l10n.gridGapBehind(-near) : '${-near}, ${l10n.gridGapBehind(-far)}';
   }
 
   /// Ce que montre la ligne du joueur courant : le total potentiel, puis le
