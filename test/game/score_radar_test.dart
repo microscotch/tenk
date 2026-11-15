@@ -45,6 +45,11 @@ void main() {
       expect(radarDifference(Player(name: 'Carl'), 0), isNull);
     });
 
+    test('devant : la ligne suivante saute les lignes barrées', () {
+      final barred = alice.applyScoreCollisionBarAt(3000, barredByName: 'Bob'); // 3000 barrée, 3100 reste
+      expect(radarDifference(barred, 2000), (near: 800, far: 1100), reason: '2800 puis 3100');
+    });
+
     test('en direct : un seul écart, sans ligne voisine', () {
       expect(radarDifference(alice, 2000, score: 2300), (near: 300, far: null));
     });

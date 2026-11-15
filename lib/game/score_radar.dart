@@ -52,24 +52,24 @@ RadarGap? radarDifference(Player other, int potentialTotal, {int? score}) {
   if (score != null) return (near: score - potentialTotal, far: null);
   final shown = other.totalScore;
   if (potentialTotal > shown) {
-    final previous = _neighbourLine(other, shown, above: false);
+    final previous = _lineBelow(other, shown);
     return (near: shown - potentialTotal, far: previous == null ? null : previous - potentialTotal);
   }
   final next = nextBarrableScore(other, potentialTotal);
   if (next == null) return null;
-  final following = _neighbourLine(other, next, above: true);
+  // La ligne non barrée suivante : le premier score barrable juste au-dessus.
+  final following = nextBarrableScore(other, next + 1);
   return (near: next - potentialTotal, far: following == null ? null : following - potentialTotal);
 }
 
 /// La ligne non barrée de [player], de valeur strictement positive, la plus
-/// proche de [value] au-dessus ([above]) ou en dessous. Une ligne à 0 n'est
-/// jamais barrable (on ne s'arrête jamais sur 0) : elle ne compte pas.
-int? _neighbourLine(Player player, int value, {required bool above}) {
+/// proche de [value] en dessous. Une ligne à 0 n'est jamais barrable (on ne
+/// s'arrête jamais sur 0) : elle ne compte pas.
+int? _lineBelow(Player player, int value) {
   int? best;
   for (final entry in player.grid) {
-    if (entry.isBarred || entry.value <= 0) continue;
-    if (above ? entry.value <= value : entry.value >= value) continue;
-    if (best == null || (above ? entry.value < best : entry.value > best)) best = entry.value;
+    if (entry.isBarred || entry.value <= 0 || entry.value >= value) continue;
+    if (best == null || entry.value > best) best = entry.value;
   }
   return best;
 }
