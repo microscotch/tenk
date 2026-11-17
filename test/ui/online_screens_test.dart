@@ -887,7 +887,6 @@ void main() {
       await joined(tester);
 
       await tester.ensureVisible(emoteButton('Mort de rire'));
-      await tester.pump(); // le sliver du corps remet la position à jour au cycle suivant
       await tester.tap(emoteButton('Mort de rire'));
       await tester.pump();
       final sent = transport.current.sent.where((m) => m.type == ClientMessageType.emote).toList();
@@ -907,7 +906,6 @@ void main() {
       await joined(tester);
 
       await tester.ensureVisible(emoteButton('Mort de rire'));
-      await tester.pump(); // le sliver du corps remet la position à jour au cycle suivant
       await tester.longPress(emoteButton('Mort de rire'));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Cinq qui colle !'), findsOneWidget);
@@ -926,7 +924,6 @@ void main() {
       await joined(tester);
 
       await tester.ensureVisible(emoteButton('Câlin'));
-      await tester.pump(); // le sliver du corps remet la position à jour au cycle suivant
       await tester.longPress(emoteButton('Câlin'));
       await tester.pump(const Duration(milliseconds: 400));
       for (final phrase in ['Salut !', 'Bonne chance !', 'Merci', 'Désolé mais je dois partir']) {

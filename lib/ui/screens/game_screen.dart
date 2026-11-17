@@ -1832,87 +1832,98 @@ class _GameScreenState extends ConsumerState<GameScreen>
               // plutôt que de se répartir l'espace restant, pour qu'il reste
               // toujours visible sans avoir à tout faire défiler.
               //
-              // Les boutons d'action et la barre d'émotions, eux, sont centrés
-              // verticalement dans l'espace qui reste entre la main courante et
-              // la barre d'historique (`SliverFillRemaining`) : ils suivent la
-              // hauteur de l'écran, et défilent avec le reste quand il n'y a
-              // plus de place.
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
+              // La liste des joueurs reste en haut ; dans la hauteur qui reste,
+              // la piste, la main courante et la barre d'action sont réparties à
+              // écarts égaux, et la barre d'émotions est posée en bas, juste
+              // au-dessus de la barre d'historique. Tout défile avec le reste
+              // quand il n'y a plus de place.
+              child: LayoutBuilder(
+                builder: (_, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    // Au moins la hauteur de l'écran : ce qui reste est réparti
+                    // entre les éléments ci-dessous (`spaceBetween`), sans calcul
+                    // de hauteur intrinsèque (la piste et la main en sont
+                    // incapables : elles contiennent des `LayoutBuilder`).
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (ref.watch(gameProvider.notifier).isOnline) _onlineBanner(),
-                        ScoreSheet(
-                          players: engine.players,
-                          currentPlayerIndex: engine.currentPlayerIndex,
-                          referenceIndex: referenceIndex,
-                          onTapPlayer: _openPlayerGrid,
-                          displayNames: ref.watch(displayNamesProvider),
-                          looks: ref.watch(avatarLooksProvider),
-                          bubbles: _bubbles,
-                          botIndices: _botIndices(engine),
-                          // Les écarts des autres joueurs suivent la main en direct,
-                          // sélection de 5 comprise ; le rouge attend les dés posés.
-                          potentialTotal: referenceTurn ? engine.currentPlayer.totalScore + liveScore : referencePotential,
-                          // En ligne, la ligne de celui qui joue suit sa main en direct sur tous
-                          // les écrans, le mien compris.
-                          currentPotentialTotal: referenceTurn ? null : potentialTotal,
-                          handRevealed: referenceTurn && _previewFrameShown && liveScore > 0,
-                          rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
-                        ),
-                        const SizedBox(height: 12),
-                        if (engine.isInFinalRound)
-                          Padding(
-                            key: widget.tutorial?.keyFor(TutorialTarget.finalBanner),
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              l10n.finalRoundBanner,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: TableColors.of(context).warning,
-                              ),
+                        // En haut : la liste des joueurs.
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (ref.watch(gameProvider.notifier).isOnline) _onlineBanner(),
+                            ScoreSheet(
+                              players: engine.players,
+                              currentPlayerIndex: engine.currentPlayerIndex,
+                              referenceIndex: referenceIndex,
+                              onTapPlayer: _openPlayerGrid,
+                              displayNames: ref.watch(displayNamesProvider),
+                              looks: ref.watch(avatarLooksProvider),
+                              bubbles: _bubbles,
+                              botIndices: _botIndices(engine),
+                              // Les écarts des autres joueurs suivent la main en direct,
+                              // sélection de 5 comprise ; le rouge attend les dés posés.
+                              potentialTotal: referenceTurn ? engine.currentPlayer.totalScore + liveScore : referencePotential,
+                              // En ligne, la ligne de celui qui joue suit sa main en direct sur tous
+                              // les écrans, le mien compris.
+                              currentPotentialTotal: referenceTurn ? null : potentialTotal,
+                              handRevealed: referenceTurn && _previewFrameShown && liveScore > 0,
+                              rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                             ),
+                            const SizedBox(height: 12),
+                            if (engine.isInFinalRound)
+                              Padding(
+                                key: widget.tutorial?.keyFor(TutorialTarget.finalBanner),
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Text(
+                                  l10n.finalRoundBanner,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: TableColors.of(context).warning,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        // La piste, la main courante et la barre d'action, à écarts
+                        // égaux qui suivent la hauteur de l'écran ; 6 de marge
+                        // chacune pour qu'elles ne se touchent jamais.
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: _buildRollZone(
+                            turn,
+                            rollZoneSelectedKeep,
+                            showScore: pendingAnalysis != null && _rollSettled,
+                            previewIndices: previewIndices,
+                            previewRevealed: _previewMoveRevealed,
+                            isAiTurn: isAiTurn,
                           ),
-                        _buildRollZone(
-                          turn,
-                          rollZoneSelectedKeep,
-                          showScore: pendingAnalysis != null && _rollSettled,
-                          previewIndices: previewIndices,
-                          previewRevealed: _previewMoveRevealed,
-                          isAiTurn: isAiTurn,
                         ),
-                        const SizedBox(height: 12),
-                        _buildHandZone(
-                          turn,
-                          liveScore: liveScore,
-                          minimum: minimum,
-                          scoreColor: scoreColor,
-                          potentialTotal: potentialTotal,
-                          potentialColor: potentialColor,
-                          pendingAnalysis: pendingAnalysis,
-                          previewIndices: previewIndices,
-                          previewStates: previewStates,
-                          previewRevealed: _previewMoveRevealed,
-                          frameShown: _previewFrameShown,
-                          isAiTurn: isAiTurn,
-                          extendedValues: extendedValuesShown,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: _buildHandZone(
+                            turn,
+                            liveScore: liveScore,
+                            minimum: minimum,
+                            scoreColor: scoreColor,
+                            potentialTotal: potentialTotal,
+                            potentialColor: potentialColor,
+                            pendingAnalysis: pendingAnalysis,
+                            previewIndices: previewIndices,
+                            previewStates: previewStates,
+                            previewRevealed: _previewMoveRevealed,
+                            frameShown: _previewFrameShown,
+                            isAiTurn: isAiTurn,
+                            extendedValues: extendedValuesShown,
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 12),
-                          Center(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Center(
                             child: turn.busted
                                 ? _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn)
                                 : (isRemoteTurn
@@ -1927,22 +1938,26 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                             ? const SizedBox.shrink()
                                             : _buildHumanControlRow(engine, turn))),
                           ),
-                          // En ligne, quand le serveur relaie les émotions : leurs
-                          // boutons. L'historique, lui, est replié dans la barre du
-                          // bas (voir [_historyBar]), en partie locale comme en ligne.
-                          if (_emotesShown) ...[
-                            const SizedBox(height: 12),
-                            EmoteBar(
+                        ),
+                        // En bas, juste au-dessus de la barre d'historique (voir
+                        // [_historyBar]) : en ligne, quand le serveur relaie les
+                        // émotions, leurs boutons. Sinon une place vide, pour que
+                        // la barre d'action garde un écart sous elle.
+                        if (_emotesShown)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: EmoteBar(
                               v2: ref.watch(onlineSessionProvider.select((s) => s.emotes2Enabled)),
                               onSend: (emote, phrase) =>
                                   ref.read(onlineSessionProvider.notifier).sendEmote(emote, phrase: phrase),
                             ),
-                          ],
-                        ],
-                      ),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),

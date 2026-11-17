@@ -380,13 +380,14 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   - These auto-advances use `Timer` (not bare `Future.delayed`) stored in fields and cancelled in
     `dispose()` — this matters for widget tests, since flutter_test's fake-clock `pumpAndSettle()` can
     otherwise fire disconnected timers and/or fail on "Timer still pending" at teardown.
-  - **The action row and the emote bar are centred vertically in the space left** between the hand zone ("Main courante") and
-    the history notch: the body is a `CustomScrollView` — the players, roll zone and hand zone in a `SliverToBoxAdapter`, the
-    action row + `EmoteBar` in a `SliverFillRemaining(hasScrollBody: false)` with a `Center`. It follows the screen height
-    with no measuring, and the whole body still scrolls when nothing is left. That sliver asks its child for its intrinsic
-    height, so a widget without intrinsics in those rows would throw (`flutter test` exercises it, but the centring itself
-    is only seen on a real screen). It also settles its scroll position one frame late: a test that calls `ensureVisible`
-    then taps needs a `pump()` in between.
+  - **The body's vertical layout follows the screen height**: a `LayoutBuilder` gives the available height, and the
+    body is a `SingleChildScrollView` → `ConstrainedBox(minHeight:` that height`)` → `Column(spaceBetween)` of: the top block
+    (online banner, players `ScoreSheet`, final-round banner), the roll zone ("Piste"), the hand zone ("Main courante"), the
+    action row, and the `EmoteBar` (or an empty box when it isn't shown). So the players stay at the top, the emote bar sits
+    at the bottom just above the history notch, and the three middle items are spread out with equal gaps that grow with
+    the screen (6 of padding each so they never touch); the whole body still scrolls when nothing is left. Never
+    `SliverFillRemaining` / `IntrinsicHeight` here: the roll and hand zones contain `LayoutBuilder`s, which throw when asked
+    for an intrinsic height (an empty body on screen).
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
     revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**
