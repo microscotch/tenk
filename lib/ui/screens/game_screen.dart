@@ -3,6 +3,7 @@ import '../theme.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderShiftedBox, BoxParentData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../game/ai/ai_profiles.dart';
@@ -1917,22 +1918,31 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         extendedValues: extendedValuesShown,
                       ),
                     ),
+                    // La barre d'action ne rétrécit jamais ([_StableHeight]) et
+                    // réserve toujours la ligne de son message ([_messageLine]) :
+                    // sa hauteur ne varie pas d'un état à l'autre, et la piste et
+                    // la main, réparties autour d'elle, ne bougent pas.
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Center(
-                        child: turn.busted
-                            ? _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn)
-                            : (isRemoteTurn
-                                  ? _buildRemoteTurnView(engine)
-                                  : isAiTurn
-                                  ? _buildAiTurnView(engine)
-                                  : (isInheritedChoice
-                                        // Popup dédiée (voir
-                                        // _maybeShowInheritedHandDialog, en
-                                        // rejeu aussi) : rien à montrer ici en
-                                        // attendant.
-                                        ? const SizedBox.shrink()
-                                        : _buildHumanControlRow(engine, turn))),
+                      child: _StableHeight(
+                        child: Center(
+                          child: turn.busted
+                              ? _withMessageLine(
+                                  _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn),
+                                )
+                              : (isRemoteTurn
+                                    ? _withMessageLine(_buildRemoteTurnView(engine))
+                                    : isAiTurn
+                                    ? _withMessageLine(_buildAiTurnView(engine))
+                                    : (isInheritedChoice
+                                          // Popup dédiée (voir
+                                          // _maybeShowInheritedHandDialog, en
+                                          // rejeu aussi) : rien à montrer ici en
+                                          // attendant — [_StableHeight] garde la
+                                          // place de la barre.
+                                          ? const SizedBox.shrink()
+                                          : _buildHumanControlRow(engine, turn))),
+                        ),
                       ),
                     ),
                     // En bas, juste au-dessus de la barre d'historique (voir
@@ -3329,17 +3339,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // s'arrêter. Les autres raisons (score insuffisant, finirait sur
         // 50...) restent expliquées ici, le bouton Stop étant alors
         // simplement absent plutôt que désactivé (voir plus bas).
-        if (pending == null &&
-            !effective.mustContinue &&
-            !bankAttempt.success &&
-            bankAttempt.reason != BankFailureReason.notRolledYet)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              _failureMessage(l10n, bankAttempt),
-              style: TextStyle(color: TableColors.of(context).muted),
-            ),
-          ),
+        // La ligne est toujours là, vide sans message : la barre garde la même
+        // hauteur (voir [_messageLine]).
+        _messageLine(
+          pending == null &&
+                  !effective.mustContinue &&
+                  !bankAttempt.success &&
+                  bankAttempt.reason != BankFailureReason.notRolledYet
+              ? _failureMessage(l10n, bankAttempt)
+              : null,
+        ),
         _controlRow(
           // Stop reste visible en permanence, simplement inerte tant que
           // s'arrêter n'est pas légal. Il ne s'ACTIVE qu'une fois les dés
@@ -3383,6 +3392,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ],
     );
   }
+
+  /// La ligne de message au-dessus de la barre d'action (pourquoi on ne peut
+  /// pas encore s'arrêter, voir [_buildHumanControlRow]). Elle est toujours
+  /// réservée, vide quand il n'y a rien à dire (une espace insécable donne la
+  /// hauteur d'une ligne de texte) : la barre ne change pas de hauteur quand le
+  /// message apparaît ou disparaît.
+  Widget _messageLine(String? message) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      message ?? '\u00A0',
+      textAlign: TextAlign.center,
+      style: TextStyle(color: TableColors.of(context).muted),
+    ),
+  );
+
+  /// [row] sous une ligne de message vide : la même hauteur qu'une barre
+  /// d'action de tour humain (voir [_messageLine]).
+  Widget _withMessageLine(Widget row) =>
+      Column(mainAxisSize: MainAxisSize.min, children: [_messageLine(null), row]);
 
   /// Gabarit unique de la ligne de contrôle, partagé par TOUS les tours —
   /// humain, IA, main héritée. Le bouton principal reste toujours à la même
@@ -3979,4 +4007,36 @@ class _FillAvailableHeight extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Ne rétrécit jamais : garde la plus grande hauteur que son enfant a eue,
+/// l'enfant posé en bas de cette hauteur. Pour la barre d'action de l'écran de
+/// jeu, dont la hauteur varie selon l'état (vide pendant le choix de la main
+/// héritée, message sur deux lignes…) : la piste et la main, réparties autour
+/// d'elle, ne bougent pas à chaque changement. La hauteur gardée vit avec
+/// l'objet de rendu, c'est-à-dire avec l'écran.
+class _StableHeight extends SingleChildRenderObjectWidget {
+  const _StableHeight({required Widget super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderStableHeight();
+}
+
+class _RenderStableHeight extends RenderShiftedBox {
+  _RenderStableHeight() : super(null);
+
+  double _height = 0;
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.constrain(Size(constraints.minWidth, _height));
+      return;
+    }
+    child.layout(constraints, parentUsesSize: true);
+    _height = math.max(_height, child.size.height);
+    size = constraints.constrain(Size(child.size.width, _height));
+    (child.parentData! as BoxParentData).offset = Offset(0, size.height - child.size.height);
+  }
 }

@@ -390,6 +390,12 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     for an intrinsic height (an empty body on screen). The `Column` is built in `build()` and handed to that wrapper
     (`_FillAvailableHeight`), never built inside the `LayoutBuilder`'s builder: that runs at layout, after the
     `ConsumerState`'s build, and every `ref.watch` in it would be dropped and re-opened on each rebuild.
+    **The action row keeps one height**, or `spaceBetween` would move the roll and hand zones whenever it changes: its
+    message line ("why you can't stop yet", `_messageLine`) is always reserved, blank when there's nothing to say, and the
+    other views (bot, remote player, bust) get the same blank line (`_withMessageLine`); `_StableHeight` (a render box
+    that never shrinks, child at its bottom) keeps the row's tallest height for the rest of the screen's life, which covers
+    the inherited-hand choice (an empty row) and a message wrapping onto two lines. Never a hidden copy of the buttons to
+    reserve the space: dozens of tests find the roll/Stop buttons by type, icon or tooltip and would find two.
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
     revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**
