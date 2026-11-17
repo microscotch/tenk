@@ -387,7 +387,9 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     at the bottom just above the history notch, and the three middle items are spread out with equal gaps that grow with
     the screen (6 of padding each so they never touch); the whole body still scrolls when nothing is left. Never
     `SliverFillRemaining` / `IntrinsicHeight` here: the roll and hand zones contain `LayoutBuilder`s, which throw when asked
-    for an intrinsic height (an empty body on screen).
+    for an intrinsic height (an empty body on screen). The `Column` is built in `build()` and handed to that wrapper
+    (`_FillAvailableHeight`), never built inside the `LayoutBuilder`'s builder: that runs at layout, after the
+    `ConsumerState`'s build, and every `ref.watch` in it would be dropped and re-opened on each rebuild.
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
     revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**
