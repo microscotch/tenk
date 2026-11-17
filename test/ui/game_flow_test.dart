@@ -3061,6 +3061,59 @@ void main() {
       expect(styleOf(tester, ' → 1400')?.color, Colors.lightGreenAccent);
     });
   });
+
+  group('la barre d\'action garde une seule hauteur', () {
+    /// La hauteur de la barre d'action pour [engine], mesurée sur un écran
+    /// neuf : celui d'avant est démonté, pour que la hauteur gardée par la
+    /// barre (qui ne rétrécit jamais) ne masque pas un écart.
+    Future<double> actionRowHeight(WidgetTester tester, GameEngine engine, {bool aiFirst = false}) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(gameProvider.notifier).debugLoadState(
+            engine,
+            GameSetup(playerNames: const ['A', 'B'], aiPlayers: aiFirst ? const {0: AiDifficulty.prudent} : const {}),
+          );
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+        ),
+      );
+      await tester.pump();
+      final row = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_StableHeight');
+      expect(row, findsOneWidget);
+      final height = tester.getSize(row).height;
+      // Un bot enchaîne tout seul : on démonte avant ses temporisations.
+      await tester.pumpWidget(const SizedBox.shrink());
+      return height;
+    }
+
+    GameEngine withTurn(TurnState turn, {Player? a}) => GameEngine.newGame(['A', 'B']).startTurn().copyWith(
+          players: [a ?? Player(name: 'A', totalScore: 700, hasEntered: true), Player(name: 'B')],
+          activeTurn: turn,
+        );
+
+    testWidgets('tour humain avec ou sans message, tour d\'un bot, suspense d\'un craque', (tester) async {
+      final idle = await actionRowHeight(tester, withTurn(const TurnState(diceToRoll: 5)));
+      final withMessage = await actionRowHeight(
+        tester,
+        withTurn(
+          const TurnState(diceToRoll: 3, bankedScore: 300, hasRolledThisTurn: true),
+          a: Player(name: 'A'),
+        ),
+      );
+      final bot = await actionRowHeight(tester, withTurn(const TurnState(diceToRoll: 5)), aiFirst: true);
+      final bust = await actionRowHeight(
+        tester,
+        withTurn(TurnState(diceToRoll: 3, pendingRoll: analyzeRoll([2, 3, 4]), busted: true)),
+      );
+      expect(idle, greaterThan(0));
+      expect(withMessage, idle, reason: 'le message prend la ligne déjà réservée');
+      expect(bot, idle, reason: 'le tour d\'un bot réserve la même ligne de message');
+      expect(bust, idle, reason: 'le suspense d\'un craque réserve la même ligne de message');
+    });
+  });
 }
 
 /// Referme la fenêtre de reprise de main par l'un de ses deux boutons : ✓ (« Valider »)

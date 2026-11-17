@@ -3398,12 +3398,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// réservée, vide quand il n'y a rien à dire (une espace insécable donne la
   /// hauteur d'une ligne de texte) : la barre ne change pas de hauteur quand le
   /// message apparaît ou disparaît.
+  /// La ligne vide est exclue de la s\u00E9mantique : un lecteur d'\u00E9cran ne doit
+  /// pas s'arr\u00EAter sur un blanc invisible au-dessus des boutons.
   Widget _messageLine(String? message) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
-    child: Text(
-      message ?? '\u00A0',
-      textAlign: TextAlign.center,
-      style: TextStyle(color: TableColors.of(context).muted),
+    child: ExcludeSemantics(
+      excluding: message == null,
+      child: Text(
+        message ?? '\u00A0',
+        textAlign: TextAlign.center,
+        style: TextStyle(color: TableColors.of(context).muted),
+      ),
     ),
   );
 
@@ -4039,4 +4044,19 @@ class _RenderStableHeight extends RenderShiftedBox {
     size = constraints.constrain(Size(child.size.width, _height));
     (child.parentData! as BoxParentData).offset = Offset(0, size.height - child.size.height);
   }
+
+  // La même hauteur gardée pour la mise en page « à sec » et les hauteurs
+  // intrinsèques que pour la vraie : RenderShiftedBox n'implémente pas la
+  // première, et lirait les secondes sur l'enfant seul.
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final childSize = child?.getDryLayout(constraints) ?? Size(constraints.minWidth, 0);
+    return constraints.constrain(Size(childSize.width, math.max(_height, childSize.height)));
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) => math.max(_height, super.computeMinIntrinsicHeight(width));
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => math.max(_height, super.computeMaxIntrinsicHeight(width));
 }
