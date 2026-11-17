@@ -383,8 +383,10 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   - **The action row and the emote bar are centred vertically in the space left** between the hand zone ("Main courante") and
     the history notch: the body is a `CustomScrollView` — the players, roll zone and hand zone in a `SliverToBoxAdapter`, the
     action row + `EmoteBar` in a `SliverFillRemaining(hasScrollBody: false)` with a `Center`. It follows the screen height
-    with no measuring, and the whole body still scrolls when nothing is left. Not run by `flutter test` here: that sliver
-    asks its child for its intrinsic height, so a widget without intrinsics in those rows would throw.
+    with no measuring, and the whole body still scrolls when nothing is left. That sliver asks its child for its intrinsic
+    height, so a widget without intrinsics in those rows would throw (`flutter test` exercises it, but the centring itself
+    is only seen on a real screen). It also settles its scroll position one frame late: a test that calls `ensureVisible`
+    then taps needs a `pump()` in between.
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
     revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**
