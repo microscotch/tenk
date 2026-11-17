@@ -380,6 +380,11 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   - These auto-advances use `Timer` (not bare `Future.delayed`) stored in fields and cancelled in
     `dispose()` — this matters for widget tests, since flutter_test's fake-clock `pumpAndSettle()` can
     otherwise fire disconnected timers and/or fail on "Timer still pending" at teardown.
+  - **The action row and the emote bar are centred vertically in the space left** between the hand zone ("Main courante") and
+    the history notch: the body is a `CustomScrollView` — the players, roll zone and hand zone in a `SliverToBoxAdapter`, the
+    action row + `EmoteBar` in a `SliverFillRemaining(hasScrollBody: false)` with a `Center`. It follows the screen height
+    with no measuring, and the whole body still scrolls when nothing is left. Not run by `flutter test` here: that sliver
+    asks its child for its intrinsic height, so a widget without intrinsics in those rows would throw.
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
     revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**

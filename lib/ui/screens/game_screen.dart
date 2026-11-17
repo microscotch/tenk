@@ -1831,97 +1831,118 @@ class _GameScreenState extends ConsumerState<GameScreen>
               // tout défile ensemble, le journal gardant une hauteur fixe
               // plutôt que de se répartir l'espace restant, pour qu'il reste
               // toujours visible sans avoir à tout faire défiler.
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (ref.watch(gameProvider.notifier).isOnline) _onlineBanner(),
-                    ScoreSheet(
-                      players: engine.players,
-                      currentPlayerIndex: engine.currentPlayerIndex,
-                      referenceIndex: referenceIndex,
-                      onTapPlayer: _openPlayerGrid,
-                      displayNames: ref.watch(displayNamesProvider),
-                      looks: ref.watch(avatarLooksProvider),
-                      bubbles: _bubbles,
-                      botIndices: _botIndices(engine),
-                      // Les écarts des autres joueurs suivent la main en direct,
-                      // sélection de 5 comprise ; le rouge attend les dés posés.
-                      potentialTotal: referenceTurn ? engine.currentPlayer.totalScore + liveScore : referencePotential,
-                      // En ligne, la ligne de celui qui joue suit sa main en direct sur tous
-                      // les écrans, le mien compris.
-                      currentPotentialTotal: referenceTurn ? null : potentialTotal,
-                      handRevealed: referenceTurn && _previewFrameShown && liveScore > 0,
-                      rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
-                    ),
-                    const SizedBox(height: 12),
-                    if (engine.isInFinalRound)
-                      Padding(
-                        key: widget.tutorial?.keyFor(TutorialTarget.finalBanner),
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          l10n.finalRoundBanner,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: TableColors.of(context).warning,
-                          ),
+              //
+              // Les boutons d'action et la barre d'émotions, eux, sont centrés
+              // verticalement dans l'espace qui reste entre la main courante et
+              // la barre d'historique (`SliverFillRemaining`) : ils suivent la
+              // hauteur de l'écran, et défilent avec le reste quand il n'y a
+              // plus de place.
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (ref.watch(gameProvider.notifier).isOnline) _onlineBanner(),
+                        ScoreSheet(
+                          players: engine.players,
+                          currentPlayerIndex: engine.currentPlayerIndex,
+                          referenceIndex: referenceIndex,
+                          onTapPlayer: _openPlayerGrid,
+                          displayNames: ref.watch(displayNamesProvider),
+                          looks: ref.watch(avatarLooksProvider),
+                          bubbles: _bubbles,
+                          botIndices: _botIndices(engine),
+                          // Les écarts des autres joueurs suivent la main en direct,
+                          // sélection de 5 comprise ; le rouge attend les dés posés.
+                          potentialTotal: referenceTurn ? engine.currentPlayer.totalScore + liveScore : referencePotential,
+                          // En ligne, la ligne de celui qui joue suit sa main en direct sur tous
+                          // les écrans, le mien compris.
+                          currentPotentialTotal: referenceTurn ? null : potentialTotal,
+                          handRevealed: referenceTurn && _previewFrameShown && liveScore > 0,
+                          rowKeys: {if (widget.tutorial case final guide?) 1: guide.keyFor(TutorialTarget.opponentRow)},
                         ),
+                        const SizedBox(height: 12),
+                        if (engine.isInFinalRound)
+                          Padding(
+                            key: widget.tutorial?.keyFor(TutorialTarget.finalBanner),
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              l10n.finalRoundBanner,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: TableColors.of(context).warning,
+                              ),
+                            ),
+                          ),
+                        _buildRollZone(
+                          turn,
+                          rollZoneSelectedKeep,
+                          showScore: pendingAnalysis != null && _rollSettled,
+                          previewIndices: previewIndices,
+                          previewRevealed: _previewMoveRevealed,
+                          isAiTurn: isAiTurn,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildHandZone(
+                          turn,
+                          liveScore: liveScore,
+                          minimum: minimum,
+                          scoreColor: scoreColor,
+                          potentialTotal: potentialTotal,
+                          potentialColor: potentialColor,
+                          pendingAnalysis: pendingAnalysis,
+                          previewIndices: previewIndices,
+                          previewStates: previewStates,
+                          previewRevealed: _previewMoveRevealed,
+                          frameShown: _previewFrameShown,
+                          isAiTurn: isAiTurn,
+                          extendedValues: extendedValuesShown,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12),
+                          Center(
+                            child: turn.busted
+                                ? _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn)
+                                : (isRemoteTurn
+                                      ? _buildRemoteTurnView(engine)
+                                      : isAiTurn
+                                      ? _buildAiTurnView(engine)
+                                      : (isInheritedChoice
+                                            // Popup dédiée (voir
+                                            // _maybeShowInheritedHandDialog, en
+                                            // rejeu aussi) : rien à montrer ici en
+                                            // attendant.
+                                            ? const SizedBox.shrink()
+                                            : _buildHumanControlRow(engine, turn))),
+                          ),
+                          // En ligne, quand le serveur relaie les émotions : leurs
+                          // boutons. L'historique, lui, est replié dans la barre du
+                          // bas (voir [_historyBar]), en partie locale comme en ligne.
+                          if (_emotesShown) ...[
+                            const SizedBox(height: 12),
+                            EmoteBar(
+                              v2: ref.watch(onlineSessionProvider.select((s) => s.emotes2Enabled)),
+                              onSend: (emote, phrase) =>
+                                  ref.read(onlineSessionProvider.notifier).sendEmote(emote, phrase: phrase),
+                            ),
+                          ],
+                        ],
                       ),
-                    _buildRollZone(
-                      turn,
-                      rollZoneSelectedKeep,
-                      showScore: pendingAnalysis != null && _rollSettled,
-                      previewIndices: previewIndices,
-                      previewRevealed: _previewMoveRevealed,
-                      isAiTurn: isAiTurn,
                     ),
-                    const SizedBox(height: 12),
-                    _buildHandZone(
-                      turn,
-                      liveScore: liveScore,
-                      minimum: minimum,
-                      scoreColor: scoreColor,
-                      potentialTotal: potentialTotal,
-                      potentialColor: potentialColor,
-                      pendingAnalysis: pendingAnalysis,
-                      previewIndices: previewIndices,
-                      previewStates: previewStates,
-                      previewRevealed: _previewMoveRevealed,
-                      frameShown: _previewFrameShown,
-                      isAiTurn: isAiTurn,
-                      extendedValues: extendedValuesShown,
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: turn.busted
-                          ? _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn)
-                          : (isRemoteTurn
-                              ? _buildRemoteTurnView(engine)
-                              : isAiTurn
-                                ? _buildAiTurnView(engine)
-                                : (isInheritedChoice
-                                      // Popup dédiée (voir
-                                      // _maybeShowInheritedHandDialog, en
-                                      // rejeu aussi) : rien à montrer ici en
-                                      // attendant.
-                                      ? const SizedBox.shrink()
-                                      : _buildHumanControlRow(engine, turn))),
-                    ),
-                    // En ligne, quand le serveur relaie les émotions : leurs
-                    // boutons. L'historique, lui, est replié dans la barre du
-                    // bas (voir [_historyBar]), en partie locale comme en ligne.
-                    if (_emotesShown) ...[
-                      const SizedBox(height: 12),
-                      EmoteBar(
-                        v2: ref.watch(onlineSessionProvider.select((s) => s.emotes2Enabled)),
-                        onSend: (emote, phrase) =>
-                            ref.read(onlineSessionProvider.notifier).sendEmote(emote, phrase: phrase),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
