@@ -150,9 +150,8 @@ const TextStyle _iconNumerals = TextStyle(
 );
 
 /// Le dé "Lancer" de la barre d'action : un dé mauve translucide comme ceux de
-/// l'accueil, marqué comme le dé de l'icône de l'app — l'as dessus, « K » sur
-/// le flanc gauche, « 10 » sur le flanc droit (le plus large, vu sous l'angle
-/// des dés de l'accueil) —, son libellé (chance de marquer, "Main pleine !")
+/// l'accueil, marqué comme le dé de l'icône de l'app — l'as dessus, « 10 » sur
+/// le flanc gauche, « K » sur le flanc droit —, son libellé (chance de marquer, "Main pleine !")
 /// écrit dessous.
 /// [onPressed] null laisse le dé visible mais inerte (grisé), sans que la ligne
 /// de contrôle change de forme pour autant.
@@ -160,8 +159,8 @@ Widget _rollButton({required VoidCallback? onPressed, required String label}) {
   return ActionDie(
     kind: ActionDieKind.roll,
     top: const DieMark.pips(1),
-    left: const DieMark.text('K', _iconNumerals),
-    right: const DieMark.text('10', _iconNumerals),
+    left: const DieMark.text('10', _iconNumerals),
+    right: const DieMark.text('K', _iconNumerals),
     color: _rollDieColor,
     ink: Colors.white,
     size: _actionDieSize,
