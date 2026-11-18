@@ -130,6 +130,12 @@ void main() {
 
     transport.current.serverSends(ServerMessage.action(seq: journal.length, action: full[journal.length]));
     await tester.pump(const Duration(milliseconds: 20));
+    // Les dés roulent encore : le même dé gris qu'avant le lancer, rien qui
+    // trahisse le craque.
+    expect(container.read(gameProvider)!.activeTurn!.busted, isTrue);
+    expect(observedDie, findsOneWidget);
+    expect(rollDie, findsNothing);
+    expect(find.text('${_names[first]} joue…'), findsOneWidget);
     await tester.pump(GameScreen.bustRevealDelay + const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
 

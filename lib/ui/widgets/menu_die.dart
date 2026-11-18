@@ -890,6 +890,7 @@ class _BombMark extends DieMark {
         Paint()
           ..color = paint.color
           ..blendMode = paint.blendMode
+          ..maskFilter = paint.maskFilter
           ..style = PaintingStyle.stroke
           ..strokeWidth = unit * 0.045
           ..strokeCap = StrokeCap.round,
@@ -1052,6 +1053,9 @@ class ActionDie extends StatelessWidget {
       button: true,
       enabled: enabled,
       label: label,
+      // Le détecteur de geste est dans le sous-arbre exclu : sans [onTap] ici,
+      // le lecteur d'écran annoncerait un bouton impossible à activer.
+      onTap: onPressed,
       excludeSemantics: true,
       child: InkResponse(
         onTap: onPressed,

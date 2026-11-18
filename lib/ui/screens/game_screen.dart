@@ -1948,7 +1948,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         child: Center(
                           child: turn.busted
                               ? _withMessageLine(
-                                  _buildBustedView(turn, isAiTurn: isAiTurn, isRemoteTurn: isRemoteTurn),
+                                  _buildBustedView(turn, isAiTurn: isAiTurn),
                                 )
                               : (isRemoteTurn
                                     ? _withMessageLine(_buildRemoteTurnView(engine))
@@ -3207,8 +3207,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   /// Tour de l'IA en cours : comme celui d'un autre joueur en ligne (voir
-  /// [_buildRemoteTurnView]), aucune commande — un seul bouton Lancer, inerte,
-  /// qui dit qui joue. Ce que l'IA décide se lit dans les zones du dessus, et
+  /// [_buildRemoteTurnView]), aucune commande — un seul dé gris, inerte
+  /// ([_observedDie]), qui dit qui joue. Ce que l'IA décide se lit dans les zones du dessus, et
   /// dans le journal. Le craque est géré séparément par [_buildBustedView]
   /// (appelé avant celle-ci par l'appelant, IA ou humain confondus).
   Widget _buildAiTurnView(GameEngine engine) => _buildRemoteTurnView(engine);
@@ -3220,9 +3220,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// porte le craque : cette zone ne montre alors plus rien une fois le craque
   /// révélé, pour ne pas dupliquer le bouton.
   ///
-  /// [isRemoteTurn] : le craque d'un autre joueur en ligne se montre, mais c'est
-  /// à lui de l'acquitter — ici le libellé reste, sans aucune action.
-  Widget _buildBustedView(TurnState turn, {required bool isAiTurn, bool isRemoteTurn = false}) {
+  /// Un autre joueur en ligne compte aussi comme [isAiTurn]
+  /// ([GameNotifier.isObservedTurn]) : son craque se montre, mais c'est à lui
+  /// de l'acquitter — ici le libellé reste, sans aucune action.
+  Widget _buildBustedView(TurnState turn, {required bool isAiTurn}) {
     // Le résultat n'est révélé qu'une fois l'animation de lancer des dés
     // terminée (cf. _scheduleBustRevealIfNeeded) : le suspense du lancer ne
     // doit pas être gâché par un message qui s'affiche trop tôt.
@@ -3236,9 +3237,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // c'est la popup qui porte l'action (voir [_showBustDialog]), et laisser
     // la ligne se vider ferait sauter la mise en page.
     if (!revealed || !isAiTurn) {
-      // Un bot, avant la révélation : le même libellé que pendant son tour,
-      // qui ne trahit rien du lancer.
-      if (isAiTurn && !isRemoteTurn) return _buildRemoteTurnView(ref.read(gameProvider)!);
+      // Un bot ou un joueur distant, avant la révélation : le même dé gris que
+      // pendant son tour, qui ne trahit rien du lancer.
+      if (isAiTurn) return _buildRemoteTurnView(ref.read(gameProvider)!);
       return _controlRow(
         primary: _rollButton(
           onPressed: null,
@@ -3582,6 +3583,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
         color: _exchangeDieColor,
         ink: Colors.white,
         size: _actionDieSize,
+        // Inerte seulement le temps du verrou ([_controlsLocked]) : il garde ses
+        // couleurs, ou il clignoterait grisé à chaque transition.
+        dimmed: false,
         onPressed: !_controlsLocked
             ? () async {
                 final picked = await showChoiceBubble(
@@ -3624,6 +3628,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ink: Colors.white,
       size: _actionDieSize,
       tooltip: AppLocalizations.of(context).stopButton,
+      // Comme le dé de recyclage : inerte seulement le temps du verrou
+      // ([_controlsLocked]), sans être grisé.
+      dimmed: false,
       onPressed: onPressed,
     );
   }
