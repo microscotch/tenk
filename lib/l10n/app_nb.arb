@@ -319,6 +319,8 @@
   "onlineReconnecting": "Tilkoblingen ble brutt, kobler til på nytt…",
   "onlineSuspended": "Spillet er satt på pause: en spiller har vært borte for lenge.",
   "onlineWaitingFor": "{playerName} spiller…",
+  "actionTakesOver": "{playerName} tar over",
+  "actionNewHand": "{playerName} ny hånd",
   "onlineDiceOffContinue": "Spill",
   "onlineErrorUnreachable": "Får ikke kontakt med serveren.",
   "onlineErrorRoomNotFound": "Ingen rom med denne koden.",

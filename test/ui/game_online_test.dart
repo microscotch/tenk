@@ -14,6 +14,7 @@ import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
+import '../test_helpers/action_dice.dart';
 
 const _token = 'abcdef0123456789abcdef0123456789';
 const _names = ['Anna', 'Bob'];
@@ -75,7 +76,7 @@ void main() {
     await openGame(tester, mySeat: me, journal: journal);
 
     expect(find.text('${_names[first]} joue…'), findsOneWidget);
-    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas de bouton Stop pour un tour qui n\'est pas le mien');
+    expect(stopDie, findsNothing, reason: 'pas de bouton Stop pour un tour qui n\'est pas le mien');
     expect(container.read(gameProvider.notifier).isMyOnlineTurn, isFalse);
   });
 
@@ -85,10 +86,12 @@ void main() {
     await openGame(tester, mySeat: me, journal: journal);
 
     expect(find.textContaining('joue…'), findsNothing);
-    expect(find.byIcon(Icons.front_hand), findsOneWidget);
+    expect(stopDie, findsNothing, reason: 'rien n\'a été lancé : Stop n\'est pas affiché');
     final before = container.read(gameProvider);
 
-    await tester.tap(find.textContaining('Lancer'));
+    await tester.ensureVisible(rollDie);
+    await tester.pump();
+    await tester.tap(rollDie);
     await tester.pump();
 
     expect(transport.current.sent.where((m) => m.type == ClientMessageType.play).map((m) => m.params['intent']), ['roll']);
@@ -133,7 +136,7 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn!.busted, isTrue);
     expect(find.byType(AlertDialog), findsNothing, reason: 'c\'est à lui d\'acquitter son craque');
     expect(find.text('Craqué !'), findsOneWidget);
-    final button = tester.widget<FilledButton>(find.ancestor(of: find.text('Craqué !'), matching: find.byType(FilledButton)));
+    final button = dieOf(tester, dieWithCaption('Craqué !'));
     expect(button.onPressed, isNull);
   });
 

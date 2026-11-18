@@ -31,6 +31,9 @@ import '../widgets/app_title.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/bordered_section.dart';
 import '../widgets/dice3d/dice_face_texture.dart' show kExtensionLabelColor, pipColorFor;
+import '../widgets/menu_die.dart' show ActionDie, ActionDieKind, DieMark;
+import '../../game/avatar_catalog.dart' show avatarAnimalById;
+import '../../game/avatar_initials.dart' show avatarLetterFor;
 import '../widgets/dice_classification.dart';
 import '../widgets/die_widget.dart';
 import '../widgets/player_avatar.dart';
@@ -125,28 +128,45 @@ String _scorePercentLabel(int diceCount, Set<int> extendedValues) {
   return '${(p * 100).round()} %';
 }
 
-/// Bouton "Lancer" (icône dé + libellé), partagé entre la ligne de contrôle
-/// humaine et le choix de main héritée.
-/// [onPressed] null laisse le bouton visible mais inerte : c'est ainsi qu'un
-/// tour IA montre un lancer possible qu'elle ne prend pas (elle s'arrête),
-/// sans que la ligne de contrôle change de forme pour autant.
+/// Le côté des dés de la barre d'action : Lancer (ou le dé gris du tour d'un
+/// autre), Stop et recyclage ont la même taille.
+const double _actionDieSize = 48;
+
+/// La couleur du dé Lancer (mauve), celle du dé Stop (or : il encaisse) et
+/// celle du dé de recyclage (vert).
+const Color _rollDieColor = Color(0xFF9B6BC9);
+const Color _stopDieColor = Color(0xFFD4A017);
+const Color _exchangeDieColor = Color(0xFF2E7D4F);
+
+/// La couleur des dés gris du tour d'un autre joueur (voir
+/// `_GameScreenState._observedDie`).
+const Color _observedDieColor = Color(0xFF6B6F73);
+
+/// Les chiffres du dé de l'icône de l'app (voir `paintAppIconDie`), repris sur
+/// le dé "Lancer".
+const TextStyle _iconNumerals = TextStyle(
+  fontFamily: 'Fraunces',
+  fontVariations: [FontVariation('wght', 900), FontVariation('opsz', 144)],
+);
+
+/// Le dé "Lancer" de la barre d'action : un dé mauve translucide comme ceux de
+/// l'accueil, marqué comme le dé de l'icône de l'app — l'as dessus, « K » sur
+/// le flanc gauche, « 10 » sur le flanc droit (le plus large, vu sous l'angle
+/// des dés de l'accueil) —, son libellé (chance de marquer, "Main pleine !")
+/// écrit dessous.
+/// [onPressed] null laisse le dé visible mais inerte (grisé), sans que la ligne
+/// de contrôle change de forme pour autant.
 Widget _rollButton({required VoidCallback? onPressed, required String label}) {
-  return FilledButton(
+  return ActionDie(
+    kind: ActionDieKind.roll,
+    top: const DieMark.pips(1),
+    left: const DieMark.text('K', _iconNumerals),
+    right: const DieMark.text('10', _iconNumerals),
+    color: _rollDieColor,
+    ink: Colors.white,
+    size: _actionDieSize,
+    caption: label,
     onPressed: onPressed,
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.casino, size: 18),
-        const SizedBox(width: 8),
-        // Le bouton se dimensionne sur son libellé (voir _controlRow, qui le
-        // centre entre deux côtés de largeur égale) : Flexible + ellipsis ne
-        // servent que de garde-fou si la place venait à manquer sur un écran
-        // très étroit, plutôt que de laisser le texte déborder.
-        Flexible(
-          child: Text(label, overflow: TextOverflow.ellipsis, softWrap: false),
-        ),
-      ],
-    ),
   );
 }
 
@@ -3138,13 +3158,51 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// Tour d'un autre joueur en ligne : aucune commande, juste qui joue. Ses
   /// lancers et ses gardes arrivent du serveur et se voient dans les zones du
   /// dessus, comme ceux d'un bot.
+  ///
+  /// Le dé gris porte la pastille du joueur et, sur ses flancs, ce qu'il fait :
+  /// ▶ il joue ; ⏭ il vient de reprendre la main héritée, ⏮ il l'a refusée
+  /// (tant qu'il n'a pas encore lancé).
   Widget _buildRemoteTurnView(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
+    final name = engine.currentPlayer.name;
+    final turn = engine.activeTurn;
+    // Une main était à reprendre (moins de 5 dés transmis) et le joueur a
+    // choisi, sans avoir encore lancé : reprise s'il est reparti des dés
+    // gardés par le joueur précédent, nouvelle main sinon.
+    final justChose = turn != null && !turn.busted && !turn.hasRolledThisTurn && engine.nextTurnDice < 5;
+    if (justChose) {
+      final tookOver = turn.keptDiceThisTurn.isNotEmpty;
+      return _controlRow(
+        primary: tookOver
+            ? _observedDie(engine, const DieMark.icon(Icons.skip_next), l10n.actionTakesOver(name))
+            : _observedDie(engine, const DieMark.icon(Icons.skip_previous), l10n.actionNewHand(name)),
+      );
+    }
     return _controlRow(
-      primary: FilledButton(
-        onPressed: null,
-        child: Text(l10n.onlineWaitingFor(engine.currentPlayer.name)),
+      primary: _observedDie(engine, const DieMark.icon(Icons.play_arrow), l10n.onlineWaitingFor(name)),
+    );
+  }
+
+  /// Le dé gris, inerte, du tour d'un autre joueur (bot, joueur en ligne) : sa
+  /// pastille sur le dessus, [sides] sur les deux flancs, [caption] dessous.
+  Widget _observedDie(GameEngine engine, DieMark sides, String caption) {
+    final name = engine.currentPlayer.name;
+    final avatars = AvatarSet.resolve(engine.players.map((p) => p.name), ref.watch(avatarLooksProvider));
+    final look = avatars.looks[name];
+    return ActionDie(
+      kind: ActionDieKind.observed,
+      top: DieMark.avatar(
+        color: avatars.color(name) ?? avatarColorFor(name),
+        letter: avatarLetterFor(look?.name ?? name),
+        emoji: avatarAnimalById(look?.animal)?.emoji,
       ),
+      left: sides,
+      right: sides,
+      color: _observedDieColor,
+      ink: Colors.white,
+      size: _actionDieSize,
+      caption: caption,
+      dimmed: false,
     );
   }
 
@@ -3193,7 +3251,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // [_scheduleAiIfNeeded] ; un joueur distant, c'est à lui) — le libellé
     // reste affiché le temps de la temporisation des messages.
     return _controlRow(
-      primary: FilledButton(onPressed: null, child: Text(AppLocalizations.of(context).bustedTitle)),
+      primary: _observedDie(ref.read(gameProvider)!, DieMark.bomb, AppLocalizations.of(context).bustedTitle),
     );
   }
 
@@ -3350,21 +3408,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
               : null,
         ),
         _controlRow(
-          // Stop reste visible en permanence, simplement inerte tant que
-          // s'arrêter n'est pas légal. Il ne s'ACTIVE qu'une fois les dés
-          // immobilisés (`_rollSettled`, comme les scores affichés) : le voir
-          // devenir cliquable pendant que les dés roulent encore révélerait
-          // d'avance que le lancer marque assez pour s'arrêter — le suspense
-          // serait gâché. Sans lancer en attente, `_rollSettled` est déjà
-          // vrai : rien ne change pour l'état au repos.
-          leading: KeyedSubtree(
-            key: widget.tutorial?.keyFor(TutorialTarget.stop),
-            child: _stopButton(
-              onPressed: bankAttempt.success && _rollSettled && _tutorialAllows(engine, TutorialTarget.stop)
-                  ? _guarded(onStop)
-                  : null,
-            ),
-          ),
+          // Stop (encaisser) n'apparaît que lorsqu'il est actif : s'arrêter est
+          // légal, et les dés sont immobilisés (`_rollSettled`, comme les scores
+          // affichés) — le voir apparaître pendant que les dés roulent encore
+          // révélerait d'avance que le lancer marque assez pour s'arrêter, le
+          // suspense serait gâché. Sans lancer en attente, `_rollSettled` est
+          // déjà vrai : rien ne change pour l'état au repos. Son absence ne
+          // déplace pas "Lancer", toujours au centre (voir [_controlRow]).
+          leading: bankAttempt.success && _rollSettled && _tutorialAllows(engine, TutorialTarget.stop)
+              ? KeyedSubtree(
+                  key: widget.tutorial?.keyFor(TutorialTarget.stop),
+                  child: _stopButton(onPressed: _guarded(onStop)),
+                )
+              : null,
           primary: KeyedSubtree(
             key: widget.tutorial?.keyFor(TutorialTarget.roll),
             child: _rollButton(
@@ -3377,17 +3433,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
               label: rollLabel,
             ),
           ),
-          trailing: KeyedSubtree(
-            key: widget.tutorial?.keyFor(TutorialTarget.exchange),
-            child: _exchangeControl(
-              enabled: canChoose && _tutorialAllows(engine, TutorialTarget.exchange),
-              value: selectedKeep,
-              minKeep: minKeep,
-              maxKeep: maxKeep,
-              fivesCount: fives?.diceCount ?? 0,
-              potentialFor: (keep) => currentTotal + turn.bankedScore + (pending == null ? 0 : _previewPoints(pending, keep)),
-            ),
-          ),
+          // Le dé de recyclage, de même, n'apparaît que lorsqu'il y a des 5 à
+          // échanger.
+          trailing: canChoose && _tutorialAllows(engine, TutorialTarget.exchange)
+              ? KeyedSubtree(
+                  key: widget.tutorial?.keyFor(TutorialTarget.exchange),
+                  child: _exchangeControl(
+                    value: selectedKeep,
+                    minKeep: minKeep,
+                    maxKeep: maxKeep,
+                    fivesCount: fives?.diceCount ?? 0,
+                    potentialFor: (keep) => currentTotal + turn.bankedScore + _previewPoints(pending, keep),
+                  ),
+                )
+              : null,
         ),
       ],
     );
@@ -3443,17 +3502,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return SizedBox(
       width: double.infinity,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Les deux côtés prennent une part égale de la largeur restante :
           // c'est ce qui garde le bouton principal exactement au centre, quelle
           // que soit la taille de ce qui l'encadre — et donc au même endroit
           // d'un tour à l'autre, humain comme IA.
           Expanded(
-            child: Align(alignment: Alignment.centerLeft, child: left ?? const SizedBox.shrink()),
+            child: Align(alignment: Alignment.topLeft, child: left ?? const SizedBox.shrink()),
           ),
           primary,
           Expanded(
-            child: Align(alignment: Alignment.centerRight, child: right ?? const SizedBox.shrink()),
+            child: Align(alignment: Alignment.topRight, child: right ?? const SizedBox.shrink()),
           ),
         ],
       ),
@@ -3502,7 +3562,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// déclinables du lancer, [potentialFor] le total potentiel pour un nombre de
   /// 5 gardés.
   Widget _exchangeControl({
-    required bool enabled,
     required int value,
     required int minKeep,
     required int maxKeep,
@@ -3511,15 +3570,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }) {
     final highest = maxKeep < minKeep ? minKeep : maxKeep;
     final current = value.clamp(minKeep, highest);
-    final accent = Theme.of(context).colorScheme.primary;
     final l10n = AppLocalizations.of(context);
 
-    // Hauteur alignée sur [_stopButton] : les deux commandes latérales doivent
-    // peser pareil de part et d'autre de "Lancer". Actif, le bouton passe à
-    // l'ambre — contour et pictogramme —, pour se distinguer de son état inerte.
+    // Un dé de la taille du dé Stop ([_stopButton]). Il n'est affiché que
+    // lorsqu'il est actif ; seul le verrou bref d'après une transition
+    // (`_controlsLocked`) le rend un instant inerte.
     return Builder(
-      builder: (buttonContext) => IconButton.outlined(
-        onPressed: enabled && !_controlsLocked
+      builder: (buttonContext) => ActionDie.uniform(
+        kind: ActionDieKind.exchange,
+        mark: const DieMark.icon(Icons.recycling),
+        color: _exchangeDieColor,
+        ink: Colors.white,
+        size: _actionDieSize,
+        onPressed: !_controlsLocked
             ? () async {
                 final picked = await showChoiceBubble(
                   context,
@@ -3533,11 +3596,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 if (picked != null && mounted) _changeSelectedKeep(int.parse(picked));
               }
             : null,
-        icon: const Icon(Icons.recycling),
         tooltip: l10n.exchangeFivesTooltip,
-        style: enabled
-            ? IconButton.styleFrom(foregroundColor: accent, side: BorderSide(color: accent, width: 1.6))
-            : null,
       ),
     );
   }
@@ -3554,26 +3613,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return l10n.exchangeKeepCount(keep);
   }
 
-  /// Bouton Stop, réduit au minimum (icône seule, pas de largeur imposée) :
-  /// contrairement à Lancer, son libellé ne varie jamais, pas besoin d'une
-  /// largeur fixe pour éviter un changement de taille. [onPressed] null le
-  /// laisse visible mais inerte — c'est ainsi qu'un tour IA montre un arrêt
-  /// possible qu'elle ne prend pas, sans déformer la ligne.
+  /// Le dé Stop : or, un dollar sur toutes ses faces — il encaisse les
+  /// points de la main courante —, sans libellé (son nom est l'infobulle).
+  /// N'est affiché que lorsque s'arrêter est possible.
   Widget _stopButton({required VoidCallback? onPressed}) {
-    final accent = Theme.of(context).colorScheme.primary;
-    return IconButton.outlined(
-      onPressed: onPressed,
-      icon: const Icon(Icons.front_hand),
+    return ActionDie.uniform(
+      kind: ActionDieKind.stop,
+      mark: const DieMark.icon(Icons.attach_money),
+      color: _stopDieColor,
+      ink: Colors.white,
+      size: _actionDieSize,
       tooltip: AppLocalizations.of(context).stopButton,
-      // Actif, le bouton passe à l'ambre — contour et pictogramme : son seul
-      // changement de gris ne se remarquait pas (même traitement que la
-      // pastille d'échange en face, voir [_exchangeControl]).
-      style: onPressed == null
-          ? null
-          : IconButton.styleFrom(
-              foregroundColor: accent,
-              side: BorderSide(color: accent, width: 1.6),
-            ),
+      onPressed: onPressed,
     );
   }
 

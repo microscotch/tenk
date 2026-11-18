@@ -17,6 +17,7 @@ import 'package:le10000/ui/widgets/paused_games_list.dart';
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/scripted_game.dart';
+import '../test_helpers/action_dice.dart';
 
 void main() {
   late FakeGameSaveStore store;
@@ -205,7 +206,7 @@ void main() {
       await tapSaved(tester, beforeFirstRoll(actions));
 
       expect(find.byType(GameScreen), findsOneWidget);
-      expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget, reason: 'le bouton Lancer est là');
+      expect(rollDie, findsOneWidget, reason: 'le bouton Lancer est là');
       await tester.pumpWidget(const SizedBox());
     });
   });

@@ -89,6 +89,13 @@ flutter:
     - assets/images/
     - assets/credits.md
 
+  # Fraunces (licence OFL) : les chiffres du dé de l'icône de l'app, repris sur le
+  # dé « Lancer » de l'écran de jeu.
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces.ttf
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

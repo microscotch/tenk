@@ -319,6 +319,8 @@
   "onlineReconnecting": "Връзката е прекъсната, свързване отново…",
   "onlineSuspended": "Играта е спряна: играч отсъства твърде дълго.",
   "onlineWaitingFor": "{playerName} играе…",
+  "actionTakesOver": "{playerName} поема",
+  "actionNewHand": "{playerName} нова ръка",
   "onlineDiceOffContinue": "Играй",
   "onlineErrorUnreachable": "Сървърът не е достъпен.",
   "onlineErrorRoomNotFound": "Няма стая с този код.",

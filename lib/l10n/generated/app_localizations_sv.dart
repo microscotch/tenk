@@ -1127,6 +1127,16 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String actionTakesOver(String playerName) {
+    return '$playerName tar över';
+  }
+
+  @override
+  String actionNewHand(String playerName) {
+    return '$playerName ny hand';
+  }
+
+  @override
   String get onlineDiceOffContinue => 'Spela';
 
   @override

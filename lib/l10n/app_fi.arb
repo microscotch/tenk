@@ -319,6 +319,8 @@
   "onlineReconnecting": "Yhteys katkesi, yhdistetään uudelleen…",
   "onlineSuspended": "Peli keskeytetty: pelaaja on ollut poissa liian kauan.",
   "onlineWaitingFor": "{playerName} pelaa…",
+  "actionTakesOver": "{playerName} jatkaa",
+  "actionNewHand": "{playerName} uusi käsi",
   "onlineDiceOffContinue": "Pelaa",
   "onlineErrorUnreachable": "Palvelimeen ei saada yhteyttä.",
   "onlineErrorRoomNotFound": "Tällä koodilla ei ole huonetta.",

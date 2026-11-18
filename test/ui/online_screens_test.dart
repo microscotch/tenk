@@ -31,6 +31,7 @@ import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/my_profile.dart';
 import '../test_helpers/scripted_game.dart';
 import '../test_helpers/history.dart';
+import '../test_helpers/action_dice.dart';
 
 const _token = 'abcdef0123456789abcdef0123456789';
 
@@ -790,7 +791,7 @@ void main() {
       await openGame(tester);
 
       // La bulle propose tous les choix, chacun suivi du total potentiel : on prend celui de la sélection voulue.
-      await tester.tap(find.byIcon(Icons.recycling));
+      await tester.tap(exchangeDie);
       await tester.pumpAndSettle();
       final fives = choice.turn.pendingRoll!.declinableFives!.diceCount;
       final keepWanted = fives - choice.alternative;

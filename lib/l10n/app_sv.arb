@@ -319,6 +319,8 @@
   "onlineReconnecting": "Anslutningen bröts, återansluter…",
   "onlineSuspended": "Spelet pausat: en spelare har varit borta för länge.",
   "onlineWaitingFor": "{playerName} spelar…",
+  "actionTakesOver": "{playerName} tar över",
+  "actionNewHand": "{playerName} ny hand",
   "onlineDiceOffContinue": "Spela",
   "onlineErrorUnreachable": "Servern går inte att nå.",
   "onlineErrorRoomNotFound": "Inget rum med den här koden.",

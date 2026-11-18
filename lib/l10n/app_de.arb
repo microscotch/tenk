@@ -319,6 +319,8 @@
   "onlineReconnecting": "Verbindung verloren, verbinde neu …",
   "onlineSuspended": "Spiel unterbrochen: Ein Spieler ist zu lange abwesend.",
   "onlineWaitingFor": "{playerName} ist am Zug …",
+  "actionTakesOver": "{playerName} übernimmt",
+  "actionNewHand": "{playerName} neue Hand",
   "onlineDiceOffContinue": "Spielen",
   "onlineErrorUnreachable": "Server nicht erreichbar.",
   "onlineErrorRoomNotFound": "Kein Raum mit diesem Code.",

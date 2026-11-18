@@ -26,6 +26,7 @@ import 'package:le10000/ui/widgets/score_sheet.dart';
 import '../test_helpers/fake_player_store.dart';
 import '../test_helpers/history.dart';
 import '../test_helpers/scripted_game.dart';
+import '../test_helpers/action_dice.dart';
 
 /// Ces scénarios (craque, victoire) sont difficiles à obtenir de façon
 /// fiable via de vrais lancers aléatoires en un temps raisonnable ; on
@@ -46,14 +47,12 @@ const _controlLockPump = Duration(milliseconds: 400);
 final _autoActionPump = const AppSettings().autoActionDelay + const Duration(milliseconds: 100);
 final _aiStepPump = const AppSettings().aiMessageDelay + const Duration(milliseconds: 100);
 
-/// Le bouton Stop est désormais toujours présent dans la ligne de contrôle,
-/// et c'est son activation — pas sa présence — qui dit si s'arrêter est
-/// possible (voir `_controlRow` dans `game_screen.dart`).
+/// Le dé Stop n'est affiché que lorsque s'arrêter est possible (voir
+/// `_buildHumanControlRow` dans `game_screen.dart`) : sa présence, active, dit
+/// si l'on peut s'arrêter.
 bool _stopEnabled(WidgetTester tester) {
-  final button = tester.widget<IconButton>(
-    find.ancestor(of: find.byIcon(Icons.front_hand), matching: find.byType(IconButton)).first,
-  );
-  return button.onPressed != null;
+  if (stopDie.evaluate().isEmpty) return false;
+  return dieOf(tester, stopDie).onPressed != null;
 }
 
 /// La popup de craque attend l'arrêt du plus lent des dés (voir
@@ -1118,9 +1117,9 @@ void main() {
 
     // Le craque n'est pas encore révélé : rien ne doit l'annoncer.
     expect(find.byType(CircularProgressIndicator), findsNothing);
-    final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
+    final rollButton = rollDie;
     expect(rollButton, findsOneWidget);
-    expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
+    expect(dieOf(tester, rollButton).onPressed, isNull,
         reason: 'le bouton reste en place mais inerte pendant le suspense');
 
     await tester.pumpAndSettle();
@@ -1150,19 +1149,21 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
+    final rollButton = rollDie;
+    await tester.ensureVisible(rollButton);
+    await tester.pump();
     await tester.tap(rollButton);
     await tester.pump();
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull, reason: 'le lancer est parti');
 
     // Au-delà de la brève inertie qui suit une transition (300 ms), les dés roulent encore.
     await tester.pump(const Duration(milliseconds: 500));
-    expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
+    expect(dieOf(tester, rollButton).onPressed, isNull,
         reason: 'les dés roulent encore : on ne relance pas (125 ms après le dernier dé immobile, pas avant)');
 
     await tester.pump(DieWidget.maxRollDuration);
     await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.widget<FilledButton>(rollButton).onPressed, isNotNull,
+    expect(dieOf(tester, rollButton).onPressed, isNotNull,
         reason: 'le résultat est effectif : le bouton redevient actif');
     await tester.pumpAndSettle();
   });
@@ -1188,8 +1189,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final rollButton = find.widgetWithIcon(FilledButton, Icons.casino);
-    expect(tester.widget<FilledButton>(rollButton).onPressed, isNotNull,
+    final rollButton = rollDie;
+    expect(dieOf(tester, rollButton).onPressed, isNotNull,
         reason: 'au repos, la commande répond');
 
     // Transition : le moteur change d'état sous le doigt du joueur.
@@ -1198,11 +1199,11 @@ void main() {
       const GameSetup(playerNames: ['A', 'B']),
     );
     await tester.pump();
-    expect(tester.widget<FilledButton>(rollButton).onPressed, isNull,
+    expect(dieOf(tester, rollButton).onPressed, isNull,
         reason: 'un tap déjà parti ne doit pas être encaissé par la commande qui vient d\'apparaître');
 
     await tester.pump(_controlLockPump);
-    expect(tester.widget<FilledButton>(rollButton).onPressed, isNotNull,
+    expect(dieOf(tester, rollButton).onPressed, isNotNull,
         reason: 'la fenêtre passée, la commande répond de nouveau');
 
     await tester.pumpAndSettle();
@@ -1547,7 +1548,7 @@ void main() {
     expect(find.text('1500'), findsOneWidget);
     expect(find.byIcon(Icons.priority_high), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.front_hand));
+    await tester.tap(stopDie);
     await tester.pumpAndSettle();
 
     // La main passe à A (pass-and-play) : écran de transition affiché.
@@ -1619,7 +1620,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.ensureVisible(rollDie);
+    await tester.pump();
+    await tester.tap(rollDie);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Craqué'), findsNothing, reason: 'la quinte d\'as ne craque jamais');
@@ -1668,7 +1671,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.front_hand));
+    await tester.tap(stopDie);
     await tester.pumpAndSettle();
 
     expect(find.byType(PassDeviceScreen), findsOneWidget);
@@ -1759,7 +1762,7 @@ void main() {
     expect(after.winnerIndex, 0, reason: 'A doit gagner malgré le tour final joué par B');
   });
 
-  testWidgets('pendant le tour final, Stop reste affiché mais désactivé sous la cible, '
+  testWidgets('pendant le tour final, Stop n\'est pas affiché sous la cible, '
       'avec le message dédié', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -1993,7 +1996,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
+    expect(stopDie, findsNothing, reason: 'pas encore de tour actif tant que la main n\'est pas reprise');
 
     await dismissInheritedHand(tester, resume: true);
 
@@ -2037,11 +2040,11 @@ void main() {
     // Aucun écran intermédiaire "Valider" : le choix de garde propose
     // directement de continuer ou de s'arrêter.
     expect(find.text('Valider'), findsNothing);
-    expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
-    expect(find.byIcon(Icons.front_hand), findsOneWidget);
+    expect(rollDie, findsOneWidget);
+    expect(stopDie, findsOneWidget);
 
-    await tester.ensureVisible(find.byIcon(Icons.front_hand));
-    await tester.tap(find.byIcon(Icons.front_hand));
+    await tester.ensureVisible(stopDie);
+    await tester.tap(stopDie);
     await tester.pumpAndSettle();
 
     expect(find.byType(PassDeviceScreen), findsOneWidget, reason: 'B a banqué, la main passe à A');
@@ -2084,7 +2087,9 @@ void main() {
     expect(_stopEnabled(tester), isFalse,
         reason: 'une main pleine ne peut pas être banquée, même pile sur 10000');
 
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.ensureVisible(rollDie);
+    await tester.pump();
+    await tester.tap(rollDie);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull, reason: 'relancer un tour déjà craqué ne doit pas lever');
@@ -2264,7 +2269,9 @@ void main() {
         reason: 'le joueur peut encore choisir combien de 5 garder, ou s\'arrêter');
 
     // L'action tranche le choix : le résumé arrive à ce moment-là.
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.ensureVisible(rollDie);
+    await tester.pump();
+    await tester.tap(rollDie);
     await tester.pump();
     await expectInHistory(tester, '2 cinq : 100, 3 dés => 200 pts', findsOneWidget);
 
@@ -2301,7 +2308,7 @@ void main() {
     await expectInHistory(tester, "brelan d'as : 1000, main pleine => 1000 pts", findsOneWidget);
     // "Main pleine !" reste le libellé du bouton Lancer, mais n'a plus
     // d'entrée de journal à lui tout seul : le résumé du lancer le dit déjà.
-    expect(find.widgetWithText(FilledButton, 'Main pleine !'), findsOneWidget);
+    expect(dieWithCaption('Main pleine !'), findsOneWidget);
     // Le liseré de la main porte le total qu'aurait le joueur en la gardant.
     expect(find.textContaining('→ 1000', findRichText: true), findsOneWidget);
   });
@@ -2339,7 +2346,7 @@ void main() {
     // l'attendrait pas.
     await tester.pump(DieWidget.maxRollDuration + const Duration(milliseconds: 100));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(FilledButton, 'Main pleine !'), findsOneWidget, reason: 'le bouton reste simple');
+    expect(dieWithCaption('Main pleine !'), findsOneWidget, reason: 'le bouton reste simple');
     // Les dés sont immobilisés mais pas encore posés dans la main : pas de spoil.
     expect(find.textContaining('→ 2750', findRichText: true), findsNothing, reason: 'dés pas encore dans la main');
     // Puis ils migrent dans la main (délai + fondu) : le total potentiel apparaît.
@@ -2429,8 +2436,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithIcon(FilledButton, Icons.casino));
-    await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+    await tester.ensureVisible(rollDie);
+    await tester.tap(rollDie);
     await tester.pump();
 
     final after = container.read(gameProvider)!;
@@ -2462,6 +2469,54 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn!.diceToRoll, 5);
   });
 
+  group('le dé gris d\'un bot qui vient de choisir sa main', () {
+    const ace = KeptDie(value: 1, points: 100, isExtended: false);
+    const three = KeptDie(value: 3, points: 100, isExtended: false, rollIndex: 1);
+
+    Future<void> showBotChoice(WidgetTester tester, {required bool useFullHand}) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final engine = GameEngine(
+        players: [Player(name: 'Bot', totalScore: 1800, hasEntered: true), Player(name: 'B')],
+        currentPlayerIndex: 0,
+        nextTurnDice: 1,
+        inheritedScore: 400,
+        inheritedKeptDice: const [ace, three, three, three],
+      ).startTurn(useFullHand: useFullHand);
+      container.read(gameProvider.notifier).debugLoadState(
+            engine,
+            const GameSetup(playerNames: ['Bot', 'B'], aiPlayers: {0: AiDifficulty.prudent}),
+          );
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: GameScreen(), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+        ),
+      );
+      await tester.pump();
+    }
+
+    Future<void> unmount(WidgetTester tester) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('reprise de la main : « Bot reprend », jusqu\'à son premier lancer', (tester) async {
+      await showBotChoice(tester, useFullHand: false);
+      expect(dieWithCaption('Bot reprend'), findsOneWidget);
+      expect(dieOf(tester, observedDie).onPressed, isNull);
+      expect(find.text('Bot joue…'), findsNothing);
+      await unmount(tester);
+    });
+
+    testWidgets('main refusée : « Bot nouvelle main »', (tester) async {
+      await showBotChoice(tester, useFullHand: true);
+      expect(dieWithCaption('Bot nouvelle main'), findsOneWidget);
+      expect(dieOf(tester, observedDie).onPressed, isNull);
+      await unmount(tester);
+    });
+  });
+
   testWidgets('la ligne de contrôle d\'un tour IA ne montre qu\'un bouton Lancer inerte, « <joueur> joue… »',
       (tester) async {
     final container = ProviderContainer();
@@ -2487,10 +2542,10 @@ void main() {
 
     // Comme pour un joueur distant en ligne : ni Stop, ni choix des 5, et le
     // seul bouton est inerte — le bot joue seul, rien à presser.
-    final button = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'A joue…'));
+    final button = dieOf(tester, dieWithCaption('A joue…'));
     expect(button.onPressed, isNull);
-    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'pas de bouton Stop pendant le tour d\'un bot');
-    expect(find.byIcon(Icons.recycling), findsNothing);
+    expect(stopDie, findsNothing, reason: 'pas de bouton Stop pendant le tour d\'un bot');
+    expect(exchangeDie, findsNothing);
     // Le bot porte la même icône que le joueur remplacé par un bot en ligne,
     // lui seul : B est humain.
     expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
@@ -2525,12 +2580,12 @@ void main() {
     await tester.pump();
 
     // Avant la révélation : le libellé ordinaire, qui ne trahit rien.
-    expect(find.widgetWithText(FilledButton, 'Bot joue…'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, 'Craqué !'), findsNothing);
+    expect(dieWithCaption('Bot joue…'), findsOneWidget);
+    expect(dieWithCaption('Craqué !'), findsNothing);
 
     // Dés immobilisés : « Craqué ! », inerte, et le tour n'est pas encore fini.
     await tester.pump(GameScreen.bustRevealDelay);
-    final busted = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Craqué !'));
+    final busted = dieOf(tester, dieWithCaption('Craqué !'));
     expect(busted.onPressed, isNull);
     expect(container.read(gameProvider)!.currentPlayerIndex, 0);
 
@@ -2574,7 +2629,7 @@ void main() {
     // auto) : le bouton affiché est le sien, pas un choix réservé à
     // l'humain ("S'arrêter" n'a de sens que dans le dialogue de banque
     // humain à deux boutons, "Valider" n'existe plus du tout).
-    expect(find.byIcon(Icons.front_hand), findsNothing, reason: 'le tour est à l\'IA : rien à arrêter soi-même');
+    expect(stopDie, findsNothing, reason: 'le tour est à l\'IA : rien à arrêter soi-même');
     expect(find.text('Valider'), findsNothing);
 
     // On laisse le temps s'écouler (délai de "réflexion" de l'IA) jusqu'à ce
@@ -2610,7 +2665,7 @@ void main() {
       // Score de tour à 0 : insuffisant pour s'arrêter. Le bouton "Lancer"
       // (icône dé + pourcentage) est affiché immédiatement et se valide
       // seul (joueur humain en mode auto).
-      expect(find.widgetWithIcon(FilledButton, Icons.casino), findsOneWidget);
+      expect(rollDie, findsOneWidget);
       await tester.pump(_autoActionPump);
       expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNotNull,
           reason: 'le joueur humain reprend la main normalement, avec un lancer automatique');
@@ -2766,7 +2821,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('exchange-bubble')), findsNothing, reason: 'la bulle ne s\'ouvre qu\'au tap');
-    await tester.tap(find.byIcon(Icons.recycling));
+    await tester.tap(exchangeDie);
     await tester.pumpAndSettle();
     // Tous les choix, du moins au plus de 5 gardés, chacun suivi de son total potentiel.
     expect(find.text('Ignorer tous les cinq · 1100'), findsOneWidget);
@@ -2855,7 +2910,7 @@ void main() {
     expect(find.text('Refuser'), findsNothing,
         reason: 'ce choix ne s\'adresse à personne : l\'IA décide seule');
     expect(find.text('Reprendre ?'), findsNothing, reason: 'ni popup pour l\'IA');
-    expect(find.widgetWithText(FilledButton, 'Bot joue…'), findsOneWidget,
+    expect(dieWithCaption('Bot joue…'), findsOneWidget,
         reason: 'la ligne garde la forme d\'un tour d\'IA ordinaire');
 
     // L'IA enchaîne toute seule : on démonte avant que ses temporisations ne
@@ -2897,9 +2952,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final stop = tester.getRect(find.byIcon(Icons.front_hand));
-    final roll = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
-    final exchange = tester.getRect(find.byIcon(Icons.recycling));
+    final stop = tester.getRect(stopDie);
+    final roll = tester.getRect(rollDie);
+    final exchange = tester.getRect(exchangeDie);
 
     // Réglage par défaut, droitier : l'échange tombe sous le pouce droit...
     expect(exchange.center.dx, lessThan(roll.left), reason: 'droitier : l\'échange est à gauche');
@@ -2908,9 +2963,9 @@ void main() {
     // ...et le mode gaucher les intervertit, sans toucher au bouton central.
     container.read(settingsProvider.notifier).setRightHanded(false);
     await tester.pumpAndSettle();
-    final stopG = tester.getRect(find.byIcon(Icons.front_hand));
-    final exchangeG = tester.getRect(find.byIcon(Icons.recycling));
-    final rollG = tester.getRect(find.widgetWithIcon(FilledButton, Icons.casino));
+    final stopG = tester.getRect(stopDie);
+    final exchangeG = tester.getRect(exchangeDie);
+    final rollG = tester.getRect(rollDie);
     expect(stopG.center.dx, lessThan(rollG.left), reason: 'gaucher : Stop passe à gauche');
     expect(exchangeG.center.dx, greaterThan(rollG.right), reason: 'gaucher : l\'échange passe à droite');
     expect(rollG.center.dx, roll.center.dx, reason: 'le bouton Lancer ne bouge pas');
@@ -2924,13 +2979,13 @@ void main() {
 
     expect(_stopEnabled(tester), isTrue, reason: '300 banqués suffisent pour s\'arrêter');
     expect(
-      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.recycling)).onPressed,
+      dieOf(tester, exchangeDie).onPressed,
       isNotNull,
       reason: 'deux 5 déclinables : l\'échange est possible',
     );
   });
 
-  testWidgets('ligne de contrôle : les deux commandes latérales restent visibles mais inertes',
+  testWidgets('ligne de contrôle : les deux commandes latérales inactives ne sont pas affichées',
       (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -2954,14 +3009,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byIcon(Icons.front_hand), findsOneWidget, reason: 'Stop reste visible');
-    expect(find.byIcon(Icons.recycling), findsOneWidget, reason: 'l\'échange reste visible');
-    expect(_stopEnabled(tester), isFalse, reason: 'rien n\'a encore été lancé');
-    expect(
-      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.recycling)).onPressed,
-      isNull,
-      reason: 'aucun 5 à échanger',
-    );
+    expect(stopDie, findsNothing, reason: 'rien n\'a encore été lancé : pas de Stop');
+    expect(exchangeDie, findsNothing, reason: 'aucun 5 à échanger : pas de recyclage');
+    expect(rollDie, findsOneWidget, reason: 'Lancer, lui, est toujours là');
     expect(find.byKey(const ValueKey('exchange-bubble')), findsNothing, reason: 'sans choix, pas de bulle');
   });
 
@@ -2992,7 +3042,7 @@ void main() {
       );
       await tester.pump();
 
-      final button = find.widgetWithIcon(FilledButton, Icons.casino);
+      final button = rollDie;
       expect(button, findsOneWidget);
       final label = tester
           .widget<Text>(find.descendant(of: button, matching: find.byType(Text)))

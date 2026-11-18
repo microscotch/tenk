@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'dice3d/dice_face_texture.dart' show pipPositions;
+import 'player_avatar.dart' show kEmojiFontFallback;
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 
 /// Une entrée du menu d'accueil, en dé vu de trois quarts : chacune de ses
@@ -50,7 +52,13 @@ class MenuDie extends StatelessWidget {
     required Color ink,
     required double size,
     required double pixelRatio,
-  }) => _MenuDiePicture.obtain(icon, color, ink, size, pixelRatio);
+  }) => _MenuDiePicture.obtain(_lookKey(icon, color, ink), _painter(icon, color, ink), size, pixelRatio);
+
+  static String _lookKey(IconData icon, Color color, Color ink) =>
+      'menu|${icon.codePoint}|${icon.fontFamily}|${icon.fontPackage}|${color.toARGB32()}|${ink.toARGB32()}';
+
+  static _MenuDiePainter _painter(IconData icon, Color color, Color ink) =>
+      _MenuDiePainter(icon: icon, color: color, ink: ink, cameraDistance: _perspectiveDistance, yaw: _menuYaw);
 
   static const _grayscale = ColorFilter.matrix(<double>[
     0.2126, 0.7152, 0.0722, 0, 0, //
@@ -65,7 +73,7 @@ class MenuDie extends StatelessWidget {
     Widget die = SizedBox(
       width: size,
       height: size,
-      child: _MenuDiePicture(icon: icon, color: color, ink: ink, size: size),
+      child: _MenuDiePicture(look: _lookKey(icon, color, ink), painter: () => _painter(icon, color, ink), size: size),
     );
     Widget caption = Text(
       label,
@@ -105,13 +113,21 @@ class MenuDie extends StatelessWidget {
 /// L'image est calculée à la densité de l'écran, avec une marge tout autour pour
 /// que l'ombre portée floue ne soit pas rognée. Tant qu'elle n'est pas prête
 /// (le premier affichage seulement), la place du dé reste vide.
+///
+/// Les dés de la barre d'action de l'écran de jeu ([ActionDie]) passent par là
+/// aussi : peint directement à l'écran, en perspective, un glyphe gravé
+/// ([_engrave]) sortait rogné de ses calques ; rendu dans une image, il est
+/// entier, comme à l'accueil.
 class _MenuDiePicture extends StatefulWidget {
-  final IconData icon;
-  final Color color;
-  final Color ink;
+  /// Ce qui distingue l'apparence de ce dé de celle des autres (couleurs,
+  /// décor), hors taille et densité : la clé de son image en mémoire.
+  final String look;
+
+  /// Le peintre du dé, appelé seulement si son image n'est pas déjà en mémoire.
+  final _MenuDiePainter Function() painter;
   final double size;
 
-  const _MenuDiePicture({required this.icon, required this.color, required this.ink, required this.size});
+  const _MenuDiePicture({required this.look, required this.painter, required this.size});
 
   /// Marge de l'image autour du dé, en part de son côté.
   static const _margin = 0.15;
@@ -119,28 +135,27 @@ class _MenuDiePicture extends StatefulWidget {
   static final Map<String, ui.Image> _ready = {};
   static final Map<String, Future<ui.Image>> _pending = {};
 
-  static String keyFor(IconData icon, Color color, Color ink, double size, double ratio) =>
-      '${icon.codePoint}|${icon.fontFamily}|${icon.fontPackage}|${color.toARGB32()}|${ink.toARGB32()}|$size|$ratio';
+  static String keyFor(String look, double size, double ratio) => '$look|$size|$ratio';
 
   /// L'image de ce dé : celle déjà en mémoire, ou celle que l'on calcule (un seul
   /// calcul, même demandé deux fois à la fois).
-  static Future<ui.Image> obtain(IconData icon, Color color, Color ink, double size, double ratio) {
-    final key = keyFor(icon, color, ink, size, ratio);
+  static Future<ui.Image> obtain(String look, _MenuDiePainter painter, double size, double ratio) {
+    final key = keyFor(look, size, ratio);
     return _pending.putIfAbsent(key, () async {
-      final image = await _render(icon, color, ink, size, ratio);
+      final image = await _render(painter, size, ratio);
       _ready[key] = image;
       return image;
     });
   }
 
-  static Future<ui.Image> _render(IconData icon, Color color, Color ink, double size, double ratio) async {
+  static Future<ui.Image> _render(_MenuDiePainter painter, double size, double ratio) async {
     final pad = size * _margin;
     final side = size + 2 * pad;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder)
       ..scale(ratio)
       ..translate(pad, pad);
-    _MenuDiePainter(icon: icon, color: color, ink: ink, cameraDistance: _perspectiveDistance, yaw: _menuYaw).paint(canvas, Size(size, size));
+    painter.paint(canvas, Size(size, size));
     final picture = recorder.endRecording();
     try {
       return await picture.toImage((side * ratio).ceil(), (side * ratio).ceil());
@@ -172,7 +187,7 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
   void _load() {
     final w = widget;
     final ratio = MediaQuery.devicePixelRatioOf(context);
-    final key = _MenuDiePicture.keyFor(w.icon, w.color, w.ink, w.size, ratio);
+    final key = _MenuDiePicture.keyFor(w.look, w.size, ratio);
     if (key == _key) return;
     _key = key;
     final ready = _MenuDiePicture._ready[key];
@@ -182,7 +197,7 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
     }
     // Entre-temps : la couleur ou la taille a changé, l'ancienne image ne va plus.
     _image = null;
-    _MenuDiePicture.obtain(w.icon, w.color, w.ink, w.size, ratio).then((image) {
+    _MenuDiePicture.obtain(w.look, w.painter(), w.size, ratio).then((image) {
       if (mounted && _key == key) setState(() => _image = image);
     });
   }
@@ -414,7 +429,17 @@ class _MenuDiePainter extends CustomPainter {
       }
       final at = Offset((unit - frontIcon.width) / 2, (unit - frontIcon.height) / 2);
       if (art != null) {
-        art!(canvas, unit, identical(placement, top) ? _FaceRole.top : (identical(placement, left) ? _FaceRole.left : _FaceRole.right));
+        // Une face du fond prend le rôle de la face visible qui lui est opposée :
+        // le dessous se lit comme le dessus, l'arrière d'un flanc comme ce flanc.
+        final seen = facing
+            ? placement
+            : visible.firstWhere((v) => normalOf(v).dot(normalOf(placement)) < -0.9, orElse: () => placement);
+        art!(
+          canvas,
+          unit,
+          identical(seen, top) ? _FaceRole.top : (identical(seen, left) ? _FaceRole.left : _FaceRole.right),
+          facing,
+        );
       } else if (facing) {
         // L'icône de devant est gravée en creux, de sa couleur.
         _engrave(canvas, unit, ink, (paint) => glyphStyled(foreground: paint).paint(canvas, at));
@@ -573,7 +598,7 @@ class _MenuDiePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_MenuDiePainter old) =>
-      old.icon != icon || old.color != color || old.ink != ink || old.translucent != translucent || old.art != art ||
+      old.icon != icon || old.color != color || old.ink != ink || old.translucent != translucent || old.art != art || old.yaw != yaw ||
       old.cameraDistance != cameraDistance || old.fillBounds != fillBounds;
 }
 
@@ -581,8 +606,9 @@ class _MenuDiePainter extends CustomPainter {
 enum _FaceRole { top, left, right }
 
 /// Ce qui se grave sur une face de [unit] de côté (le repère de la face, origine
-/// en haut à gauche).
-typedef _FaceArt = void Function(Canvas canvas, double unit, _FaceRole role);
+/// en haut à gauche). [facing] faux : une face du fond, vue à travers le dé, dont
+/// [role] est celui de la face visible opposée.
+typedef _FaceArt = void Function(Canvas canvas, double unit, _FaceRole role, bool facing);
 
 /// Une gravure en creux sur une face de [unit] de côté : le fond de la cavité
 /// ([cavity]), une ombre intérieure floue le long des bords du haut et de la
@@ -632,7 +658,7 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
     cameraDistance: _perspectiveDistance,
     yaw: _iconYaw,
     fillBounds: true,
-    art: (canvas, unit, role) => _engrave(canvas, unit, Color.lerp(color, Colors.black, 0.72)!, (paint) {
+    art: (canvas, unit, role, _) => _engrave(canvas, unit, Color.lerp(color, Colors.black, 0.72)!, (paint) {
       switch (role) {
         case _FaceRole.top:
           canvas.drawCircle(Offset(unit / 2, unit / 2), unit * 0.13, paint);
@@ -643,4 +669,421 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
       }
     }),
   ).paint(canvas, size);
+}
+
+/// Ce que porte une face visible d'un [ActionDie] : une icône, des pips, la
+/// pastille d'un joueur, ou une bombe.
+@immutable
+sealed class DieMark {
+  const DieMark();
+
+  /// L'icône [icon], gravée.
+  const factory DieMark.icon(IconData icon) = _IconMark;
+
+  /// Les pips de [value] (1 à 6), gravés comme sur les dés du jeu.
+  const factory DieMark.pips(int value) = _PipsMark;
+
+  /// La pastille d'un joueur, posée sur la face : un disque de [color] portant
+  /// sa lettre [letter], ou son animal [emoji] à la place.
+  const factory DieMark.avatar({required Color color, required String letter, String? emoji}) = _AvatarMark;
+
+  /// Le texte [text] gravé, dans le style [style] (sa taille est fixée ici) :
+  /// le « 10 » et le « K » du dé de l'icône de l'app.
+  const factory DieMark.text(String text, TextStyle style) = _TextMark;
+
+  /// Une bombe (💣) gravée : le craque.
+  static const DieMark bomb = _BombMark();
+
+  /// Ce qui distingue cette marque des autres, pour la clé de l'image du dé.
+  String get _id;
+
+  /// Dessine la marque sur une face de [unit] de côté, gravée en [ink] si la
+  /// face est visible ([facing]), estompée sinon (vue à travers le dé).
+  void _paint(Canvas canvas, double unit, Color ink, bool facing);
+}
+
+class _IconMark extends DieMark {
+  final IconData icon;
+  const _IconMark(this.icon);
+
+  @override
+  String get _id => 'icon:${icon.codePoint}:${icon.fontFamily}:${icon.fontPackage}';
+
+  @override
+  void _paint(Canvas canvas, double unit, Color ink, bool facing) {
+    TextPainter glyph({Color? color, Paint? foreground}) => TextPainter(
+          text: TextSpan(
+            text: String.fromCharCode(icon.codePoint),
+            style: TextStyle(
+              fontSize: unit * 0.62,
+              fontFamily: icon.fontFamily,
+              package: icon.fontPackage,
+              color: color,
+              foreground: foreground,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+    final probe = glyph(color: ink);
+    final at = Offset((unit - probe.width) / 2, (unit - probe.height) / 2);
+    if (facing) {
+      _stamp(canvas, unit, ink, (paint) => glyph(foreground: paint).paint(canvas, at));
+    } else {
+      glyph(color: ink.withValues(alpha: 0.4)).paint(canvas, at);
+    }
+  }
+
+  @override
+  bool operator ==(Object other) => other is _IconMark && other.icon == icon;
+  @override
+  int get hashCode => icon.hashCode;
+}
+
+class _TextMark extends DieMark {
+  final String text;
+  final TextStyle style;
+  const _TextMark(this.text, this.style);
+
+  @override
+  String get _id => 'text:$text:${style.fontFamily}:${style.fontVariations}';
+
+  @override
+  void _paint(Canvas canvas, double unit, Color ink, bool facing) {
+    // La taille de [paintAppIconDie] : le même marquage que l'icône de l'app.
+    TextPainter painter(Paint paint) => TextPainter(
+          text: TextSpan(text: text, style: style.copyWith(fontSize: unit * 0.56, foreground: paint)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+    void draw(Paint paint) {
+      final p = painter(paint);
+      p.paint(canvas, Offset((unit - p.width) / 2, (unit - p.height) / 2));
+    }
+
+    if (facing) {
+      _engrave(canvas, unit, ink, draw);
+    } else {
+      draw(Paint()..color = ink.withValues(alpha: 0.3));
+    }
+  }
+
+  @override
+  bool operator ==(Object other) => other is _TextMark && other.text == text && other.style == style;
+  @override
+  int get hashCode => Object.hash(text, style);
+}
+
+class _PipsMark extends DieMark {
+  final int value;
+  const _PipsMark(this.value);
+
+  @override
+  String get _id => 'pips:$value';
+
+  @override
+  void _paint(Canvas canvas, double unit, Color ink, bool facing) {
+    // Vue à travers le dé, c'est la face opposée : sur un vrai dé, la somme de
+    // deux faces opposées fait 7.
+    final shown = facing ? value : 7 - value;
+    void draw(Paint paint) {
+      for (final p in pipPositions[shown] ?? const <Offset>[]) {
+        canvas.drawCircle(Offset(p.dx * unit, p.dy * unit), unit * 0.095, paint);
+      }
+    }
+
+    if (facing) {
+      _engrave(canvas, unit, ink, draw);
+    } else {
+      draw(Paint()..color = ink.withValues(alpha: 0.3));
+    }
+  }
+
+  @override
+  bool operator ==(Object other) => other is _PipsMark && other.value == value;
+  @override
+  int get hashCode => value.hashCode;
+}
+
+class _AvatarMark extends DieMark {
+  final Color color;
+  final String letter;
+  final String? emoji;
+  const _AvatarMark({required this.color, required this.letter, this.emoji});
+
+  @override
+  String get _id => 'avatar:${color.toARGB32()}:$letter:${emoji ?? ''}';
+
+  @override
+  void _paint(Canvas canvas, double unit, Color ink, bool facing) {
+    final center = Offset(unit / 2, unit / 2);
+    final radius = unit * 0.38;
+    if (!facing) {
+      canvas.drawCircle(center, radius, Paint()..color = color.withValues(alpha: 0.3));
+      return;
+    }
+    // Une pastille collée sur la face, comme dans la liste des joueurs : pas
+    // gravée, pour garder sa couleur.
+    canvas.drawCircle(center, radius, Paint()..color = color);
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 0.03,
+    );
+    final text = TextPainter(
+      text: TextSpan(
+        text: emoji ?? letter,
+        style: emoji != null
+            ? TextStyle(fontSize: unit * 0.4, height: 1, fontFamilyFallback: kEmojiFontFallback)
+            : TextStyle(fontSize: unit * 0.4, height: 1, fontWeight: FontWeight.w700, color: Colors.white),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    text.paint(canvas, center - Offset(text.width / 2, text.height / 2));
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is _AvatarMark && other.color == color && other.letter == letter && other.emoji == emoji;
+  @override
+  int get hashCode => Object.hash(color, letter, emoji);
+}
+
+class _BombMark extends DieMark {
+  const _BombMark();
+
+  @override
+  String get _id => 'bomb';
+
+  @override
+  void _paint(Canvas canvas, double unit, Color ink, bool facing) {
+    // Le corps rond, le goulot, la mèche courbe et son étincelle : dessinés à la
+    // main, aucune police d'icônes n'ayant de bombe.
+    final body = Path()..addOval(Rect.fromCircle(center: Offset(unit * 0.45, unit * 0.58), radius: unit * 0.25));
+    final neck = Path()
+      ..addPolygon([
+        Offset(unit * 0.55, unit * 0.30),
+        Offset(unit * 0.66, unit * 0.36),
+        Offset(unit * 0.60, unit * 0.46),
+        Offset(unit * 0.49, unit * 0.40),
+      ], true);
+    final fuse = Path()
+      ..moveTo(unit * 0.62, unit * 0.33)
+      ..quadraticBezierTo(unit * 0.70, unit * 0.16, unit * 0.80, unit * 0.22);
+    final spark = Path();
+    const rays = 8;
+    final sparkAt = Offset(unit * 0.82, unit * 0.18);
+    for (var i = 0; i < rays * 2; i++) {
+      final r = unit * (i.isEven ? 0.09 : 0.035);
+      final a = i * math.pi / rays;
+      final p = sparkAt + Offset(math.cos(a) * r, math.sin(a) * r);
+      i == 0 ? spark.moveTo(p.dx, p.dy) : spark.lineTo(p.dx, p.dy);
+    }
+    spark.close();
+    void draw(Paint paint) {
+      canvas.drawPath(body, paint);
+      canvas.drawPath(neck, paint);
+      canvas.drawPath(spark, paint);
+      canvas.drawPath(
+        fuse,
+        Paint()
+          ..color = paint.color
+          ..blendMode = paint.blendMode
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = unit * 0.045
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    if (facing) {
+      _stamp(canvas, unit, ink, draw);
+    } else {
+      draw(Paint()..color = ink.withValues(alpha: 0.4));
+    }
+  }
+
+  @override
+  bool operator ==(Object other) => other is _BombMark;
+  @override
+  int get hashCode => 0;
+}
+
+/// Une marque pleine imprimée sur une face de [unit] de côté, en [ink], sur une
+/// ombre douce décalée vers le bas à droite. Pas de gravure ([_engrave]) : sur
+/// un petit dé vu de biais, son ombre intérieure couvre presque toute une forme
+/// pleine (le carré du stop, le triangle de lecture), qui paraît alors trouée.
+void _stamp(Canvas canvas, double unit, Color ink, void Function(Paint paint) draw) {
+  canvas
+    ..save()
+    ..translate(unit * 0.025, unit * 0.03);
+  draw(
+    Paint()
+      ..color = Colors.black.withValues(alpha: 0.45)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, unit * 0.02),
+  );
+  canvas.restore();
+  draw(Paint()..color = ink);
+}
+
+/// Le rôle d'un [ActionDie] dans la barre d'action de l'écran de jeu.
+enum ActionDieKind {
+  /// Lancer les dés.
+  roll,
+
+  /// S'arrêter (encaisser).
+  stop,
+
+  /// Choisir combien de 5 garder (le recyclage).
+  exchange,
+
+  /// Le tour d'un autre (bot, joueur en ligne) : un dé gris, inerte, qui dit ce
+  /// qu'il fait.
+  observed,
+}
+
+/// Un bouton de la barre d'action de l'écran de jeu, en dé translucide comme
+/// ceux de l'accueil ([MenuDie]), plus petit : ses trois faces visibles portent
+/// [top], [left] et [right] (voir [DieMark]), et un [caption] facultatif
+/// s'écrit dessous.
+///
+/// Sans [onPressed], le dé est inerte. [dimmed] le délave alors et le grise
+/// comme un [MenuDie] désactivé ; un dé [ActionDieKind.observed] est déjà gris
+/// et garde ses couleurs (la pastille du joueur doit rester lisible).
+class ActionDie extends StatelessWidget {
+  final ActionDieKind kind;
+  final DieMark top;
+  final DieMark left;
+  final DieMark right;
+  final Color color;
+  final Color ink;
+  final double size;
+  final String? caption;
+
+  /// Le nom du bouton (infobulle et lecteur d'écran) ; à défaut, [caption].
+  final String? tooltip;
+  final VoidCallback? onPressed;
+  final bool dimmed;
+
+  const ActionDie({
+    super.key,
+    required this.kind,
+    required this.top,
+    required this.left,
+    required this.right,
+    required this.color,
+    required this.ink,
+    required this.size,
+    this.caption,
+    this.tooltip,
+    this.onPressed,
+    this.dimmed = true,
+  });
+
+  /// Un dé dont les trois faces portent la même [mark].
+  const ActionDie.uniform({
+    Key? key,
+    required ActionDieKind kind,
+    required DieMark mark,
+    required Color color,
+    required Color ink,
+    required double size,
+    String? caption,
+    String? tooltip,
+    VoidCallback? onPressed,
+    bool dimmed = true,
+  }) : this(
+          key: key,
+          kind: kind,
+          top: mark,
+          left: mark,
+          right: mark,
+          color: color,
+          ink: ink,
+          size: size,
+          caption: caption,
+          tooltip: tooltip,
+          onPressed: onPressed,
+          dimmed: dimmed,
+        );
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final art = _ActionDieArt(top: top, left: left, right: right, ink: ink);
+    Widget die = SizedBox(
+      width: size,
+      height: size,
+      child: _MenuDiePicture(
+        look: 'action|${color.toARGB32()}|${art.id}',
+        painter: () => _MenuDiePainter(
+          icon: Icons.circle,
+          color: color,
+          ink: ink,
+          cameraDistance: _perspectiveDistance,
+          yaw: _menuYaw,
+          art: art.call,
+        ),
+        size: size,
+      ),
+    );
+    final caption = this.caption;
+    Widget content = caption == null
+        ? die
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 4,
+            children: [
+              die,
+              Text(
+                caption,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: TableColors.of(context).plain),
+              ),
+            ],
+          );
+    if (!enabled && dimmed) {
+      content = Opacity(opacity: 0.38, child: ColorFiltered(colorFilter: MenuDie._grayscale, child: content));
+    }
+    final label = tooltip ?? caption ?? '';
+    content = Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      excludeSemantics: true,
+      child: InkResponse(
+        onTap: onPressed,
+        radius: size / 2 + 6,
+        containedInkWell: false,
+        child: content,
+      ),
+    );
+    final message = tooltip;
+    return message == null ? content : Tooltip(message: message, excludeFromSemantics: true, child: content);
+  }
+}
+
+/// Les marques d'un [ActionDie], données à [_MenuDiePainter] comme décor de ses
+/// faces ; [id] les résume pour la clé de l'image du dé.
+@immutable
+class _ActionDieArt {
+  final DieMark top;
+  final DieMark left;
+  final DieMark right;
+  final Color ink;
+
+  const _ActionDieArt({required this.top, required this.left, required this.right, required this.ink});
+
+  String get id => '${top._id}|${left._id}|${right._id}|${ink.toARGB32()}';
+
+  void call(Canvas canvas, double unit, _FaceRole role, bool facing) {
+    final mark = switch (role) {
+      _FaceRole.top => top,
+      _FaceRole.left => left,
+      _FaceRole.right => right,
+    };
+    mark._paint(canvas, unit, ink, facing);
+  }
 }

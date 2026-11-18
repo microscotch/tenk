@@ -6,8 +6,8 @@
 //
 // Ce n'est pas un test de la suite (elle ne lit que test/) : c'est un outil, qui
 // passe par flutter_test pour disposer du moteur de rendu sans écran. La police
-// des chiffres, Fraunces (licence OFL), est dans tool/icon/ ; elle n'est pas
-// embarquée dans l'app.
+// des chiffres, Fraunces (licence OFL), est dans assets/fonts/ : l'app l'embarque
+// aussi, pour le dé « Lancer » de l'écran de jeu.
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -33,7 +33,7 @@ Future<void> _write(String path, void Function(Canvas canvas) paint) async {
 
 void main() {
   testWidgets('icône de l\'app', (tester) async {
-    final font = FontLoader('Fraunces')..addFont(Future.value(ByteData.sublistView(File('tool/icon/Fraunces.ttf').readAsBytesSync())));
+    final font = FontLoader('Fraunces')..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Fraunces.ttf').readAsBytesSync())));
     await font.load();
     const numerals = TextStyle(
       fontFamily: 'Fraunces',

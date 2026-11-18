@@ -319,6 +319,8 @@
   "onlineReconnecting": "Conexiune pierdută, se reconectează…",
   "onlineSuspended": "Joc suspendat: un jucător lipsește de prea mult timp.",
   "onlineWaitingFor": "{playerName} joacă…",
+  "actionTakesOver": "{playerName} preia",
+  "actionNewHand": "{playerName} mână nouă",
   "onlineDiceOffContinue": "Joacă",
   "onlineErrorUnreachable": "Serverul nu poate fi contactat.",
   "onlineErrorRoomNotFound": "Nicio cameră cu acest cod.",

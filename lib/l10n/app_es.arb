@@ -319,6 +319,8 @@
   "onlineReconnecting": "Conexión perdida, reconectando…",
   "onlineSuspended": "Partida suspendida: un jugador lleva demasiado tiempo ausente.",
   "onlineWaitingFor": "{playerName} está jugando…",
+  "actionTakesOver": "{playerName} retoma",
+  "actionNewHand": "{playerName} mano nueva",
   "onlineDiceOffContinue": "Jugar",
   "onlineErrorUnreachable": "Servidor inaccesible.",
   "onlineErrorRoomNotFound": "No hay ninguna sala con este código.",

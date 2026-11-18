@@ -1137,6 +1137,16 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
+  String actionTakesOver(String playerName) {
+    return '$playerName preia';
+  }
+
+  @override
+  String actionNewHand(String playerName) {
+    return '$playerName mână nouă';
+  }
+
+  @override
   String get onlineDiceOffContinue => 'Joacă';
 
   @override

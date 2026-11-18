@@ -1131,6 +1131,16 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
+  String actionTakesOver(String playerName) {
+    return '$playerName jatkaa';
+  }
+
+  @override
+  String actionNewHand(String playerName) {
+    return '$playerName uusi käsi';
+  }
+
+  @override
   String get onlineDiceOffContinue => 'Pelaa';
 
   @override

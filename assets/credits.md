@@ -104,3 +104,10 @@ The game's default background music, "Next to You" by Joth, published on OpenGam
 on 4 June 2016 (tags: loop, emotional). Released under the CC0 licence (public domain
 dedication): no attribution is required, it is given here out of gratitude.
 <https://opengameart.org/content/next-to-you> · Author: <https://opengameart.org/users/joth>
+
+## Font
+
+### Fraunces
+The typeface of the "10" and the "K" on the app icon's die and on the game screen's roll
+die, by Undercase Type (Phaedra Charles and Flavia Zimbardi). SIL Open Font License 1.1.
+<https://github.com/undercasetype/Fraunces>

@@ -1964,6 +1964,18 @@ abstract class AppLocalizations {
   /// **'{playerName} joue…'**
   String onlineWaitingFor(String playerName);
 
+  /// Sous le dé de lancer, quand un autre joueur (bot, joueur en ligne) vient de reprendre la main héritée et n'a pas encore lancé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{playerName} reprend'**
+  String actionTakesOver(String playerName);
+
+  /// Sous le dé de lancer, quand un autre joueur (bot, joueur en ligne) vient de refuser la main héritée et repart avec cinq dés neufs.
+  ///
+  /// In fr, this message translates to:
+  /// **'{playerName} nouvelle main'**
+  String actionNewHand(String playerName);
+
   /// Bouton qui passe du résultat du tirage au sort à la partie en ligne.
   ///
   /// In fr, this message translates to:

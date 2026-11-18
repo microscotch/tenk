@@ -14,6 +14,7 @@ import 'package:le10000/ui/widgets/tutorial_overlay.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
+import '../test_helpers/action_dice.dart';
 
 /// Le tutoriel sur le vrai écran de jeu : chaque leçon jouée comme un joueur
 /// qui suit les bulles, jusque dans les fenêtres de craque et de main héritée.
@@ -92,11 +93,11 @@ void main() {
       } else {
         switch (beat.target) {
           case TutorialTarget.roll:
-            await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+            await tester.tap(rollDie);
           case TutorialTarget.stop:
-            await tester.tap(find.byIcon(Icons.front_hand));
+            await tester.tap(stopDie);
           case TutorialTarget.exchange:
-            await tester.tap(find.byIcon(Icons.recycling));
+            await tester.tap(exchangeDie);
             await tester.pumpAndSettle();
             await tester.tap(find.textContaining('Garder un seul cinq'));
           case TutorialTarget.bustOk:
@@ -159,8 +160,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('tutorial-action')));
     await tester.pump(const Duration(seconds: 1));
 
-    await tester.tap(find.byIcon(Icons.front_hand), warnIfMissed: false);
-    await tester.pump();
+    expect(stopDie, findsNothing, reason: 'Stop n\'est pas la commande de l\'étape : il n\'est pas affiché');
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll, isNull);
     expect(find.byIcon(Icons.menu), findsNothing, reason: 'pas de menu pendant le tutoriel');
   });
@@ -189,9 +189,9 @@ void main() {
       if (beat.needsAck) {
         await tester.tap(find.byKey(const ValueKey('tutorial-action')).last);
       } else if (beat.target == TutorialTarget.roll) {
-        await tester.tap(find.widgetWithIcon(FilledButton, Icons.casino));
+        await tester.tap(rollDie);
       } else if (beat.target == TutorialTarget.stop) {
-        await tester.tap(find.byIcon(Icons.front_hand));
+        await tester.tap(stopDie);
       }
       await tester.pump(const Duration(milliseconds: 250));
     }

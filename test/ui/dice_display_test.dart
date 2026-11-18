@@ -9,6 +9,7 @@ import 'package:le10000/state/game_providers.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
 import 'package:le10000/ui/widgets/bordered_section.dart';
 import 'package:le10000/ui/widgets/die_widget.dart';
+import '../test_helpers/action_dice.dart';
 
 void main() {
   testWidgets('1-3-4-5-6 : le 1 est gardé (obligatoire), le 5 décliné par défaut pour éviter un total finissant par 50',
@@ -93,7 +94,7 @@ void main() {
     // Interagit directement avec le callback de la combobox (plutôt que
     // d'ouvrir puis de taper l'entrée du menu) : plus robuste, et teste la
     // même mise à jour d'état que la vraie sélection à l'écran.
-    await tester.tap(find.byIcon(Icons.recycling));
+    await tester.tap(exchangeDie);
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Garder un seul cinq'));
     await tester.pump();
@@ -415,7 +416,7 @@ void main() {
     final widthForFour = tester.getSize(frame).width;
     expect(widthForFour, greaterThan(0));
 
-    await tester.tap(find.byIcon(Icons.recycling));
+    await tester.tap(exchangeDie);
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Garder un seul cinq'));
     await tester.pumpAndSettle();

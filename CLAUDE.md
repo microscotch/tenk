@@ -395,10 +395,20 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     other views (bot, remote player, bust) get the same blank line (`_withMessageLine`); `_StableHeight` (a render box
     that never shrinks, child at its bottom) keeps the row's tallest height for the rest of the screen's life, which covers
     the inherited-hand choice (an empty row) and a message wrapping onto two lines. Never a hidden copy of the buttons to
-    reserve the space: dozens of tests find the roll/Stop buttons by type, icon or tooltip and would find two.
+    reserve the space: dozens of tests find the action dice by kind and would find two.
+  - **The action row's buttons are translucent dice** (`ActionDie`, `lib/ui/widgets/menu_die.dart`: the home dice's
+    painter, rendered into the same image cache, faces marked by `DieMark` — icon, text, pips, avatar, bomb), all three
+    `_actionDieSize` (48) wide: in the centre the mauve **roll** die, marked like the app icon (ace on top, "K" left,
+    "10" right, in the bundled Fraunces font, `assets/fonts/`), its label (chance to score, "Main pleine !") written
+    underneath; the gold **Stop** die (a dollar on every face: it banks the hand) and the green **recycle** die (the 5s
+    choice) on either side, **shown only when active** (Stop also waits for the dice to settle, or its appearance would
+    give the roll away) — the roll die stays centred either way (`_controlRow`). Tests find them with
+    `test/test_helpers/action_dice.dart` (`rollDie`, `stopDie`, `exchangeDie`, `observedDie`, `dieOf`, `dieWithCaption`).
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
-    `_buildRemoteTurnView`): one disabled roll button reading "<joueur> joue…", then "Craqué !" once a bust is
-    revealed — no Stop, no 5s chips, nothing to press. Bots therefore **always play on their own**
+    `_buildRemoteTurnView`): one grey disabled die (`_observedDie`) carrying the player's pastille on top and, on its
+    sides, ▶ with "<joueur> joue…"; 💣 with "Craqué !" once a bust is revealed; ⏭ "<joueur> reprend" / ⏮ "<joueur>
+    nouvelle main" just after they took over or refused an inherited hand (before their first roll) — no Stop, no 5s
+    choice, nothing to press. Bots therefore **always play on their own**
     (`_scheduleAiIfNeeded` bypasses "mode auto" and its 0-means-manual rule), after `aiMessageDelay`, plus
     `bustRevealDelay` when the turn busted on a roll, so the bust stays readable as long as any other AI message.
   - **A die keeps its resting orientation from the roll track to the current hand, and roll after roll**: each
