@@ -1033,12 +1033,12 @@ class ActionDie extends StatelessWidget {
     // que la commande vocale cherche ; l'infobulle, quand elle dit autre chose,
     // vient en précision.
     final label = caption ?? tooltip ?? '';
-    final hint = caption != null && tooltip != caption ? tooltip : null;
+    final detail = caption != null && tooltip != caption ? tooltip : null;
     content = Semantics(
       button: true,
       enabled: enabled,
       label: label,
-      tooltip: hint,
+      tooltip: detail,
       // Le détecteur de geste est dans le sous-arbre exclu : sans [onTap] ici,
       // le lecteur d'écran annoncerait un bouton impossible à activer.
       onTap: onPressed,

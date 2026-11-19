@@ -2044,6 +2044,12 @@ void main() {
     expect(stopDie, findsOneWidget);
     expect(find.descendant(of: stopDie, matching: find.text('Encaisser')), findsOneWidget);
     expect(find.descendant(of: exchangeDie, matching: find.text('Échanger')), findsOneWidget);
+    // Le lecteur d'écran les nomme par ce libellé affiché, pas par leur infobulle.
+    final semantics = tester.ensureSemantics();
+    await tester.pump();
+    expect(find.bySemanticsLabel('Encaisser'), findsOneWidget);
+    expect(find.bySemanticsLabel('Échanger'), findsOneWidget);
+    semantics.dispose();
 
     await tester.ensureVisible(stopDie);
     await tester.tap(stopDie);
