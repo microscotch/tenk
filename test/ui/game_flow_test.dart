@@ -10,6 +10,7 @@ import 'package:le10000/game/player.dart';
 import 'package:le10000/game/player_profile.dart';
 import 'package:le10000/game/turn_state.dart';
 import 'package:le10000/state/game_providers.dart';
+import 'package:le10000/game/avatar_catalog.dart' show AvatarLook;
 import 'package:le10000/state/player_providers.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/state/settings_providers.dart';
@@ -2481,8 +2482,8 @@ void main() {
     const ace = KeptDie(value: 1, points: 100, isExtended: false);
     const three = KeptDie(value: 3, points: 100, isExtended: false, rollIndex: 1);
 
-    Future<void> showBotChoice(WidgetTester tester, {required bool useFullHand}) async {
-      final container = ProviderContainer();
+    Future<void> showBotChoice(WidgetTester tester, {required bool useFullHand, Map<String, AvatarLook>? looks}) async {
+      final container = ProviderContainer(overrides: [if (looks != null) avatarLooksProvider.overrideWithValue(looks)]);
       addTearDown(container.dispose);
       final engine = GameEngine(
         players: [Player(name: 'Bot', totalScore: 1800, hasEntered: true), Player(name: 'B')],
@@ -2514,6 +2515,13 @@ void main() {
       expect(dieWithCaption('Bot reprend'), findsOneWidget);
       expect(dieOf(tester, observedDie).onPressed, isNull);
       expect(find.text('Bot joue…'), findsNothing);
+      await unmount(tester);
+    });
+
+    testWidgets('le libellé lu au lecteur d\'écran donne le pseudo du joueur, s\'il en a un', (tester) async {
+      await showBotChoice(tester, useFullHand: false, looks: const {'Bot': AvatarLook(name: 'Robby')});
+      expect(dieWithCaption('Robby reprend'), findsOneWidget);
+      expect(dieWithCaption('Bot reprend'), findsNothing);
       await unmount(tester);
     });
 

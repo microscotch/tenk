@@ -3185,7 +3185,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// pastille sur le dessus, [sides] sur les deux flancs, et dessous le libellé
   /// que [captionFor] écrit pour un nom de joueur. Le nom y est affiché sous la
   /// forme de sa pastille, plus étroite qu'un pseudo ; le lecteur d'écran, lui,
-  /// lit le nom.
+  /// lit le pseudo du joueur, ou son nom s'il n'en a pas.
   Widget _observedDie(GameEngine engine, DieMark sides, String Function(String playerName) captionFor) {
     final name = engine.currentPlayer.name;
     final avatars = AvatarSet.resolve(engine.players.map((p) => p.name), ref.watch(avatarLooksProvider));
@@ -3227,7 +3227,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
       color: _observedDieColor,
       ink: Colors.white,
       size: _actionDieSize,
-      caption: captionFor(name),
+      // Le lecteur d'écran lit le nom affiché : le pseudo s'il existe, le nom
+      // en jeu sinon — celui dont la pastille porte la lettre.
+      caption: captionFor(look?.name ?? name),
       captionSpan: captionSpan,
       dimmed: false,
     );
