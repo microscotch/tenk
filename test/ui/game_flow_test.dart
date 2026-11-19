@@ -2042,6 +2042,8 @@ void main() {
     expect(find.text('Valider'), findsNothing);
     expect(rollDie, findsOneWidget);
     expect(stopDie, findsOneWidget);
+    expect(find.descendant(of: stopDie, matching: find.text('Encaisser')), findsOneWidget);
+    expect(find.descendant(of: exchangeDie, matching: find.text('Échanger')), findsOneWidget);
 
     await tester.ensureVisible(stopDie);
     await tester.tap(stopDie);

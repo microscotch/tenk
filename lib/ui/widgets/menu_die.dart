@@ -831,15 +831,16 @@ class _AvatarMark extends DieMark {
         ..style = PaintingStyle.stroke
         ..strokeWidth = unit * 0.03,
     );
-    final text = TextPainter(
-      text: TextSpan(
-        text: emoji ?? letter,
-        style: emoji != null
-            ? TextStyle(fontSize: unit * 0.4, height: 1, fontFamilyFallback: kEmojiFontFallback)
-            : TextStyle(fontSize: unit * 0.4, height: 1, fontWeight: FontWeight.w700, color: Colors.white),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    final animal = emoji;
+    final text = animal != null
+        ? _emojiPainter(animal, unit * 0.4)
+        : (TextPainter(
+            text: TextSpan(
+              text: letter,
+              style: TextStyle(fontSize: unit * 0.4, height: 1, fontWeight: FontWeight.w700, color: Colors.white),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout());
     text.paint(canvas, center - Offset(text.width / 2, text.height / 2));
   }
 
@@ -849,6 +850,16 @@ class _AvatarMark extends DieMark {
   @override
   int get hashCode => Object.hash(color, letter, emoji);
 }
+
+/// Un émoji en couleurs de [fontSize], prêt à peindre : la pastille animale
+/// ([_AvatarMark]) et l'émoji d'une face ([_EmojiMark]).
+TextPainter _emojiPainter(String emoji, double fontSize) => TextPainter(
+      text: TextSpan(
+        text: emoji,
+        style: TextStyle(fontSize: fontSize, height: 1, fontFamilyFallback: kEmojiFontFallback),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
 
 class _EmojiMark extends DieMark {
   final String emoji;
@@ -861,13 +872,7 @@ class _EmojiMark extends DieMark {
   void _paint(Canvas canvas, double unit, Color ink, bool facing) {
     // L'émoji en couleurs, posé sur la face comme la pastille : ni gravé ni
     // teinté. Vu à travers le dé (une face cachée), il n'est qu'un reflet.
-    final text = TextPainter(
-      text: TextSpan(
-        text: emoji,
-        style: TextStyle(fontSize: unit * 0.62, height: 1, fontFamilyFallback: kEmojiFontFallback),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    final text = _emojiPainter(emoji, unit * 0.62);
     final at = Offset((unit - text.width) / 2, (unit - text.height) / 2);
     if (facing) {
       text.paint(canvas, at);

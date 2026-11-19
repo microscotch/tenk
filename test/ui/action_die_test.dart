@@ -36,4 +36,27 @@ void main() {
     expect(data.hasAction(SemanticsAction.tap), isFalse);
     handle.dispose();
   });
+
+  testWidgets('un dé marqué d\'un émoji se dessine, faces visibles et cachées', (tester) async {
+    await tester.pumpWidget(_host(const ActionDie.uniform(
+      kind: ActionDieKind.observed,
+      mark: DieMark.emoji('💥'),
+      color: Colors.grey,
+      ink: Colors.white,
+      size: 48,
+      caption: 'Craqué !',
+    )));
+    // L'image du dé est calculée hors de l'horloge factice du test.
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
+
+    expect(find.byType(RawImage), findsOneWidget);
+    expect(find.text('Craqué !'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('deux marques émoji ne se confondent que sur le même émoji', () {
+    expect(const DieMark.emoji('💥'), const DieMark.emoji('💥'));
+    expect(const DieMark.emoji('💥'), isNot(const DieMark.emoji('💣')));
+  });
 }
