@@ -221,6 +221,24 @@ class _MenuDiePictureState extends State<_MenuDiePicture> {
 /// du menu et de l'icône de l'app.
 const double _perspectiveDistance = 3.0;
 
+/// La hauteur de la caméra des dés de l'accueil et de l'icône : vue de 30°
+/// au-dessus de la table.
+const double _menuPitch = 30 * math.pi / 180;
+
+/// La hauteur de la caméra du dé central de la barre d'action de l'écran de jeu
+/// (Lancer, ou le dé gris du tour d'un autre — voir [ActionDie]) : vu de 43°
+/// au-dessus de la table, pour que le dessus (l'as, la pastille du joueur) soit
+/// aussi lisible que les flancs. Il est vu de biais exact ([_cornerYaw]) :
+/// flancs égaux, le « 10 » comme le « K ».
+const double _actionPitch = 43 * math.pi / 180;
+
+/// L'angle du dé Stop de la barre d'action : celui des dés de l'accueil
+/// ([_menuYaw]) en miroir, tourné de 12° vers la droite. Les deux dés latéraux,
+/// vus de 30° comme ceux de l'accueil, se font face de part et d'autre du dé
+/// central : le recyclage (à gauche, [_menuYaw]) montre surtout son flanc droit,
+/// Stop surtout son flanc gauche.
+const double _mirroredMenuYaw = _cornerYaw + 12 * math.pi / 180;
+
 /// Le quart de tour de base : un dé vu exactement de biais (45° autour de la
 /// verticale), deux flancs égaux.
 const double _cornerYaw = math.pi / 4;
@@ -240,7 +258,7 @@ const double _iconYaw = _cornerYaw + 8 * math.pi / 180;
 /// transparente, si bien qu'on voit à travers le dé les faces du fond (leurs
 /// icônes à l'envers) et que la couleur s'épaissit là où les faces se
 /// superposent. Le cube est tourné autour de la verticale (45° par défaut, voir [yaw]), vu de 30°
-/// au-dessus de la table, en perspective (voir [cameraDistance]) : ce qui est près
+/// au-dessus de la table par défaut (voir [pitch]), en perspective (voir [cameraDistance]) : ce qui est près
 /// de l'œil, le sommet de devant, est plus grand que ce qui est loin.
 ///
 /// Avec [translucent] faux, le dé est opaque : plus de faces vues à travers les
@@ -261,6 +279,9 @@ class _MenuDiePainter extends CustomPainter {
   /// De combien le dé est tourné autour de la verticale ([_cornerYaw] : de biais).
   final double yaw;
 
+  /// La hauteur de la caméra au-dessus de la table ([_menuPitch] : 30°).
+  final double pitch;
+
   /// Le dé remplit tout son cadre (contour arrondi compris) au lieu de laisser la
   /// place d'une ombre.
   final bool fillBounds;
@@ -273,15 +294,14 @@ class _MenuDiePainter extends CustomPainter {
     this.art,
     this.cameraDistance,
     this.yaw = _cornerYaw,
+    this.pitch = _menuPitch,
     this.fillBounds = false,
   });
-
-  static const _tilt = -30 * math.pi / 180;
 
   @override
   void paint(Canvas canvas, Size size) {
     final spin = Matrix4.identity()
-      ..rotateX(_tilt)
+      ..rotateX(-pitch)
       ..rotateY(yaw);
     // Projection en perspective : l'œil est sur l'axe, à [cameraDistance] du centre
     // du cube (dont le côté vaut 1), et ce qui est plus près est plus grand :
@@ -313,10 +333,14 @@ class _MenuDiePainter extends CustomPainter {
     // Les trois faces visibles : le dessus est celle dont la normale est la plus
     // verticale, des deux flancs celle qui regarde le plus à gauche est la gauche.
     Vector3 normalOf(Matrix4 placement) => spin.transformed3(placement.transformed3(Vector3(0, 0, 1)));
-    final visible = [for (final (placement, _, z) in ordered) if (z > 0) placement]
-      ..sort((a, b) => normalOf(b).y.abs().compareTo(normalOf(a).y.abs()));
-    final top = visible.first;
-    final left = visible.skip(1).reduce((a, b) => normalOf(a).x < normalOf(b).x ? a : b);
+    // Le dé est toujours vu d'au-dessus de la table : des deux faces horizontales
+    // (les deux dernières de [faces]), la visible est le dessus. Le chercher par
+    // la normale la plus verticale à l'écran ne marche plus au-delà de 45° de
+    // hauteur ([pitch]) : un flanc l'emporte alors sur le dessus.
+    final horizontal = {faces[4].$1, faces[5].$1};
+    final visible = [for (final (placement, _, z) in ordered) if (z > 0) placement];
+    final top = visible.firstWhere(horizontal.contains);
+    final left = visible.where((p) => p != top).reduce((a, b) => normalOf(a).x < normalOf(b).x ? a : b);
 
     // Les huit sommets du cube unité, vus par la caméra (projection parallèle :
     // on ne garde que x et y).
@@ -598,7 +622,7 @@ class _MenuDiePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_MenuDiePainter old) =>
-      old.icon != icon || old.color != color || old.ink != ink || old.translucent != translucent || old.art != art || old.yaw != yaw ||
+      old.icon != icon || old.color != color || old.ink != ink || old.translucent != translucent || old.art != art || old.yaw != yaw || old.pitch != pitch ||
       old.cameraDistance != cameraDistance || old.fillBounds != fillBounds;
 }
 
@@ -940,6 +964,11 @@ class ActionDie extends StatelessWidget {
   final double size;
   final String? caption;
 
+  /// Ce qui s'affiche à la place du texte de [caption], quand il porte autre
+  /// chose que du texte (la pastille d'un joueur à la place de son nom) ;
+  /// [caption] reste ce que le lecteur d'écran annonce.
+  final InlineSpan? captionSpan;
+
   /// L'infobulle du bouton. Le lecteur d'écran annonce le texte affiché,
   /// [caption], et n'en fait qu'une précision ; sans [caption], c'est elle qu'il
   /// annonce comme nom du bouton.
@@ -957,6 +986,7 @@ class ActionDie extends StatelessWidget {
     required this.ink,
     required this.size,
     this.caption,
+    this.captionSpan,
     this.tooltip,
     this.onPressed,
     this.dimmed = true,
@@ -989,27 +1019,41 @@ class ActionDie extends StatelessWidget {
           dimmed: dimmed,
         );
 
+  /// L'angle de vue du dé selon son rôle : le dé central (Lancer, ou le dé gris
+  /// du tour d'un autre) de biais exact, vu de plus haut ([_actionPitch]) ; les
+  /// deux dés latéraux vus comme ceux de l'accueil, en miroir l'un de l'autre.
+  (double yaw, double pitch) get _view => switch (kind) {
+        ActionDieKind.roll || ActionDieKind.observed => (_cornerYaw, _actionPitch),
+        ActionDieKind.exchange => (_menuYaw, _menuPitch),
+        ActionDieKind.stop => (_mirroredMenuYaw, _menuPitch),
+      };
+
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
-    final art = _ActionDieArt(top: top, left: left, right: right, ink: ink);
+    final (yaw, pitch) = _view;
+    // La pastille du dessus est redressée : dessinée dans le losange que forme
+    // la face vue de biais, elle serait penchée de l'angle du dé.
+    final art = _ActionDieArt(top: top, left: left, right: right, ink: ink, topTurn: yaw);
     Widget die = SizedBox(
       width: size,
       height: size,
       child: _MenuDiePicture(
-        look: 'action|${color.toARGB32()}|${art.id}',
+        look: 'action|${kind.name}|${color.toARGB32()}|${art.id}',
         painter: () => _MenuDiePainter(
           icon: Icons.circle,
           color: color,
           ink: ink,
           cameraDistance: _perspectiveDistance,
-          yaw: _menuYaw,
+          yaw: yaw,
+          pitch: pitch,
           art: art.call,
         ),
         size: size,
       ),
     );
     final caption = this.caption;
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(color: TableColors.of(context).plain);
     Widget content = caption == null
         ? die
         : Column(
@@ -1017,12 +1061,12 @@ class ActionDie extends StatelessWidget {
             spacing: 4,
             children: [
               die,
-              Text(
-                caption,
+              Text.rich(
+                captionSpan ?? TextSpan(text: caption),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: TableColors.of(context).plain),
+                style: style,
               ),
             ],
           );
@@ -1064,7 +1108,11 @@ class _ActionDieArt {
   final DieMark right;
   final Color ink;
 
-  const _ActionDieArt({required this.top, required this.left, required this.right, required this.ink});
+  /// De combien la pastille du dessus est tournée sur sa face pour se lire
+  /// droite à l'écran : l'angle du dé autour de la verticale.
+  final double topTurn;
+
+  const _ActionDieArt({required this.top, required this.left, required this.right, required this.ink, required this.topTurn});
 
   String get id => '${top._id}|${left._id}|${right._id}|${ink.toARGB32()}';
 
@@ -1074,6 +1122,15 @@ class _ActionDieArt {
       _FaceRole.left => left,
       _FaceRole.right => right,
     };
+    if (role == _FaceRole.top && mark is _AvatarMark) {
+      canvas.save();
+      canvas.translate(unit / 2, unit / 2);
+      canvas.rotate(topTurn);
+      canvas.translate(-unit / 2, -unit / 2);
+      mark._paint(canvas, unit, ink, facing);
+      canvas.restore();
+      return;
+    }
     mark._paint(canvas, unit, ink, facing);
   }
 }

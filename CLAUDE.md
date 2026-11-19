@@ -358,7 +358,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
   must stay identical: each of the three visible faces
   carries the entry's icon, the die has the entry's colour, its label is written underneath), rules, settings and about
   included; tests find a die by its `label` (`MenuDie.label`), and the icon painted on it is `MenuDie.icon`. The same
-  painter, opaque, draws the app icon (`tool/render_app_icon_test.dart`, then `dart run flutter_launcher_icons`, then check that `project.pbxproj` was left alone). Neither is seen from the symmetric 45° corner (`_cornerYaw`, the painter's default `yaw`): the home dice are turned to 33° (`_menuYaw`, 12° to the left), so their right face is the wide one; the icon to 53° (`_iconYaw`, 8° to the right), so its left face — the "10" — is the wide one and the "K" the narrow one.
+  painter, opaque, draws the app icon (`tool/render_app_icon_test.dart`, then `dart run flutter_launcher_icons`, then check that `project.pbxproj` was left alone). Neither is seen from the symmetric 45° corner (`_cornerYaw`, the painter's default `yaw`): the home dice are turned to 33° (`_menuYaw`, 12° to the left), so their right face is the wide one; the icon to 53° (`_iconYaw`, 8° to the right), so its left face — the "10" — is the wide one and the "K" the narrow one. Both are seen from 30° above the table (`_menuPitch`); on the game screen's action row (`ActionDie._view`, by kind), the centre die (roll, or the grey one) is seen from 43° (`_actionPitch`) at the symmetric corner, so the "10" and the "K" read equally, and the side dice like the home dice, mirrored: recycle at `_menuYaw`, Stop at `_mirroredMenuYaw` (12° to the right). The pastille on the grey die's top is turned back upright (`_ActionDieArt.topTurn`). The top face is found among the two horizontal faces, never as the one whose normal looks the most vertical on screen: past 45° a side face wins that test.
 
 - **Android and iOS run full screen** (`applyFullScreen`, `lib/ui/full_screen.dart`): immersive sticky — no status or navigation
   bar on Android, no status bar on iOS (its home indicator can't be removed from Flutter, and the notch stays out of the
@@ -406,7 +406,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     `test/test_helpers/action_dice.dart` (`rollDie`, `stopDie`, `exchangeDie`, `observedDie`, `dieOf`, `dieWithCaption`).
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one grey disabled die (`_observedDie`) carrying the player's pastille on top and, on its
-    sides, ▶ with "<joueur> joue…"; 💥 with "Craqué !" once a bust is revealed; ⏭ "<joueur> reprend" / ⏮ "<joueur>
+    sides — its label writes the player's name as their pastille (`captionSpan`; `caption`, read by screen readers and by `dieWithCaption`, keeps the name) —, ▶ with "<joueur> joue…"; 💥 with "Craqué !" once a bust is revealed; ⏭ "<joueur> reprend" / ⏮ "<joueur>
     nouvelle main" just after they took over or refused an inherited hand (before their first roll) — no Stop, no 5s
     choice, nothing to press. Bots therefore **always play on their own**
     (`_scheduleAiIfNeeded` bypasses "mode auto" and its 0-means-manual rule), after `aiMessageDelay`, plus

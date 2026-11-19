@@ -3052,9 +3052,7 @@ void main() {
 
       final button = rollDie;
       expect(button, findsOneWidget);
-      final label = tester
-          .widget<Text>(find.descendant(of: button, matching: find.byType(Text)))
-          .data!;
+      final label = dieOf(tester, button).caption!;
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();

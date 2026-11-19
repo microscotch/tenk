@@ -3163,7 +3163,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// (tant qu'il n'a pas encore lancé).
   Widget _buildRemoteTurnView(GameEngine engine) {
     final l10n = AppLocalizations.of(context);
-    final name = engine.currentPlayer.name;
     final turn = engine.activeTurn;
     // Une main était à reprendre (moins de 5 dés transmis) et le joueur a
     // choisi, sans avoir encore lancé : reprise s'il est reparti des dés
@@ -3173,21 +3172,49 @@ class _GameScreenState extends ConsumerState<GameScreen>
       final tookOver = turn.keptDiceThisTurn.isNotEmpty;
       return _controlRow(
         primary: tookOver
-            ? _observedDie(engine, const DieMark.icon(Icons.skip_next), l10n.actionTakesOver(name))
-            : _observedDie(engine, const DieMark.icon(Icons.skip_previous), l10n.actionNewHand(name)),
+            ? _observedDie(engine, const DieMark.icon(Icons.skip_next), l10n.actionTakesOver)
+            : _observedDie(engine, const DieMark.icon(Icons.skip_previous), l10n.actionNewHand),
       );
     }
     return _controlRow(
-      primary: _observedDie(engine, const DieMark.icon(Icons.play_arrow), l10n.onlineWaitingFor(name)),
+      primary: _observedDie(engine, const DieMark.icon(Icons.play_arrow), l10n.onlineWaitingFor),
     );
   }
 
   /// Le dé gris, inerte, du tour d'un autre joueur (bot, joueur en ligne) : sa
-  /// pastille sur le dessus, [sides] sur les deux flancs, [caption] dessous.
-  Widget _observedDie(GameEngine engine, DieMark sides, String caption) {
+  /// pastille sur le dessus, [sides] sur les deux flancs, et dessous le libellé
+  /// que [captionFor] écrit pour un nom de joueur. Le nom y est affiché sous la
+  /// forme de sa pastille, plus étroite qu'un pseudo ; le lecteur d'écran, lui,
+  /// lit le nom.
+  Widget _observedDie(GameEngine engine, DieMark sides, String Function(String playerName) captionFor) {
     final name = engine.currentPlayer.name;
     final avatars = AvatarSet.resolve(engine.players.map((p) => p.name), ref.watch(avatarLooksProvider));
     final look = avatars.looks[name];
+    // Le libellé traduit, écrit avec une marque à la place du nom : la pastille
+    // prend la place de la marque, là où chaque langue met le nom.
+    const marker = '\u{E000}';
+    final parts = captionFor(marker).split(marker);
+    final captionSpan = parts.length < 2
+        ? null
+        : TextSpan(children: [
+            for (var i = 0; i < parts.length; i++) ...[
+              if (i > 0)
+                // La pastille déborde de la ligne sans la grandir : la barre
+                // d'action garde la même hauteur que sous un libellé tout texte.
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: SizedBox(
+                    width: 18,
+                    height: 12,
+                    child: OverflowBox(
+                      maxHeight: 18,
+                      child: PlayerAvatarWidget.seat(name, looks: avatars.looks, color: avatars.color(name), size: 18),
+                    ),
+                  ),
+                ),
+              if (parts[i].isNotEmpty) TextSpan(text: parts[i]),
+            ],
+          ]);
     return ActionDie(
       kind: ActionDieKind.observed,
       top: DieMark.avatar(
@@ -3200,7 +3227,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
       color: _observedDieColor,
       ink: Colors.white,
       size: _actionDieSize,
-      caption: caption,
+      caption: captionFor(name),
+      captionSpan: captionSpan,
       dimmed: false,
     );
   }
@@ -3251,7 +3279,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // [_scheduleAiIfNeeded] ; un joueur distant, c'est à lui) — le libellé
     // reste affiché le temps de la temporisation des messages.
     return _controlRow(
-      primary: _observedDie(ref.read(gameProvider)!, const DieMark.emoji('💥'), AppLocalizations.of(context).bustedTitle),
+      primary: _observedDie(ref.read(gameProvider)!, const DieMark.emoji('💥'), (_) => AppLocalizations.of(context).bustedTitle),
     );
   }
 

@@ -75,7 +75,7 @@ void main() {
     final me = 1 - first;
     await openGame(tester, mySeat: me, journal: journal);
 
-    expect(find.text('${_names[first]} joue…'), findsOneWidget);
+    expect(dieWithCaption('${_names[first]} joue…'), findsOneWidget);
     expect(stopDie, findsNothing, reason: 'pas de bouton Stop pour un tour qui n\'est pas le mien');
     expect(container.read(gameProvider.notifier).isMyOnlineTurn, isFalse);
   });
@@ -111,7 +111,7 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
 
     expect(container.read(gameProvider)!.activeTurn!.pendingRoll!.faces, full[rollIndex].faces);
-    expect(find.text('${_names[first]} joue…'), findsOneWidget);
+    expect(dieWithCaption('${_names[first]} joue…'), findsOneWidget);
   });
 
   testWidgets('le craque d\'un autre joueur se voit sans popup et sans commande', (tester) async {
@@ -135,7 +135,7 @@ void main() {
     expect(container.read(gameProvider)!.activeTurn!.busted, isTrue);
     expect(observedDie, findsOneWidget);
     expect(rollDie, findsNothing);
-    expect(find.text('${_names[first]} joue…'), findsOneWidget);
+    expect(dieWithCaption('${_names[first]} joue…'), findsOneWidget);
     await tester.pump(GameScreen.bustRevealDelay + const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
 
