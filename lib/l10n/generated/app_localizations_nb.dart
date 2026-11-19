@@ -1140,6 +1140,12 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Inkasser';
+
+  @override
+  String get actionExchange => 'Bytt';
+
+  @override
   String get onlineDiceOffContinue => 'Spill';
 
   @override

@@ -1147,6 +1147,12 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Încasează';
+
+  @override
+  String get actionExchange => 'Schimbă';
+
+  @override
   String get onlineDiceOffContinue => 'Joacă';
 
   @override

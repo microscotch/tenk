@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} ist am Zug …",
   "actionTakesOver": "{playerName} übernimmt",
   "actionNewHand": "{playerName} neue Hand",
+  "actionBank": "Kassieren",
+  "actionExchange": "Tauschen",
   "onlineDiceOffContinue": "Spielen",
   "onlineErrorUnreachable": "Server nicht erreichbar.",
   "onlineErrorRoomNotFound": "Kein Raum mit diesem Code.",

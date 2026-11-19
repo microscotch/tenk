@@ -1142,6 +1142,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Cobrar';
+
+  @override
+  String get actionExchange => 'Cambiar';
+
+  @override
   String get onlineDiceOffContinue => 'Jugar';
 
   @override

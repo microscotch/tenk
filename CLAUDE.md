@@ -401,7 +401,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     `_actionDieSize` (48) wide: in the centre the mauve **roll** die, marked like the app icon (ace on top, "10" left,
     "K" right, in the bundled Fraunces font, `assets/fonts/`), its label (chance to score, "Main pleine !") written
     underneath; the gold **Stop** die (a dollar on every face: it banks the hand) and the green **recycle** die (the 5s
-    choice) on either side, **shown only when active** (Stop also waits for the dice to settle, or its appearance would
+    choice) on either side, labelled "Encaisser" / "Échanger", **shown only when active** (Stop also waits for the dice to settle, or its appearance would
     give the roll away) — the roll die stays centred either way (`_controlRow`). Tests find them with
     `test/test_helpers/action_dice.dart` (`rollDie`, `stopDie`, `exchangeDie`, `observedDie`, `dieOf`, `dieWithCaption`).
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →

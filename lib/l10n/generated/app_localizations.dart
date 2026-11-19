@@ -1976,6 +1976,18 @@ abstract class AppLocalizations {
   /// **'{playerName} nouvelle main'**
   String actionNewHand(String playerName);
 
+  /// Sous le dé Stop de la barre d'action : s'arrêter et encaisser les points de la main courante.
+  ///
+  /// In fr, this message translates to:
+  /// **'Encaisser'**
+  String get actionBank;
+
+  /// Sous le dé de recyclage de la barre d'action : choisir combien de 5 garder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échanger'**
+  String get actionExchange;
+
   /// Bouton qui passe du résultat du tirage au sort à la partie en ligne.
   ///
   /// In fr, this message translates to:

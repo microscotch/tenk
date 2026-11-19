@@ -1136,6 +1136,12 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Прибери';
+
+  @override
+  String get actionExchange => 'Смени';
+
+  @override
   String get onlineDiceOffContinue => 'Играй';
 
   @override

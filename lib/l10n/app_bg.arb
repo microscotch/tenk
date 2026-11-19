@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} играе…",
   "actionTakesOver": "{playerName} поема",
   "actionNewHand": "{playerName} нова ръка",
+  "actionBank": "Прибери",
+  "actionExchange": "Смени",
   "onlineDiceOffContinue": "Играй",
   "onlineErrorUnreachable": "Сървърът не е достъпен.",
   "onlineErrorRoomNotFound": "Няма стая с този код.",

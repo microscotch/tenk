@@ -1141,6 +1141,12 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Kotiuta';
+
+  @override
+  String get actionExchange => 'Vaihda';
+
+  @override
   String get onlineDiceOffContinue => 'Pelaa';
 
   @override

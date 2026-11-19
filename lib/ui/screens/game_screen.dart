@@ -3599,6 +3599,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 if (picked != null && mounted) _changeSelectedKeep(int.parse(picked));
               }
             : null,
+        caption: l10n.actionExchange,
         tooltip: l10n.exchangeFivesTooltip,
       ),
     );
@@ -3617,7 +3618,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   /// Le dé Stop : or, un dollar sur toutes ses faces — il encaisse les
-  /// points de la main courante —, sans libellé (son nom est l'infobulle).
+  /// points de la main courante —, « Encaisser » écrit dessous.
   /// N'est affiché que lorsque s'arrêter est possible.
   Widget _stopButton({required VoidCallback? onPressed}) {
     return ActionDie.uniform(
@@ -3626,6 +3627,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
       color: _stopDieColor,
       ink: Colors.white,
       size: _actionDieSize,
+      caption: AppLocalizations.of(context).actionBank,
       tooltip: AppLocalizations.of(context).stopButton,
       // Comme le dé de recyclage : inerte seulement le temps du verrou
       // ([_controlsLocked]), sans être grisé.

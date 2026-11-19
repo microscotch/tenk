@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} spelar…",
   "actionTakesOver": "{playerName} tar över",
   "actionNewHand": "{playerName} ny hand",
+  "actionBank": "Inkassera",
+  "actionExchange": "Byt",
   "onlineDiceOffContinue": "Spela",
   "onlineErrorUnreachable": "Servern går inte att nå.",
   "onlineErrorRoomNotFound": "Inget rum med den här koden.",

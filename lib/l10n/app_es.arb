@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} está jugando…",
   "actionTakesOver": "{playerName} retoma",
   "actionNewHand": "{playerName} mano nueva",
+  "actionBank": "Cobrar",
+  "actionExchange": "Cambiar",
   "onlineDiceOffContinue": "Jugar",
   "onlineErrorUnreachable": "Servidor inaccesible.",
   "onlineErrorRoomNotFound": "No hay ninguna sala con este código.",

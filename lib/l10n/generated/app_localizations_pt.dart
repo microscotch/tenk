@@ -1141,6 +1141,12 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Cobrar';
+
+  @override
+  String get actionExchange => 'Trocar';
+
+  @override
   String get onlineDiceOffContinue => 'Jogar';
 
   @override

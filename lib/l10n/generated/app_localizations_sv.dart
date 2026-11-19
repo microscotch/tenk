@@ -1137,6 +1137,12 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Inkassera';
+
+  @override
+  String get actionExchange => 'Byt';
+
+  @override
   String get onlineDiceOffContinue => 'Spela';
 
   @override

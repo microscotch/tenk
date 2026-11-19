@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} joacă…",
   "actionTakesOver": "{playerName} preia",
   "actionNewHand": "{playerName} mână nouă",
+  "actionBank": "Încasează",
+  "actionExchange": "Schimbă",
   "onlineDiceOffContinue": "Joacă",
   "onlineErrorUnreachable": "Serverul nu poate fi contactat.",
   "onlineErrorRoomNotFound": "Nicio cameră cu acest cod.",

@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} pelaa…",
   "actionTakesOver": "{playerName} jatkaa",
   "actionNewHand": "{playerName} uusi käsi",
+  "actionBank": "Kotiuta",
+  "actionExchange": "Vaihda",
   "onlineDiceOffContinue": "Pelaa",
   "onlineErrorUnreachable": "Palvelimeen ei saada yhteyttä.",
   "onlineErrorRoomNotFound": "Tällä koodilla ei ole huonetta.",

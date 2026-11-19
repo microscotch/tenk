@@ -1145,6 +1145,12 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get actionBank => 'Kassieren';
+
+  @override
+  String get actionExchange => 'Tauschen';
+
+  @override
   String get onlineDiceOffContinue => 'Spielen';
 
   @override

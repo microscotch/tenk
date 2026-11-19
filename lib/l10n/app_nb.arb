@@ -321,6 +321,8 @@
   "onlineWaitingFor": "{playerName} spiller…",
   "actionTakesOver": "{playerName} tar over",
   "actionNewHand": "{playerName} ny hånd",
+  "actionBank": "Inkasser",
+  "actionExchange": "Bytt",
   "onlineDiceOffContinue": "Spill",
   "onlineErrorUnreachable": "Får ikke kontakt med serveren.",
   "onlineErrorRoomNotFound": "Ingen rom med denne koden.",
