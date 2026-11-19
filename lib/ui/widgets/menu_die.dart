@@ -330,17 +330,16 @@ class _MenuDiePainter extends CustomPainter {
       for (final (placement, tint) in faces)
         (placement, tint, spin.transformed3(placement.transformed3(Vector3(0, 0, 1))).z),
     ]..sort((a, b) => a.$3.compareTo(b.$3));
-    // Les trois faces visibles : le dessus est celle dont la normale est la plus
-    // verticale, des deux flancs celle qui regarde le plus à gauche est la gauche.
+    // Les trois faces visibles : le dessus (voir plus bas), et des deux flancs
+    // celle qui regarde le plus à gauche est la gauche.
     Vector3 normalOf(Matrix4 placement) => spin.transformed3(placement.transformed3(Vector3(0, 0, 1)));
     // Le dé est toujours vu d'au-dessus de la table : des deux faces horizontales
     // (les deux dernières de [faces]), la visible est le dessus. Le chercher par
     // la normale la plus verticale à l'écran ne marche plus au-delà de 45° de
     // hauteur ([pitch]) : un flanc l'emporte alors sur le dessus.
-    final horizontal = {faces[4].$1, faces[5].$1};
     final visible = [for (final (placement, _, z) in ordered) if (z > 0) placement];
-    final top = visible.firstWhere(horizontal.contains);
-    final left = visible.where((p) => p != top).reduce((a, b) => normalOf(a).x < normalOf(b).x ? a : b);
+    final top = visible.firstWhere((p) => identical(p, faces[4].$1) || identical(p, faces[5].$1));
+    final left = visible.where((p) => !identical(p, top)).reduce((a, b) => normalOf(a).x < normalOf(b).x ? a : b);
 
     // Les huit sommets du cube unité, vus par la caméra (projection parallèle :
     // on ne garde que x et y).

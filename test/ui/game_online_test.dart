@@ -9,6 +9,7 @@ import 'package:le10000/state/game_save_store.dart';
 import 'package:le10000/state/online_providers.dart';
 import 'package:le10000/state/player_store.dart';
 import 'package:le10000/ui/screens/game_screen.dart';
+import 'package:le10000/ui/widgets/player_avatar.dart';
 
 import '../test_helpers/fake_game_save_store.dart';
 import '../test_helpers/fake_online.dart';
@@ -76,6 +77,10 @@ void main() {
     await openGame(tester, mySeat: me, journal: journal);
 
     expect(dieWithCaption('${_names[first]} joue…'), findsOneWidget);
+    // Sous le dé gris, le nom s'affiche en pastille, pas en toutes lettres.
+    expect(find.descendant(of: observedDie, matching: find.byType(PlayerAvatarWidget)), findsOneWidget);
+    expect(find.descendant(of: observedDie, matching: find.textContaining(_names[first])), findsNothing);
+    expect(find.descendant(of: observedDie, matching: find.textContaining('joue…')), findsOneWidget);
     expect(stopDie, findsNothing, reason: 'pas de bouton Stop pour un tour qui n\'est pas le mien');
     expect(container.read(gameProvider.notifier).isMyOnlineTurn, isFalse);
   });
