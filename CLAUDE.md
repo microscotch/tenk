@@ -397,7 +397,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     the inherited-hand choice (an empty row) and a message wrapping onto two lines. Never a hidden copy of the buttons to
     reserve the space: dozens of tests find the action dice by kind and would find two.
   - **The action row's buttons are translucent dice** (`ActionDie`, `lib/ui/widgets/menu_die.dart`: the home dice's
-    painter, rendered into the same image cache, faces marked by `DieMark` — icon, text, pips, avatar, bomb), all three
+    painter, rendered into the same image cache, faces marked by `DieMark` — icon, text, pips, avatar, emoji), all three
     `_actionDieSize` (48) wide: in the centre the mauve **roll** die, marked like the app icon (ace on top, "10" left,
     "K" right, in the bundled Fraunces font, `assets/fonts/`), its label (chance to score, "Main pleine !") written
     underneath; the gold **Stop** die (a dollar on every face: it banks the hand) and the green **recycle** die (the 5s
@@ -406,7 +406,7 @@ from widgets. `lib/state/**` (Riverpod notifiers) is the only layer allowed to b
     `test/test_helpers/action_dice.dart` (`rollDie`, `stopDie`, `exchangeDie`, `observedDie`, `dieOf`, `dieWithCaption`).
   - **A bot's turn shows the same inert row as a remote online player's** (`_buildAiTurnView` →
     `_buildRemoteTurnView`): one grey disabled die (`_observedDie`) carrying the player's pastille on top and, on its
-    sides, ▶ with "<joueur> joue…"; 💣 with "Craqué !" once a bust is revealed; ⏭ "<joueur> reprend" / ⏮ "<joueur>
+    sides, ▶ with "<joueur> joue…"; 💥 with "Craqué !" once a bust is revealed; ⏭ "<joueur> reprend" / ⏮ "<joueur>
     nouvelle main" just after they took over or refused an inherited hand (before their first roll) — no Stop, no 5s
     choice, nothing to press. Bots therefore **always play on their own**
     (`_scheduleAiIfNeeded` bypasses "mode auto" and its 0-means-manual rule), after `aiMessageDelay`, plus

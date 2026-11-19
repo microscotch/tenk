@@ -3251,7 +3251,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // [_scheduleAiIfNeeded] ; un joueur distant, c'est à lui) — le libellé
     // reste affiché le temps de la temporisation des messages.
     return _controlRow(
-      primary: _observedDie(ref.read(gameProvider)!, DieMark.bomb, AppLocalizations.of(context).bustedTitle),
+      primary: _observedDie(ref.read(gameProvider)!, const DieMark.emoji('💥'), AppLocalizations.of(context).bustedTitle),
     );
   }
 

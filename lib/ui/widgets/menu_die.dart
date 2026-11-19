@@ -671,8 +671,8 @@ void paintAppIconDie(Canvas canvas, Size size, {required Color color, required C
   ).paint(canvas, size);
 }
 
-/// Ce que porte une face visible d'un [ActionDie] : une icône, des pips, la
-/// pastille d'un joueur, ou une bombe.
+/// Ce que porte une face visible d'un [ActionDie] : une icône, des pips, un
+/// texte, la pastille d'un joueur, ou un émoji.
 @immutable
 sealed class DieMark {
   const DieMark();
@@ -691,8 +691,8 @@ sealed class DieMark {
   /// le « 10 » et le « K » du dé de l'icône de l'app.
   const factory DieMark.text(String text, TextStyle style) = _TextMark;
 
-  /// Une bombe (💣) gravée : le craque.
-  static const DieMark bomb = _BombMark();
+  /// L'émoji [emoji], en couleurs, posé sur la face (💥 : le craque).
+  const factory DieMark.emoji(String emoji) = _EmojiMark;
 
   /// Ce qui distingue cette marque des autres, pour la clé de l'image du dé.
   String get _id;
@@ -850,64 +850,38 @@ class _AvatarMark extends DieMark {
   int get hashCode => Object.hash(color, letter, emoji);
 }
 
-class _BombMark extends DieMark {
-  const _BombMark();
+class _EmojiMark extends DieMark {
+  final String emoji;
+  const _EmojiMark(this.emoji);
 
   @override
-  String get _id => 'bomb';
+  String get _id => 'emoji:$emoji';
 
   @override
   void _paint(Canvas canvas, double unit, Color ink, bool facing) {
-    // Le corps rond, le goulot, la mèche courbe et son étincelle : dessinés à la
-    // main, aucune police d'icônes n'ayant de bombe.
-    final body = Path()..addOval(Rect.fromCircle(center: Offset(unit * 0.45, unit * 0.58), radius: unit * 0.25));
-    final neck = Path()
-      ..addPolygon([
-        Offset(unit * 0.55, unit * 0.30),
-        Offset(unit * 0.66, unit * 0.36),
-        Offset(unit * 0.60, unit * 0.46),
-        Offset(unit * 0.49, unit * 0.40),
-      ], true);
-    final fuse = Path()
-      ..moveTo(unit * 0.62, unit * 0.33)
-      ..quadraticBezierTo(unit * 0.70, unit * 0.16, unit * 0.80, unit * 0.22);
-    final spark = Path();
-    const rays = 8;
-    final sparkAt = Offset(unit * 0.82, unit * 0.18);
-    for (var i = 0; i < rays * 2; i++) {
-      final r = unit * (i.isEven ? 0.09 : 0.035);
-      final a = i * math.pi / rays;
-      final p = sparkAt + Offset(math.cos(a) * r, math.sin(a) * r);
-      i == 0 ? spark.moveTo(p.dx, p.dy) : spark.lineTo(p.dx, p.dy);
-    }
-    spark.close();
-    void draw(Paint paint) {
-      canvas.drawPath(body, paint);
-      canvas.drawPath(neck, paint);
-      canvas.drawPath(spark, paint);
-      canvas.drawPath(
-        fuse,
-        Paint()
-          ..color = paint.color
-          ..blendMode = paint.blendMode
-          ..maskFilter = paint.maskFilter
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 0.045
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
+    // L'émoji en couleurs, posé sur la face comme la pastille : ni gravé ni
+    // teinté. Vu à travers le dé (une face cachée), il n'est qu'un reflet.
+    final text = TextPainter(
+      text: TextSpan(
+        text: emoji,
+        style: TextStyle(fontSize: unit * 0.62, height: 1, fontFamilyFallback: kEmojiFontFallback),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final at = Offset((unit - text.width) / 2, (unit - text.height) / 2);
     if (facing) {
-      _stamp(canvas, unit, ink, draw);
+      text.paint(canvas, at);
     } else {
-      draw(Paint()..color = ink.withValues(alpha: 0.4));
+      canvas.saveLayer(Offset.zero & Size.square(unit), Paint()..color = Colors.white.withValues(alpha: 0.3));
+      text.paint(canvas, at);
+      canvas.restore();
     }
   }
 
   @override
-  bool operator ==(Object other) => other is _BombMark;
+  bool operator ==(Object other) => other is _EmojiMark && other.emoji == emoji;
   @override
-  int get hashCode => 0;
+  int get hashCode => emoji.hashCode;
 }
 
 /// Une marque pleine imprimée sur une face de [unit] de côté, en [ink], sur une
