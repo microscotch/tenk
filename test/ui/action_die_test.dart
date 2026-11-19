@@ -37,6 +37,25 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('le lecteur d\'écran annonce le libellé affiché, l\'infobulle en précision', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(_host(ActionDie.uniform(
+      kind: ActionDieKind.stop,
+      mark: const DieMark.icon(Icons.attach_money),
+      color: Colors.amber,
+      ink: Colors.white,
+      size: 48,
+      caption: 'Encaisser',
+      tooltip: 'S\'arrêter',
+      onPressed: () {},
+    )));
+
+    final data = tester.getSemantics(find.bySemanticsLabel('Encaisser')).getSemanticsData();
+    expect(data.tooltip, 'S\'arrêter');
+    expect(find.bySemanticsLabel('S\'arrêter'), findsNothing);
+    handle.dispose();
+  });
+
   testWidgets('un dé marqué d\'un émoji se dessine, faces visibles et cachées', (tester) async {
     await tester.pumpWidget(_host(const ActionDie.uniform(
       kind: ActionDieKind.observed,

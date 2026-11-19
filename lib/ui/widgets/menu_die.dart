@@ -940,7 +940,9 @@ class ActionDie extends StatelessWidget {
   final double size;
   final String? caption;
 
-  /// Le nom du bouton (infobulle et lecteur d'écran) ; à défaut, [caption].
+  /// L'infobulle du bouton. Le lecteur d'écran annonce le texte affiché,
+  /// [caption], et n'en fait qu'une précision ; sans [caption], c'est elle qu'il
+  /// annonce comme nom du bouton.
   final String? tooltip;
   final VoidCallback? onPressed;
   final bool dimmed;
@@ -1027,11 +1029,16 @@ class ActionDie extends StatelessWidget {
     if (!enabled && dimmed) {
       content = Opacity(opacity: 0.38, child: ColorFiltered(colorFilter: MenuDie._grayscale, child: content));
     }
-    final label = tooltip ?? caption ?? '';
+    // Le nom annoncé est le texte affiché sous le dé, celui que l'on voit — et
+    // que la commande vocale cherche ; l'infobulle, quand elle dit autre chose,
+    // vient en précision.
+    final label = caption ?? tooltip ?? '';
+    final hint = caption != null && tooltip != caption ? tooltip : null;
     content = Semantics(
       button: true,
       enabled: enabled,
       label: label,
+      tooltip: hint,
       // Le détecteur de geste est dans le sous-arbre exclu : sans [onTap] ici,
       // le lecteur d'écran annoncerait un bouton impossible à activer.
       onTap: onPressed,
